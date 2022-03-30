@@ -1,6 +1,6 @@
 #include "Visual.h"
 
-void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes) {
+void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes, Config &config) {
     // todo: just testing
     brightness = 0;
     for (int i = 0; i < notes.size(); i++) {
@@ -18,25 +18,26 @@ void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes) {
     for (int i=0; i<sources.size(); i++) {
         if (sources[i].substr(0, 3) == "amp") {
             int j = ofToInt(sources[i].substr(3));
-            brightness += (255 * soundData[j].amplitude);
+            //brightness += (255 * tanh(soundData[j].amplitude / config.maxAmp * M_PI));
+            brightness += (255 * int(soundData[j].amplitude > config.maxAmp / 2.f));
         }
         else if (sources[i].substr(0, 4) == "loud") {
             int j = ofToInt(sources[i].substr(4));
-            brightness += (255 * (soundData[j].loudness / 64.f));
+            brightness += (255 * (soundData[j].loudness / config.maxLoud));
         }
     }
-    shader.update(size);
+    shader.update(pos, size);
     if (brightness > 255) {
         brightness = 255;
     }
     if (behaviour & B_RANDOM_SHADER) {
-        shader.choose();
+        shader.random();
     }
 }
 
 void Visual::draw() {
     ofSetColor(brightness);
-    shader.draw(position.x, position.y, size.x, size.y);
+    shader.draw(pos.x, pos.y, size.x, size.y);
     brightness -= 32;
     if (brightness < 0) {
         brightness = 0;

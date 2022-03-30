@@ -5,6 +5,7 @@
 #include "ofxOsc.h"
 #include "SoundData.h"
 #include "Visual.h"
+#include "Config.h"
 
 class ofApp : public ofBaseApp {
 
@@ -33,6 +34,7 @@ public:
 	void gotMessage(ofMessage msg);
 
     ofxOscReceiver receiver;
+    Config config;
 	ofxTidalCycles *tidal;
     
     vector<SoundData> soundData;

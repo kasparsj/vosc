@@ -7,9 +7,10 @@ public:
     
 	Shader();
     ~Shader();
-	void update(const glm::vec2 &size);
+	void update(const glm::vec2 &pos, const glm::vec2 &size);
 	void draw(int left, int top, int width, int height);
-    void choose();
+    void random();
+    void reload();
 
 	ofFbo fbo;
 	string name;
