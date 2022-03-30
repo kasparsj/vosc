@@ -21,7 +21,6 @@ void ofApp::setupVisuals(int numVisuals) {
     for (int i=0; i<visuals.size(); i++) {
         visuals[i].pos = glm::vec2(0, ofGetHeight() / numVisuals * i);
         visuals[i].size = glm::vec2(ofGetWidth(), ofGetHeight() / numVisuals);
-        visuals[i].sources.push_back("amp" + ofToString(i));
     }
 }
 
@@ -59,6 +58,24 @@ void ofApp::parseIncomingMessages(){
         else if (m.getAddress() == "/config/loud") {
             config.maxLoud = m.getArgAsFloat(0);
         }
+        else if (m.getAddress() == "/all/data/tidal") {
+            for (int i=0; i<visuals.size(); i++) {
+                visuals[i].datas.clear();
+                visuals[i].datas.push_back("tidal" + ofToString(i));
+            }
+        }
+        else if (m.getAddress() == "/all/data/amp") {
+            for (int i=0; i<visuals.size(); i++) {
+                visuals[i].datas.clear();
+                visuals[i].datas.push_back("amp" + ofToString(i));
+            }
+        }
+        else if (m.getAddress() == "/all/data/loud") {
+            for (int i=0; i<visuals.size(); i++) {
+                visuals[i].datas.clear();
+                visuals[i].datas.push_back("loud" + ofToString(i));
+            }
+        }
         else if (m.getAddress() == "/all/shader") {
             for (int i=0; i<visuals.size(); i++) {
                 visuals[i].shader.name = m.getArgAsString(0);
@@ -72,6 +89,21 @@ void ofApp::parseIncomingMessages(){
         else if (m.getAddress() == "/all/shader/reload") {
             for (int i=0; i<visuals.size(); i++) {
                 visuals[i].shader.reload();
+            }
+        }
+        else if (m.getAddress() == "/all/video") {
+            for (int i=0; i<visuals.size(); i++) {
+                visuals[i].video.name = m.getArgAsString(0);
+            }
+        }
+        else if (m.getAddress() == "/all/video/random") {
+            for (int i=0; i<visuals.size(); i++) {
+                visuals[i].video.random();
+            }
+        }
+        else if (m.getAddress() == "/vis/video/pos/random") {
+            for (int i=0; i<visuals.size(); i++) {
+                visuals[i].video.pos = ofRandom(1.f);
             }
         }
         else if (m.getAddress() == "/all/pos") {
@@ -89,6 +121,15 @@ void ofApp::parseIncomingMessages(){
         }
         else if (m.getAddress() == "/vis/shader/random") {
             visuals[m.getArgAsInt(0)].shader.random();
+        }
+        else if (m.getAddress() == "/vis/video") {
+            visuals[m.getArgAsInt(0)].video.name = m.getArgAsString(1);
+        }
+        else if (m.getAddress() == "/vis/video/pos") {
+            visuals[m.getArgAsInt(0)].video.pos = m.getArgAsFloat(1);
+        }
+        else if (m.getAddress() == "/vis/video/pos/random") {
+            visuals[m.getArgAsInt(0)].video.pos = ofRandom(1.f);
         }
         else if (m.getAddress() == "/vis/pos") {
             visuals[m.getArgAsInt(0)].pos = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));

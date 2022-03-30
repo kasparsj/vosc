@@ -18,13 +18,13 @@ map<string, ofShader> loadShaders()
 map<string, ofShader> Shader::shaders = loadShaders();
 
 Shader::Shader(){
-    random();
 }
 
 Shader::~Shader(){
 }
 
 void Shader::update(const glm::vec2 &pos, const glm::vec2 &size) {
+    Source::update();
     if (!shaders[name].isLoaded()) {
         shaders[name].load("", "shaders/" + name + ".frag");
     }
@@ -34,7 +34,7 @@ void Shader::update(const glm::vec2 &pos, const glm::vec2 &size) {
     }
 	fbo.begin();
 	shaders[name].begin();
-	shaders[name].setUniform1f("time", ofGetElapsedTimef());
+	shaders[name].setUniform1f("time", time);
 	shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
     shaders[name].setUniform2f("offset", pos.x, pos.y);
 	ofDrawRectangle(0, 0, size.x, size.y);

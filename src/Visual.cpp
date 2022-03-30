@@ -1,7 +1,8 @@
 #include "Visual.h"
 
 void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes, Config &config) {
-    // todo: just testing
+    bool isOnset = false;
+    // todo: for tidal this does not work
     brightness = 0;
     for (int i = 0; i < notes.size(); i++) {
         if (ofGetElapsedTimef() - notes[i].timeStamp < 32) {
@@ -9,24 +10,35 @@ void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes, Conf
             float diff = ofGetElapsedTimef() - notes[i].timeStamp;
             if (diff > 0 && abs(diff) < 1.0 / ofGetFrameRate() && notes[i].s != "midi") {
                 int instNum = notes[i].instNum;
-                if (find(sources.begin(), sources.end(), "tidal" + ofToString(instNum)) != sources.end()) {
+                if (find(datas.begin(), datas.end(), "tidal" + ofToString(instNum)) != datas.end()) {
                     brightness += (int) (255 * notes[i].gain);
+                    isOnset = true;
                 }
             }
         }
     }
-    for (int i=0; i<sources.size(); i++) {
-        if (sources[i].substr(0, 3) == "amp") {
-            int j = ofToInt(sources[i].substr(3));
+    for (int i=0; i<datas.size(); i++) {
+        if (datas[i].substr(0, 3) == "amp") {
+            int j = ofToInt(datas[i].substr(3));
             //brightness += (255 * tanh(soundData[j].amplitude / config.maxAmp * M_PI));
             brightness += (255 * int(soundData[j].amplitude > config.maxAmp / 2.f));
+            isOnset = isOnset || (soundData[j].onset == 1);
         }
-        else if (sources[i].substr(0, 4) == "loud") {
-            int j = ofToInt(sources[i].substr(4));
+        else if (datas[i].substr(0, 4) == "loud") {
+            int j = ofToInt(datas[i].substr(4));
             brightness += (255 * (soundData[j].loudness / config.maxLoud));
+            isOnset = isOnset || (soundData[j].onset == 1);
         }
     }
-    shader.update(pos, size);
+    if (shader.isEnabled()) {
+        shader.update(pos, size);
+    }
+    if (video.isEnabled()) {
+        if (isOnset) {
+            video.resetPos();
+        }
+        video.update();
+    }
     if (brightness > 255) {
         brightness = 255;
     }
@@ -37,7 +49,12 @@ void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes, Conf
 
 void Visual::draw() {
     ofSetColor(brightness);
-    shader.draw(pos.x, pos.y, size.x, size.y);
+    if (shader.isEnabled()) {
+        shader.draw(pos.x, pos.y, size.x, size.y);
+    }
+    if (video.isEnabled()) {
+        video.draw(pos.x, pos.y, size.x, size.y);
+    }
     brightness -= 32;
     if (brightness < 0) {
         brightness = 0;

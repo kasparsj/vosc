@@ -5,6 +5,7 @@
 #include "ofxTidalCycles.h"
 #include "SoundData.h"
 #include "Config.h"
+#include "Video.h"
 
 enum Behaviour {
     B_RANDOM_SHADER = 1,
@@ -15,7 +16,8 @@ public:
     void update(vector<SoundData> &soundData, vector<TidalNote> &notes, Config &config);
     void draw();
     
-    vector<string> sources;
+    vector<string> datas;
+    Video video;
     Shader shader;
     glm::vec2 pos;
     glm::vec2 size;
