@@ -1,6 +1,14 @@
 #include "Visual.h"
 
-void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes, Config &config) {
+void Visual::setup(int index, int numVisuals)
+{
+    pos = glm::vec2(0, ofGetHeight() / numVisuals * index);
+    size = glm::vec2(ofGetWidth(), ofGetHeight() / numVisuals);
+    datas.clear();
+    datas.push_back("amp" + ofToString(index));
+}
+
+void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes) {
     bool isOnset = false;
     // todo: for tidal this does not work
     brightness = 0;
@@ -31,18 +39,18 @@ void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes, Conf
         }
     }
     if (shader.isEnabled()) {
-        shader.update(pos, size);
+        shader.update(pos, size, config);
     }
     if (video.isEnabled()) {
         if (isOnset) {
             video.resetPos();
         }
-        video.update();
+        video.update(config);
     }
     if (brightness > 255) {
         brightness = 255;
     }
-    if (behaviour & B_RANDOM_SHADER) {
+    if (config.behaviour & B_RANDOM_SHADER) {
         shader.random();
     }
 }

@@ -19,8 +19,7 @@ void ofApp::setupSoundData(int numInsts) {
 void ofApp::setupVisuals(int numVisuals) {
     visuals.resize(numVisuals);
     for (int i=0; i<visuals.size(); i++) {
-        visuals[i].pos = glm::vec2(0, ofGetHeight() / numVisuals * i);
-        visuals[i].size = glm::vec2(ofGetWidth(), ofGetHeight() / numVisuals);
+        visuals[i].setup(i, numVisuals);
     }
 }
 
@@ -31,7 +30,8 @@ void ofApp::update(){
         tidal->notes.erase(tidal->notes.begin());
     }
 	for (int i = 0; i < visuals.size(); i++) {
-		visuals[i].update(soundData, tidal->notes, config);
+        visuals[i].config = config; // todo: merge instead
+		visuals[i].update(soundData, tidal->notes);
 	}
 }
 
@@ -57,6 +57,12 @@ void ofApp::parseIncomingMessages(){
         }
         else if (m.getAddress() == "/config/loud") {
             config.maxLoud = m.getArgAsFloat(0);
+        }
+        else if (m.getAddress() == "/config/speed") {
+            config.speed = m.getArgAsFloat(0);
+        }
+        else if (m.getAddress() == "/config/behaviour") {
+            config.behaviour = m.getArgAsInt(0);
         }
         else if (m.getAddress() == "/all/data/tidal") {
             for (int i=0; i<visuals.size(); i++) {
@@ -101,19 +107,19 @@ void ofApp::parseIncomingMessages(){
                 visuals[i].video.random();
             }
         }
-        else if (m.getAddress() == "/vis/video/pos/random") {
+        else if (m.getAddress() == "/all/video/pos/random") {
             for (int i=0; i<visuals.size(); i++) {
                 visuals[i].video.pos = ofRandom(1.f);
             }
         }
         else if (m.getAddress() == "/all/pos") {
             for (int i=0; i<visuals.size(); i++) {
-                visuals[i].pos = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
+                visuals[i].pos = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
             }
         }
         else if (m.getAddress() == "/all/size") {
             for (int i=0; i<visuals.size(); i++) {
-                visuals[i].size = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
+                visuals[i].size = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
             }
         }
         else if (m.getAddress() == "/vis/shader") {
@@ -138,7 +144,7 @@ void ofApp::parseIncomingMessages(){
             visuals[m.getArgAsInt(0)].size = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
         }
         else if (m.getAddress() == "/vis/behaviour") {
-            visuals[m.getArgAsInt(0)].behaviour = m.getArgAsInt(1);
+            visuals[m.getArgAsInt(0)].config.behaviour = m.getArgAsInt(1);
         }
     }
 }

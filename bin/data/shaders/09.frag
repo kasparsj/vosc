@@ -2,9 +2,11 @@
 
 uniform float time;
 uniform vec2 resolution;
+uniform vec2 offset;
 
 void main(void) {
-    vec2 st = gl_FragCoord.xy / resolution.xy;
+    vec2 fragCoord = offset + gl_FragCoord.xy;
+    vec2 st = fragCoord.xy / resolution.xy;
     vec2 uv = -1. + 2. * st;
     float div = 12.0;
     float speed = 2.0;

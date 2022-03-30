@@ -23,8 +23,8 @@ Shader::Shader(){
 Shader::~Shader(){
 }
 
-void Shader::update(const glm::vec2 &pos, const glm::vec2 &size) {
-    Source::update();
+void Shader::update(const glm::vec2 &pos, const glm::vec2 &size, const Config &config) {
+    Source::update(config);
     if (!shaders[name].isLoaded()) {
         shaders[name].load("", "shaders/" + name + ".frag");
     }

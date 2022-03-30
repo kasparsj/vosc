@@ -13,14 +13,16 @@ enum Behaviour {
 
 class Visual {
 public:
-    void update(vector<SoundData> &soundData, vector<TidalNote> &notes, Config &config);
+    void setup(int index, int numVisuals);
+    void update(vector<SoundData> &soundData, vector<TidalNote> &notes);
     void draw();
     
+    int index;
     vector<string> datas;
     Video video;
     Shader shader;
     glm::vec2 pos;
     glm::vec2 size;
     int brightness = 0;
-    int behaviour = 0;
+    Config config;
 };
