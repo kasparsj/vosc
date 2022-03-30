@@ -15,7 +15,7 @@ public:
     
 	void setup();
     void setupSoundData(int numInsts);
-    void setupVisuals(int numVisuals);
+    void setupVisuals(int numVisuals, Layout layout);
 	void update();
     void parseIncomingMessages();
 	void draw();
@@ -36,6 +36,7 @@ public:
     ofxOscReceiver receiver;
     Config config;
 	ofxTidalCycles *tidal;
+    ofBlendMode blendMode;
     
     vector<SoundData> soundData;
     vector<Visual> visuals;

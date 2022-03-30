@@ -9,17 +9,18 @@ void ofApp::setup(){
     receiver.setup(33333);
 	tidal = new ofxTidalCycles(1);
     setupSoundData(NUM_VISUALS);
-    setupVisuals(NUM_VISUALS);
+    setupVisuals(NUM_VISUALS, L_STACK);
 }
 
 void ofApp::setupSoundData(int numInsts) {
     soundData.resize(numInsts);
 }
 
-void ofApp::setupVisuals(int numVisuals) {
+void ofApp::setupVisuals(int numVisuals, Layout layout) {
     visuals.resize(numVisuals);
     for (int i=0; i<visuals.size(); i++) {
         visuals[i].setup(i, numVisuals);
+        visuals[i].layout(layout);
     }
 }
 
@@ -50,7 +51,12 @@ void ofApp::parseIncomingMessages(){
             setupSoundData(m.getArgAsInt(0));
         }
         else if (m.getAddress() == "/setup/vis") {
-            setupVisuals(m.getArgAsInt(0));
+            setupVisuals(m.getArgAsInt(0), static_cast<Layout>(m.getArgAsInt(1)));
+        }
+        else if (m.getAddress() == "/setup/layout") {
+            for (int i=0; i<visuals.size(); i++) {
+                visuals[i].layout(static_cast<Layout>(m.getArgAsInt(0)));
+            }
         }
         else if (m.getAddress() == "/config/amp") {
             config.maxAmp = m.getArgAsFloat(0);
@@ -152,9 +158,11 @@ void ofApp::parseIncomingMessages(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 	ofSetColor(255);
+    ofEnableBlendMode(blendMode);
     for (int i=0; i<visuals.size(); i++) {
         visuals[i].draw();
     }
+    ofDisableBlendMode();
 }
 
 void ofApp::exit() {
@@ -162,7 +170,25 @@ void ofApp::exit() {
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
+    switch (key) {
+        case 49:
+            blendMode = OF_BLENDMODE_ALPHA;
+            break;
+        case 50:
+            blendMode = OF_BLENDMODE_ADD;
+            break;
+        case 51:
+            blendMode = OF_BLENDMODE_MULTIPLY;
+            break;
+        case 52:
+            blendMode = OF_BLENDMODE_SUBTRACT;
+            break;
+        case 53:
+            blendMode = OF_BLENDMODE_SCREEN;
+            break;
+        default:
+            break;
+    }
 }
 
 //--------------------------------------------------------------

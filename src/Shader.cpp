@@ -23,7 +23,7 @@ Shader::Shader(){
 Shader::~Shader(){
 }
 
-void Shader::update(const glm::vec2 &pos, const glm::vec2 &size, const Config &config) {
+void Shader::update(const int index, const glm::vec2 &pos, const glm::vec2 &size, const Config &config) {
     Source::update(config);
     if (!shaders[name].isLoaded()) {
         shaders[name].load("", "shaders/" + name + ".frag");
@@ -37,9 +37,13 @@ void Shader::update(const glm::vec2 &pos, const glm::vec2 &size, const Config &c
 	shaders[name].setUniform1f("time", time);
 	shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
     shaders[name].setUniform2f("offset", pos.x, pos.y);
+    shaders[name].setUniform1i("id", index);
 	ofDrawRectangle(0, 0, size.x, size.y);
 	shaders[name].end();
 	fbo.end();
+    if (config.behaviour & B_RANDOM_SHADER) {
+        random();
+    }
 }
 
 void Shader::draw(int left, int top, int width, int height) {

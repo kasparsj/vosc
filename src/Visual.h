@@ -7,17 +7,15 @@
 #include "Config.h"
 #include "Video.h"
 
-enum Behaviour {
-    B_RANDOM_SHADER = 1,
-};
-
 class Visual {
 public:
     void setup(int index, int numVisuals);
+    void layout(Layout layout);
     void update(vector<SoundData> &soundData, vector<TidalNote> &notes);
     void draw();
     
     int index;
+    int total;
     vector<string> datas;
     Video video;
     Shader shader;
@@ -25,4 +23,6 @@ public:
     glm::vec2 size;
     int brightness = 0;
     Config config;
+    bool isOnset = false;
+    bool isTidal = false;
 };
