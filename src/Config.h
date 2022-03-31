@@ -2,6 +2,10 @@
 
 #include "ofMain.h"
 
+#define MAX_SOUNDS 7
+#define MAX_VISUALS 8
+#define MAX_NOTES 10
+
 enum Behaviour {
     B_RANDOM_SHADER = 1,
 };
@@ -16,7 +20,8 @@ enum Layout {
 class Config {
 public:
     Config() {
-        
+        threshAmp = maxAmp / 2;
+        threshLoud = maxLoud / 2;
     }
     Config(const Config &config) {
         maxAmp = config.maxAmp;
@@ -24,6 +29,8 @@ public:
         speed = config.speed;
         behaviour = config.behaviour;
         color = config.color;
+        threshAmp = config.threshAmp;
+        threshLoud = config.threshLoud;
     }
     Config(float initValue) : maxAmp(initValue), maxLoud(initValue), speed(initValue) {
         
@@ -33,8 +40,10 @@ public:
         if (maxLoud == 0) maxLoud = parent.maxLoud;
         if (speed == 0) speed = parent.speed;
         if (behaviour < 0) behaviour = parent.behaviour;
+        if (threshAmp < 0) threshAmp = parent.threshAmp;
+        if (threshLoud < 0) threshLoud = parent.threshLoud;
     }
-    bool randomShader() {
+    bool randomShader() const {
         return behaviour > 0 && behaviour & B_RANDOM_SHADER;
     }
     
@@ -43,4 +52,6 @@ public:
     float speed = 1.0;
     int behaviour = -1;
     ofFloatColor color = ofFloatColor(0);
+    float threshAmp = -1;
+    float threshLoud = -1;
 };

@@ -23,34 +23,37 @@ Shader::Shader(){
 Shader::~Shader(){
 }
 
-void Shader::update(const int index, const glm::vec2 &pos, const glm::vec2 &size, Config &mergedConfig, Config &config) {
-    Source::update(mergedConfig);
+void Shader::update(ShaderData *shaderData, Config &config) {
+    Source::update(shaderData->mergedConfig);
     if (name != prevName) {
         prevName = name;
         random = ofRandom(1000);
         config.color = ofFloatColor(0.4, 1.0/1.5, 1.0);
-        mergedConfig.color = config.color;
+        shaderData->mergedConfig.color = config.color;
     }
     if (!shaders[name].isLoaded()) {
         shaders[name].load("", "shaders/" + name + ".frag");
     }
-    if (!fbo.isAllocated() || (fbo.getWidth() != size.x || fbo.getHeight() != size.y)) {
+    if (!fbo.isAllocated() || (fbo.getWidth() != shaderData->size.x || fbo.getHeight() != shaderData->size.y)) {
         fbo.clear();
-        fbo.allocate(size.x, size.y);
+        fbo.allocate(shaderData->size.x, shaderData->size.y);
     }
 	fbo.begin();
     ofClear(0, 0, 0, 0);
 	shaders[name].begin();
 	shaders[name].setUniform1f("time", time);
 	shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
-    shaders[name].setUniform2f("offset", pos.x, pos.y);
-    shaders[name].setUniform1i("index", index);
-    shaders[name].setUniform4f("color", mergedConfig.color);
+    shaders[name].setUniform2f("offset", shaderData->pos.x, shaderData->pos.y);
+    shaders[name].setUniform1i("index", shaderData->index);
+    shaders[name].setUniform4f("color", shaderData->mergedConfig.color);
     shaders[name].setUniform1i("random", random);
-	ofDrawRectangle(0, 0, size.x, size.y);
+    shaders[name].setUniform1fv("values", shaderData->values, MAX_VISUALS);
+    shaders[name].setUniform1i("visible", shaderData->visible ? 1 : 0);
+    shaders[name].setUniform1i("onset", shaderData->onset ? 1 : 0);
+	ofDrawRectangle(0, 0, shaderData->size.x, shaderData->size.y);
 	shaders[name].end();
 	fbo.end();
-    if (mergedConfig.randomShader()) {
+    if (shaderData->mergedConfig.randomShader()) {
         choose();
     }
 }

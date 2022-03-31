@@ -3,6 +3,7 @@
 #include "Source.h"
 #include "ofMain.h"
 #include "Config.h"
+#include "ShaderData.h"
 
 class Shader : public Source {
 public:
@@ -10,7 +11,7 @@ public:
     
 	Shader();
     ~Shader();
-	void update(const int index, const glm::vec2 &pos, const glm::vec2 &size, Config &mergedConfig, Config &config);
+	void update(ShaderData *shaderData, Config &config);
 	void draw(int left, int top, int width, int height) override;
     void choose();
     void reload();

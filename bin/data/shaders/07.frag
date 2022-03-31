@@ -1,17 +1,21 @@
 #version 120
 
+#define MAX_VISUALS 8
+
 uniform float time;
 uniform vec2 resolution;
 uniform vec2 offset;
 uniform int index;
 uniform vec4 color;
 uniform int random;
+uniform float values[MAX_VISUALS];
+uniform int visible;
 
 float rand(float n){return fract(sin(n) * 43758.5453123);}
 
 float noise(float p){
     float fl = floor(p);
-  float fc = fract(p);
+    float fc = fract(p);
     return mix(rand(fl), rand(fl + 1.0), fc);
 }
 
@@ -33,5 +37,5 @@ void main (void){
     float radius = cos(time * index1) * 0.1 + 0.2;
     float border = sin(time * index1) * 0.2 + 0.05;
     float t = smoothstep(radius + border, radius - border, dist);
-    gl_FragColor = vec4(color.rgb * 1.5 * t * noise(vec2(random, index)), t);
+    gl_FragColor = vec4(color.rgb * 1.5 * t * noise(vec2(random, index)), t * visible);
 }

@@ -8,8 +8,8 @@ void ofApp::setup(){
 
     receiver.setup(33333);
 	tidal = new ofxTidalCycles(1);
-    setupSounds(NUM_SOUNDS);
-    setupVisuals(NUM_VISUALS, L_STACK);
+    setupSounds(MAX_SOUNDS);
+    setupVisuals(MAX_VISUALS, L_STACK);
     
     fbo.allocate(ofGetWidth(), ofGetHeight());
 }
@@ -48,54 +48,60 @@ void ofApp::parseIncomingMessages(){
         else if (m.getAddress() == "/dirt/play") {
             tidal->parse(m);
         }
-        else if (m.getAddress() == "/setup/sound") {
+        else if (m.getAddress() == "/sounds") {
             setupSounds(m.getArgAsInt(0));
         }
-        else if (m.getAddress() == "/setup/vis") {
+        else if (m.getAddress() == "/visuals") {
             setupVisuals(m.getArgAsInt(0), static_cast<Layout>(m.getArgAsInt(1)));
         }
-        else if (m.getAddress() == "/setup/layout") {
+        else if (m.getAddress() == "/layout") {
             for (int i=0; i<visuals.size(); i++) {
                 visuals[i].layout(static_cast<Layout>(m.getArgAsInt(0)));
             }
         }
-        else if (m.getAddress() == "/config/amp") {
+        else if (m.getAddress() == "/amp/max") {
             config.maxAmp = m.getArgAsFloat(0);
         }
-        else if (m.getAddress() == "/config/loud") {
+        else if (m.getAddress() == "/amp/thresh") {
+            config.threshAmp = m.getArgAsFloat(0);
+        }
+        else if (m.getAddress() == "/loud/max") {
             config.maxLoud = m.getArgAsFloat(0);
         }
-        else if (m.getAddress() == "/config/speed") {
+        else if (m.getAddress() == "/loud/thresh") {
+            config.threshLoud = m.getArgAsFloat(0);
+        }
+        else if (m.getAddress() == "/speed") {
             config.speed = m.getArgAsFloat(0);
         }
-        else if (m.getAddress() == "/config/behaviour") {
+        else if (m.getAddress() == "/behaviour") {
             config.behaviour = m.getArgAsInt(0);
         }
-        else if (m.getAddress() == "/config/color") {
+        else if (m.getAddress() == "/color") {
             config.color = ofFloatColor(ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2)));
         }
-        else if (m.getAddress() == "/config/bgcolor") {
+        else if (m.getAddress() == "/bgcolor") {
             bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
         }
-        else if (m.getAddress() == "/config/bgblendmode") {
+        else if (m.getAddress() == "/bgblendmode") {
             bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
         }
         else if (m.getAddress() == "/all/data/tidal") {
             for (int i=0; i<visuals.size(); i++) {
-                visuals[i].datas.clear();
-                visuals[i].datas.push_back("tidal" + ofToString(i));
+                visuals[i].dataSource.clear();
+                visuals[i].dataSource.push_back("tidal" + ofToString(i));
             }
         }
         else if (m.getAddress() == "/all/data/amp") {
             for (int i=0; i<visuals.size(); i++) {
-                visuals[i].datas.clear();
-                visuals[i].datas.push_back("amp" + ofToString(i));
+                visuals[i].dataSource.clear();
+                visuals[i].dataSource.push_back("amp" + ofToString(i));
             }
         }
         else if (m.getAddress() == "/all/data/loud") {
             for (int i=0; i<visuals.size(); i++) {
-                visuals[i].datas.clear();
-                visuals[i].datas.push_back("loud" + ofToString(i));
+                visuals[i].dataSource.clear();
+                visuals[i].dataSource.push_back("loud" + ofToString(i));
             }
         }
         else if (m.getAddress() == "/all/shader") {

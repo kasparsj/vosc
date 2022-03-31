@@ -10,10 +10,6 @@
 class ofApp : public ofBaseApp {
 
 public:
-    static const int NUM_SOUNDS = 7;
-    static const int NUM_VISUALS = 8;
-    static const int MAX_NOTES = 10;
-    
 	void setup();
     void setupSounds(int numInsts);
     void setupVisuals(int numVisuals, Layout layout);
