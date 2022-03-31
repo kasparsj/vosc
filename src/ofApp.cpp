@@ -86,22 +86,11 @@ void ofApp::parseIncomingMessages(){
         else if (m.getAddress() == "/bgblendmode") {
             bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
         }
-        else if (m.getAddress() == "/all/data/tidal") {
+        else if (m.getAddress() == "/all/data") {
+            // todo: check if valid
             for (int i=0; i<visuals.size(); i++) {
                 visuals[i].dataSource.clear();
-                visuals[i].dataSource.push_back("tidal" + ofToString(i));
-            }
-        }
-        else if (m.getAddress() == "/all/data/amp") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].dataSource.clear();
-                visuals[i].dataSource.push_back("amp" + ofToString(i));
-            }
-        }
-        else if (m.getAddress() == "/all/data/loud") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].dataSource.clear();
-                visuals[i].dataSource.push_back("loud" + ofToString(i));
+                visuals[i].dataSource.push_back(m.getArgAsString(0) + ofToString(i));
             }
         }
         else if (m.getAddress() == "/all/shader") {
@@ -177,6 +166,17 @@ void ofApp::parseIncomingMessages(){
         }
         else if (m.getAddress() == "/vis/behaviour") {
             visuals[m.getArgAsInt(0)].config.behaviour = m.getArgAsInt(1);
+        }
+        else if (m.getAddress() == "/vis/data") {
+            visuals[m.getArgAsInt(0)].dataSource.clear();
+            for (int i=1; i<m.getNumArgs(); i++) {
+                visuals[m.getArgAsInt(0)].dataSource.push_back(m.getArgAsString(i));
+            }
+        }
+        else if (m.getAddress() == "/vis/data/add") {
+            for (int i=1; i<m.getNumArgs(); i++) {
+                visuals[m.getArgAsInt(0)].dataSource.push_back(m.getArgAsString(i));
+            }
         }
     }
 }
