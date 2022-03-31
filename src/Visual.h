@@ -3,15 +3,15 @@
 #include "ofConstants.h"
 #include "Shader.h"
 #include "ofxTidalCycles.h"
-#include "SoundData.h"
+#include "Sound.h"
 #include "Config.h"
 #include "Video.h"
 
 class Visual {
 public:
-    void setup(int index, int numVisuals);
+    void setup(int index, int numVisuals, string data = "");
     void layout(Layout layout);
-    void update(vector<SoundData> &soundData, vector<TidalNote> &notes);
+    void update(vector<Sound> &soundData, vector<TidalNote> &notes, const Config &config);
     void draw();
     
     int index;
@@ -22,7 +22,7 @@ public:
     glm::vec2 pos;
     glm::vec2 size;
     int brightness = 0;
-    Config config;
+    Config config = Config(0);
     bool isOnset = false;
     bool isTidal = false;
 };

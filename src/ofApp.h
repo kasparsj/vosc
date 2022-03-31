@@ -3,21 +3,23 @@
 #include "ofMain.h"
 #include "ofxTidalCycles.h"
 #include "ofxOsc.h"
-#include "SoundData.h"
+#include "Sound.h"
 #include "Visual.h"
 #include "Config.h"
 
 class ofApp : public ofBaseApp {
 
 public:
-    static const int NUM_VISUALS = 7;
+    static const int NUM_SOUNDS = 7;
+    static const int NUM_VISUALS = 8;
     static const int MAX_NOTES = 10;
     
 	void setup();
-    void setupSoundData(int numInsts);
+    void setupSounds(int numInsts);
     void setupVisuals(int numVisuals, Layout layout);
 	void update();
     void parseIncomingMessages();
+    void reloadShaders();
 	void draw();
 	void exit();
 
@@ -36,8 +38,13 @@ public:
     ofxOscReceiver receiver;
     Config config;
 	ofxTidalCycles *tidal;
-    ofBlendMode blendMode;
     
-    vector<SoundData> soundData;
+    vector<Sound> sounds;
     vector<Visual> visuals;
+    
+    ofFbo fbo;
+    ofBlendMode blendMode;
+    ofBlendMode bgBlendMode = OF_BLENDMODE_ALPHA;
+    ofColor bgColor = ofColor(0);
+    bool showDebug = true;
 };

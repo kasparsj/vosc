@@ -2,9 +2,9 @@
 
 #include "ofxOsc.h"
 
-class SoundData {
+class Sound {
 public:
-    SoundData() {
+    Sound() {
         
     }
     void parse(ofxOscMessage &m);

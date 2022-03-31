@@ -1,11 +1,11 @@
 #include "Visual.h"
 
-void Visual::setup(int index, int numVisuals)
+void Visual::setup(int index, int numVisuals, string data)
 {
     this->index = index;
     this->total = numVisuals;
     datas.clear();
-    datas.push_back("amp" + ofToString(index));
+    datas.push_back(data);
 }
 
 void Visual::layout(Layout layout)
@@ -32,7 +32,9 @@ void Visual::layout(Layout layout)
     }
 }
 
-void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes) {
+void Visual::update(vector<Sound> &soundData, vector<TidalNote> &notes, const Config &globalConfig) {
+    Config mergedConfig = Config(config);
+    mergedConfig.merge(globalConfig);
     isOnset = false;
     isTidal = datas[0].substr(0, 5) == "tidal";
     if (isTidal) {
@@ -55,25 +57,28 @@ void Visual::update(vector<SoundData> &soundData, vector<TidalNote> &notes) {
         for (int i=0; i<datas.size(); i++) {
             if (datas[i].substr(0, 3) == "amp") {
                 int j = ofToInt(datas[i].substr(3));
-                //brightness += (255 * tanh(soundData[j].amplitude / config.maxAmp * M_PI));
-                brightness += (255 * int(soundData[j].amplitude > config.maxAmp / 2.f));
+                //brightness += (255 * tanh(soundData[j].amplitude / mergedConfig.maxAmp * M_PI));
+                brightness += (255 * int(soundData[j].amplitude > mergedConfig.maxAmp / 2.f));
                 isOnset = isOnset || (soundData[j].onset == 1);
             }
             else if (datas[i].substr(0, 4) == "loud") {
                 int j = ofToInt(datas[i].substr(4));
-                brightness += (255 * (soundData[j].loudness / config.maxLoud));
+                brightness += (255 * (soundData[j].loudness / mergedConfig.maxLoud));
                 isOnset = isOnset || (soundData[j].onset == 1);
             }
         }
+        if (datas[0].substr(0, 6) == "static") {
+            brightness = 127;
+        }
     }
     if (shader.isEnabled()) {
-        shader.update(index, pos, size, config);
+        shader.update(index, pos, size, mergedConfig, config);
     }
     if (video.isEnabled()) {
         if (isOnset) {
             video.resetPos();
         }
-        video.update(config);
+        video.update(mergedConfig);
     }
     if (brightness > 255) {
         brightness = 255;

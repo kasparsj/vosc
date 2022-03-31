@@ -37,7 +37,7 @@ void Video::draw(int left, int top, int width, int height) {
     videoPlayer.draw(left, top, width, height);
 }
 
-void Video::random() {
+void Video::choose() {
     name = videos[int(ofRandom(videos.size()))];
 }
 

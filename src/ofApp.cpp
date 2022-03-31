@@ -8,18 +8,20 @@ void ofApp::setup(){
 
     receiver.setup(33333);
 	tidal = new ofxTidalCycles(1);
-    setupSoundData(NUM_VISUALS);
+    setupSounds(NUM_SOUNDS);
     setupVisuals(NUM_VISUALS, L_STACK);
+    
+    fbo.allocate(ofGetWidth(), ofGetHeight());
 }
 
-void ofApp::setupSoundData(int numInsts) {
-    soundData.resize(numInsts);
+void ofApp::setupSounds(int numInsts) {
+    sounds.resize(numInsts);
 }
 
 void ofApp::setupVisuals(int numVisuals, Layout layout) {
     visuals.resize(numVisuals);
     for (int i=0; i<visuals.size(); i++) {
-        visuals[i].setup(i, numVisuals);
+        visuals[i].setup(i, numVisuals, sounds.size() > i ? "amp" + ofToString(i) : "static");
         visuals[i].layout(layout);
     }
 }
@@ -31,8 +33,7 @@ void ofApp::update(){
         tidal->notes.erase(tidal->notes.begin());
     }
 	for (int i = 0; i < visuals.size(); i++) {
-        visuals[i].config = config; // todo: merge instead
-		visuals[i].update(soundData, tidal->notes);
+		visuals[i].update(sounds, tidal->notes, config);
 	}
 }
 
@@ -42,13 +43,13 @@ void ofApp::parseIncomingMessages(){
         receiver.getNextMessage(m);
         if (m.getAddress() == "/sound/data") {
             int instNum = m.getArgAsInt(0);
-            soundData[instNum].parse(m);
+            sounds[instNum].parse(m);
         }
         else if (m.getAddress() == "/dirt/play") {
             tidal->parse(m);
         }
         else if (m.getAddress() == "/setup/sound") {
-            setupSoundData(m.getArgAsInt(0));
+            setupSounds(m.getArgAsInt(0));
         }
         else if (m.getAddress() == "/setup/vis") {
             setupVisuals(m.getArgAsInt(0), static_cast<Layout>(m.getArgAsInt(1)));
@@ -69,6 +70,15 @@ void ofApp::parseIncomingMessages(){
         }
         else if (m.getAddress() == "/config/behaviour") {
             config.behaviour = m.getArgAsInt(0);
+        }
+        else if (m.getAddress() == "/config/color") {
+            config.color = ofFloatColor(ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2)));
+        }
+        else if (m.getAddress() == "/config/bgcolor") {
+            bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
+        }
+        else if (m.getAddress() == "/config/bgblendmode") {
+            bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
         }
         else if (m.getAddress() == "/all/data/tidal") {
             for (int i=0; i<visuals.size(); i++) {
@@ -95,13 +105,11 @@ void ofApp::parseIncomingMessages(){
         }
         else if (m.getAddress() == "/all/shader/random") {
             for (int i=0; i<visuals.size(); i++) {
-                visuals[i].shader.random();
+                visuals[i].shader.choose();
             }
         }
         else if (m.getAddress() == "/all/shader/reload") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].shader.reload();
-            }
+            reloadShaders();
         }
         else if (m.getAddress() == "/all/video") {
             for (int i=0; i<visuals.size(); i++) {
@@ -110,7 +118,7 @@ void ofApp::parseIncomingMessages(){
         }
         else if (m.getAddress() == "/all/video/random") {
             for (int i=0; i<visuals.size(); i++) {
-                visuals[i].video.random();
+                visuals[i].video.choose();
             }
         }
         else if (m.getAddress() == "/all/video/pos/random") {
@@ -128,11 +136,17 @@ void ofApp::parseIncomingMessages(){
                 visuals[i].size = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
             }
         }
+        else if (m.getAddress() == "/all/color") {
+            ofFloatColor color = ofFloatColor(ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2)));
+            for (int i=0; i<visuals.size(); i++) {
+                visuals[i].config.color = color;
+            }
+        }
         else if (m.getAddress() == "/vis/shader") {
             visuals[m.getArgAsInt(0)].shader.name = m.getArgAsString(1);
         }
         else if (m.getAddress() == "/vis/shader/random") {
-            visuals[m.getArgAsInt(0)].shader.random();
+            visuals[m.getArgAsInt(0)].shader.choose();
         }
         else if (m.getAddress() == "/vis/video") {
             visuals[m.getArgAsInt(0)].video.name = m.getArgAsString(1);
@@ -149,18 +163,53 @@ void ofApp::parseIncomingMessages(){
         else if (m.getAddress() == "/vis/size") {
             visuals[m.getArgAsInt(0)].size = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
         }
+        else if (m.getAddress() == "/vis/color") {
+            visuals[m.getArgAsInt(0)].config.color = ofFloatColor(ofColor(m.getArgAsInt(1), m.getArgAsInt(2), m.getArgAsInt(3)));
+        }
+        else if (m.getAddress() == "/vis/color/random") {
+            visuals[m.getArgAsInt(0)].config.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+        }
         else if (m.getAddress() == "/vis/behaviour") {
             visuals[m.getArgAsInt(0)].config.behaviour = m.getArgAsInt(1);
         }
     }
 }
 
+void ofApp::reloadShaders() {
+    for (int i=0; i<visuals.size(); i++) {
+        visuals[i].shader.reload();
+    }
+}
+
 //--------------------------------------------------------------
 void ofApp::draw(){
-	ofSetColor(255);
+    fbo.begin();
+    ofClear(0, 0, 0, 0);
+    switch (blendMode) {
+        case OF_BLENDMODE_ALPHA:
+            ofSetColor(255, 255, 255, 255 / visuals.size());
+            break;
+        default:
+            ofSetColor(255);
+            break;
+    }
     ofEnableBlendMode(blendMode);
     for (int i=0; i<visuals.size(); i++) {
         visuals[i].draw();
+    }
+    ofDisableBlendMode();
+    fbo.end();
+    
+    ofEnableBlendMode(bgBlendMode);
+    ofBackground(bgColor);
+    ofSetColor(255);
+    fbo.draw(0, 0);
+    
+    if (showDebug) {
+        for (int i=0; i<visuals.size(); i++) {
+            ofSetColor(255);
+            visuals[i].shader.fbo.draw(20+i*120, ofGetHeight()-120, 100, 100);
+        }
     }
     ofDisableBlendMode();
 }
@@ -171,20 +220,18 @@ void ofApp::exit() {
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     switch (key) {
-        case 49:
-            blendMode = OF_BLENDMODE_ALPHA;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+            blendMode = static_cast<ofBlendMode>(key - '1' + 1);
             break;
-        case 50:
-            blendMode = OF_BLENDMODE_ADD;
+        case 'd':
+            showDebug = !showDebug;
             break;
-        case 51:
-            blendMode = OF_BLENDMODE_MULTIPLY;
-            break;
-        case 52:
-            blendMode = OF_BLENDMODE_SUBTRACT;
-            break;
-        case 53:
-            blendMode = OF_BLENDMODE_SCREEN;
+        case 'r':
+            reloadShaders();
             break;
         default:
             break;
