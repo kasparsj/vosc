@@ -103,6 +103,11 @@ void ofApp::parseIncomingMessages(){
                 visuals[i].shader.choose();
             }
         }
+        else if (m.getAddress() == "/all/shader/noclear") {
+            for (int i=0; i<visuals.size(); i++) {
+                visuals[i].shader.noClear = m.getArgAsBool(0);
+            }
+        }
         else if (m.getAddress() == "/all/shader/reload") {
             reloadShaders();
         }
@@ -142,6 +147,9 @@ void ofApp::parseIncomingMessages(){
         }
         else if (m.getAddress() == "/vis/shader/random") {
             visuals[m.getArgAsInt(0)].shader.choose();
+        }
+        else if (m.getAddress() == "/vis/shader/noclear") {
+            visuals[m.getArgAsInt(0)].shader.noClear = m.getArgAsBool(0);
         }
         else if (m.getAddress() == "/vis/video") {
             visuals[m.getArgAsInt(0)].video.name = m.getArgAsString(1);

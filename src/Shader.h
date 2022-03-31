@@ -18,6 +18,7 @@ public:
 
 	ofFbo fbo;
     string prevName = "";
+    bool noClear;
     int random = 0;
 };
 

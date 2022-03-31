@@ -38,8 +38,11 @@ void Shader::update(ShaderData *shaderData, Config &config) {
         fbo.clear();
         fbo.allocate(shaderData->size.x, shaderData->size.y);
     }
+    ofEnableAlphaBlending();
 	fbo.begin();
-    ofClear(0, 0, 0, 0);
+    if (!noClear) {
+        ofClear(0, 0, 0, 0);
+    }
 	shaders[name].begin();
 	shaders[name].setUniform1f("time", time);
 	shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
@@ -50,9 +53,11 @@ void Shader::update(ShaderData *shaderData, Config &config) {
     shaders[name].setUniform1fv("values", shaderData->values, MAX_VISUALS);
     shaders[name].setUniform1i("visible", shaderData->visible ? 1 : 0);
     shaders[name].setUniform1i("onset", shaderData->onset ? 1 : 0);
+    ofSetColor(255);
 	ofDrawRectangle(0, 0, shaderData->size.x, shaderData->size.y);
 	shaders[name].end();
 	fbo.end();
+    ofDisableAlphaBlending();
     if (shaderData->mergedConfig.randomShader()) {
         choose();
     }
