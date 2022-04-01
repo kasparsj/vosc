@@ -27,6 +27,16 @@ enum DataSource {
     DS_TIDAL = 6,
 };
 
+static std::unordered_map<std::string, DataSource> const DataSourceMap = {
+    {"const", DataSource::DS_CONST},
+    {"rand", DataSource::DS_RAND},
+    {"noise", DataSource::DS_NOISE},
+    {"amp", DataSource::DS_AMP},
+    {"loud", DataSource::DS_LOUD},
+    {"onset", DataSource::DS_ONSET},
+    {"tidal", DataSource::DS_TIDAL},
+};
+
 class Config {
 public:
     Config() {

@@ -28,7 +28,7 @@ void ofApp::setupVisuals(int numVisuals, Layout layout) {
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    parseIncomingMessages();
+    parseMessages();
     while (tidal->notes.size() > MAX_NOTES) {
         tidal->notes.erase(tidal->notes.begin());
     }
@@ -37,22 +37,16 @@ void ofApp::update(){
 	}
 }
 
-void ofApp::parseIncomingMessages(){
+void ofApp::parseMessages(){
     while (receiver.hasWaitingMessages()) {
         ofxOscMessage m;
         receiver.getNextMessage(m);
-        if (m.getAddress().substr(0, 4) == "/all") {
-            for (int i=0; i<visuals.size(); i++) {
-                visualCommand(visuals[i], m.getAddress().substr(4), m, 0);
-            }
-        }
-        else {
-            doCommand(m.getAddress(), m);
-        }
+        parseMessage(m);
     }
 }
 
-void ofApp::doCommand(string command, ofxOscMessage &m) {
+void ofApp::parseMessage(const ofxOscMessage &m) {
+    string command = m.getAddress();
     if (command == "/sound/data") {
         int instNum = m.getArgAsInt(0);
         sounds[instNum].parse(m);
@@ -99,22 +93,32 @@ void ofApp::doCommand(string command, ofxOscMessage &m) {
         bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
     }
     else {
-        visualCommand(visuals[m.getArgAsInt(0)], m.getAddress(), m, 1);
+        string::size_type firstSlash = command.find("/", 1);
+        string cmd = command.substr(0, firstSlash);
+        string which = command.substr(firstSlash+1, 1);
+        if (which == "*" || which == "x" || which == "a") {
+            for (int i=0; i<visuals.size(); i++) {
+                visualCommand(visuals[i], cmd + command.substr(firstSlash+2), m);
+            }
+        }
+        else {
+            visualCommand(visuals[std::stoi(which)], cmd + command.substr(firstSlash+2), m);
+        }
     }
 }
 
-void ofApp::visualCommand(Visual &visual, string command, ofxOscMessage &m, int i) {
+void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m) {
     if (command == "/video") {
-        visual.video.name = m.getArgAsString(i);
+        visual.video.name = m.getArgAsString(0);
     }
     else if (command == "/video/pos") {
-        visual.video.pos = m.getArgAsFloat(i);
+        visual.video.pos = m.getArgAsFloat(0);
     }
     else if (command == "/video/pos/random") {
         visual.video.pos = ofRandom(1.f);
     }
     else if (command == "/shader") {
-        visual.shader.name = m.getArgAsString(i);
+        visual.shader.name = m.getArgAsString(0);
     }
     else if (command == "/shader/random") {
         visual.shader.choose();
@@ -123,10 +127,10 @@ void ofApp::visualCommand(Visual &visual, string command, ofxOscMessage &m, int 
         visual.shader.reload();
     }
     else if (command == "/shader/noclear") {
-        visual.shader.noClear = m.getArgAsBool(i);
+        visual.shader.noClear = m.getArgAsBool(0);
     }
     else if (command == "/sketch") {
-        visual.sketch.name = m.getArgAsString(i);
+        visual.sketch.name = m.getArgAsString(0);
     }
     else if (command == "/sketch/random") {
         visual.sketch.choose();
@@ -138,22 +142,20 @@ void ofApp::visualCommand(Visual &visual, string command, ofxOscMessage &m, int 
         visual.sketch.reset();
     }
     else if (command == "/pos") {
-        visual.pos = glm::vec2(m.getArgAsFloat(i), m.getArgAsFloat(i+1));
+        visual.pos = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
     }
     else if (command == "/size") {
-        visual.size = glm::vec2(m.getArgAsFloat(i), m.getArgAsFloat(i+1));
+        visual.size = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
     }
     else if (command == "/color") {
         ofFloatColor color;
-        int k = 0;
-        for (int j=i; j<m.getNumArgs(); j++) {
-            if (m.getArgType(j) == OFXOSC_TYPE_FLOAT) {
-                color[k] = m.getArgAsFloat(j);
+        for (int i=0; i<m.getNumArgs(); i++) {
+            if (m.getArgType(i) == OFXOSC_TYPE_FLOAT) {
+                color[i] = m.getArgAsFloat(i);
             }
             else {
-                color[k] = m.getArgAsInt(j) / 255.f;
+                color[i] = m.getArgAsInt(i) / 255.f;
             }
-            k++;
         }
         visual.color = color;
     }
@@ -161,17 +163,30 @@ void ofApp::visualCommand(Visual &visual, string command, ofxOscMessage &m, int 
         visual.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
     }
     else if (command == "/behaviour") {
-        visual.config.behaviour = m.getArgAsInt(i);
+        visual.config.behaviour = m.getArgAsInt(0);
     }
     else if (command == "/data") {
         visual.dataSources.clear();
-        for (int j=i; j<m.getNumArgs(); j++) {
-            visual.dataSources.push_back(m.getArgAsString(j));
+        for (int i=0; i<m.getNumArgs(); i++) {
+            string dsName = m.getArgAsString(i);
+            string dsMax = "";
+            if (dsName.find(":") != string::npos) {
+                dsMax = dsName.substr(dsName.find(":") + 1);
+                dsName = dsName.substr(0, dsName.find(":"));
+            }
+            auto it = DataSourceMap.find(dsName);
+            if (it != DataSourceMap.end()) {
+                // todo: should hold struct instead of string
+                visual.dataSources.push_back(it->first + dsMax);
+            }
+            else {
+                ofLog() << "invalid data source " << m.getArgAsString(i);
+            }
         }
     }
     else if (command == "/data/add") {
-        for (int j=i; j<m.getNumArgs(); j++) {
-            visual.dataSources.push_back(m.getArgAsString(j));
+        for (int i=0; i<m.getNumArgs(); i++) {
+            visual.dataSources.push_back(m.getArgAsString(i));
         }
     }
 }
@@ -238,7 +253,7 @@ void ofApp::keyPressed(int key){
         case 'r': {
             for (int i=0; i<visuals.size(); i++) {
                 ofxOscMessage m;
-                visualCommand(visuals[i], "/shader/reload", m, 0);
+                visualCommand(visuals[i], "/shader/reload", m);
             }
             break;
         }

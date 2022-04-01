@@ -1,6 +1,6 @@
 #include "Sound.h"
 
-void Sound::parse(ofxOscMessage &m) {
+void Sound::parse(const ofxOscMessage &m) {
     instNum = m.getArgAsInt(0);
     amplitude = m.getArgAsFloat(1);
     loudness = m.getArgAsFloat(2);

@@ -14,9 +14,9 @@ public:
     void setupSounds(int numInsts);
     void setupVisuals(int numVisuals, Layout layout);
 	void update();
-    void parseIncomingMessages();
-    void doCommand(string command, ofxOscMessage &m);
-    void visualCommand(Visual &visual, string command, ofxOscMessage &m, int i);
+    void parseMessages();
+    void parseMessage(const ofxOscMessage &m);
+    void visualCommand(Visual &visual, string command, const ofxOscMessage &m);
 	void draw();
 	void exit();
 

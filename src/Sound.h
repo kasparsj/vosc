@@ -7,7 +7,7 @@ public:
     Sound() {
         
     }
-    void parse(ofxOscMessage &m);
+    void parse(const ofxOscMessage &m);
     
     int instNum;
     float amplitude;
