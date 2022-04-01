@@ -3,6 +3,7 @@
 void VisualData::update(const vector<string> dataSources, const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) {
     mergedConfig = Config(config);
     mergedConfig.merge(globalConfig);
+    time = ofGetElapsedTimef() * mergedConfig.speed;
     tidal = dataSources.size() && dataSources[0].substr(0, 5) == "tidal";
     onset = false;
     values.clear();
@@ -45,7 +46,13 @@ void VisualData::update(const vector<string> dataSources, const vector<Sound> &s
                 }
             }
             else if (dataSources[i].substr(0, 5) == "const") {
-                values[i] = std::stof(dataSources[i].substr(5));
+                values[i] = (dataSources[i].size() > 5 ? std::stof(dataSources[i].substr(5)) : 1.0);
+            }
+            else if (dataSources[i].substr(0, 5) == "noise") {
+                values[i] = ofNoise(i, time) * (dataSources[i].size() > 5 ? std::stof(dataSources[i].substr(5)) : 1.0);
+            }
+            else if (dataSources[i].substr(0, 4) == "rand") {
+                values[i] = ofRandom(dataSources[i].size() > 4 ? std::stof(dataSources[i].substr(4)) : 1.0);
             }
         }
     }

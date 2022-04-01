@@ -24,7 +24,6 @@ Shader::~Shader(){
 }
 
 void Shader::update(VisualData *data, Config &config) {
-    Gen::update(data->mergedConfig);
     if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
         fbo.clear();
         fbo.allocate(data->size.x, data->size.y);
@@ -44,7 +43,7 @@ void Shader::update(VisualData *data, Config &config) {
         ofClear(0, 0, 0, 0);
     }
 	shaders[name].begin();
-	shaders[name].setUniform1f("time", time);
+	shaders[name].setUniform1f("time", data->time);
 	shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
     shaders[name].setUniform2f("offset", data->pos.x, data->pos.y);
     shaders[name].setUniform1i("index", data->index);

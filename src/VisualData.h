@@ -21,4 +21,5 @@ public:
     bool visible;
     bool onset;
     bool tidal;
+    float time = 0;
 };

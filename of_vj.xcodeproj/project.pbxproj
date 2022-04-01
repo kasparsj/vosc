@@ -15,7 +15,6 @@
 		2B43A50627F71B1100E49E87 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B43A50527F71B1100E49E87 /* Shader.cpp */; };
 		2BA5C44427F467DE003DC02D /* Config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BA5C44227F467DE003DC02D /* Config.cpp */; };
 		2BA5C4AF27F473E1003DC02D /* Video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BA5C4AD27F473E1003DC02D /* Video.cpp */; };
-		2BA5C4B227F47780003DC02D /* Gen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BA5C4B027F47780003DC02D /* Gen.cpp */; };
 		4ADB88E2FB52E76A471065DE /* ofxOscParameterSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0AED834CE4DEC5260AF302A2 /* ofxOscParameterSync.cpp */; };
 		510CAFE035E576A4E1502D52 /* UdpSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DEF695B88BA5FAACEAA937 /* UdpSocket.cpp */; };
 		5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DF49D76C45D5DB505A234880 /* ofxOscMessage.cpp */; };
@@ -169,7 +168,6 @@
 		2BA5C4AC27F46D8A003DC02D /* 34.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 34.frag; sourceTree = "<group>"; };
 		2BA5C4AD27F473E1003DC02D /* Video.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Video.cpp; sourceTree = "<group>"; };
 		2BA5C4AE27F473E1003DC02D /* Video.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Video.h; sourceTree = "<group>"; };
-		2BA5C4B027F47780003DC02D /* Gen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Gen.cpp; sourceTree = "<group>"; };
 		2BA5C4B127F47780003DC02D /* Gen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Gen.h; sourceTree = "<group>"; };
 		2FD4B0329909D3527F003494 /* UdpSocket.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = UdpSocket.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/UdpSocket.h; sourceTree = SOURCE_ROOT; };
 		3B361208CD4107E479F04E7B /* NetworkingUtils.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = NetworkingUtils.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/posix/NetworkingUtils.cpp; sourceTree = SOURCE_ROOT; };
@@ -412,7 +410,6 @@
 			children = (
 				2B43A50227F71A6700E49E87 /* FBOGen.cpp */,
 				2B43A50327F71A6700E49E87 /* FBOGen.h */,
-				2BA5C4B027F47780003DC02D /* Gen.cpp */,
 				2BA5C4B127F47780003DC02D /* Gen.h */,
 				2B43A50527F71B1100E49E87 /* Shader.cpp */,
 				2B43A50727F71B1700E49E87 /* Shader.h */,
@@ -1100,7 +1097,6 @@
 				0546D1A38E13BD319CC9755B /* OscReceivedElements.cpp in Sources */,
 				2B43A50427F71A6700E49E87 /* FBOGen.cpp in Sources */,
 				879A251454401BC0B6E4F238 /* OscTypes.cpp in Sources */,
-				2BA5C4B227F47780003DC02D /* Gen.cpp in Sources */,
 				2BA5C4AF27F473E1003DC02D /* Video.cpp in Sources */,
 				72A929D3561B8232A182ABFC /* ofxOscBundle.cpp in Sources */,
 				5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */,

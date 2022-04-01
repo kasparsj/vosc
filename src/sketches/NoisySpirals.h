@@ -12,8 +12,7 @@ public:
             lasty = -999;
             radius = 10;
             radiusNoise = ofRandom(10);
-            ofNoFill();
-            ofSetLineWidth(10.0/(10+ofRandom(10)));
+            strokeWeight = 10.0 / (10+ofRandom(10));
             
             startAngle = int(ofRandom(360));
             endAngle = 0 + int(ofRandom(width/2));
@@ -38,8 +37,14 @@ public:
                 else {
                     strokeAlpha = 127+ofRandom(128);
                 }
+                ofPushStyle();
+                ofNoFill();
+                ofSetLineWidth(strokeWeight);
                 ofSetColor(config.color, strokeAlpha);
+                ofPushMatrix();
                 ofDrawLine(x, y, lastx,lasty);
+                ofPopMatrix();
+                ofPopStyle();
             }
             lastx=x;
             lasty=y;
@@ -56,4 +61,5 @@ private:
     float lasty = -999;
     float radius = 0;;
     float radiusNoise;
+    float strokeWeight = 1.0;
 };

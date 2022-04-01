@@ -17,6 +17,16 @@ enum Layout {
     L_STACK = 3,
 };
 
+enum DataSource {
+    DS_CONST = 0,
+    DS_RAND = 1,
+    DS_NOISE = 2,
+    DS_AMP = 3,
+    DS_LOUD = 4,
+    DS_ONSET = 5,
+    DS_TIDAL = 6,
+};
+
 class Config {
 public:
     Config() {

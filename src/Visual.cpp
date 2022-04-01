@@ -41,7 +41,7 @@ void Visual::update(const vector<Sound> &sounds, const vector<TidalNote> &notes,
         if (data->onset) {
             video.resetPos();
         }
-        video.update(data->mergedConfig);
+        video.update(data, config);
     }
     if (shader.isEnabled()) {
         shader.update(data, config);
