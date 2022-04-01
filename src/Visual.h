@@ -21,10 +21,11 @@ public:
     void layout(Layout layout);
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &config);
     void draw();
+    void setDataSources(vector<string> ds);
+    void addDataSources(vector<string> ds);
     
     int index;
     int total;
-    vector<string> dataSources;
     VisualData *data;
     Video video;
     Shader shader;
@@ -34,4 +35,6 @@ public:
     ofFloatColor color = ofFloatColor(0);
     bool isTidal = false;
     Config config = Config(0);
+private:
+    vector<string> dataSources;
 };

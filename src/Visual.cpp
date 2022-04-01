@@ -67,3 +67,27 @@ void Visual::draw() {
     }
     data->afterDraw();
 }
+
+void Visual::setDataSources(vector<string> ds) {
+    dataSources.clear();
+    addDataSources(ds);
+}
+
+void Visual::addDataSources(vector<string> ds) {
+    for (int i=0; i<ds.size(); i++) {
+        string dsName = ds[i];
+        string dsMax = "";
+        if (dsName.find(":") != string::npos) {
+            dsMax = dsName.substr(dsName.find(":") + 1);
+            dsName = dsName.substr(0, dsName.find(":"));
+        }
+        auto it = DataSourceMap.find(dsName);
+        if (it != DataSourceMap.end()) {
+            // todo: should hold struct instead of string
+            dataSources.push_back(it->first + dsMax);
+        }
+        else {
+            ofLog() << "invalid data source " << ds[i];
+        }
+    }
+}

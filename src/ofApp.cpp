@@ -166,28 +166,18 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
         visual.config.behaviour = m.getArgAsInt(0);
     }
     else if (command == "/data") {
-        visual.dataSources.clear();
+        vector<string> ds;
         for (int i=0; i<m.getNumArgs(); i++) {
-            string dsName = m.getArgAsString(i);
-            string dsMax = "";
-            if (dsName.find(":") != string::npos) {
-                dsMax = dsName.substr(dsName.find(":") + 1);
-                dsName = dsName.substr(0, dsName.find(":"));
-            }
-            auto it = DataSourceMap.find(dsName);
-            if (it != DataSourceMap.end()) {
-                // todo: should hold struct instead of string
-                visual.dataSources.push_back(it->first + dsMax);
-            }
-            else {
-                ofLog() << "invalid data source " << m.getArgAsString(i);
-            }
+            ds.push_back(m.getArgAsString(i));
         }
+        visual.setDataSources(ds);
     }
     else if (command == "/data/add") {
+        vector<string> ds;
         for (int i=0; i<m.getNumArgs(); i++) {
-            visual.dataSources.push_back(m.getArgAsString(i));
+            ds.push_back(m.getArgAsString(i));
         }
+        visual.addDataSources(ds);
     }
 }
 
