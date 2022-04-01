@@ -74,6 +74,8 @@
 		2B43A51127F76B9700E49E87 /* Ether.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Ether.frag; sourceTree = "<group>"; };
 		2B43A51227F76D2100E49E87 /* Water.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Water.frag; sourceTree = "<group>"; };
 		2B43A51327F76F6700E49E87 /* AtmoScattering.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = AtmoScattering.frag; sourceTree = "<group>"; };
+		2B43A51527F77A0600E49E87 /* AudioEclipse.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = AudioEclipse.frag; sourceTree = "<group>"; };
+		2B43A51827F77DC700E49E87 /* TerrainGrid.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = TerrainGrid.frag; sourceTree = "<group>"; };
 		2BA5C44227F467DE003DC02D /* Config.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Config.cpp; sourceTree = "<group>"; };
 		2BA5C44327F467DE003DC02D /* Config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Config.h; sourceTree = "<group>"; };
 		2BA5C44627F46D8A003DC02D /* empty.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = empty.frag; sourceTree = "<group>"; };
@@ -348,18 +350,20 @@
 		2BA5C44827F46D8A003DC02D /* shaders */ = {
 			isa = PBXGroup;
 			children = (
+				2B43A51327F76F6700E49E87 /* AtmoScattering.frag */,
+				2B43A51527F77A0600E49E87 /* AudioEclipse.frag */,
 				2B43A50E27F74F6C00E49E87 /* Blobs.frag */,
 				2B43A50D27F74D2400E49E87 /* Bubbles.frag */,
+				2B43A51127F76B9700E49E87 /* Ether.frag */,
 				2B43A50B27F739AD00E49E87 /* Fluid.frag */,
 				2B43A50A27F739AD00E49E87 /* OscCircle.frag */,
 				2B43A50927F739AD00E49E87 /* RotRainbow.frag */,
 				2B43A50C27F739AD00E49E87 /* RotStringsH.frag */,
 				2B43A50827F739AD00E49E87 /* RotStringsV.frag */,
-				2B43A50F27F763A200E49E87 /* StarNest.frag */,
 				2B43A51027F76A1A00E49E87 /* Star.frag */,
-				2B43A51127F76B9700E49E87 /* Ether.frag */,
+				2B43A50F27F763A200E49E87 /* StarNest.frag */,
+				2B43A51827F77DC700E49E87 /* TerrainGrid.frag */,
 				2B43A51227F76D2100E49E87 /* Water.frag */,
-				2B43A51327F76F6700E49E87 /* AtmoScattering.frag */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
