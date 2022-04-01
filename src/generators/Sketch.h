@@ -12,6 +12,7 @@ public:
     void draw(int left, int top, int width, int height) override;
     void choose() override;
     void clear();
+    void reset();
     
     ofFbo fbo;
     SketchImpl *impl;

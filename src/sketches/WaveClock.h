@@ -37,7 +37,7 @@ class WaveClock : public SketchImpl {
         _xNoise += 0.01;
         _yNoise += 0.01;
         float centerX = _w/2 + (ofNoise(_xNoise) * 100) - 50;
-        float centerY = _h/2 + (ofNoise(_yNoise) * 100) -50;
+        float centerY = _h/2 + (ofNoise(_yNoise) * 100) - 50;
         
         float rad = ofDegToRad(_angle);
         float x1 = centerX + (_radius * cos(rad));

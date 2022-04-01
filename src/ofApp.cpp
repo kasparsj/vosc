@@ -134,6 +134,9 @@ void ofApp::visualCommand(Visual &visual, string command, ofxOscMessage &m, int 
     else if (command == "/sketch/clear") {
         visual.sketch.clear();
     }
+    else if (command == "/sketch/reset") {
+        visual.sketch.reset();
+    }
     else if (command == "/pos") {
         visual.pos = glm::vec2(m.getArgAsFloat(i), m.getArgAsFloat(i+1));
     }

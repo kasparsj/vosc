@@ -49,3 +49,8 @@ void Sketch::clear() {
     ofClear(0, 0, 0, 0);
     fbo.end();
 }
+
+void Sketch::reset() {
+    clear();
+    sketches[name]->initialized = false;
+}
