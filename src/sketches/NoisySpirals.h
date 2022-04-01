@@ -40,7 +40,7 @@ public:
                 ofPushStyle();
                 ofNoFill();
                 ofSetLineWidth(strokeWeight);
-                ofSetColor(data->color, strokeAlpha);
+                ofSetColor(data->getColor(), strokeAlpha);
                 ofPushMatrix();
                 ofDrawLine(x, y, lastx,lasty);
                 ofPopMatrix();

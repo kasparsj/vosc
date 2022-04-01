@@ -8,7 +8,7 @@ void Visual::setup(int index, int numVisuals, string dataSource)
     if (dataSource != "") {
         dataSources.push_back(dataSource);
     }
-    data = new VisualData(index, pos, size, color, config);
+    data = new VisualData(index, pos, size, color, useMFCC, config);
 }
 
 void Visual::layout(Layout layout)
@@ -54,15 +54,15 @@ void Visual::update(const vector<Sound> &sounds, const vector<TidalNote> &notes,
 void Visual::draw() {
     if (video.isEnabled()) {
         float value = (data->values.size() ? data->values[0] : 1.0);
-        ofSetColor(value * 255);
+        ofSetColor(value * 255 * video.alpha);
         video.draw(pos.x, pos.y, size.x, size.y);
     }
     if (shader.isEnabled()) {
-        ofSetColor(255);
+        ofSetColor(255 * shader.alpha);
         shader.draw(pos.x, pos.y, size.x, size.y);
     }
     if (sketch.isEnabled()) {
-        ofSetColor(255);
+        ofSetColor(255 * sketch.alpha);
         sketch.draw(pos.x, pos.y, size.x, size.y);
     }
     data->afterDraw();
@@ -90,4 +90,10 @@ void Visual::addDataSources(vector<string> ds) {
             ofLog() << "invalid data source " << ds[i];
         }
     }
+}
+
+void Visual::unload() {
+    video.name = "";
+    shader.name = "";
+    sketch.name = "";
 }

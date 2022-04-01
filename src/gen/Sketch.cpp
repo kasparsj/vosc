@@ -52,5 +52,7 @@ void Sketch::choose() {
 }
 
 void Sketch::reset() {
-    sketches[name]->initialized = false;
+    if (name != "") {
+        sketches[name]->initialized = false;
+    }
 }

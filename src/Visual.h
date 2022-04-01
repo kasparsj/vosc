@@ -23,6 +23,7 @@ public:
     void draw();
     void setDataSources(vector<string> ds);
     void addDataSources(vector<string> ds);
+    void unload();
     
     int index;
     int total;
@@ -33,6 +34,7 @@ public:
     glm::vec2 pos;
     glm::vec2 size;
     ofFloatColor color = ofFloatColor(0);
+    bool useMFCC = false;
     bool isTidal = false;
     Config config = Config(0);
 private:

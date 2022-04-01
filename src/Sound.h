@@ -13,4 +13,6 @@ public:
     float amplitude;
     float loudness;
     int onset;
+    ofFloatColor mfcc;
+    
 };

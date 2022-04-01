@@ -47,6 +47,7 @@ void ofApp::parseMessages(){
         receiver.getNextMessage(m);
         parseMessage(m);
     }
+    parseQueuedMessages();
 }
 
 void ofApp::parseMessage(const ofxOscMessage &m) {
@@ -67,47 +68,81 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
             layoutVisuals(static_cast<Layout>(m.getArgAsInt(1)));
         }
     }
-    else if (command == "/layout") {
-        layoutVisuals(static_cast<Layout>(m.getArgAsInt(0)));
+    else {
+        messageQueue.push_back(m);
     }
-    else if (command == "/amp/max") {
-        config.maxAmp = m.getArgAsFloat(0);
-    }
-    else if (command == "/amp/thresh") {
-        config.threshAmp = m.getArgAsFloat(0);
-    }
-    else if (command == "/loud/max") {
-        config.maxLoud = m.getArgAsFloat(0);
-    }
-    else if (command == "/loud/thresh") {
-        config.threshLoud = m.getArgAsFloat(0);
-    }
-    else if (command == "/speed") {
-        config.speed = m.getArgAsFloat(0);
-    }
-    else if (command == "/behaviour") {
-        config.behaviour = m.getArgAsInt(0);
-    }
-    else if (command == "/blendmode") {
-        blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
-    }
-    else if (command == "/bgcolor") {
-        bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
-    }
-    else if (command == "/bgblendmode") {
-        bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+}
+
+void ofApp::parseQueuedMessages() {
+    bool isOnset;
+    if (tidal->notes.size()) {
+        isOnset = true;
     }
     else {
-        string::size_type firstSlash = command.find("/", 1);
-        string cmd = command.substr(0, firstSlash);
-        string which = command.substr(firstSlash+1, 1);
-        if (which == "*" || which == "x" || which == "a") {
-            for (int i=0; i<visuals.size(); i++) {
-                visualCommand(visuals[i], cmd + command.substr(firstSlash+2), m);
+        for (int i=0; i<sounds.size(); i++) {
+            if (sounds[i].onset) {
+                isOnset = true;
+                break;
             }
         }
-        else {
-            visualCommand(visuals[std::stoi(which)], cmd + command.substr(firstSlash+2), m);
+    }
+    if (isOnset) {
+        while (messageQueue.size()) {
+            ofxOscMessage &m = messageQueue[0];
+            string command = m.getAddress();
+            if (command == "/layout") {
+                layoutVisuals(static_cast<Layout>(m.getArgAsInt(0)));
+            }
+            else if (command == "/amp/max") {
+                config.maxAmp = m.getArgAsFloat(0);
+            }
+            else if (command == "/amp/thresh") {
+                config.threshAmp = m.getArgAsFloat(0);
+            }
+            else if (command == "/loud/max") {
+                config.maxLoud = m.getArgAsFloat(0);
+            }
+            else if (command == "/loud/thresh") {
+                config.threshLoud = m.getArgAsFloat(0);
+            }
+            else if (command == "/speed") {
+                config.speed = m.getArgAsFloat(0);
+            }
+            else if (command == "/behaviour") {
+                config.behaviour = m.getArgAsInt(0);
+            }
+            else if (command == "/blendmode") {
+                blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+            }
+            else if (command == "/bgcolor") {
+                bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
+            }
+            else if (command == "/bgblendmode") {
+                bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+            }
+            else {
+                string::size_type firstSlash = command.find("/", 1);
+                string cmd = command.substr(0, firstSlash);
+                string which = command.substr(firstSlash+1, 1);
+                if (which == "*" || which == "x" || which == "a") {
+                    for (int i=0; i<visuals.size(); i++) {
+                        visualCommand(visuals[i], cmd + command.substr(firstSlash+2), m);
+                    }
+                }
+                else {
+                    int i = -1;
+                    try {
+                        i = std::stoi(which);
+                    }
+                    catch (...) {
+                        ofLog() << "invalid command " << command;
+                    }
+                    if (i > -1) {
+                        visualCommand(visuals[i], cmd + command.substr(firstSlash+2), m);
+                    }
+                }
+            }
+            messageQueue.erase(messageQueue.begin());
         }
     }
 }
@@ -122,10 +157,13 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
     else if (command == "/video/pos/random") {
         visual.video.pos = ofRandom(1.f);
     }
+    else if (command == "/video/alpha") {
+        visual.video.alpha = m.getArgAsFloat(0);
+    }
     else if (command == "/shader") {
         visual.shader.name = m.getArgAsString(0);
     }
-    else if (command == "/shader/random") {
+    else if (command == "/shader/choose") {
         visual.shader.choose();
     }
     else if (command == "/shader/reload") {
@@ -134,10 +172,13 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
     else if (command == "/shader/noclear") {
         visual.shader.noClear = m.getArgAsBool(0);
     }
+    else if (command == "/shader/alpha") {
+        visual.shader.alpha = m.getArgAsFloat(0);
+    }
     else if (command == "/sketch") {
         visual.sketch.name = m.getArgAsString(0);
     }
-    else if (command == "/sketch/random") {
+    else if (command == "/sketch/choose") {
         visual.sketch.choose();
     }
     else if (command == "/sketch/clear") {
@@ -145,6 +186,9 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
     }
     else if (command == "/sketch/reset") {
         visual.sketch.reset();
+    }
+    else if (command == "/sketch/alpha") {
+        visual.sketch.alpha = m.getArgAsFloat(0);
     }
     else if (command == "/pos") {
         visual.pos = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
@@ -167,6 +211,9 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
     else if (command == "/color/random") {
         visual.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
     }
+    else if (command == "/color/mfcc") {
+        visual.useMFCC = m.getArgAsBool(0);
+    }
     else if (command == "/behaviour") {
         visual.config.behaviour = m.getArgAsInt(0);
     }
@@ -183,6 +230,9 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
             ds.push_back(m.getArgAsString(i));
         }
         visual.addDataSources(ds);
+    }
+    else if (command == "/unload") {
+        visual.unload();
     }
 }
 

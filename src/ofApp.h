@@ -17,6 +17,7 @@ public:
 	void update();
     void parseMessages();
     void parseMessage(const ofxOscMessage &m);
+    void parseQueuedMessages();
     void visualCommand(Visual &visual, string command, const ofxOscMessage &m);
 	void draw();
 	void exit();
@@ -34,6 +35,7 @@ public:
 	void gotMessage(ofMessage msg);
 
     ofxOscReceiver receiver;
+    vector<ofxOscMessage> messageQueue;
     Config config;
 	ofxTidalCycles *tidal;
     
@@ -44,6 +46,6 @@ public:
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
     ofBlendMode bgBlendMode = OF_BLENDMODE_ALPHA;
     ofColor bgColor = ofColor(0);
-    bool showDebug = true;
+    bool showDebug = false;
     Layout layout = L_STACK;
 };

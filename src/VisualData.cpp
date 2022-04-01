@@ -28,22 +28,25 @@ void VisualData::update(const vector<string> dataSources, const vector<Sound> &s
     }
     else {
         for (int i=0; i<dataSources.size(); i++) {
-            if (dataSources[i].substr(0, 3) == "amp") {
-                int j = ofToInt(dataSources[i].substr(3));
-                //values[i] += tanh(sounds[j].amplitude / mergedConfig.maxAmp * M_PI);
-                values[i] += int(sounds[j].amplitude > mergedConfig.maxAmp / 2.f);
-                onset = onset || (sounds[j].onset == 1);
-                if (i == 0) {
-                    thresh = mergedConfig.threshAmp;
+            if (dataSources[i].substr(0, 3) == "amp" || dataSources[i].substr(0, 4) == "loud") {
+                int j;
+                if (dataSources[i].substr(0, 3) == "amp") {
+                    j = ofToInt(dataSources[i].substr(3));
+                    //values[i] += tanh(sounds[j].amplitude / mergedConfig.maxAmp * M_PI);
+                    values[i] += int(sounds[j].amplitude > mergedConfig.maxAmp / 2.f);
+                    if (i == 0) {
+                        thresh = mergedConfig.threshAmp;
+                    }
                 }
-            }
-            else if (dataSources[i].substr(0, 4) == "loud") {
-                int j = ofToInt(dataSources[i].substr(4));
-                values[i] += (sounds[j].loudness / mergedConfig.maxLoud);
-                onset = onset || (sounds[j].onset == 1);
-                if (i == 0) {
-                    thresh = mergedConfig.threshLoud;
+                else {
+                    j = ofToInt(dataSources[i].substr(4));
+                    values[i] += (sounds[j].loudness / mergedConfig.maxLoud);
+                    if (i == 0) {
+                        thresh = mergedConfig.threshLoud;
+                    }
                 }
+                onset = onset || (sounds[j].onset == 1);
+                mfcc = sounds[j].mfcc;
             }
             else if (dataSources[i].substr(0, 5) == "const") {
                 values[i] = (dataSources[i].size() > 5 ? std::stof(dataSources[i].substr(5)) : 1.0);

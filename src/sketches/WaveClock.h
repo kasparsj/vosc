@@ -57,7 +57,7 @@ class WaveClock : public SketchImpl {
         }
         
         ofPushStyle();
-        ofSetColor(data->color, (int) (_strokeAlpha * 0.75));
+        ofSetColor(data->getColor(), (int) (_strokeAlpha * 0.75));
         ofSetLineWidth(1);
 
         ofPushMatrix();
