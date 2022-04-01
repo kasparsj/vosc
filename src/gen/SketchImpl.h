@@ -12,4 +12,5 @@ public:
     virtual void draw(VisualData *shaderData, Config &config) = 0;
     
     bool initialized;
+    ofFloatColor defaultColor = ofFloatColor(1.0);
 };

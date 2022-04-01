@@ -4,31 +4,23 @@
 
 class NoisySpirals : public SketchImpl {
 public:
-    void draw(VisualData *shaderData, Config &config) override {
-        float width = shaderData->size.x;
-        float height = shaderData->size.y;
+    void draw(VisualData *data, Config &config) override {
+        float width = data->size.x;
+        float height = data->size.y;
         if (radius >= endAngle) {
             lastx = -999;
             lasty = -999;
             radius = 10;
             radiusNoise = ofRandom(10);
             ofNoFill();
-            int strokeColor;
-            if (shaderData->values.size()) {
-                strokeColor = shaderData->values[0] * 255;
-            }
-            else {
-                strokeColor = 127+ofRandom(128);
-            }
-            ofSetColor(strokeColor);
             ofSetLineWidth(10.0/(10+ofRandom(10)));
             
             startAngle = int(ofRandom(360));
             endAngle = 0 + int(ofRandom(width/2));
             angleStep = 5 + int(ofRandom(3));
             ang = startAngle;
-          }
-          else {
+        }
+        else {
             float x,y;
             
             radiusNoise +=0.05;
@@ -39,12 +31,20 @@ public:
             y = height/2 + (thisRadius * sin(rad));
             
             if(lastx > -999){
-              ofDrawLine(x, y, lastx,lasty);
+                int strokeAlpha;
+                if (data->values.size()) {
+                    strokeAlpha = data->values[0] * 255;
+                }
+                else {
+                    strokeAlpha = 127+ofRandom(128);
+                }
+                ofSetColor(config.color, strokeAlpha);
+                ofDrawLine(x, y, lastx,lasty);
             }
             lastx=x;
             lasty=y;
             ang += angleStep;
-          }
+        }
     }
     
 private:

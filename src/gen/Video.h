@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Generator.h"
+#include "Gen.h"
 
-class Video : public Generator {
+class Video : public Gen {
 public:
     static vector<string> videos;
     

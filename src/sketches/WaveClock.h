@@ -7,7 +7,7 @@ class WaveClock : public SketchImpl {
     float _xNoise, _yNoise;
     float _angle = -PI/2;
     float _radius;
-    float _strokeCol = 254;
+    float _strokeAlpha = 254;
     int _strokeChange = -1;
     int _mode = 0;
 
@@ -48,16 +48,16 @@ class WaveClock : public SketchImpl {
         float y2 = centerY + (_radius * sin(opprad));
         
         if (data->values.size()) {
-            _strokeCol = data->values[0] * 255;
+            _strokeAlpha = data->values[0] * 255;
         }
         else {
-            _strokeCol += _strokeChange;
-            if (_strokeCol > 254)  {_strokeChange = -1;}
-            if (_strokeCol < 0)    {_strokeChange =1;}
+            _strokeAlpha += _strokeChange;
+            if (_strokeAlpha > 254)  {_strokeChange = -1;}
+            if (_strokeAlpha < 0)    {_strokeChange =1;}
         }
         
         ofPushStyle();
-        ofSetColor(_strokeCol, 60);
+        ofSetColor(config.color, (int) (_strokeAlpha * 0.75));
         ofSetLineWidth(1);
 
         ofPushMatrix();

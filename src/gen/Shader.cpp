@@ -24,7 +24,11 @@ Shader::~Shader(){
 }
 
 void Shader::update(VisualData *data, Config &config) {
-    Generator::update(data->mergedConfig);
+    Gen::update(data->mergedConfig);
+    if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
+        fbo.clear();
+        fbo.allocate(data->size.x, data->size.y);
+    }
     if (name != prevName) {
         prevName = name;
         random = ofRandom(1000);
@@ -33,10 +37,6 @@ void Shader::update(VisualData *data, Config &config) {
     }
     if (!shaders[name].isLoaded()) {
         shaders[name].load("", "shaders/" + name + ".frag");
-    }
-    if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
-        fbo.clear();
-        fbo.allocate(data->size.x, data->size.y);
     }
     ofEnableAlphaBlending();
 	fbo.begin();

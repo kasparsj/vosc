@@ -13,17 +13,18 @@ map<string, SketchImpl*> createSketches()
 map<string, SketchImpl*> Sketch::sketches = createSketches();
 
 void Sketch::update(VisualData *data, Config &config) {
-    if (name != prevName) {
-        prevName = name;
-        random = ofRandom(1000);
-    }
-    if (!sketches[name]->initialized) {
-        sketches[name]->init();
-    }
     if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
         fbo.clear();
         fbo.allocate(data->size.x, data->size.y);
+    }
+    if (name != prevName) {
+        prevName = name;
+    }
+    if (!sketches[name]->initialized) {
         clear();
+        sketches[name]->init();
+        random = ofRandom(1000);
+        config.color = sketches[name]->defaultColor;
     }
     ofEnableAlphaBlending();
     fbo.begin();
@@ -45,13 +46,6 @@ void Sketch::choose() {
     name = it->first;
 }
 
-void Sketch::clear() {
-    fbo.begin();
-    ofClear(0, 0, 0, 0);
-    fbo.end();
-}
-
 void Sketch::reset() {
-    clear();
     sketches[name]->initialized = false;
 }

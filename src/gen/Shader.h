@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Generator.h"
+#include "FBOGen.h"
 #include "ofMain.h"
 #include "Config.h"
 #include "VisualData.h"
 
-class Shader : public Generator {
+class Shader : public FBOGen {
 public:
     static map<string, ofShader> shaders;
     
@@ -16,7 +16,6 @@ public:
     void choose() override;
     void reload();
 
-	ofFbo fbo;
     bool noClear;
 };
 

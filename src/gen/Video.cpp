@@ -17,7 +17,7 @@ vector<string> loadVideos()
 vector<string> Video::videos = loadVideos();
 
 void Video::update(const Config &config) {
-    Generator::update(config);
+    Gen::update(config);
     if (!videoPlayer.isLoaded()) {
         videoPlayer.close();
         videoPlayer.load("videos/" + name + ".mov");
