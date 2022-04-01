@@ -1,10 +1,12 @@
 #include "VisualData.h"
 
-void VisualData::update(const vector<string> sources, const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) {
+void VisualData::update(const vector<string> dataSources, const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) {
     mergedConfig = Config(config);
     mergedConfig.merge(globalConfig);
-    tidal = sources[0].substr(0, 5) == "tidal";
+    tidal = dataSources.size() && dataSources[0].substr(0, 5) == "tidal";
     onset = false;
+    values.clear();
+    values.resize(dataSources.size());
     float thresh = 0;
     if (tidal) {
         for (int i = 0; i < notes.size(); i++) {
@@ -13,9 +15,9 @@ void VisualData::update(const vector<string> sources, const vector<Sound> &sound
                 float diff = ofGetElapsedTimef() - notes[i].timeStamp;
                 if (diff > 0 && abs(diff) < 1.0 / ofGetFrameRate() && notes[i].s != "midi") {
                     int instNum = notes[i].instNum;
-                    auto it = find(sources.begin(), sources.end(), "tidal" + ofToString(instNum));
-                    if (it != sources.end()) {
-                        int idx = it - sources.begin();
+                    auto it = find(dataSources.begin(), dataSources.end(), "tidal" + ofToString(instNum));
+                    if (it != dataSources.end()) {
+                        int idx = it - dataSources.begin();
                         values[idx] += notes[i].gain;
                         onset = true;
                     }
@@ -24,10 +26,9 @@ void VisualData::update(const vector<string> sources, const vector<Sound> &sound
         }
     }
     else {
-        values[0] = 0;
-        for (int i=0; i<sources.size(); i++) {
-            if (sources[i].substr(0, 3) == "amp") {
-                int j = ofToInt(sources[i].substr(3));
+        for (int i=0; i<dataSources.size(); i++) {
+            if (dataSources[i].substr(0, 3) == "amp") {
+                int j = ofToInt(dataSources[i].substr(3));
                 //values[i] += tanh(sounds[j].amplitude / mergedConfig.maxAmp * M_PI);
                 values[i] += int(sounds[j].amplitude > mergedConfig.maxAmp / 2.f);
                 onset = onset || (sounds[j].onset == 1);
@@ -35,21 +36,21 @@ void VisualData::update(const vector<string> sources, const vector<Sound> &sound
                     thresh = mergedConfig.threshAmp;
                 }
             }
-            else if (sources[i].substr(0, 4) == "loud") {
-                int j = ofToInt(sources[i].substr(4));
+            else if (dataSources[i].substr(0, 4) == "loud") {
+                int j = ofToInt(dataSources[i].substr(4));
                 values[i] += (sounds[j].loudness / mergedConfig.maxLoud);
                 onset = onset || (sounds[j].onset == 1);
                 if (i == 0) {
                     thresh = mergedConfig.threshLoud;
                 }
             }
-            else if (sources[i].substr(0, 6) == "static") {
-                values[i] = 0.5f;
+            else if (dataSources[i].substr(0, 5) == "const") {
+                values[i] = std::stof(dataSources[i].substr(5));
             }
         }
     }
-    visible = onset || values[0] > thresh;
-    for (int i=0; i<MAX_VISUALS; i++) {
+    visible = onset && (!values.size() || values[0] > thresh);
+    for (int i=0; i<values.size(); i++) {
         if (values[i] > 1.f) {
             values[i] = 1.f;
         }
@@ -57,7 +58,7 @@ void VisualData::update(const vector<string> sources, const vector<Sound> &sound
 }
 
 void VisualData::afterDraw() {
-    if (tidal) {
+    if (tidal && values.size() >= 1) {
         values[0] -= 1.f/8.f;
         if (values[0] < 0) {
             values[0] = 0;

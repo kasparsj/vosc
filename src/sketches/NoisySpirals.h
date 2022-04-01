@@ -13,7 +13,14 @@ public:
             radius = 10;
             radiusNoise = ofRandom(10);
             ofNoFill();
-            ofSetColor(127+ofRandom(128));
+            int strokeColor;
+            if (shaderData->values.size()) {
+                strokeColor = shaderData->values[0] * 255;
+            }
+            else {
+                strokeColor = 127+ofRandom(128);
+            }
+            ofSetColor(strokeColor);
             ofSetLineWidth(10.0/(10+ofRandom(10)));
             
             startAngle = int(ofRandom(360));

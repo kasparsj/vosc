@@ -40,7 +40,7 @@ public:
     vector<Visual> visuals;
     
     ofFbo fbo;
-    ofBlendMode blendMode;
+    ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
     ofBlendMode bgBlendMode = OF_BLENDMODE_ALPHA;
     ofColor bgColor = ofColor(0);
     bool showDebug = true;

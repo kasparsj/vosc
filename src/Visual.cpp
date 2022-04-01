@@ -1,12 +1,14 @@
 #include "Visual.h"
 
-void Visual::setup(int index, int numVisuals, string data)
+void Visual::setup(int index, int numVisuals, string dataSource)
 {
     this->index = index;
     this->total = numVisuals;
-    sources.clear();
-    sources.push_back(data);
-    shaderData = new VisualData(index, pos, size, config);
+    dataSources.clear();
+    if (dataSource != "") {
+        dataSources.push_back(dataSource);
+    }
+    data = new VisualData(index, pos, size, config);
 }
 
 void Visual::layout(Layout layout)
@@ -34,24 +36,25 @@ void Visual::layout(Layout layout)
 }
 
 void Visual::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) { 
-    shaderData->update(sources, sounds, notes, globalConfig);
+    data->update(dataSources, sounds, notes, globalConfig);
     if (video.isEnabled()) {
-        if (shaderData->onset) {
+        if (data->onset) {
             video.resetPos();
         }
-        video.update(shaderData->mergedConfig);
+        video.update(data->mergedConfig);
     }
     if (shader.isEnabled()) {
-        shader.update(shaderData, config);
+        shader.update(data, config);
     }
     if (sketch.isEnabled()) {
-        sketch.update(shaderData, config);
+        sketch.update(data, config);
     }
 }
 
 void Visual::draw() {
     if (video.isEnabled()) {
-        ofSetColor(shaderData->values[0] * 255);
+        float value = (data->values.size() ? data->values[0] : 1.0);
+        ofSetColor(value * 255);
         video.draw(pos.x, pos.y, size.x, size.y);
     }
     if (shader.isEnabled()) {
@@ -62,5 +65,5 @@ void Visual::draw() {
         ofSetColor(255);
         sketch.draw(pos.x, pos.y, size.x, size.y);
     }
-    shaderData->afterDraw();
+    data->afterDraw();
 }

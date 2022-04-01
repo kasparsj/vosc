@@ -23,6 +23,7 @@ void Sketch::update(VisualData *data, Config &config) {
     if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
         fbo.clear();
         fbo.allocate(data->size.x, data->size.y);
+        clear();
     }
     ofEnableAlphaBlending();
     fbo.begin();

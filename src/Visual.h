@@ -12,19 +12,20 @@
 class Visual {
 public:
     ~Visual() {
-        if (shaderData != NULL) {
-            delete shaderData;
-            shaderData = NULL;
+        if (data != NULL) {
+            delete data;
+            data = NULL;
         }
     }
-    void setup(int index, int numVisuals, string data = "");
+    void setup(int index, int numVisuals, string dataSource = "");
     void layout(Layout layout);
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &config);
     void draw();
     
     int index;
     int total;
-    vector<string> sources;
+    vector<string> dataSources;
+    VisualData *data;
     Video video;
     Shader shader;
     Sketch sketch;
@@ -32,5 +33,4 @@ public:
     glm::vec2 size;
     bool isTidal = false;
     Config config = Config(0);
-    VisualData *shaderData;
 };

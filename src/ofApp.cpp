@@ -21,7 +21,7 @@ void ofApp::setupSounds(int numInsts) {
 void ofApp::setupVisuals(int numVisuals, Layout layout) {
     visuals.resize(numVisuals);
     for (int i=0; i<visuals.size(); i++) {
-        visuals[i].setup(i, numVisuals, sounds.size() > i ? "amp" + ofToString(i) : "static");
+        visuals[i].setup(i, numVisuals, sounds.size() > i ? "amp" + ofToString(i) : "");
         visuals[i].layout(layout);
     }
 }
@@ -92,6 +92,9 @@ void ofApp::doCommand(string command, ofxOscMessage &m) {
     else if (command == "/color") {
         config.color = ofFloatColor(ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2)));
     }
+    else if (command == "/blendmode") {
+        blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+    }
     else if (command == "/bgcolor") {
         bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
     }
@@ -153,14 +156,14 @@ void ofApp::visualCommand(Visual &visual, string command, ofxOscMessage &m, int 
         visual.config.behaviour = m.getArgAsInt(i);
     }
     else if (command == "/data") {
-        visual.sources.clear();
+        visual.dataSources.clear();
         for (int j=i; j<m.getNumArgs(); j++) {
-            visual.sources.push_back(m.getArgAsString(j));
+            visual.dataSources.push_back(m.getArgAsString(j));
         }
     }
     else if (command == "/data/add") {
         for (int j=i; j<m.getNumArgs(); j++) {
-            visual.sources.push_back(m.getArgAsString(j));
+            visual.dataSources.push_back(m.getArgAsString(j));
         }
     }
 }
@@ -192,7 +195,14 @@ void ofApp::draw(){
     if (showDebug) {
         for (int i=0; i<visuals.size(); i++) {
             ofSetColor(255);
-            visuals[i].shader.fbo.draw(20+i*120, ofGetHeight()-120, 100, 100);
+            if (visuals[i].shader.isEnabled() && visuals[i].sketch.isEnabled()) {
+                visuals[i].shader.fbo.draw(20+i*120, ofGetHeight()-120, 100, 50);
+                visuals[i].sketch.fbo.draw(20+i*120, ofGetHeight()-70, 100, 50);
+            }
+            else {
+                visuals[i].shader.fbo.draw(20+i*120, ofGetHeight()-120, 100, 100);
+                visuals[i].sketch.fbo.draw(20+i*120, ofGetHeight()-120, 100, 100);
+            }
         }
     }
     ofDisableBlendMode();
@@ -204,6 +214,9 @@ void ofApp::exit() {
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     switch (key) {
+        case '0':
+            blendMode = OF_BLENDMODE_DISABLED;
+            break;
         case '1':
         case '2':
         case '3':
