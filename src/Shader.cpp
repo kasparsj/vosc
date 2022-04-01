@@ -53,7 +53,6 @@ void Shader::update(ShaderData *shaderData, Config &config) {
     shaders[name].setUniform1fv("values", shaderData->values, MAX_VISUALS);
     shaders[name].setUniform1i("visible", shaderData->visible ? 1 : 0);
     shaders[name].setUniform1i("onset", shaderData->onset ? 1 : 0);
-    ofSetColor(255);
 	ofDrawRectangle(0, 0, shaderData->size.x, shaderData->size.y);
 	shaders[name].end();
 	fbo.end();

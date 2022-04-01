@@ -41,157 +41,124 @@ void ofApp::parseIncomingMessages(){
     while (receiver.hasWaitingMessages()) {
         ofxOscMessage m;
         receiver.getNextMessage(m);
-        if (m.getAddress() == "/sound/data") {
-            int instNum = m.getArgAsInt(0);
-            sounds[instNum].parse(m);
-        }
-        else if (m.getAddress() == "/dirt/play") {
-            tidal->parse(m);
-        }
-        else if (m.getAddress() == "/sounds") {
-            setupSounds(m.getArgAsInt(0));
-        }
-        else if (m.getAddress() == "/visuals") {
-            setupVisuals(m.getArgAsInt(0), static_cast<Layout>(m.getArgAsInt(1)));
-        }
-        else if (m.getAddress() == "/layout") {
+        if (m.getAddress().substr(0, 4) == "/all") {
             for (int i=0; i<visuals.size(); i++) {
-                visuals[i].layout(static_cast<Layout>(m.getArgAsInt(0)));
+                visualCommand(visuals[i], m.getAddress().substr(4), m, 0);
             }
         }
-        else if (m.getAddress() == "/amp/max") {
-            config.maxAmp = m.getArgAsFloat(0);
-        }
-        else if (m.getAddress() == "/amp/thresh") {
-            config.threshAmp = m.getArgAsFloat(0);
-        }
-        else if (m.getAddress() == "/loud/max") {
-            config.maxLoud = m.getArgAsFloat(0);
-        }
-        else if (m.getAddress() == "/loud/thresh") {
-            config.threshLoud = m.getArgAsFloat(0);
-        }
-        else if (m.getAddress() == "/speed") {
-            config.speed = m.getArgAsFloat(0);
-        }
-        else if (m.getAddress() == "/behaviour") {
-            config.behaviour = m.getArgAsInt(0);
-        }
-        else if (m.getAddress() == "/color") {
-            config.color = ofFloatColor(ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2)));
-        }
-        else if (m.getAddress() == "/bgcolor") {
-            bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
-        }
-        else if (m.getAddress() == "/bgblendmode") {
-            bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
-        }
-        else if (m.getAddress() == "/all/data") {
-            // todo: check if valid
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].dataSource.clear();
-                visuals[i].dataSource.push_back(m.getArgAsString(0) + ofToString(i));
-            }
-        }
-        else if (m.getAddress() == "/all/shader") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].shader.name = m.getArgAsString(0);
-            }
-        }
-        else if (m.getAddress() == "/all/shader/random") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].shader.choose();
-            }
-        }
-        else if (m.getAddress() == "/all/shader/noclear") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].shader.noClear = m.getArgAsBool(0);
-            }
-        }
-        else if (m.getAddress() == "/all/shader/reload") {
-            reloadShaders();
-        }
-        else if (m.getAddress() == "/all/video") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].video.name = m.getArgAsString(0);
-            }
-        }
-        else if (m.getAddress() == "/all/video/random") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].video.choose();
-            }
-        }
-        else if (m.getAddress() == "/all/video/pos/random") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].video.pos = ofRandom(1.f);
-            }
-        }
-        else if (m.getAddress() == "/all/pos") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].pos = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
-            }
-        }
-        else if (m.getAddress() == "/all/size") {
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].size = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
-            }
-        }
-        else if (m.getAddress() == "/all/color") {
-            ofFloatColor color = ofFloatColor(ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2)));
-            for (int i=0; i<visuals.size(); i++) {
-                visuals[i].config.color = color;
-            }
-        }
-        else if (m.getAddress() == "/vis/shader") {
-            visuals[m.getArgAsInt(0)].shader.name = m.getArgAsString(1);
-        }
-        else if (m.getAddress() == "/vis/shader/random") {
-            visuals[m.getArgAsInt(0)].shader.choose();
-        }
-        else if (m.getAddress() == "/vis/shader/noclear") {
-            visuals[m.getArgAsInt(0)].shader.noClear = m.getArgAsBool(0);
-        }
-        else if (m.getAddress() == "/vis/video") {
-            visuals[m.getArgAsInt(0)].video.name = m.getArgAsString(1);
-        }
-        else if (m.getAddress() == "/vis/video/pos") {
-            visuals[m.getArgAsInt(0)].video.pos = m.getArgAsFloat(1);
-        }
-        else if (m.getAddress() == "/vis/video/pos/random") {
-            visuals[m.getArgAsInt(0)].video.pos = ofRandom(1.f);
-        }
-        else if (m.getAddress() == "/vis/pos") {
-            visuals[m.getArgAsInt(0)].pos = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
-        }
-        else if (m.getAddress() == "/vis/size") {
-            visuals[m.getArgAsInt(0)].size = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
-        }
-        else if (m.getAddress() == "/vis/color") {
-            visuals[m.getArgAsInt(0)].config.color = ofFloatColor(ofColor(m.getArgAsInt(1), m.getArgAsInt(2), m.getArgAsInt(3)));
-        }
-        else if (m.getAddress() == "/vis/color/random") {
-            visuals[m.getArgAsInt(0)].config.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
-        }
-        else if (m.getAddress() == "/vis/behaviour") {
-            visuals[m.getArgAsInt(0)].config.behaviour = m.getArgAsInt(1);
-        }
-        else if (m.getAddress() == "/vis/data") {
-            visuals[m.getArgAsInt(0)].dataSource.clear();
-            for (int i=1; i<m.getNumArgs(); i++) {
-                visuals[m.getArgAsInt(0)].dataSource.push_back(m.getArgAsString(i));
-            }
-        }
-        else if (m.getAddress() == "/vis/data/add") {
-            for (int i=1; i<m.getNumArgs(); i++) {
-                visuals[m.getArgAsInt(0)].dataSource.push_back(m.getArgAsString(i));
-            }
+        else {
+            doCommand(m.getAddress(), m);
         }
     }
 }
 
-void ofApp::reloadShaders() {
-    for (int i=0; i<visuals.size(); i++) {
-        visuals[i].shader.reload();
+void ofApp::doCommand(string command, ofxOscMessage &m) {
+    if (command == "/sound/data") {
+        int instNum = m.getArgAsInt(0);
+        sounds[instNum].parse(m);
+    }
+    else if (command == "/dirt/play") {
+        tidal->parse(m);
+    }
+    else if (command == "/sounds") {
+        setupSounds(m.getArgAsInt(0));
+    }
+    else if (command == "/visuals") {
+        setupVisuals(m.getArgAsInt(0), static_cast<Layout>(m.getArgAsInt(1)));
+    }
+    else if (command == "/layout") {
+        for (int i=0; i<visuals.size(); i++) {
+            visuals[i].layout(static_cast<Layout>(m.getArgAsInt(0)));
+        }
+    }
+    else if (command == "/amp/max") {
+        config.maxAmp = m.getArgAsFloat(0);
+    }
+    else if (command == "/amp/thresh") {
+        config.threshAmp = m.getArgAsFloat(0);
+    }
+    else if (command == "/loud/max") {
+        config.maxLoud = m.getArgAsFloat(0);
+    }
+    else if (command == "/loud/thresh") {
+        config.threshLoud = m.getArgAsFloat(0);
+    }
+    else if (command == "/speed") {
+        config.speed = m.getArgAsFloat(0);
+    }
+    else if (command == "/behaviour") {
+        config.behaviour = m.getArgAsInt(0);
+    }
+    else if (command == "/color") {
+        config.color = ofFloatColor(ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2)));
+    }
+    else if (command == "/bgcolor") {
+        bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
+    }
+    else if (command == "/bgblendmode") {
+        bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+    }
+    else {
+        visualCommand(visuals[m.getArgAsInt(0)], m.getAddress(), m, 1);
+    }
+}
+
+void ofApp::visualCommand(Visual &visual, string command, ofxOscMessage &m, int i) {
+    if (command == "/video") {
+        visual.video.name = m.getArgAsString(i);
+    }
+    else if (command == "/video/pos") {
+        visual.video.pos = m.getArgAsFloat(i);
+    }
+    else if (command == "/video/pos/random") {
+        visual.video.pos = ofRandom(1.f);
+    }
+    else if (command == "/shader") {
+        visual.shader.name = m.getArgAsString(i);
+    }
+    else if (command == "/shader/random") {
+        visual.shader.choose();
+    }
+    else if (command == "/shader/reload") {
+        visual.shader.reload();
+    }
+    else if (command == "/shader/noclear") {
+        visual.shader.noClear = m.getArgAsBool(i);
+    }
+    else if (command == "/sketch") {
+        visual.sketch.name = m.getArgAsString(i);
+    }
+    else if (command == "/sketch/random") {
+        visual.sketch.choose();
+    }
+    else if (command == "/sketch/clear") {
+        visual.sketch.clear();
+    }
+    else if (command == "/pos") {
+        visual.pos = glm::vec2(m.getArgAsFloat(i), m.getArgAsFloat(i+1));
+    }
+    else if (command == "/size") {
+        visual.size = glm::vec2(m.getArgAsFloat(i), m.getArgAsFloat(i+1));
+    }
+    else if (command == "/color") {
+        visual.config.color = ofFloatColor(ofColor(m.getArgAsInt(i), m.getArgAsInt(i+1), m.getArgAsInt(i+2)));
+    }
+    else if (command == "/color/random") {
+        visual.config.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+    }
+    else if (command == "/behaviour") {
+        visual.config.behaviour = m.getArgAsInt(i);
+    }
+    else if (command == "/data") {
+        visual.dataSource.clear();
+        for (int j=i; j<m.getNumArgs(); j++) {
+            visual.dataSource.push_back(m.getArgAsString(j));
+        }
+    }
+    else if (command == "/data/add") {
+        for (int j=i; j<m.getNumArgs(); j++) {
+            visual.dataSource.push_back(m.getArgAsString(j));
+        }
     }
 }
 
@@ -244,9 +211,13 @@ void ofApp::keyPressed(int key){
         case 'd':
             showDebug = !showDebug;
             break;
-        case 'r':
-            reloadShaders();
+        case 'r': {
+            for (int i=0; i<visuals.size(); i++) {
+                ofxOscMessage m;
+                visualCommand(visuals[i], "/shader/reload", m, 0);
+            }
             break;
+        }
         default:
             break;
     }

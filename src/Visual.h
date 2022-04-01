@@ -7,6 +7,7 @@
 #include "Config.h"
 #include "Video.h"
 #include "ShaderData.h"
+#include "Sketch.h"
 
 class Visual {
 public:
@@ -26,6 +27,7 @@ public:
     vector<string> dataSource;
     Video video;
     Shader shader;
+    Sketch sketch;
     glm::vec2 pos;
     glm::vec2 size;
     bool isTidal = false;

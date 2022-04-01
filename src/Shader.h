@@ -13,12 +13,10 @@ public:
     ~Shader();
 	void update(ShaderData *shaderData, Config &config);
 	void draw(int left, int top, int width, int height) override;
-    void choose();
+    void choose() override;
     void reload();
 
 	ofFbo fbo;
-    string prevName = "";
     bool noClear;
-    int random = 0;
 };
 

@@ -15,7 +15,8 @@ public:
     void setupVisuals(int numVisuals, Layout layout);
 	void update();
     void parseIncomingMessages();
-    void reloadShaders();
+    void doCommand(string command, ofxOscMessage &m);
+    void visualCommand(Visual &visual, string command, ofxOscMessage &m, int i);
 	void draw();
 	void exit();
 

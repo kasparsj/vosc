@@ -35,25 +35,32 @@ void Visual::layout(Layout layout)
 
 void Visual::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) { 
     shaderData->update(dataSource, sounds, notes, globalConfig);
-    if (shader.isEnabled()) {
-        shader.update(shaderData, config);
-    }
     if (video.isEnabled()) {
         if (shaderData->onset) {
             video.resetPos();
         }
         video.update(shaderData->mergedConfig);
     }
+    if (shader.isEnabled()) {
+        shader.update(shaderData, config);
+    }
+    if (sketch.isEnabled()) {
+        sketch.update(shaderData, config);
+    }
 }
 
 void Visual::draw() {
+    if (video.isEnabled()) {
+        ofSetColor(shaderData->values[0] * 255);
+        video.draw(pos.x, pos.y, size.x, size.y);
+    }
     if (shader.isEnabled()) {
         ofSetColor(255);
         shader.draw(pos.x, pos.y, size.x, size.y);
     }
-    if (video.isEnabled()) {
-        ofSetColor(shaderData->values[0] * 255);
-        video.draw(pos.x, pos.y, size.x, size.y);
+    if (sketch.isEnabled()) {
+        ofSetColor(255);
+        sketch.draw(pos.x, pos.y, size.x, size.y);
     }
     shaderData->afterDraw();
 }
