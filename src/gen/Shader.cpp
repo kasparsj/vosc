@@ -29,10 +29,13 @@ void Shader::update(VisualData *data, Config &config) {
         fbo.allocate(data->size.x, data->size.y);
     }
     if (name != prevName) {
+        if (shaders.find(name) == shaders.end()) {
+            ofLog() << "shader " << name << " does not exist";
+            name = prevName;
+            return;
+        }
         prevName = name;
         random = ofRandom(1000);
-        config.color = ofFloatColor(0.4, 1.0/1.5, 1.0);
-        data->mergedConfig.color = config.color;
     }
     if (!shaders[name].isLoaded()) {
         shaders[name].load("", "shaders/" + name + ".frag");

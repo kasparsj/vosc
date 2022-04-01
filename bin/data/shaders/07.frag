@@ -37,5 +37,7 @@ void main (void){
     float radius = cos(time * index1) * 0.1 + 0.2;
     float border = sin(time * index1) * 0.2 + 0.05;
     float t = smoothstep(radius + border, radius - border, dist);
-    gl_FragColor = vec4(color.rgb * 1.5 * t * noise(vec2(random, index)), t * visible);
+    vec4 col = color;
+    if (col.rgb == vec3(0)) col = vec4(0.4, 1.0/1.5, 1.0, col.a);
+    gl_FragColor = vec4(col.rgb * 1.5 * t * noise(vec2(random, index)), t * visible);
 }

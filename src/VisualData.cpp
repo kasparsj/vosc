@@ -56,7 +56,7 @@ void VisualData::update(const vector<string> dataSources, const vector<Sound> &s
             }
         }
     }
-    visible = onset && (!values.size() || values[0] > thresh);
+    visible = onset || (!values.size() || values[0] > thresh);
     for (int i=0; i<values.size(); i++) {
         if (values[i] > 1.f) {
             values[i] = 1.f;

@@ -18,6 +18,11 @@ void Sketch::update(VisualData *data, Config &config) {
         fbo.allocate(data->size.x, data->size.y);
     }
     if (name != prevName) {
+        if (sketches.find(name) == sketches.end()) {
+            ofLog() << "sketch " << name << " does not exist";
+            name = prevName;
+            return;
+        }
         prevName = name;
     }
     if (!sketches[name]->initialized) {
