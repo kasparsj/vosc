@@ -73,6 +73,7 @@
 		2B43A51027F76A1A00E49E87 /* Star.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Star.frag; sourceTree = "<group>"; };
 		2B43A51127F76B9700E49E87 /* Ether.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Ether.frag; sourceTree = "<group>"; };
 		2B43A51227F76D2100E49E87 /* Water.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Water.frag; sourceTree = "<group>"; };
+		2B43A51327F76F6700E49E87 /* AtmoScattering.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = AtmoScattering.frag; sourceTree = "<group>"; };
 		2BA5C44227F467DE003DC02D /* Config.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Config.cpp; sourceTree = "<group>"; };
 		2BA5C44327F467DE003DC02D /* Config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Config.h; sourceTree = "<group>"; };
 		2BA5C44627F46D8A003DC02D /* empty.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = empty.frag; sourceTree = "<group>"; };
@@ -358,6 +359,7 @@
 				2B43A51027F76A1A00E49E87 /* Star.frag */,
 				2B43A51127F76B9700E49E87 /* Ether.frag */,
 				2B43A51227F76D2100E49E87 /* Water.frag */,
+				2B43A51327F76F6700E49E87 /* AtmoScattering.frag */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
