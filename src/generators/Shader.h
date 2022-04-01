@@ -1,17 +1,17 @@
 #pragma once
 
-#include "Source.h"
+#include "Generator.h"
 #include "ofMain.h"
 #include "Config.h"
-#include "ShaderData.h"
+#include "VisualData.h"
 
-class Shader : public Source {
+class Shader : public Generator {
 public:
     static map<string, ofShader> shaders;
     
 	Shader();
     ~Shader();
-	void update(ShaderData *shaderData, Config &config);
+	void update(VisualData *data, Config &config);
 	void draw(int left, int top, int width, int height) override;
     void choose() override;
     void reload();

@@ -6,7 +6,7 @@
 #include "Sound.h"
 #include "Config.h"
 #include "Video.h"
-#include "ShaderData.h"
+#include "VisualData.h"
 #include "Sketch.h"
 
 class Visual {
@@ -24,7 +24,7 @@ public:
     
     int index;
     int total;
-    vector<string> dataSource;
+    vector<string> sources;
     Video video;
     Shader shader;
     Sketch sketch;
@@ -32,5 +32,5 @@ public:
     glm::vec2 size;
     bool isTidal = false;
     Config config = Config(0);
-    ShaderData *shaderData;
+    VisualData *shaderData;
 };

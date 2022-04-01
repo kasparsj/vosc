@@ -23,20 +23,20 @@ Shader::Shader(){
 Shader::~Shader(){
 }
 
-void Shader::update(ShaderData *shaderData, Config &config) {
-    Source::update(shaderData->mergedConfig);
+void Shader::update(VisualData *data, Config &config) {
+    Generator::update(data->mergedConfig);
     if (name != prevName) {
         prevName = name;
         random = ofRandom(1000);
         config.color = ofFloatColor(0.4, 1.0/1.5, 1.0);
-        shaderData->mergedConfig.color = config.color;
+        data->mergedConfig.color = config.color;
     }
     if (!shaders[name].isLoaded()) {
         shaders[name].load("", "shaders/" + name + ".frag");
     }
-    if (!fbo.isAllocated() || (fbo.getWidth() != shaderData->size.x || fbo.getHeight() != shaderData->size.y)) {
+    if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
         fbo.clear();
-        fbo.allocate(shaderData->size.x, shaderData->size.y);
+        fbo.allocate(data->size.x, data->size.y);
     }
     ofEnableAlphaBlending();
 	fbo.begin();
@@ -46,18 +46,18 @@ void Shader::update(ShaderData *shaderData, Config &config) {
 	shaders[name].begin();
 	shaders[name].setUniform1f("time", time);
 	shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
-    shaders[name].setUniform2f("offset", shaderData->pos.x, shaderData->pos.y);
-    shaders[name].setUniform1i("index", shaderData->index);
-    shaders[name].setUniform4f("color", shaderData->mergedConfig.color);
+    shaders[name].setUniform2f("offset", data->pos.x, data->pos.y);
+    shaders[name].setUniform1i("index", data->index);
+    shaders[name].setUniform4f("color", data->mergedConfig.color);
     shaders[name].setUniform1i("random", random);
-    shaders[name].setUniform1fv("values", shaderData->values, MAX_VISUALS);
-    shaders[name].setUniform1i("visible", shaderData->visible ? 1 : 0);
-    shaders[name].setUniform1i("onset", shaderData->onset ? 1 : 0);
-	ofDrawRectangle(0, 0, shaderData->size.x, shaderData->size.y);
+    shaders[name].setUniform1fv("values", data->values, MAX_VISUALS);
+    shaders[name].setUniform1i("visible", data->visible ? 1 : 0);
+    shaders[name].setUniform1i("onset", data->onset ? 1 : 0);
+	ofDrawRectangle(0, 0, data->size.x, data->size.y);
 	shaders[name].end();
 	fbo.end();
     ofDisableAlphaBlending();
-    if (shaderData->mergedConfig.randomShader()) {
+    if (data->mergedConfig.randomShader()) {
         choose();
     }
 }

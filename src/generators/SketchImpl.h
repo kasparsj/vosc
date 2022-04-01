@@ -2,14 +2,14 @@
 
 #include "ofMain.h"
 #include "Config.h"
-#include "ShaderData.h"
+#include "VisualData.h"
 
 class SketchImpl {
 public:
     virtual void init() {
         initialized = true;
     }
-    virtual void draw(ShaderData *shaderData, Config &config) = 0;
+    virtual void draw(VisualData *shaderData, Config &config) = 0;
     
     bool initialized;
 };

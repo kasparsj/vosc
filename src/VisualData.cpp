@@ -1,9 +1,9 @@
-#include "ShaderData.h"
+#include "VisualData.h"
 
-void ShaderData::update(const vector<string> dataSource, const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) {
+void VisualData::update(const vector<string> sources, const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) {
     mergedConfig = Config(config);
     mergedConfig.merge(globalConfig);
-    tidal = dataSource[0].substr(0, 5) == "tidal";
+    tidal = sources[0].substr(0, 5) == "tidal";
     onset = false;
     float thresh = 0;
     if (tidal) {
@@ -13,9 +13,9 @@ void ShaderData::update(const vector<string> dataSource, const vector<Sound> &so
                 float diff = ofGetElapsedTimef() - notes[i].timeStamp;
                 if (diff > 0 && abs(diff) < 1.0 / ofGetFrameRate() && notes[i].s != "midi") {
                     int instNum = notes[i].instNum;
-                    auto it = find(dataSource.begin(), dataSource.end(), "tidal" + ofToString(instNum));
-                    if (it != dataSource.end()) {
-                        int idx = it - dataSource.begin();
+                    auto it = find(sources.begin(), sources.end(), "tidal" + ofToString(instNum));
+                    if (it != sources.end()) {
+                        int idx = it - sources.begin();
                         values[idx] += notes[i].gain;
                         onset = true;
                     }
@@ -25,9 +25,9 @@ void ShaderData::update(const vector<string> dataSource, const vector<Sound> &so
     }
     else {
         values[0] = 0;
-        for (int i=0; i<dataSource.size(); i++) {
-            if (dataSource[i].substr(0, 3) == "amp") {
-                int j = ofToInt(dataSource[i].substr(3));
+        for (int i=0; i<sources.size(); i++) {
+            if (sources[i].substr(0, 3) == "amp") {
+                int j = ofToInt(sources[i].substr(3));
                 //values[i] += tanh(sounds[j].amplitude / mergedConfig.maxAmp * M_PI);
                 values[i] += int(sounds[j].amplitude > mergedConfig.maxAmp / 2.f);
                 onset = onset || (sounds[j].onset == 1);
@@ -35,15 +35,15 @@ void ShaderData::update(const vector<string> dataSource, const vector<Sound> &so
                     thresh = mergedConfig.threshAmp;
                 }
             }
-            else if (dataSource[i].substr(0, 4) == "loud") {
-                int j = ofToInt(dataSource[i].substr(4));
+            else if (sources[i].substr(0, 4) == "loud") {
+                int j = ofToInt(sources[i].substr(4));
                 values[i] += (sounds[j].loudness / mergedConfig.maxLoud);
                 onset = onset || (sounds[j].onset == 1);
                 if (i == 0) {
                     thresh = mergedConfig.threshLoud;
                 }
             }
-            else if (dataSource[i].substr(0, 6) == "static") {
+            else if (sources[i].substr(0, 6) == "static") {
                 values[i] = 0.5f;
             }
         }
@@ -56,7 +56,7 @@ void ShaderData::update(const vector<string> dataSource, const vector<Sound> &so
     }
 }
 
-void ShaderData::afterDraw() {
+void VisualData::afterDraw() {
     if (tidal) {
         values[0] -= 1.f/8.f;
         if (values[0] < 0) {

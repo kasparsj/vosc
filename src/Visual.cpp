@@ -4,9 +4,9 @@ void Visual::setup(int index, int numVisuals, string data)
 {
     this->index = index;
     this->total = numVisuals;
-    dataSource.clear();
-    dataSource.push_back(data);
-    shaderData = new ShaderData(index, pos, size, config);
+    sources.clear();
+    sources.push_back(data);
+    shaderData = new VisualData(index, pos, size, config);
 }
 
 void Visual::layout(Layout layout)
@@ -34,7 +34,7 @@ void Visual::layout(Layout layout)
 }
 
 void Visual::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) { 
-    shaderData->update(dataSource, sounds, notes, globalConfig);
+    shaderData->update(sources, sounds, notes, globalConfig);
     if (video.isEnabled()) {
         if (shaderData->onset) {
             video.resetPos();

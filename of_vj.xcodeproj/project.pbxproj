@@ -9,12 +9,12 @@
 /* Begin PBXBuildFile section */
 		0546D1A38E13BD319CC9755B /* OscReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9BF3AA0D4FAA89D0F8A0E545 /* OscReceivedElements.cpp */; };
 		1C9FABB0E14A3545CF709CD3 /* Sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E10F57F93CD2C353DD9DFFEC /* Sound.cpp */; };
-		2B050AB827F5338100FED430 /* ShaderData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B050AB627F5338100FED430 /* ShaderData.cpp */; };
+		2B050AB827F5338100FED430 /* VisualData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B050AB627F5338100FED430 /* VisualData.cpp */; };
 		2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
 		2B43A4F627F672BD00E49E87 /* Sketch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B43A4F427F672BD00E49E87 /* Sketch.cpp */; };
 		2BA5C44427F467DE003DC02D /* Config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BA5C44227F467DE003DC02D /* Config.cpp */; };
 		2BA5C4AF27F473E1003DC02D /* Video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BA5C4AD27F473E1003DC02D /* Video.cpp */; };
-		2BA5C4B227F47780003DC02D /* Source.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BA5C4B027F47780003DC02D /* Source.cpp */; };
+		2BA5C4B227F47780003DC02D /* Generator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BA5C4B027F47780003DC02D /* Generator.cpp */; };
 		4ADB88E2FB52E76A471065DE /* ofxOscParameterSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0AED834CE4DEC5260AF302A2 /* ofxOscParameterSync.cpp */; };
 		510CAFE035E576A4E1502D52 /* UdpSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DEF695B88BA5FAACEAA937 /* UdpSocket.cpp */; };
 		5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DF49D76C45D5DB505A234880 /* ofxOscMessage.cpp */; };
@@ -49,15 +49,16 @@
 		029684CF678F70F6D3537A29 /* OscOutboundPacketStream.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscOutboundPacketStream.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscOutboundPacketStream.h; sourceTree = SOURCE_ROOT; };
 		08BF2C31FCDD3E3B7404D970 /* Sound.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Sound.h; path = src/Sound.h; sourceTree = SOURCE_ROOT; };
 		0AED834CE4DEC5260AF302A2 /* ofxOscParameterSync.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscParameterSync.cpp; path = ../../../addons/ofxOsc/src/ofxOscParameterSync.cpp; sourceTree = SOURCE_ROOT; };
-		0D89BE3AA93DB4811A6135A4 /* Shader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Shader.cpp; path = src/Shader.cpp; sourceTree = SOURCE_ROOT; };
+		0D89BE3AA93DB4811A6135A4 /* Shader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Shader.cpp; path = src/generators/Shader.cpp; sourceTree = SOURCE_ROOT; };
 		20F35AFADAF0068B067E713F /* OscReceivedElements.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscReceivedElements.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscReceivedElements.h; sourceTree = SOURCE_ROOT; };
 		23640F57DF6C4BB6BFC5DA4C /* PacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PacketListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/PacketListener.h; sourceTree = SOURCE_ROOT; };
-		2B050AB627F5338100FED430 /* ShaderData.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ShaderData.cpp; sourceTree = "<group>"; };
-		2B050AB727F5338100FED430 /* ShaderData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderData.h; sourceTree = "<group>"; };
+		2B050AB627F5338100FED430 /* VisualData.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = VisualData.cpp; sourceTree = "<group>"; };
+		2B050AB727F5338100FED430 /* VisualData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VisualData.h; sourceTree = "<group>"; };
 		2B43A4F427F672BD00E49E87 /* Sketch.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sketch.cpp; sourceTree = "<group>"; };
 		2B43A4F527F672BD00E49E87 /* Sketch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sketch.h; sourceTree = "<group>"; };
 		2B43A4F927F6744D00E49E87 /* NoisySpirals.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NoisySpirals.h; sourceTree = "<group>"; };
 		2B43A4FC27F6748F00E49E87 /* SketchImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SketchImpl.h; sourceTree = "<group>"; };
+		2B43A50027F6840D00E49E87 /* WaveClock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WaveClock.h; sourceTree = "<group>"; };
 		2BA5C44227F467DE003DC02D /* Config.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Config.cpp; sourceTree = "<group>"; };
 		2BA5C44327F467DE003DC02D /* Config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Config.h; sourceTree = "<group>"; };
 		2BA5C44627F46D8A003DC02D /* empty.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = empty.frag; sourceTree = "<group>"; };
@@ -164,15 +165,15 @@
 		2BA5C4AC27F46D8A003DC02D /* 34.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 34.frag; sourceTree = "<group>"; };
 		2BA5C4AD27F473E1003DC02D /* Video.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Video.cpp; sourceTree = "<group>"; };
 		2BA5C4AE27F473E1003DC02D /* Video.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Video.h; sourceTree = "<group>"; };
-		2BA5C4B027F47780003DC02D /* Source.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Source.cpp; sourceTree = "<group>"; };
-		2BA5C4B127F47780003DC02D /* Source.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Source.h; sourceTree = "<group>"; };
+		2BA5C4B027F47780003DC02D /* Generator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Generator.cpp; sourceTree = "<group>"; };
+		2BA5C4B127F47780003DC02D /* Generator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Generator.h; sourceTree = "<group>"; };
 		2FD4B0329909D3527F003494 /* UdpSocket.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = UdpSocket.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/UdpSocket.h; sourceTree = SOURCE_ROOT; };
 		3B361208CD4107E479F04E7B /* NetworkingUtils.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = NetworkingUtils.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/posix/NetworkingUtils.cpp; sourceTree = SOURCE_ROOT; };
 		444657A12E59D0ED86981498 /* TimerListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = TimerListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/TimerListener.h; sourceTree = SOURCE_ROOT; };
 		48974F980F51769171D0B2F5 /* IpEndpointName.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IpEndpointName.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/IpEndpointName.h; sourceTree = SOURCE_ROOT; };
 		4E95FB446A9C9C6F0DE12D75 /* OscPrintReceivedElements.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscPrintReceivedElements.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPrintReceivedElements.h; sourceTree = SOURCE_ROOT; };
 		5214315DDF42B8F6ED7D5B8C /* Visual.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Visual.cpp; path = src/Visual.cpp; sourceTree = SOURCE_ROOT; };
-		5D55687EAFB7EC68378DC960 /* Shader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Shader.h; path = src/Shader.h; sourceTree = SOURCE_ROOT; };
+		5D55687EAFB7EC68378DC960 /* Shader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Shader.h; path = src/generators/Shader.h; sourceTree = SOURCE_ROOT; };
 		63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscOutboundPacketStream.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscOutboundPacketStream.cpp; sourceTree = SOURCE_ROOT; };
 		65EEFA3DA3526E9CDD9C21F9 /* ofxOscBundle.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscBundle.cpp; path = ../../../addons/ofxOsc/src/ofxOscBundle.cpp; sourceTree = SOURCE_ROOT; };
 		6B65E6930994CC4B2D2B8B33 /* OscPacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscPacketListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPacketListener.h; sourceTree = SOURCE_ROOT; };
@@ -398,8 +399,25 @@
 			isa = PBXGroup;
 			children = (
 				2B43A4F927F6744D00E49E87 /* NoisySpirals.h */,
+				2B43A50027F6840D00E49E87 /* WaveClock.h */,
 			);
 			path = sketches;
+			sourceTree = "<group>";
+		};
+		2B43A4FE27F6839A00E49E87 /* generators */ = {
+			isa = PBXGroup;
+			children = (
+				0D89BE3AA93DB4811A6135A4 /* Shader.cpp */,
+				5D55687EAFB7EC68378DC960 /* Shader.h */,
+				2BA5C4AD27F473E1003DC02D /* Video.cpp */,
+				2BA5C4AE27F473E1003DC02D /* Video.h */,
+				2BA5C4B027F47780003DC02D /* Generator.cpp */,
+				2BA5C4B127F47780003DC02D /* Generator.h */,
+				2B43A4F427F672BD00E49E87 /* Sketch.cpp */,
+				2B43A4F527F672BD00E49E87 /* Sketch.h */,
+				2B43A4FC27F6748F00E49E87 /* SketchImpl.h */,
+			);
+			path = generators;
 			sourceTree = "<group>";
 		};
 		2BA5C44527F46D8A003DC02D /* data */ = {
@@ -925,27 +943,19 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				2B43A4FE27F6839A00E49E87 /* generators */,
 				2B43A4F727F6743000E49E87 /* sketches */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
 				5214315DDF42B8F6ED7D5B8C /* Visual.cpp */,
 				C4ECA1461B2C4348EC957BBD /* Visual.h */,
-				0D89BE3AA93DB4811A6135A4 /* Shader.cpp */,
-				5D55687EAFB7EC68378DC960 /* Shader.h */,
-				2B050AB627F5338100FED430 /* ShaderData.cpp */,
-				2B050AB727F5338100FED430 /* ShaderData.h */,
+				2B050AB627F5338100FED430 /* VisualData.cpp */,
+				2B050AB727F5338100FED430 /* VisualData.h */,
 				E10F57F93CD2C353DD9DFFEC /* Sound.cpp */,
 				08BF2C31FCDD3E3B7404D970 /* Sound.h */,
 				2BA5C44227F467DE003DC02D /* Config.cpp */,
 				2BA5C44327F467DE003DC02D /* Config.h */,
-				2BA5C4AD27F473E1003DC02D /* Video.cpp */,
-				2BA5C4AE27F473E1003DC02D /* Video.h */,
-				2BA5C4B027F47780003DC02D /* Source.cpp */,
-				2BA5C4B127F47780003DC02D /* Source.h */,
-				2B43A4F427F672BD00E49E87 /* Sketch.cpp */,
-				2B43A4F527F672BD00E49E87 /* Sketch.h */,
-				2B43A4FC27F6748F00E49E87 /* SketchImpl.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1084,12 +1094,12 @@
 				C4782ECC372420ACE0615B74 /* OscPrintReceivedElements.cpp in Sources */,
 				0546D1A38E13BD319CC9755B /* OscReceivedElements.cpp in Sources */,
 				879A251454401BC0B6E4F238 /* OscTypes.cpp in Sources */,
-				2BA5C4B227F47780003DC02D /* Source.cpp in Sources */,
+				2BA5C4B227F47780003DC02D /* Generator.cpp in Sources */,
 				2BA5C4AF27F473E1003DC02D /* Video.cpp in Sources */,
 				72A929D3561B8232A182ABFC /* ofxOscBundle.cpp in Sources */,
 				5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */,
 				4ADB88E2FB52E76A471065DE /* ofxOscParameterSync.cpp in Sources */,
-				2B050AB827F5338100FED430 /* ShaderData.cpp in Sources */,
+				2B050AB827F5338100FED430 /* VisualData.cpp in Sources */,
 				640279EE111671BD026CB013 /* ofxOscReceiver.cpp in Sources */,
 				8F5205AEF8861EF234F0651A /* ofxOscSender.cpp in Sources */,
 				2B43A4F627F672BD00E49E87 /* Sketch.cpp in Sources */,

@@ -4,7 +4,7 @@
 
 class NoisySpirals : public SketchImpl {
 public:
-    void draw(ShaderData *shaderData, Config &config) override {
+    void draw(VisualData *shaderData, Config &config) override {
         float width = shaderData->size.x;
         float height = shaderData->size.y;
         if (radius >= endAngle) {

@@ -1,16 +1,18 @@
 #include "Sketch.h"
 #include "NoisySpirals.h"
+#include "WaveClock.h"
 
 map<string, SketchImpl*> createSketches()
 {
     map<string, SketchImpl*> sketches;
     sketches["NoisySpirals"] = new NoisySpirals();
+    sketches["WaveClock"] = new WaveClock();
     return sketches;
 }
 
 map<string, SketchImpl*> Sketch::sketches = createSketches();
 
-void Sketch::update(ShaderData *shaderData, Config &config) {
+void Sketch::update(VisualData *data, Config &config) {
     if (name != prevName) {
         prevName = name;
         random = ofRandom(1000);
@@ -18,16 +20,16 @@ void Sketch::update(ShaderData *shaderData, Config &config) {
     if (!sketches[name]->initialized) {
         sketches[name]->init();
     }
-    if (!fbo.isAllocated() || (fbo.getWidth() != shaderData->size.x || fbo.getHeight() != shaderData->size.y)) {
+    if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
         fbo.clear();
-        fbo.allocate(shaderData->size.x, shaderData->size.y);
+        fbo.allocate(data->size.x, data->size.y);
     }
     ofEnableAlphaBlending();
     fbo.begin();
-    sketches[name]->draw(shaderData, config);
+    sketches[name]->draw(data, config);
     fbo.end();
     ofDisableAlphaBlending();
-    if (shaderData->mergedConfig.randomShader()) {
+    if (data->mergedConfig.randomShader()) {
         choose();
     }
 }

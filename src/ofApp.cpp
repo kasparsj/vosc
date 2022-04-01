@@ -150,14 +150,14 @@ void ofApp::visualCommand(Visual &visual, string command, ofxOscMessage &m, int 
         visual.config.behaviour = m.getArgAsInt(i);
     }
     else if (command == "/data") {
-        visual.dataSource.clear();
+        visual.sources.clear();
         for (int j=i; j<m.getNumArgs(); j++) {
-            visual.dataSource.push_back(m.getArgAsString(j));
+            visual.sources.push_back(m.getArgAsString(j));
         }
     }
     else if (command == "/data/add") {
         for (int j=i; j<m.getNumArgs(); j++) {
-            visual.dataSource.push_back(m.getArgAsString(j));
+            visual.sources.push_back(m.getArgAsString(j));
         }
     }
 }

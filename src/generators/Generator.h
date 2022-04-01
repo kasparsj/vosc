@@ -3,7 +3,7 @@
 #include "Config.h"
 #include "ofMain.h"
 
-class Source {
+class Generator {
 public:
     bool isEnabled() const {
         return name != "";
