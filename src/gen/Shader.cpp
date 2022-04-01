@@ -50,7 +50,7 @@ void Shader::update(VisualData *data, Config &config) {
 	shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
     shaders[name].setUniform2f("offset", data->pos.x, data->pos.y);
     shaders[name].setUniform1i("index", data->index);
-    shaders[name].setUniform4f("color", data->mergedConfig.color);
+    shaders[name].setUniform4f("color", data->color);
     shaders[name].setUniform1i("random", random);
     shaders[name].setUniform1i("num_values", data->values.size());
     shaders[name].setUniform1fv("values", data->values.data(), data->values.size());

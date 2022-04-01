@@ -31,6 +31,7 @@ public:
     Sketch sketch;
     glm::vec2 pos;
     glm::vec2 size;
+    ofFloatColor color = ofFloatColor(0);
     bool isTidal = false;
     Config config = Config(0);
 };

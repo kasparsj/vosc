@@ -38,7 +38,6 @@ public:
         maxLoud = config.maxLoud;
         speed = config.speed;
         behaviour = config.behaviour;
-        color = config.color;
         threshAmp = config.threshAmp;
         threshLoud = config.threshLoud;
     }
@@ -61,7 +60,6 @@ public:
     float maxLoud = 64.0;
     float speed = 1.0;
     int behaviour = -1;
-    ofFloatColor color = ofFloatColor(0);
     float threshAmp = -1;
     float threshLoud = -1;
 };

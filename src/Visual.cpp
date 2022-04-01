@@ -8,7 +8,7 @@ void Visual::setup(int index, int numVisuals, string dataSource)
     if (dataSource != "") {
         dataSources.push_back(dataSource);
     }
-    data = new VisualData(index, pos, size, config);
+    data = new VisualData(index, pos, size, color, config);
 }
 
 void Visual::layout(Layout layout)

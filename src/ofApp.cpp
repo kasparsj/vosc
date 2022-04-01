@@ -89,9 +89,6 @@ void ofApp::doCommand(string command, ofxOscMessage &m) {
     else if (command == "/behaviour") {
         config.behaviour = m.getArgAsInt(0);
     }
-    else if (command == "/color") {
-        config.color = ofFloatColor(ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2)));
-    }
     else if (command == "/blendmode") {
         blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
     }
@@ -147,10 +144,21 @@ void ofApp::visualCommand(Visual &visual, string command, ofxOscMessage &m, int 
         visual.size = glm::vec2(m.getArgAsFloat(i), m.getArgAsFloat(i+1));
     }
     else if (command == "/color") {
-        visual.config.color = ofFloatColor(ofColor(m.getArgAsInt(i), m.getArgAsInt(i+1), m.getArgAsInt(i+2)));
+        ofFloatColor color;
+        int k = 0;
+        for (int j=i; j<m.getNumArgs(); j++) {
+            if (m.getArgType(j) == OFXOSC_TYPE_FLOAT) {
+                color[k] = m.getArgAsFloat(j);
+            }
+            else {
+                color[k] = m.getArgAsInt(j) / 255.f;
+            }
+            k++;
+        }
+        visual.color = color;
     }
     else if (command == "/color/random") {
-        visual.config.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+        visual.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
     }
     else if (command == "/behaviour") {
         visual.config.behaviour = m.getArgAsInt(i);

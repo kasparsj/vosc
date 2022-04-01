@@ -1,6 +1,6 @@
 #version 120
 
-#define MAX_VISUALS 8
+#define MAX_VALUES 8
 
 uniform float time;
 uniform vec2 resolution;
@@ -8,7 +8,7 @@ uniform vec2 offset;
 uniform int index;
 uniform vec4 color;
 uniform int random;
-uniform float values[MAX_VISUALS];
+uniform float values[MAX_VALUES];
 uniform int visible;
 
 float rand(float n){return fract(sin(n) * 43758.5453123);}
@@ -33,11 +33,11 @@ void main (void){
     vec2 fragCoord = offset + gl_FragCoord.xy;
     vec2 uv = vec2(0.5, 0.5 * (resolution.y / resolution.x)) - fragCoord.xy / resolution.x;
     float dist = sqrt(dot(uv, uv));
-    int index1 = index + 1;
-    float radius = cos(time * index1) * 0.1 + 0.2;
-    float border = sin(time * index1) * 0.2 + 0.05;
+    float radius = cos(time) * 0.1 + 0.2;
+    float border = sin(time) * 0.2 + 0.05;
     float t = smoothstep(radius + border, radius - border, dist);
     vec4 col = color;
-    if (col.rgb == vec3(0)) col = vec4(0.4, 1.0/1.5, 1.0, col.a);
-    gl_FragColor = vec4(col.rgb * 1.5 * t * noise(vec2(random, index)), t * visible);
+    if (col.rgb == vec3(0)) col = vec4(0.4, 0.75, 1.0, col.a);
+    //gl_FragColor = vec4(col.rgb * 1.5 * t * noise(vec2(random, index)), t * visible);
+    gl_FragColor = vec4(col.rgb * 2.0 * t * noise(vec2(random, index)), t * visible);
 }

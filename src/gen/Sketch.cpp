@@ -29,7 +29,7 @@ void Sketch::update(VisualData *data, Config &config) {
         clear();
         sketches[name]->init();
         random = ofRandom(1000);
-        config.color = sketches[name]->defaultColor;
+        data->color = sketches[name]->defaultColor;
     }
     ofEnableAlphaBlending();
     fbo.begin();
