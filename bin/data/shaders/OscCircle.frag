@@ -1,12 +1,13 @@
 #version 120
 
 #define MAX_VALUES 8
+#define DEFAULT_COLOR vec3(0.4, 0.75, 1.0)
 
 uniform float time;
 uniform vec2 resolution;
 uniform vec2 offset;
 uniform int index;
-uniform vec4 color;
+uniform vec4 color = vec4(DEFAULT_COLOR, 1.0);
 uniform int random;
 uniform float values[MAX_VALUES];
 uniform int visible;
@@ -37,7 +38,7 @@ void main (void){
     float border = sin(time) * 0.2 + 0.05;
     float t = smoothstep(radius + border, radius - border, dist);
     vec4 col = color;
-    if (col.rgb == vec3(0)) col = vec4(0.4, 0.75, 1.0, col.a);
+    if (col.rgb == vec3(0)) col = vec4(DEFAULT_COLOR, col.a);
     //gl_FragColor = vec4(col.rgb * 1.5 * t * noise(vec2(random, index)), t * visible);
     gl_FragColor = vec4(col.rgb * 2.0 * t * noise(vec2(random, index)), t * visible);
 }

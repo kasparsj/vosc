@@ -9,19 +9,23 @@ void ofApp::setup(){
     receiver.setup(33333);
 	tidal = new ofxTidalCycles(1);
     setupSounds(MAX_SOUNDS);
-    setupVisuals(MAX_VISUALS, L_STACK);
-    
-    fbo.allocate(ofGetWidth(), ofGetHeight());
+    setupVisuals(MAX_VISUALS);
+    windowResized(ofGetWidth(), ofGetHeight());
 }
 
 void ofApp::setupSounds(int numInsts) {
     sounds.resize(numInsts);
 }
 
-void ofApp::setupVisuals(int numVisuals, Layout layout) {
+void ofApp::setupVisuals(int numVisuals) {
     visuals.resize(numVisuals);
     for (int i=0; i<visuals.size(); i++) {
         visuals[i].setup(i, numVisuals, sounds.size() > i ? "amp" + ofToString(i) : "");
+    }
+}
+
+void ofApp::layoutVisuals(Layout layout) {
+    for (int i=0; i<visuals.size(); i++) {
         visuals[i].layout(layout);
     }
 }
@@ -58,12 +62,13 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
         setupSounds(m.getArgAsInt(0));
     }
     else if (command == "/visuals") {
-        setupVisuals(m.getArgAsInt(0), static_cast<Layout>(m.getArgAsInt(1)));
+        setupVisuals(m.getArgAsInt(0));
+        if (m.getNumArgs() > 1) {
+            layoutVisuals(static_cast<Layout>(m.getArgAsInt(1)));
+        }
     }
     else if (command == "/layout") {
-        for (int i=0; i<visuals.size(); i++) {
-            visuals[i].layout(static_cast<Layout>(m.getArgAsInt(0)));
-        }
+        layoutVisuals(static_cast<Layout>(m.getArgAsInt(0)));
     }
     else if (command == "/amp/max") {
         config.maxAmp = m.getArgAsFloat(0);
@@ -227,6 +232,9 @@ void ofApp::exit() {
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     switch (key) {
+        case 'f':
+            ofToggleFullscreen();
+            break;
         case '0':
             blendMode = OF_BLENDMODE_DISABLED;
             break;
@@ -289,7 +297,8 @@ void ofApp::mouseExited(int x, int y){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
-
+    fbo.allocate(ofGetWidth(), ofGetHeight());
+    layoutVisuals(layout);
 }
 
 //--------------------------------------------------------------

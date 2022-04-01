@@ -12,7 +12,8 @@ class ofApp : public ofBaseApp {
 public:
 	void setup();
     void setupSounds(int numInsts);
-    void setupVisuals(int numVisuals, Layout layout);
+    void setupVisuals(int numVisuals);
+    void layoutVisuals(Layout layout);
 	void update();
     void parseMessages();
     void parseMessage(const ofxOscMessage &m);
@@ -44,4 +45,5 @@ public:
     ofBlendMode bgBlendMode = OF_BLENDMODE_ALPHA;
     ofColor bgColor = ofColor(0);
     bool showDebug = true;
+    Layout layout = L_STACK;
 };
