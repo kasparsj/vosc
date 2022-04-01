@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "ColorUtil.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -157,6 +158,9 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
     else if (command == "/video/pos/random") {
         visual.video.pos = ofRandom(1.f);
     }
+    else if (command == "/video/bri") {
+        visual.video.bri = m.getArgAsFloat(0);
+    }
     else if (command == "/video/alpha") {
         visual.video.alpha = m.getArgAsFloat(0);
     }
@@ -171,6 +175,9 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
     }
     else if (command == "/shader/noclear") {
         visual.shader.noClear = m.getArgAsBool(0);
+    }
+    else if (command == "/shader/bri") {
+        visual.shader.bri = m.getArgAsFloat(0);
     }
     else if (command == "/shader/alpha") {
         visual.shader.alpha = m.getArgAsFloat(0);
@@ -187,6 +194,9 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
     else if (command == "/sketch/reset") {
         visual.sketch.reset();
     }
+    else if (command == "/sketch/bri") {
+        visual.sketch.bri = m.getArgAsFloat(0);
+    }
     else if (command == "/sketch/alpha") {
         visual.sketch.alpha = m.getArgAsFloat(0);
     }
@@ -197,19 +207,16 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
         visual.size = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
     }
     else if (command == "/color") {
-        ofFloatColor color;
-        for (int i=0; i<m.getNumArgs(); i++) {
-            if (m.getArgType(i) == OFXOSC_TYPE_FLOAT) {
-                color[i] = m.getArgAsFloat(i);
-            }
-            else {
-                color[i] = m.getArgAsInt(i) / 255.f;
-            }
-        }
-        visual.color = color;
+        visual.color = parseColor(m);
     }
     else if (command == "/color/random") {
         visual.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+    }
+    else if (command == "/color/lerp") {
+        ofFloatColor fromColor = parseColor(m, 1);
+        ofFloatColor toColor = parseColor(m, 4);
+        float perc = m.getArgAsFloat(0);
+        visual.color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
     }
     else if (command == "/color/mfcc") {
         visual.useMFCC = m.getArgAsBool(0);
@@ -234,6 +241,19 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
     else if (command == "/unload") {
         visual.unload();
     }
+}
+
+ofFloatColor ofApp::parseColor(const ofxOscMessage &m, int idx) {
+    ofFloatColor color;
+    for (int i=idx; i<min(idx+3, (int) m.getNumArgs()); i++) {
+        if (m.getArgType(i) == OFXOSC_TYPE_FLOAT) {
+            color[i-idx] = m.getArgAsFloat(i);
+        }
+        else {
+            color[i-idx] = m.getArgAsInt(i) / 255.f;
+        }
+    }
+    return color;
 }
 
 //--------------------------------------------------------------

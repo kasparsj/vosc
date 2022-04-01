@@ -15,6 +15,7 @@ public:
 
     string name = "";
     string prevName = "";
-    float alpha = 1.0;
     int random = 0;
+    float bri = 1.0;
+    float alpha = 1.0;
 };

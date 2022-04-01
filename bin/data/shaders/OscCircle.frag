@@ -1,7 +1,7 @@
 #version 120
 
 #define MAX_VALUES 8
-#define DEFAULT_COLOR vec3(0.4, 0.75, 1.0)
+#define DEFAULT_COLOR vec3(0.15, 0.75, 1.0)
 
 uniform float time;
 uniform vec2 resolution;

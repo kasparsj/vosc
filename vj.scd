@@ -96,8 +96,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/video/*/random');
 ~visuals.sendMsg('/video/*/pos/random');
 
-~visuals.sendMsg('/color/0', 1.0, 0.45, 0); // orange
 ~visuals.sendMsg('/color/0', 0.15, 0.75, 1.0); // blue
+~visuals.sendMsg('/color/0', 1.0, 0.45, 0); // orange
 ~visuals.sendMsg('/color/0', 0.4615, 0.615, 1.0); // blue2
 ~visuals.sendMsg('/color/0', 1.0, 1.0, 0.25); // yellow
 ~visuals.sendMsg('/color/0', 0, 0, 0); // reset
@@ -126,6 +126,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/loud/max', 32);
 ~visuals.sendMsg('/data/0', "loud:0");
 ~visuals.sendMsg('/sketch/0', "NoisySpirals");
+~visuals.sendMsg('/sketch/0/alpha', 1.0);
+~visuals.sendMsg('/sketch/0/bri', 1.0);
 ~visuals.sendMsg('/color/0/mfcc', false);
 )
 
@@ -133,29 +135,56 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/loud/max', 32);
 ~visuals.sendMsg('/data/1', "loud:0");
 ~visuals.sendMsg('/sketch/1', "WaveClock");
+~visuals.sendMsg('/sketch/1/alpha', 1.0);
+~visuals.sendMsg('/sketch/1/bri', 1.0);
 ~visuals.sendMsg('/color/1/mfcc', true);
 )
 
-~visuals.sendMsg('/loud/thresh', 0.7);
-~visuals.sendMsg('/color/0', 1.0, 1.0, 1.0); // white
-
 (
 ~visuals.sendMsg('/shader/0', "OscCircle");
+~visuals.sendMsg('/loud/thresh', 0.7);
+~visuals.sendMsg('/color/0', 1.0, 1.0, 1.0);
 {
-	20.do { |i|
-		~visuals.sendMsg('/shader/0/alpha', i/20.0);
-		~visuals.sendMsg('/sketch/0/alpha', 1-(i/20.0));
-		~visuals.sendMsg('/sketch/1/alpha', 1-(i/20.0));
-		0.5.wait;
+	100.do { |i|
+		var j = (i+1);
+		~visuals.sendMsg('/shader/0/alpha', j/100.0);
+		~visuals.sendMsg('/sketch/0/bri', 1-(j/100.0));
+		~visuals.sendMsg('/sketch/1/bri', 1-(j/100.0));
+		0.3.wait;
 	};
+	~visuals.sendMsg('/loud/thresh', 0.6);
+	"bri fade done".postln;
 }.fork;
 )
 
-~visuals.sendMsg('/loud/thresh', 0.6);
-
 (
 ~visuals.sendMsg('/loud/thresh', 0.5);
-~visuals.sendMsg('/color/0', 0, 0, 0); // reset
-~visuals.sendMsg('/sketch/0', "");
-~visuals.sendMsg('/sketch/1', "");
+{
+	// lerp to blue
+	100.do { |i|
+		var j = (i+1);
+		~visuals.sendMsg('/color/0/lerp', j/100.0, 1.0, 1.0, 1.0, 0.15, 0.75, 1.0);
+		~visuals.sendMsg('/sketch/0/alpha', 1-(j/100.0));
+		~visuals.sendMsg('/sketch/1/alpha', 1-(j/100.0));
+		0.3.wait;
+	};
+	~visuals.sendMsg('/color/0', 0, 0, 0);
+	~visuals.sendMsg('/sketch/0', "");
+	~visuals.sendMsg('/sketch/1', "");
+	"colorlerp+alpha done".postln;
+}.fork;
+)
+
+(
+{
+	// lerp to orange
+	100.do { |i|
+		var j = (i+1);
+		~visuals.sendMsg('/color/0/lerp', j/100.0, 0.15, 0.75, 1.0, 1.0, 0.45, 0); // orange
+		~visuals.sendMsg('/color/0/lerp', j/100.0, 1.0, 1.0, 0.45, 0, 0.4615, 0.615, 1.0); // blue2
+		// ~visuals.sendMsg('/color/0/lerp', j/100.0, 0.4615, 0.615, 1.0, 1.0, 1.0, 0.25); // yellow
+		0.1.wait;
+	};
+	"colorlerp done".postln;
+}.fork;
 )

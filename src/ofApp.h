@@ -19,6 +19,7 @@ public:
     void parseMessage(const ofxOscMessage &m);
     void parseQueuedMessages();
     void visualCommand(Visual &visual, string command, const ofxOscMessage &m);
+    ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0);
 	void draw();
 	void exit();
 

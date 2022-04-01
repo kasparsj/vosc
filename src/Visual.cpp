@@ -54,15 +54,15 @@ void Visual::update(const vector<Sound> &sounds, const vector<TidalNote> &notes,
 void Visual::draw() {
     if (video.isEnabled()) {
         float value = (data->values.size() ? data->values[0] : 1.0);
-        ofSetColor(value * 255 * video.alpha);
+        ofSetColor(value * 255 * video.bri, video.alpha * 255);
         video.draw(pos.x, pos.y, size.x, size.y);
     }
     if (shader.isEnabled()) {
-        ofSetColor(255 * shader.alpha);
+        ofSetColor(255 * shader.bri, shader.alpha * 255);
         shader.draw(pos.x, pos.y, size.x, size.y);
     }
     if (sketch.isEnabled()) {
-        ofSetColor(255 * sketch.alpha);
+        ofSetColor(255 * sketch.bri, sketch.alpha * 255);
         sketch.draw(pos.x, pos.y, size.x, size.y);
     }
     data->afterDraw();
