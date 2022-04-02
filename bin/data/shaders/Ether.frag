@@ -32,13 +32,15 @@ void main(void){
     vec2 p = fragCoord.xy/resolution.y - vec2(.9,.5);
     vec3 cl = vec3(0.);
     float d = 2.5;
+    vec4 col = color;
+    if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
     for(int i=0; i<=5; i++)    {
         vec3 p = vec3(0,0,5.) + normalize(vec3(p, -1.))*d;
         float rz = map(p);
         float f =  clamp((rz - map(p+.1))*0.5, -.1, 1. );
-        vec3 l = color.rgb + vec3(5., 2.5, 3.) * f;
+        vec3 l = col.rgb + vec3(5., 2.5, 3.) * f;
         cl = cl*l + smoothstep(2.5, .0, rz)*.7*l;
         d += min(rz, 1.);
     }
-    gl_FragColor = vec4(cl, color.a);
+    gl_FragColor = vec4(cl, col.a);
 }

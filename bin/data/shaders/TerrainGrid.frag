@@ -1,3 +1,5 @@
+#version 120
+
 // references:
 // http://madebyevan.com/shaders/grid/
 // Hash without sine: https://www.shadertoy.com/view/4djSRW
@@ -76,10 +78,11 @@ vec3 shading( vec3 ro, vec3 rd )
     return vec3(0.0);
 }
 
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
+void main(void)
 {
-    vec2 uv = (2.*fragCoord.xy - iResolution.xy)/iResolution.y;
-    vec3 ro = vec3(0.5,25,iTime * 5.0);
+    vec2 fragCoord = offset + gl_FragCoord.xy;
+    vec2 uv = (2.*fragCoord.xy - resolution.xy)/resolution.y;
+    vec3 ro = vec3(0.5,25,time * 5.0);
     vec3 rd = normalize(vec3(uv,2.0)) * rotationMatrix;
-    fragColor = vec4(shading(ro,rd), 1.0);
+    gl_FragColor = vec4(shading(ro,rd), 1.0);
 }

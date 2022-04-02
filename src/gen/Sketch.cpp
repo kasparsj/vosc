@@ -1,12 +1,14 @@
 #include "Sketch.h"
 #include "NoisySpirals.h"
 #include "WaveClock.h"
+#include "Spiral.h"
 
 map<string, SketchImpl*> createSketches()
 {
     map<string, SketchImpl*> sketches;
     sketches["NoisySpirals"] = new NoisySpirals();
     sketches["WaveClock"] = new WaveClock();
+    sketches["Spiral"] = new Spiral();
     return sketches;
 }
 
@@ -24,12 +26,14 @@ void Sketch::update(VisualData *data, Config &config) {
             return;
         }
         prevName = name;
+        random = ofRandom(1000);
+        if (data->color == ofFloatColor(0, 0)) {
+            data->color = sketches[name]->defaultColor;
+        }
     }
     if (!sketches[name]->initialized) {
         clear();
         sketches[name]->init();
-        random = ofRandom(1000);
-        data->color = sketches[name]->defaultColor;
     }
     ofEnableAlphaBlending();
     fbo.begin();

@@ -108,14 +108,15 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/unload/*');
 ~visuals.sendMsg('/sketch/*/reset');
 
+~visuals.sendMsg('/onset');
 ~visuals.sendMsg('/data/0', "const");
 ~visuals.sendMsg('/data/0', "rand");
 ~visuals.sendMsg('/data/0', "noise");
 ~visuals.sendMsg('/data/1f', "noise");
 ~visuals.sendMsg('/data/*', "loud:0");
 ~visuals.sendMsg('/shader/0', "AtmoScattering");
-~visuals.sendMsg('/sketch/0', "WaveClock"); // good
-~visuals.sendMsg('/sketch/1', "NoisySpirals"); // good
+~visuals.sendMsg('/sketch/0', "WaveClock");
+~visuals.sendMsg('/sketch/1', "NoisySpirals");
 ~visuals.sendMsg('/sketch/0/reset'); // good
 
 /// PERFORMANCE
@@ -181,10 +182,23 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 	100.do { |i|
 		var j = (i+1);
 		~visuals.sendMsg('/color/0/lerp', j/100.0, 0.15, 0.75, 1.0, 1.0, 0.45, 0); // orange
-		~visuals.sendMsg('/color/0/lerp', j/100.0, 1.0, 1.0, 0.45, 0, 0.4615, 0.615, 1.0); // blue2
+		// ~visuals.sendMsg('/color/0/lerp', j/100.0, 1.0, 1.0, 0.45, 0, 0.4615, 0.615, 1.0); // blue2
 		// ~visuals.sendMsg('/color/0/lerp', j/100.0, 0.4615, 0.615, 1.0, 1.0, 1.0, 0.25); // yellow
 		0.1.wait;
 	};
 	"colorlerp done".postln;
+}.fork;
+)
+
+(
+{
+	//~visuals.sendMsg('/loud/thresh', 0);
+	~visuals.sendMsg('/sketch/1', "Spiral");
+	~visuals.sendMsg('/sketch/1/bri', 1.0);
+	100.do { |i|
+		var j = (i+1);
+		~visuals.sendMsg('/sketch/1/alpha', (j/100.0));
+		0.1.wait;
+	};
 }.fork;
 )

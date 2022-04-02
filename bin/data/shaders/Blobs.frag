@@ -22,6 +22,6 @@ void main(void){
         t += sin(i * 2.0) / length(m - pos);
     }
     vec4 col = color;
-    if (col.rgb == vec3(0)) col = vec4(DEFAULT_COLOR, col.a);
+    if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
     gl_FragColor = vec4(vec3(t) / 0.1 * col.rgb + vec3(0.0, 0.0, 0.5), col.a);
 }

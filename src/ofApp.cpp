@@ -48,7 +48,10 @@ void ofApp::parseMessages(){
         receiver.getNextMessage(m);
         parseMessage(m);
     }
-    parseQueuedMessages();
+    if (forceOnset || checkOnset()) {
+        processQueue();
+        forceOnset = false;
+    }
 }
 
 void ofApp::parseMessage(const ofxOscMessage &m) {
@@ -59,6 +62,9 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     }
     else if (command == "/dirt/play") {
         tidal->parse(m);
+    }
+    else if (command == "/onset") {
+        forceOnset = true;
     }
     else if (command == "/sounds") {
         setupSounds(m.getArgAsInt(0));
@@ -74,7 +80,7 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     }
 }
 
-void ofApp::parseQueuedMessages() {
+bool ofApp::checkOnset() {
     bool isOnset;
     if (tidal->notes.size()) {
         isOnset = true;
@@ -87,64 +93,66 @@ void ofApp::parseQueuedMessages() {
             }
         }
     }
-    if (isOnset) {
-        while (messageQueue.size()) {
-            ofxOscMessage &m = messageQueue[0];
-            string command = m.getAddress();
-            if (command == "/layout") {
-                layoutVisuals(static_cast<Layout>(m.getArgAsInt(0)));
-            }
-            else if (command == "/amp/max") {
-                config.maxAmp = m.getArgAsFloat(0);
-            }
-            else if (command == "/amp/thresh") {
-                config.threshAmp = m.getArgAsFloat(0);
-            }
-            else if (command == "/loud/max") {
-                config.maxLoud = m.getArgAsFloat(0);
-            }
-            else if (command == "/loud/thresh") {
-                config.threshLoud = m.getArgAsFloat(0);
-            }
-            else if (command == "/speed") {
-                config.speed = m.getArgAsFloat(0);
-            }
-            else if (command == "/behaviour") {
-                config.behaviour = m.getArgAsInt(0);
-            }
-            else if (command == "/blendmode") {
-                blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
-            }
-            else if (command == "/bgcolor") {
-                bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
-            }
-            else if (command == "/bgblendmode") {
-                bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+    return isOnset;
+}
+
+void ofApp::processQueue() {
+    while (messageQueue.size()) {
+        ofxOscMessage &m = messageQueue[0];
+        string command = m.getAddress();
+        if (command == "/layout") {
+            layoutVisuals(static_cast<Layout>(m.getArgAsInt(0)));
+        }
+        else if (command == "/amp/max") {
+            config.maxAmp = m.getArgAsFloat(0);
+        }
+        else if (command == "/amp/thresh") {
+            config.threshAmp = m.getArgAsFloat(0);
+        }
+        else if (command == "/loud/max") {
+            config.maxLoud = m.getArgAsFloat(0);
+        }
+        else if (command == "/loud/thresh") {
+            config.threshLoud = m.getArgAsFloat(0);
+        }
+        else if (command == "/speed") {
+            config.speed = m.getArgAsFloat(0);
+        }
+        else if (command == "/behaviour") {
+            config.behaviour = m.getArgAsInt(0);
+        }
+        else if (command == "/blendmode") {
+            blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+        }
+        else if (command == "/bgcolor") {
+            bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
+        }
+        else if (command == "/bgblendmode") {
+            bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+        }
+        else {
+            string::size_type firstSlash = command.find("/", 1);
+            string cmd = command.substr(0, firstSlash);
+            string which = command.substr(firstSlash+1, 1);
+            if (which == "*" || which == "x" || which == "a") {
+                for (int i=0; i<visuals.size(); i++) {
+                    visualCommand(visuals[i], cmd + command.substr(firstSlash+2), m);
+                }
             }
             else {
-                string::size_type firstSlash = command.find("/", 1);
-                string cmd = command.substr(0, firstSlash);
-                string which = command.substr(firstSlash+1, 1);
-                if (which == "*" || which == "x" || which == "a") {
-                    for (int i=0; i<visuals.size(); i++) {
-                        visualCommand(visuals[i], cmd + command.substr(firstSlash+2), m);
-                    }
+                int i = -1;
+                try {
+                    i = std::stoi(which);
                 }
-                else {
-                    int i = -1;
-                    try {
-                        i = std::stoi(which);
-                    }
-                    catch (...) {
-                        ofLog() << "invalid command " << command;
-                    }
-                    if (i > -1) {
-                        visualCommand(visuals[i], cmd + command.substr(firstSlash+2), m);
-                    }
+                catch (...) {
+                    ofLog() << "invalid command " << command;
+                }
+                if (i > -1) {
+                    visualCommand(visuals[i], cmd + command.substr(firstSlash+2), m);
                 }
             }
-            messageQueue.erase(messageQueue.begin());
         }
+        messageQueue.erase(messageQueue.begin());
     }
 }
 

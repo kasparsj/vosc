@@ -1,8 +1,9 @@
 #version 120
 
+#define TWO_PI 6.28318530718
+
 uniform float time;
 uniform vec2 resolution;
-#define TWO_PI 6.28318530718
 
 vec3 hsb2rgb(vec3 c){
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);

@@ -17,8 +17,9 @@ public:
 	void update();
     void parseMessages();
     void parseMessage(const ofxOscMessage &m);
-    void parseQueuedMessages();
+    void processQueue();
     void visualCommand(Visual &visual, string command, const ofxOscMessage &m);
+    bool checkOnset();
     ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0);
 	void draw();
 	void exit();
@@ -42,6 +43,7 @@ public:
     
     vector<Sound> sounds;
     vector<Visual> visuals;
+    bool forceOnset;
     
     ofFbo fbo;
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;

@@ -1,5 +1,6 @@
 #version 120
 
+#define DEFAULT_COLOR(0.15, 0.75, 1.0)
 #define MAX_VALUES 8
 
 uniform float time;
@@ -20,7 +21,7 @@ void main(void){
         bri += (1.0 - pow(abs(st.x), values[0] * 0.03));
     }
     vec4 col = color;
-    if (col.rgb == vec3(0)) col = vec4(0.15, 0.75, 1.0, col.a);
+    if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
     //gl_FragColor = vec4(col.rgb * bri, col.a);
     gl_FragColor = col * bri;
 }
