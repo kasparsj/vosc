@@ -10,7 +10,7 @@ void ofApp::setup(){
     receiver.setup(33333);
 	tidal = new ofxTidalCycles(1);
     setupSounds(MAX_SOUNDS);
-    setupVisuals(MAX_VISUALS);
+    setupLayers(MAX_VISUALS);
     windowResized(ofGetWidth(), ofGetHeight());
 }
 
@@ -18,16 +18,16 @@ void ofApp::setupSounds(int numInsts) {
     sounds.resize(numInsts);
 }
 
-void ofApp::setupVisuals(int numVisuals) {
-    visuals.resize(numVisuals);
-    for (int i=0; i<visuals.size(); i++) {
-        visuals[i].setup(i, numVisuals, sounds.size() > i ? "amp" + ofToString(i) : "");
+void ofApp::setupLayers(int numVisuals) {
+    layers.resize(numVisuals);
+    for (int i=0; i<layers.size(); i++) {
+        layers[i].setup(i, numVisuals, sounds.size() > i ? "amp" + ofToString(i) : "");
     }
 }
 
-void ofApp::layoutVisuals(Layout layout) {
-    for (int i=0; i<visuals.size(); i++) {
-        visuals[i].layout(layout);
+void ofApp::layoutLayers(Layout layout) {
+    for (int i=0; i<layers.size(); i++) {
+        layers[i].layout(layout);
     }
 }
 
@@ -37,8 +37,8 @@ void ofApp::update(){
     while (tidal->notes.size() > MAX_NOTES) {
         tidal->notes.erase(tidal->notes.begin());
     }
-	for (int i = 0; i < visuals.size(); i++) {
-		visuals[i].update(sounds, tidal->notes, config);
+	for (int i = 0; i < layers.size(); i++) {
+		layers[i].update(sounds, tidal->notes, config);
 	}
 }
 
@@ -48,7 +48,7 @@ void ofApp::parseMessages(){
         receiver.getNextMessage(m);
         parseMessage(m);
     }
-    if (!waitOnset || forceOnset || checkOnset()) {
+    if (waitOnset < 1 || forceOnset || checkOnset()) {
         processQueue();
         forceOnset = false;
     }
@@ -59,12 +59,18 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     if (command == "/sound/data") {
         int instNum = m.getArgAsInt(0);
         sounds[instNum].parse(m);
+        if (waitOnset == -1) {
+            waitOnset = 1;
+        }
     }
     else if (command == "/dirt/play") {
         tidal->parse(m);
+        if (waitOnset == -1) {
+            waitOnset = 1;
+        }
     }
     else if (command == "/onset") {
-        waitOnset = m.getNumArgs() > 0 ? m.getArgAsBool(0) : !waitOnset;
+        waitOnset = m.getNumArgs() > 0 ? m.getArgAsBool(0) : (int) !(bool)waitOnset;
     }
     else if (command == "/onset/force") {
         forceOnset = true;
@@ -72,10 +78,10 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     else if (command == "/sounds") {
         setupSounds(m.getArgAsInt(0));
     }
-    else if (command == "/visuals") {
-        setupVisuals(m.getArgAsInt(0));
+    else if (command == "/layers") {
+        setupLayers(m.getArgAsInt(0));
         if (m.getNumArgs() > 1) {
-            layoutVisuals(static_cast<Layout>(m.getArgAsInt(1)));
+            layoutLayers(static_cast<Layout>(m.getArgAsInt(1)));
         }
     }
     else {
@@ -104,7 +110,7 @@ void ofApp::processQueue() {
         ofxOscMessage &m = messageQueue[0];
         string command = m.getAddress();
         if (command == "/layout") {
-            layoutVisuals(static_cast<Layout>(m.getArgAsInt(0)));
+            layoutLayers(static_cast<Layout>(m.getArgAsInt(0)));
         }
         else if (command == "/amp/max") {
             config.maxAmp = m.getArgAsFloat(0);
@@ -134,24 +140,31 @@ void ofApp::processQueue() {
             bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
         }
         else {
-            string::size_type firstSlash = command.find("/", 1);
-            string cmd = command.substr(0, firstSlash);
-            string which = command.substr(firstSlash+1, 1);
-            if (which == "*" || which == "x" || which == "a") {
-                for (int i=0; i<visuals.size(); i++) {
-                    visualCommand(visuals[i], cmd + command.substr(firstSlash+2), m);
+            bool all = false;
+            int idx = -1;
+            if (m.getArgType(0) == OFXOSC_TYPE_STRING) {
+                string which = m.getArgAsString(0);
+                all = which == "*" || which == "x" || which == "a";
+                if (!all) {
+                    try {
+                        idx = std::stoi(which);
+                    }
+                    catch (...) {
+                        ofLog() << "invalid layer index " << which;
+                    }
                 }
             }
             else {
-                int i = -1;
-                try {
-                    i = std::stoi(which);
+                idx = m.getArgAsInt(0);
+            }
+            if (all) {
+                for (int i=0; i<layers.size(); i++) {
+                    layerCommand(layers[i], command, m);
                 }
-                catch (...) {
-                    ofLog() << "invalid command " << command;
-                }
-                if (i > -1) {
-                    visualCommand(visuals[i], cmd + command.substr(firstSlash+2), m);
+            }
+            else {
+                if (idx > -1) {
+                    layerCommand(layers[idx], command, m);
                 }
             }
         }
@@ -159,63 +172,42 @@ void ofApp::processQueue() {
     }
 }
 
-void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m) {
-    if (command == "/video") {
-        visual.video.name = m.getArgAsString(0);
+void ofApp::layerCommand(Layer &visual, string command, const ofxOscMessage &m) {
+    if (command == "/load") {
+        visual.load(m.getArgAsString(1));
     }
-    else if (command == "/video/pos") {
-        visual.video.pos = m.getArgAsFloat(0);
+    else if (command == "/seek") {
+        visual.seek(m.getArgAsFloat(1));
     }
-    else if (command == "/video/pos/random") {
-        visual.video.pos = ofRandom(1.f);
+    else if (command == "/seek/random") {
+        visual.seek(ofRandom(1.f));
     }
-    else if (command == "/video/bri") {
-        visual.video.bri = m.getArgAsFloat(0);
+    else if (command == "/reload") {
+        visual.reload();
     }
-    else if (command == "/video/alpha") {
-        visual.video.alpha = m.getArgAsFloat(0);
+    else if (command == "/noclear") {
+        visual.setNoClear(m.getArgAsBool(1));
     }
-    else if (command == "/shader") {
-        visual.shader.name = m.getArgAsString(0);
+    else if (command == "/bri") {
+        visual.setBri(m.getArgAsFloat(1));
     }
-    else if (command == "/shader/choose") {
-        visual.shader.choose();
+    else if (command == "/alpha") {
+        visual.setAlpha(m.getArgAsFloat(1));
     }
-    else if (command == "/shader/reload") {
-        visual.shader.reload();
+    else if (command == "/choose") {
+        visual.choose();
     }
-    else if (command == "/shader/noclear") {
-        visual.shader.noClear = m.getArgAsBool(0);
+    else if (command == "/clear") {
+        visual.clear();
     }
-    else if (command == "/shader/bri") {
-        visual.shader.bri = m.getArgAsFloat(0);
-    }
-    else if (command == "/shader/alpha") {
-        visual.shader.alpha = m.getArgAsFloat(0);
-    }
-    else if (command == "/sketch") {
-        visual.sketch.name = m.getArgAsString(0);
-    }
-    else if (command == "/sketch/choose") {
-        visual.sketch.choose();
-    }
-    else if (command == "/sketch/clear") {
-        visual.sketch.clear();
-    }
-    else if (command == "/sketch/reset") {
-        visual.sketch.reset();
-    }
-    else if (command == "/sketch/bri") {
-        visual.sketch.bri = m.getArgAsFloat(0);
-    }
-    else if (command == "/sketch/alpha") {
-        visual.sketch.alpha = m.getArgAsFloat(0);
+    else if (command == "/reset") {
+        visual.reset();
     }
     else if (command == "/pos") {
-        visual.pos = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
+        visual.pos = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
     }
     else if (command == "/size") {
-        visual.size = glm::vec2(m.getArgAsFloat(0), m.getArgAsFloat(1));
+        visual.size = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
     }
     else if (command == "/color") {
         visual.color = parseColor(m);
@@ -224,27 +216,27 @@ void ofApp::visualCommand(Visual &visual, string command, const ofxOscMessage &m
         visual.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
     }
     else if (command == "/color/lerp") {
-        ofFloatColor fromColor = parseColor(m, 1);
-        ofFloatColor toColor = parseColor(m, 4);
-        float perc = m.getArgAsFloat(0);
+        ofFloatColor fromColor = parseColor(m, 2);
+        ofFloatColor toColor = parseColor(m, 5);
+        float perc = m.getArgAsFloat(1);
         visual.color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
     }
     else if (command == "/color/mfcc") {
-        visual.useMFCC = m.getArgAsBool(0);
+        visual.useMFCC = m.getArgAsBool(1);
     }
     else if (command == "/behaviour") {
-        visual.config.behaviour = m.getArgAsInt(0);
+        visual.config.behaviour = m.getArgAsInt(1);
     }
     else if (command == "/data") {
         vector<string> ds;
-        for (int i=0; i<m.getNumArgs(); i++) {
+        for (int i=1; i<m.getNumArgs(); i++) {
             ds.push_back(m.getArgAsString(i));
         }
         visual.setDataSources(ds);
     }
     else if (command == "/data/add") {
         vector<string> ds;
-        for (int i=0; i<m.getNumArgs(); i++) {
+        for (int i=1; i<m.getNumArgs(); i++) {
             ds.push_back(m.getArgAsString(i));
         }
         visual.addDataSources(ds);
@@ -273,15 +265,15 @@ void ofApp::draw(){
     ofClear(0, 0, 0, 0);
     switch (blendMode) {
         case OF_BLENDMODE_ALPHA:
-            ofSetColor(255, 255, 255, 255 / visuals.size());
+            ofSetColor(255, 255, 255, 255 / layers.size());
             break;
         default:
             ofSetColor(255);
             break;
     }
     ofEnableBlendMode(blendMode);
-    for (int i=0; i<visuals.size(); i++) {
-        visuals[i].draw();
+    for (int i=0; i<layers.size(); i++) {
+        layers[i].draw();
     }
     ofDisableBlendMode();
     fbo.end();
@@ -292,15 +284,10 @@ void ofApp::draw(){
     fbo.draw(0, 0);
     
     if (showDebug) {
-        for (int i=0; i<visuals.size(); i++) {
+        for (int i=0; i<layers.size(); i++) {
             ofSetColor(255);
-            if (visuals[i].shader.isEnabled() && visuals[i].sketch.isEnabled()) {
-                visuals[i].shader.fbo.draw(20+i*120, ofGetHeight()-120, 100, 50);
-                visuals[i].sketch.fbo.draw(20+i*120, ofGetHeight()-70, 100, 50);
-            }
-            else {
-                visuals[i].shader.fbo.draw(20+i*120, ofGetHeight()-120, 100, 100);
-                visuals[i].sketch.fbo.draw(20+i*120, ofGetHeight()-120, 100, 100);
+            if (layers[i].gen != NULL) {
+                layers[i].draw(20+i*120, ofGetHeight()-120, 100, 100);
             }
         }
     }
@@ -330,9 +317,9 @@ void ofApp::keyPressed(int key){
             showDebug = !showDebug;
             break;
         case 'r': {
-            for (int i=0; i<visuals.size(); i++) {
+            for (int i=0; i<layers.size(); i++) {
                 ofxOscMessage m;
-                visualCommand(visuals[i], "/shader/reload", m);
+                layerCommand(layers[i], "/reload", m);
             }
             break;
         }
@@ -379,7 +366,7 @@ void ofApp::mouseExited(int x, int y){
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
     fbo.allocate(ofGetWidth(), ofGetHeight());
-    layoutVisuals(layout);
+    layoutLayers(layout);
 }
 
 //--------------------------------------------------------------

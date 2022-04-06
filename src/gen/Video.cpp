@@ -16,7 +16,11 @@ vector<string> loadVideos()
 
 vector<string> Video::videos = loadVideos();
 
-void Video::update(VisualData *data, Config &config) {
+string Video::random() {
+    return videos[int(ofRandom(videos.size()))];
+}
+
+void Video::update(LayerData *data, Config &config) {
     if (!videoPlayer.isLoaded()) {
         videoPlayer.close();
         videoPlayer.load("videos/" + name + ".mov");
@@ -25,11 +29,14 @@ void Video::update(VisualData *data, Config &config) {
         resetPos();
         videoPlayer.play();
     }
+    else if (data->onset) {
+        resetPos();
+    }
     videoPlayer.update();
 }
 
 void Video::resetPos() {
-    videoPlayer.setPosition(pos);
+    videoPlayer.setPosition(timeNorm);
 }
 
 void Video::draw(int left, int top, int width, int height) {
@@ -37,6 +44,6 @@ void Video::draw(int left, int top, int width, int height) {
 }
 
 void Video::choose() {
-    name = videos[int(ofRandom(videos.size()))];
+    name = random();
 }
 

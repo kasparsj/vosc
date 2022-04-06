@@ -13,7 +13,7 @@
 		1EF68DFFFDB46A876B77338B /* ColorUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55138D8657D9D09949E54626 /* ColorUtil.cpp */; };
 		231BF86FC8A2A84536B0CBE0 /* Video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9C35AB5202DEE1FAE587B8D /* Video.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
-		3C625574DC7EC9AD63808D34 /* VisualData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24387067D514D4E422DDB29A /* VisualData.cpp */; };
+		3C625574DC7EC9AD63808D34 /* LayerData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24387067D514D4E422DDB29A /* LayerData.cpp */; };
 		3D6BA46406CE29B32055340C /* Analogous.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24317A596BC892793AEA0706 /* Analogous.cpp */; };
 		3D839E120AFEABE9CA2B91D4 /* Monochrome.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C5EDF65915908821C72E565 /* Monochrome.cpp */; };
 		4ADB88E2FB52E76A471065DE /* ofxOscParameterSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0AED834CE4DEC5260AF302A2 /* ofxOscParameterSync.cpp */; };
@@ -36,7 +36,7 @@
 		C4782ECC372420ACE0615B74 /* OscPrintReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BC8881B3C8C0A1C45F042E7A /* OscPrintReceivedElements.cpp */; };
 		C6D227F5B8C686EF7F391BA6 /* Tetrad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5BE5C3443286643DF629CB82 /* Tetrad.cpp */; };
 		CC7496C750B49DFCA0D43427 /* ColorWheelScheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D09A011EA9E66CDCAAB4FD25 /* ColorWheelScheme.cpp */; };
-		CEDEE1DEF2CD954B8F4B0557 /* Visual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5214315DDF42B8F6ED7D5B8C /* Visual.cpp */; };
+		CEDEE1DEF2CD954B8F4B0557 /* Layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5214315DDF42B8F6ED7D5B8C /* Layer.cpp */; };
 		D91BBD56E65F1B0195ABD2FB /* ofxTidalCycles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A5288DE681747CD43B30E8C3 /* ofxTidalCycles.cpp */; };
 		E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1D0A3A1BDC003C02F2 /* main.cpp */; };
 		E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */; };
@@ -67,7 +67,7 @@
 		20F35AFADAF0068B067E713F /* OscReceivedElements.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscReceivedElements.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscReceivedElements.h; sourceTree = SOURCE_ROOT; };
 		23640F57DF6C4BB6BFC5DA4C /* PacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PacketListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/PacketListener.h; sourceTree = SOURCE_ROOT; };
 		24317A596BC892793AEA0706 /* Analogous.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Analogous.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Analogous.cpp; sourceTree = SOURCE_ROOT; };
-		24387067D514D4E422DDB29A /* VisualData.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VisualData.cpp; path = src/VisualData.cpp; sourceTree = SOURCE_ROOT; };
+		24387067D514D4E422DDB29A /* LayerData.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerData.cpp; path = src/LayerData.cpp; sourceTree = SOURCE_ROOT; };
 		27959D03B9B02B84FE8D7790 /* Video.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Video.h; path = src/gen/Video.h; sourceTree = SOURCE_ROOT; };
 		27F1AFE400331DE8F477F084 /* ColorWheelSchemes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorWheelSchemes.cpp; path = ../../../addons/ofxColorTheory/src/ColorWheelSchemes.cpp; sourceTree = SOURCE_ROOT; };
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
@@ -187,7 +187,7 @@
 		4E2B4BC4A65212574815E669 /* SplitComplementary.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = SplitComplementary.cpp; path = ../../../addons/ofxColorTheory/src/Rules/SplitComplementary.cpp; sourceTree = SOURCE_ROOT; };
 		4E95FB446A9C9C6F0DE12D75 /* OscPrintReceivedElements.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscPrintReceivedElements.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPrintReceivedElements.h; sourceTree = SOURCE_ROOT; };
 		50E07179CDF66AF17198BE27 /* Triad.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Triad.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Triad.cpp; sourceTree = SOURCE_ROOT; };
-		5214315DDF42B8F6ED7D5B8C /* Visual.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Visual.cpp; path = src/Visual.cpp; sourceTree = SOURCE_ROOT; };
+		5214315DDF42B8F6ED7D5B8C /* Layer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Layer.cpp; path = src/Layer.cpp; sourceTree = SOURCE_ROOT; };
 		5311A9F18B9148BAFDDC189B /* ColorScheme.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ColorScheme.h; path = ../../../addons/ofxColorTheory/src/ColorScheme.h; sourceTree = SOURCE_ROOT; };
 		55138D8657D9D09949E54626 /* ColorUtil.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorUtil.cpp; path = ../../../addons/ofxColorTheory/src/ColorUtil.cpp; sourceTree = SOURCE_ROOT; };
 		57B986EA2D2AB951677C2AED /* Gen.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Gen.h; path = src/gen/Gen.h; sourceTree = SOURCE_ROOT; };
@@ -224,11 +224,11 @@
 		C037A9C7AF50F90807B4BA85 /* Shader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Shader.cpp; path = src/gen/Shader.cpp; sourceTree = SOURCE_ROOT; };
 		C2FAC65C491D4231379F3298 /* ofxOscReceiver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscReceiver.cpp; path = ../../../addons/ofxOsc/src/ofxOscReceiver.cpp; sourceTree = SOURCE_ROOT; };
 		C4A1A32A8CE01C0C31CA524E /* FlippedCompound.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FlippedCompound.h; path = ../../../addons/ofxColorTheory/src/Rules/FlippedCompound.h; sourceTree = SOURCE_ROOT; };
-		C4ECA1461B2C4348EC957BBD /* Visual.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Visual.h; path = src/Visual.h; sourceTree = SOURCE_ROOT; };
+		C4ECA1461B2C4348EC957BBD /* Layer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Layer.h; path = src/Layer.h; sourceTree = SOURCE_ROOT; };
 		C58862C6D212C8E8A83810F4 /* ofxOscMessage.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscMessage.h; path = ../../../addons/ofxOsc/src/ofxOscMessage.h; sourceTree = SOURCE_ROOT; };
 		C6937888E126BADC8777423B /* OscTypes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscTypes.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscTypes.h; sourceTree = SOURCE_ROOT; };
 		D09A011EA9E66CDCAAB4FD25 /* ColorWheelScheme.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorWheelScheme.cpp; path = ../../../addons/ofxColorTheory/src/ColorWheelScheme.cpp; sourceTree = SOURCE_ROOT; };
-		D12199CD23C43C7003D851F3 /* VisualData.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VisualData.h; path = src/VisualData.h; sourceTree = SOURCE_ROOT; };
+		D12199CD23C43C7003D851F3 /* LayerData.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerData.h; path = src/LayerData.h; sourceTree = SOURCE_ROOT; };
 		D9BFFBBF4CC43DEE890B3C3E /* OscTypes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscTypes.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscTypes.cpp; sourceTree = SOURCE_ROOT; };
 		DF49D76C45D5DB505A234880 /* ofxOscMessage.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscMessage.cpp; path = ../../../addons/ofxOsc/src/ofxOscMessage.cpp; sourceTree = SOURCE_ROOT; };
 		DFDE17F719D605BCC72E5E76 /* Compound.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Compound.h; path = ../../../addons/ofxColorTheory/src/Rules/Compound.h; sourceTree = SOURCE_ROOT; };
@@ -1057,11 +1057,11 @@
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
 				3E8911C6B8ABF8D32A950348 /* Sound.h */,
-				24387067D514D4E422DDB29A /* VisualData.cpp */,
+				24387067D514D4E422DDB29A /* LayerData.cpp */,
+				D12199CD23C43C7003D851F3 /* LayerData.h */,
 				97AC5D82D06DAB2345FDB039 /* Config.h */,
-				5214315DDF42B8F6ED7D5B8C /* Visual.cpp */,
-				D12199CD23C43C7003D851F3 /* VisualData.h */,
-				C4ECA1461B2C4348EC957BBD /* Visual.h */,
+				5214315DDF42B8F6ED7D5B8C /* Layer.cpp */,
+				C4ECA1461B2C4348EC957BBD /* Layer.h */,
 				ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */,
 			);
 			path = src;
@@ -1190,8 +1190,8 @@
 			files = (
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
-				3C625574DC7EC9AD63808D34 /* VisualData.cpp in Sources */,
-				CEDEE1DEF2CD954B8F4B0557 /* Visual.cpp in Sources */,
+				3C625574DC7EC9AD63808D34 /* LayerData.cpp in Sources */,
+				CEDEE1DEF2CD954B8F4B0557 /* Layer.cpp in Sources */,
 				64419FBCCF52F2F13D35A292 /* Sketch.cpp in Sources */,
 				231BF86FC8A2A84536B0CBE0 /* Video.cpp in Sources */,
 				C1104C02B7261C2D5DEF27CD /* Shader.cpp in Sources */,

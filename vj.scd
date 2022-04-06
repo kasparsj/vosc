@@ -77,7 +77,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 }
 )
 
-~visuals.sendMsg('/visuals', 8);
+~visuals.sendMsg('/layers', 8);
 ~visuals.sendMsg('/layout', 3);
 ~visuals.sendMsg('/loud/thresh', 0);
 ~visuals.sendMsg('/loud/max', 32);
@@ -85,80 +85,93 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/amp/max', 0.1);
 ~visuals.sendMsg('/speed', 0.5);
 
-~visuals.sendMsg('/shader/*/random');
-~visuals.sendMsg('/shader/*/reload');
-~visuals.sendMsg('/shader/*/noclear', true);
-~visuals.sendMsg('/shader/*', "OscCircle"); // good
-~visuals.sendMsg('/sketch/*', "NoisySpirals");
-~visuals.sendMsg('/pos/*', 0, 0);
-~visuals.sendMsg('/size/*', 960, 1080);
-~visuals.sendMsg('/data/*', "amp");
-~visuals.sendMsg('/data/*', "loud");
-~visuals.sendMsg('/color/*', 256.rand, 256.rand, 256.rand);
-~visuals.sendMsg('/video/*', "");
-~visuals.sendMsg('/video/*/random');
-~visuals.sendMsg('/video/*/pos/random');
+~visuals.sendMsg('/choose', "*", "shader");
+~visuals.sendMsg('/reload', "*");
+~visuals.sendMsg('/noclear', "*", true);
+~visuals.sendMsg('/load', "*", "shader:OscCircle"); // good
+~visuals.sendMsg('/load', "*", "shader:NoisySpirals");
+~visuals.sendMsg('/pos', "*", 0, 0);
+~visuals.sendMsg('/size', "*", 960, 1080);
+~visuals.sendMsg('/data', "*", "amp");
+~visuals.sendMsg('/data', "*", "loud");
+~visuals.sendMsg('/color', "*", 256.rand, 256.rand, 256.rand);
+~visuals.sendMsg('/load', "*", "");
+~visuals.sendMsg('/unload', "*");
+~visuals.sendMsg('/choose', "*", "video");
+~visuals.sendMsg('/seek/random', "*");
+~visuals.sendMsg('/reset', "*");
 
-~visuals.sendMsg('/color/0', 0.15, 0.75, 1.0); // blue
-~visuals.sendMsg('/color/0', 1.0, 0.45, 0); // orange
-~visuals.sendMsg('/color/0', 0.4615, 0.615, 1.0); // blue2
-~visuals.sendMsg('/color/0', 1.0, 1.0, 0.25); // yellow
-~visuals.sendMsg('/color/0', 0, 0, 0); // reset
-~visuals.sendMsg('/color/0', 1.0, 1.0, 1.0); // white
-~visuals.sendMsg('/color/1', 0, 0, 0); // white
-~visuals.sendMsg('/color/0', 1.0, 0, 0); // red
-~visuals.sendMsg('/color/0', 256.rand, 256.rand, 256.rand); // random
-~visuals.sendMsg('/color/0/random'); // random
-
-~visuals.sendMsg('/unload/*');
-~visuals.sendMsg('/sketch/*/reset');
+~visuals.sendMsg('/color', 0, 0.15, 0.75, 1.0); // blue
+~visuals.sendMsg('/color', 0, 1.0, 0.45, 0); // orange
+~visuals.sendMsg('/color', 0, 0.4615, 0.615, 1.0); // blue2
+~visuals.sendMsg('/color', 0, 1.0, 1.0, 0.25); // yellow
+~visuals.sendMsg('/color', 0, 0, 0, 0); // black
+~visuals.sendMsg('/color', 0, 1.0, 1.0, 1.0); // white
+~visuals.sendMsg('/color', 1, 0, 0, 0); // white
+~visuals.sendMsg('/color', 0, 1.0, 0, 0); // red
+~visuals.sendMsg('/color', 0, 256.rand, 256.rand, 256.rand); // random
+~visuals.sendMsg('/color/random', 0); // random
 
 //~visuals.sendMsg('/onset/force'); // force onset
 //~visuals.sendMsg('/onset', false); // toggle onset
-~visuals.sendMsg('/data/0', "const");
-~visuals.sendMsg('/data/0', "rand");
-~visuals.sendMsg('/data/0', "noise");
-~visuals.sendMsg('/data/1f', "noise");
-~visuals.sendMsg('/data/*', "loud:0");
-~visuals.sendMsg('/shader/0', "AtmoScattering");
-~visuals.sendMsg('/sketch/0', "WaveClock");
-~visuals.sendMsg('/sketch/1', "NoisySpirals");
-~visuals.sendMsg('/sketch/0/reset'); // good
+~visuals.sendMsg('/data', 0, "const");
+~visuals.sendMsg('/data', 0, "rand");
+~visuals.sendMsg('/data', 0, "noise");
+~visuals.sendMsg('/data', 1, "noise");
+~visuals.sendMsg('/data', "*", "loud:0");
+~visuals.sendMsg('/load', 0, "shader:AtmoScattering");
+~visuals.sendMsg('/load', 0, "sketch:WaveClock");
+~visuals.sendMsg('/load', 1, "sketch:NoisySpirals");
+~visuals.sendMsg('/reset', 0);
 
 /// PERFORMANCE
 
-~visuals.sendMsg('/sketch/0/clear');
-~visuals.sendMsg('/sketch/1/clear');
+~visuals.sendMsg('/clear', 0);
+~visuals.sendMsg('/clear', 1);
 
 (
 ~visuals.sendMsg('/loud/max', 32);
 ~visuals.sendMsg('/amp/max', 0.1);
-~visuals.sendMsg('/data/0', "loud:1");
-~visuals.sendMsg('/sketch/0', "NoisySpirals");
-~visuals.sendMsg('/sketch/0/alpha', 1.0);
-~visuals.sendMsg('/sketch/0/bri', 1.0);
-~visuals.sendMsg('/color/0/mfcc', false);
+//~visuals.sendMsg('/data', 0, "loud:1");
+~visuals.sendMsg('/data', 0, "noise");
+~visuals.sendMsg('/load', 0, "sketch:NoisySpirals");
+~visuals.sendMsg('/alpha', 0, 1);
+~visuals.sendMsg('/bri', 0, 1.0);
+~visuals.sendMsg('/color/mfcc', 0, false);
 )
+
+~visuals.sendMsg('/color', 2, 0.15, 0.75, 1.0); // blue
+~visuals.sendMsg('/color', 2, 1.0, 0.45, 0); // orange
+~visuals.sendMsg('/color', 0, 0.4615, 0.615, 1.0); // blue2
+~visuals.sendMsg('/color', 2, 1.0, 1.0, 0.25); // yellow
+~visuals.sendMsg('/color', 0, 0, 0, 0); // black
+~visuals.sendMsg('/color', 2, 1.0, 1.0, 1.0); // white
+~visuals.sendMsg('/color', 1, 0, 0, 0); // white
+~visuals.sendMsg('/color', 0, 1.0, 0, 0); // red
+~visuals.sendMsg('/color', 0, 256.rand, 256.rand, 256.rand); // random
+~visuals.sendMsg('/color/random', 0); // random
 
 (
 ~visuals.sendMsg('/loud/max', 24);
-~visuals.sendMsg('/data/1', "loud:1");
-~visuals.sendMsg('/sketch/1', "WaveClock");
-~visuals.sendMsg('/sketch/1/alpha', 1.0);
-~visuals.sendMsg('/sketch/1/bri', 1.0);
-~visuals.sendMsg('/color/1/mfcc', true);
+~visuals.sendMsg('/data', 1, "loud:1");
+~visuals.sendMsg('/load', 1, "sketch:WaveClock");
+~visuals.sendMsg('/alpha', 1, 1.0);
+~visuals.sendMsg('/bri', 1, 1.0);
+~visuals.sendMsg('/color/mfcc', 1, false);
 )
 
+~visuals.sendMsg('/speed', 1);
+
 (
-~visuals.sendMsg('/shader/0', "OscCircle");
+~visuals.sendMsg('/load', 0, "shader:OscCircle");
 ~visuals.sendMsg('/loud/thresh', 0.7);
-~visuals.sendMsg('/color/0', 1.0, 1.0, 1.0);
+~visuals.sendMsg('/color', 0, 1.0, 1.0, 1.0);
 {
 	100.do { |i|
 		var j = (i+1);
-		~visuals.sendMsg('/shader/0/alpha', j/100.0);
-		~visuals.sendMsg('/sketch/0/bri', 1-(j/100.0));
-		~visuals.sendMsg('/sketch/1/bri', 1-(j/100.0));
+		~visuals.sendMsg('/alpha', 0, j/100.0);
+		~visuals.sendMsg('/bri', 0, 1-(j/100.0));
+		~visuals.sendMsg('/bri', 1, 1-(j/100.0));
 		0.6.wait;
 	};
 	~visuals.sendMsg('/loud/thresh', 0.6);
@@ -167,19 +180,19 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 )
 
 (
-~visuals.sendMsg('/loud/thresh', 0.5);
+~visuals.sendMsg('/loud/thresh', 0.8);
 {
 	// lerp to blue
 	100.do { |i|
 		var j = (i+1);
-		~visuals.sendMsg('/color/0/lerp', j/100.0, 1.0, 1.0, 1.0, 0.15, 0.75, 1.0);
-		~visuals.sendMsg('/sketch/0/alpha', 1-(j/100.0));
-		~visuals.sendMsg('/sketch/1/alpha', 1-(j/100.0));
+		~visuals.sendMsg('/color/lerp', 0, j/100.0, 1.0, 1.0, 1.0, 0.15, 0.75, 1.0);
+		~visuals.sendMsg('/alpha', 0, 1-(j/100.0));
+		~visuals.sendMsg('/alpha', 1, 1-(j/100.0));
 		0.3.wait;
 	};
-	//~visuals.sendMsg('/color/0', 0, 0, 0);
-	~visuals.sendMsg('/sketch/0', "");
-	~visuals.sendMsg('/sketch/1', "");
+	//~visuals.sendMsg('/color', 0, 0, 0, 0);
+	~visuals.sendMsg('/load', 0, "");
+	~visuals.sendMsg('/load', 1, "");
 	"colorlerp+alpha done".postln;
 }.fork;
 )
@@ -189,10 +202,10 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 	// lerp to orange
 	100.do { |i|
 		var j = (i+1);
-		//~visuals.sendMsg('/color/0/lerp', j/100.0, 0.15, 0.75, 1.0, 1.0, 0.45, 0); // orange
-		// ~visuals.sendMsg('/color/0/lerp', j/100.0, 1.0, 1.0, 0.45, 0, 0.4615, 0.615, 1.0); // blue2
-		 ~visuals.sendMsg('/color/0/lerp', j/100.0, 0.4615, 0.615, 1.0, 1.0, 1.0, 0.25); // yellow
-		0.1.wait;
+		// ~visuals.sendMsg('/color/lerp', 0, j/100.0, 0.15, 0.75, 1.0, 1.0, 0.45, 0); // orange
+		// ~visuals.sendMsg('/color/lerp', 0, j/100.0, 1.0, 1.0, 0.45, 0, 0.4615, 0.615, 1.0); // blue2
+		~visuals.sendMsg('/color/lerp', 0, j/100.0, 0.4615, 0.615, 1.0, 1.0, 1.0, 0.25); // yellow
+		0.3.wait;
 	};
 	"colorlerp done".postln;
 }.fork;
@@ -201,52 +214,63 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 (
 {
 	//~visuals.sendMsg('/loud/thresh', 0);
-	~visuals.sendMsg('/sketch/1', "Spiral");
-	~visuals.sendMsg('/sketch/1/bri', 1.0);
+	~visuals.sendMsg('/load', 1, "sketch:Spiral");
+	~visuals.sendMsg('/bri', 1, 1.0);
 	100.do { |i|
 		var j = (i+1);
-		~visuals.sendMsg('/sketch/1/alpha', (j/100.0));
+		~visuals.sendMsg('/alpha', 1, (j/100.0));
 		0.1.wait;
 	};
 }.fork;
 )
 
+
+
 (
-~visuals.sendMsg('/data/2', "const");
-~visuals.sendMsg('/shader/2', "StarNest");
+~visuals.sendMsg('/data', 2, "const");
+~visuals.sendMsg('/load', 2, "StarNest");
 {
 	100.do { |i|
 		var j = (i+1);
-		~visuals.sendMsg('/shader/2/alpha', j/100.0);
-		~visuals.sendMsg('/sketch/0/alpha', 1-(j/100.0));
-		~visuals.sendMsg('/sketch/1/alpha', 1-(j/100.0));
+		~visuals.sendMsg('/alpha', 2, j/100.0);
+		~visuals.sendMsg('/alpha', 0, 1-(j/100.0));
+		~visuals.sendMsg('/alpha', 1, 1-(j/100.0));
 		0.6.wait;
 	};
-	~visuals.sendMsg('/sketch/1', "");
-	~visuals.sendMsg('/shader/1', "");
-	~visuals.sendMsg('/shader/0', "");
-	~visuals.sendMsg('/sketch/0', "");
-	~visuals.sendMsg('/data/3', "loud:1");
-	~visuals.sendMsg('/shader/3', "Ether");
-	~visuals.sendMsg('/color/3/mfcc', true);
-	~visuals.sendMsg('/data/4', "loud:0");
-	~visuals.sendMsg('/shader/4', "AtmoScattering");
-	~visuals.sendMsg('/loud/thresh', 0.5);
+	~visuals.sendMsg('/load', 1, "");
+	~visuals.sendMsg('/load', 0 "");
+	~visuals.sendMsg('/data', 3, "loud:1");
+	~visuals.sendMsg('/load', 3, "shader:Ether");
+	~visuals.sendMsg('/color/mfcc', 3, true);
+	~visuals.sendMsg('/data', 4, "loud:0");
+	~visuals.sendMsg('/load', 4, "shader:AtmoScattering");
+	~visuals.sendMsg('/loud/thresh', 0.8);
 }.fork;
 )
 
 (
-~visuals.sendMsg('/color/3/mfcc', false);
-~visuals.sendMsg('/color/3/random', true);
+~visuals.sendMsg('/color/mfcc', 3, false);
+~visuals.sendMsg('/color/random', 3, true);
 )
+
+~visuals.sendMsg('/data', 2, "loud:1");
+~visuals.sendMsg('/data', 3, "loud:0");
+~visuals.sendMsg('/load', 2, "shader:02");
+~visuals.sendMsg('/load', 2, "shader:04");
+~visuals.sendMsg('/load', 2, "shader:RotStringsH");
+~visuals.sendMsg('/alpha', 3, 1.0);
+~visuals.sendMsg('/load', 3, "");
+~visuals.sendMsg('/color/mfcc', 2, false);
+~visuals.sendMsg('/alpha', 2, 1.0);
+~visuals.sendMsg('/alpha', 4, 1.0);
 
 (
 {
 	100.do { |i|
 		var j = (i+1);
-		~visuals.sendMsg('/shader/2/alpha', 1-(j/100.0));
-		~visuals.sendMsg('/shader/3/alpha', 1-(j/100.0));
-		~visuals.sendMsg('/shader/4/alpha', 1-(j/100.0));
+		~visuals.sendMsg('/alpha', 2, 1-(j/100.0));
+		~visuals.sendMsg('/alpha', 3, 1-(j/100.0));
+		~visuals.sendMsg('/alpha', 4, 1-(j/100.0));
 		1.0.wait;
 	};
 	"fade out done".postln;
@@ -254,9 +278,9 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 )
 
 (
-~visuals.sendMsg('/data/0', "const");
-~visuals.sendMsg('/data/1', "const");
-~visuals.sendMsg('/data/2', "const");
-~visuals.sendMsg('/data/3', "rand");
-~visuals.sendMsg('/data/4', "rand");
+~visuals.sendMsg('/data', 0, "rand");
+~visuals.sendMsg('/data', 1, "const");
+~visuals.sendMsg('/data', 2, "const");
+~visuals.sendMsg('/data', 3, "rand");
+~visuals.sendMsg('/data', 4, "rand");
 )

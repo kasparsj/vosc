@@ -4,7 +4,8 @@
 
 class FBOGen : public Gen {
 public:
-    virtual void clear();
+    FBOGen(string name) : Gen(name) {}
+    void clear() override;
     
     ofFbo fbo;
 };

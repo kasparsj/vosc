@@ -1,6 +1,6 @@
-#include "VisualData.h"
+#include "LayerData.h"
 
-void VisualData::update(const vector<string> dataSources, const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) {
+void LayerData::update(const vector<string> dataSources, const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) {
     mergedConfig = Config(config);
     mergedConfig.merge(globalConfig);
     time = ofGetElapsedTimef() * mergedConfig.speed;
@@ -67,7 +67,7 @@ void VisualData::update(const vector<string> dataSources, const vector<Sound> &s
     }
 }
 
-void VisualData::afterDraw() {
+void LayerData::afterDraw() {
     if (tidal && values.size() >= 1) {
         values[0] -= 1.f/8.f;
         if (values[0] < 0) {

@@ -11,20 +11,34 @@ enum Behaviour {
 };
 
 enum Layout {
-    L_COLUMN = 0,
-    L_ROW = 1,
-    L_GRID = 2,
-    L_STACK = 3,
+    L_COLUMN,
+    L_ROW,
+    L_GRID,
+    L_STACK,
+};
+
+enum Source {
+    S_VIDEO,
+    S_SHADER,
+    S_SKETCH,
+    S_LAST = S_SKETCH,
+};
+
+static std::unordered_map<std::string, Source> const SourceMap = {
+    {"video", Source::S_VIDEO},
+    {"shader", Source::S_SHADER},
+    {"sketch", Source::S_SKETCH},
 };
 
 enum DataSource {
-    DS_CONST = 0,
-    DS_RAND = 1,
-    DS_NOISE = 2,
-    DS_AMP = 3,
-    DS_LOUD = 4,
-    DS_ONSET = 5,
-    DS_TIDAL = 6,
+    DS_CONST,
+    DS_RAND,
+    DS_NOISE,
+    DS_AMP,
+    DS_LOUD,
+    DS_ONSET,
+    DS_TIDAL,
+    DS_LAST = DS_TIDAL,
 };
 
 static std::unordered_map<std::string, DataSource> const DataSourceMap = {

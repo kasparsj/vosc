@@ -17,13 +17,16 @@ map<string, ofShader> loadShaders()
 
 map<string, ofShader> Shader::shaders = loadShaders();
 
-Shader::Shader(){
+string Shader::random() {
+    auto it = shaders.begin();
+    advance(it, int(ofRandom(shaders.size())));
+    return it->first;
 }
 
 Shader::~Shader(){
 }
 
-void Shader::update(VisualData *data, Config &config) {
+void Shader::update(LayerData *data, Config &config) {
     if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
         fbo.clear();
         fbo.allocate(data->size.x, data->size.y);
@@ -35,7 +38,7 @@ void Shader::update(VisualData *data, Config &config) {
             return;
         }
         prevName = name;
-        random = ofRandom(1000);
+        randomSeed = ofRandom(1000);
     }
     if (!shaders[name].isLoaded()) {
         shaders[name].load("", "shaders/" + name + ".frag");
@@ -52,7 +55,7 @@ void Shader::update(VisualData *data, Config &config) {
         shaders[name].setUniform2f("offset", data->pos.x, data->pos.y);
         shaders[name].setUniform1i("index", data->index);
         shaders[name].setUniform4f("color", data->getColor());
-        shaders[name].setUniform1i("random", random);
+        shaders[name].setUniform1i("random", randomSeed);
         shaders[name].setUniform1i("num_values", data->values.size());
         shaders[name].setUniform1fv("values", data->values.data(), data->values.size());
         shaders[name].setUniform1i("visible", data->visible ? 1 : 0);
@@ -72,9 +75,7 @@ void Shader::draw(int left, int top, int width, int height) {
 }
 
 void Shader::choose() {
-    auto it = shaders.begin();
-    advance(it, int(ofRandom(shaders.size())));
-    name = it->first;
+    name = random();
 }
 
 void Shader::reload() {

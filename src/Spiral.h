@@ -7,7 +7,7 @@ class Spiral : public SketchImpl {
         initialized = true;
     }
 
-    void draw(VisualData *data, Config &config) override {
+    void draw(LayerData *data, Config &config) override {
         float lastx = -999;
         float lasty = -999;
         

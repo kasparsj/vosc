@@ -6,14 +6,13 @@
 class Shader : public FBOGen {
 public:
     static map<string, ofShader> shaders;
+    static string random();
     
-	Shader();
+    Shader(string name) : FBOGen(name) {}
     ~Shader();
-	void update(VisualData *data, Config &config) override;
+	void update(LayerData *data, Config &config) override;
 	void draw(int left, int top, int width, int height) override;
     void choose() override;
-    void reload();
-
-    bool noClear;
+    void reload() override;
 };
 

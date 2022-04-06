@@ -14,7 +14,13 @@ map<string, SketchImpl*> createSketches()
 
 map<string, SketchImpl*> Sketch::sketches = createSketches();
 
-void Sketch::update(VisualData *data, Config &config) {
+string Sketch::random() {
+    auto it = sketches.begin();
+    advance(it, int(ofRandom(sketches.size())));
+    return it->first;
+}
+
+void Sketch::update(LayerData *data, Config &config) {
     if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
         fbo.clear();
         fbo.allocate(data->size.x, data->size.y);
@@ -26,7 +32,7 @@ void Sketch::update(VisualData *data, Config &config) {
             return;
         }
         prevName = name;
-        random = ofRandom(1000);
+        randomSeed = ofRandom(1000);
         if (data->color == ofFloatColor(0, 0)) {
             data->color = sketches[name]->defaultColor;
         }
@@ -50,9 +56,7 @@ void Sketch::draw(int left, int top, int width, int height) {
 }
 
 void Sketch::choose() {
-    auto it = sketches.begin();
-    advance(it, int(ofRandom(sketches.size())));
-    name = it->first;
+    name = random();
 }
 
 void Sketch::reset() {

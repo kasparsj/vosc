@@ -20,7 +20,7 @@ class WaveClock : public SketchImpl {
         initialized = true;
     }
   
-    void draw(VisualData *data, Config &config) override{
+    void draw(LayerData *data, Config &config) override{
         float _w = data->size.x;
         float _h = data->size.y;
         float _r = min(_w, _h) - 150;

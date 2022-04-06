@@ -4,9 +4,9 @@
 #include "Sound.h"
 #include "ofxTidalCycles.h"
 
-class VisualData {
+class LayerData {
 public:
-    VisualData(const int index, const glm::vec2 &pos, const glm::vec2 &size, ofFloatColor &color, bool &useMFCC, const Config &config) :
+    LayerData(const int index, const glm::vec2 &pos, const glm::vec2 &size, ofFloatColor &color, bool &useMFCC, const Config &config) :
         index(index), pos(pos), size(size), color(color), useMFCC(useMFCC), config(config) {
         
     }

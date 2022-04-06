@@ -6,10 +6,13 @@
 class Sketch : public FBOGen {
 public:
     static map<string, SketchImpl*> sketches;
-    void update(VisualData *data, Config &config) override;
+    static string random();
+    
+    Sketch(string name) : FBOGen(name) {}
+    void update(LayerData *data, Config &config) override;
     void draw(int left, int top, int width, int height) override;
     void choose() override;
-    void reset();
+    void reset() override;
     
     SketchImpl *impl;
 };

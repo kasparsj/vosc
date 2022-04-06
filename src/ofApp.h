@@ -4,7 +4,7 @@
 #include "ofxTidalCycles.h"
 #include "ofxOsc.h"
 #include "Sound.h"
-#include "Visual.h"
+#include "Layer.h"
 #include "Config.h"
 
 class ofApp : public ofBaseApp {
@@ -12,13 +12,13 @@ class ofApp : public ofBaseApp {
 public:
 	void setup();
     void setupSounds(int numInsts);
-    void setupVisuals(int numVisuals);
-    void layoutVisuals(Layout layout);
+    void setupLayers(int numLayers);
+    void layoutLayers(Layout layout);
 	void update();
     void parseMessages();
     void parseMessage(const ofxOscMessage &m);
     void processQueue();
-    void visualCommand(Visual &visual, string command, const ofxOscMessage &m);
+    void layerCommand(Layer &visual, string command, const ofxOscMessage &m);
     bool checkOnset();
     ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0);
 	void draw();
@@ -42,8 +42,8 @@ public:
 	ofxTidalCycles *tidal;
     
     vector<Sound> sounds;
-    vector<Visual> visuals;
-    bool waitOnset = true;
+    vector<Layer> layers;
+    int waitOnset = -1;
     bool forceOnset;
     
     ofFbo fbo;
