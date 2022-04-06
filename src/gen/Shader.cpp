@@ -45,20 +45,22 @@ void Shader::update(VisualData *data, Config &config) {
     if (!noClear) {
         ofClear(0, 0, 0, 0);
     }
-	shaders[name].begin();
-	shaders[name].setUniform1f("time", data->time);
-	shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
-    shaders[name].setUniform2f("offset", data->pos.x, data->pos.y);
-    shaders[name].setUniform1i("index", data->index);
-    shaders[name].setUniform4f("color", data->getColor());
-    shaders[name].setUniform1i("random", random);
-    shaders[name].setUniform1i("num_values", data->values.size());
-    shaders[name].setUniform1fv("values", data->values.data(), data->values.size());
-    shaders[name].setUniform1i("visible", data->visible ? 1 : 0);
-    shaders[name].setUniform1i("onset", data->onset ? 1 : 0);
-	ofDrawRectangle(0, 0, data->size.x, data->size.y);
-	shaders[name].end();
-	fbo.end();
+    if (data->visible) {
+        shaders[name].begin();
+        shaders[name].setUniform1f("time", data->time);
+        shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
+        shaders[name].setUniform2f("offset", data->pos.x, data->pos.y);
+        shaders[name].setUniform1i("index", data->index);
+        shaders[name].setUniform4f("color", data->getColor());
+        shaders[name].setUniform1i("random", random);
+        shaders[name].setUniform1i("num_values", data->values.size());
+        shaders[name].setUniform1fv("values", data->values.data(), data->values.size());
+        shaders[name].setUniform1i("visible", data->visible ? 1 : 0);
+        shaders[name].setUniform1i("onset", data->onset ? 1 : 0);
+        ofDrawRectangle(0, 0, data->size.x, data->size.y);
+        shaders[name].end();
+    }
+    fbo.end();
     ofDisableAlphaBlending();
     if (data->mergedConfig.randomShader()) {
         choose();

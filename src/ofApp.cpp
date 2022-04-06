@@ -48,7 +48,7 @@ void ofApp::parseMessages(){
         receiver.getNextMessage(m);
         parseMessage(m);
     }
-    if (forceOnset || checkOnset()) {
+    if (!waitOnset || forceOnset || checkOnset()) {
         processQueue();
         forceOnset = false;
     }
@@ -64,6 +64,9 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
         tidal->parse(m);
     }
     else if (command == "/onset") {
+        waitOnset = m.getNumArgs() > 0 ? m.getArgAsBool(0) : !waitOnset;
+    }
+    else if (command == "/onset/force") {
         forceOnset = true;
     }
     else if (command == "/sounds") {

@@ -69,7 +69,9 @@ void main(void)
         fade*=distfading; // distance fading
         s+=stepsize;
     }
+    vec4 col = color;
+    if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
     v=mix(vec3(length(v)),v,saturation); //color adjust
-    gl_FragColor = vec4(v*.01,1.);
+    gl_FragColor = vec4(v*.01, col.a);
     
 }

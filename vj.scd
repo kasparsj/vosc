@@ -1,4 +1,4 @@
-//m = ServerMeter.new(s, 8, 2);
+m = ServerMeter.new(s, 2, 2);
 
 (
 ~visuals = NetAddr("127.0.0.1", 33333);
@@ -6,8 +6,10 @@
 ~synths = [];
 // ~file = "/Users/kasparsj/Music/ivars/tema1.wav";
 // ~file = "/Users/kasparsj/Music/ivars/tema1_2.wav";
-~file = "/Users/kasparsj/Music/ivars/tema1_1.wav";
-if (~file.isNil.not, {
+// ~file = "/Users/kasparsj/Music/ivars/tema1_1.wav";
+if (~file.isNil, {
+	~numChannels = 2;
+}, {
 	~buffers = [];
 	Buffer.read(s, ~file, action: { |buffer|
 		~numChannels = buffer.numChannels;
@@ -64,7 +66,8 @@ OSCdef(\visuals_sender, {|msg|
 (
 var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~numChannels.do {|i|
-	~synths = ~synths.add(Synth(synthName, [in: i, rate: 120, bufnum: ~buffers[i].bufnum]));
+	var bufnum = if (~file.isNil, { nil }, { ~buffers[i].bufnum; });
+	~synths = ~synths.add(Synth(synthName, [in: i, rate: 120, bufnum: bufnum]));
 };
 )
 
@@ -80,7 +83,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/loud/max', 32);
 ~visuals.sendMsg('/amp/thresh', 0.35);
 ~visuals.sendMsg('/amp/max', 0.1);
-~visuals.sendMsg('/speed', 0.1);
+~visuals.sendMsg('/speed', 0.5);
 
 ~visuals.sendMsg('/shader/*/random');
 ~visuals.sendMsg('/shader/*/reload');
@@ -101,6 +104,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/color/0', 0.4615, 0.615, 1.0); // blue2
 ~visuals.sendMsg('/color/0', 1.0, 1.0, 0.25); // yellow
 ~visuals.sendMsg('/color/0', 0, 0, 0); // reset
+~visuals.sendMsg('/color/0', 1.0, 1.0, 1.0); // white
+~visuals.sendMsg('/color/1', 0, 0, 0); // white
 ~visuals.sendMsg('/color/0', 1.0, 0, 0); // red
 ~visuals.sendMsg('/color/0', 256.rand, 256.rand, 256.rand); // random
 ~visuals.sendMsg('/color/0/random'); // random
@@ -108,7 +113,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/unload/*');
 ~visuals.sendMsg('/sketch/*/reset');
 
-~visuals.sendMsg('/onset');
+//~visuals.sendMsg('/onset/force'); // force onset
+//~visuals.sendMsg('/onset', false); // toggle onset
 ~visuals.sendMsg('/data/0', "const");
 ~visuals.sendMsg('/data/0', "rand");
 ~visuals.sendMsg('/data/0', "noise");
@@ -121,11 +127,13 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 
 /// PERFORMANCE
 
-~visuals.sendMsg('/sketch/0/reset');
+~visuals.sendMsg('/sketch/0/clear');
+~visuals.sendMsg('/sketch/1/clear');
 
 (
 ~visuals.sendMsg('/loud/max', 32);
-~visuals.sendMsg('/data/0', "loud:0");
+~visuals.sendMsg('/amp/max', 0.1);
+~visuals.sendMsg('/data/0', "loud:1");
 ~visuals.sendMsg('/sketch/0', "NoisySpirals");
 ~visuals.sendMsg('/sketch/0/alpha', 1.0);
 ~visuals.sendMsg('/sketch/0/bri', 1.0);
@@ -133,8 +141,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 )
 
 (
-~visuals.sendMsg('/loud/max', 32);
-~visuals.sendMsg('/data/1', "loud:0");
+~visuals.sendMsg('/loud/max', 24);
+~visuals.sendMsg('/data/1', "loud:1");
 ~visuals.sendMsg('/sketch/1', "WaveClock");
 ~visuals.sendMsg('/sketch/1/alpha', 1.0);
 ~visuals.sendMsg('/sketch/1/bri', 1.0);
@@ -151,7 +159,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 		~visuals.sendMsg('/shader/0/alpha', j/100.0);
 		~visuals.sendMsg('/sketch/0/bri', 1-(j/100.0));
 		~visuals.sendMsg('/sketch/1/bri', 1-(j/100.0));
-		0.3.wait;
+		0.6.wait;
 	};
 	~visuals.sendMsg('/loud/thresh', 0.6);
 	"bri fade done".postln;
@@ -169,7 +177,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 		~visuals.sendMsg('/sketch/1/alpha', 1-(j/100.0));
 		0.3.wait;
 	};
-	~visuals.sendMsg('/color/0', 0, 0, 0);
+	//~visuals.sendMsg('/color/0', 0, 0, 0);
 	~visuals.sendMsg('/sketch/0', "");
 	~visuals.sendMsg('/sketch/1', "");
 	"colorlerp+alpha done".postln;
@@ -181,9 +189,9 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 	// lerp to orange
 	100.do { |i|
 		var j = (i+1);
-		~visuals.sendMsg('/color/0/lerp', j/100.0, 0.15, 0.75, 1.0, 1.0, 0.45, 0); // orange
+		//~visuals.sendMsg('/color/0/lerp', j/100.0, 0.15, 0.75, 1.0, 1.0, 0.45, 0); // orange
 		// ~visuals.sendMsg('/color/0/lerp', j/100.0, 1.0, 1.0, 0.45, 0, 0.4615, 0.615, 1.0); // blue2
-		// ~visuals.sendMsg('/color/0/lerp', j/100.0, 0.4615, 0.615, 1.0, 1.0, 1.0, 0.25); // yellow
+		 ~visuals.sendMsg('/color/0/lerp', j/100.0, 0.4615, 0.615, 1.0, 1.0, 1.0, 0.25); // yellow
 		0.1.wait;
 	};
 	"colorlerp done".postln;
@@ -201,4 +209,54 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 		0.1.wait;
 	};
 }.fork;
+)
+
+(
+~visuals.sendMsg('/data/2', "const");
+~visuals.sendMsg('/shader/2', "StarNest");
+{
+	100.do { |i|
+		var j = (i+1);
+		~visuals.sendMsg('/shader/2/alpha', j/100.0);
+		~visuals.sendMsg('/sketch/0/alpha', 1-(j/100.0));
+		~visuals.sendMsg('/sketch/1/alpha', 1-(j/100.0));
+		0.6.wait;
+	};
+	~visuals.sendMsg('/sketch/1', "");
+	~visuals.sendMsg('/shader/1', "");
+	~visuals.sendMsg('/shader/0', "");
+	~visuals.sendMsg('/sketch/0', "");
+	~visuals.sendMsg('/data/3', "loud:1");
+	~visuals.sendMsg('/shader/3', "Ether");
+	~visuals.sendMsg('/color/3/mfcc', true);
+	~visuals.sendMsg('/data/4', "loud:0");
+	~visuals.sendMsg('/shader/4', "AtmoScattering");
+	~visuals.sendMsg('/loud/thresh', 0.5);
+}.fork;
+)
+
+(
+~visuals.sendMsg('/color/3/mfcc', false);
+~visuals.sendMsg('/color/3/random', true);
+)
+
+(
+{
+	100.do { |i|
+		var j = (i+1);
+		~visuals.sendMsg('/shader/2/alpha', 1-(j/100.0));
+		~visuals.sendMsg('/shader/3/alpha', 1-(j/100.0));
+		~visuals.sendMsg('/shader/4/alpha', 1-(j/100.0));
+		1.0.wait;
+	};
+	"fade out done".postln;
+}.fork;
+)
+
+(
+~visuals.sendMsg('/data/0', "const");
+~visuals.sendMsg('/data/1', "const");
+~visuals.sendMsg('/data/2', "const");
+~visuals.sendMsg('/data/3', "rand");
+~visuals.sendMsg('/data/4', "rand");
 )

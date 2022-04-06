@@ -43,6 +43,7 @@ public:
     
     vector<Sound> sounds;
     vector<Visual> visuals;
+    bool waitOnset = true;
     bool forceOnset;
     
     ofFbo fbo;

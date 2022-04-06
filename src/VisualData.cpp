@@ -28,15 +28,15 @@ void VisualData::update(const vector<string> dataSources, const vector<Sound> &s
     }
     else {
         for (int i=0; i<dataSources.size(); i++) {
+            if (i == 0) {
+                thresh = mergedConfig.threshAmp;
+            }
             if (dataSources[i].substr(0, 3) == "amp" || dataSources[i].substr(0, 4) == "loud") {
                 int j;
                 if (dataSources[i].substr(0, 3) == "amp") {
                     j = ofToInt(dataSources[i].substr(3));
                     //values[i] += tanh(sounds[j].amplitude / mergedConfig.maxAmp * M_PI);
                     values[i] += int(sounds[j].amplitude > mergedConfig.maxAmp / 2.f);
-                    if (i == 0) {
-                        thresh = mergedConfig.threshAmp;
-                    }
                 }
                 else {
                     j = ofToInt(dataSources[i].substr(4));
