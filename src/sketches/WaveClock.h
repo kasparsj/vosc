@@ -20,12 +20,12 @@ class WaveClock : public SketchImpl {
         initialized = true;
     }
   
-    void draw(LayerData *data, Config &config) override{
-        float _w = data->size.x;
-        float _h = data->size.y;
+    void draw(Layer *layer, const Config &config) override{
+        float _w = layer->size.x;
+        float _h = layer->size.y;
         float _r = min(_w, _h) - 150;
-        float _x = data->pos.x;
-        float _y = data->pos.y;
+        float _x = layer->pos.x;
+        float _y = layer->pos.y;
         _radiusNoise += 0.005;
         _radius = (ofNoise(_radiusNoise) * _r) +1;
     
@@ -47,8 +47,8 @@ class WaveClock : public SketchImpl {
         float x2 = centerX + (_radius * cos(opprad));
         float y2 = centerY + (_radius * sin(opprad));
         
-        if (data->values.size()) {
-            _strokeAlpha = data->values[0] * 255;
+        if (layer->data->values.size()) {
+            _strokeAlpha = layer->data->values[0] * 255;
         }
         else {
             _strokeAlpha += _strokeChange;
@@ -57,7 +57,7 @@ class WaveClock : public SketchImpl {
         }
         
         ofPushStyle();
-        ofSetColor(data->getColor(), (int) (_strokeAlpha * 0.75));
+        ofSetColor(layer->getColor(), (int) (_strokeAlpha * 0.75));
         ofSetLineWidth(1);
 
         ofPushMatrix();

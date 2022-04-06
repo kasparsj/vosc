@@ -171,22 +171,22 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
         layer.load(m.getArgAsString(1));
     }
     else if (command == "/seek") {
-        layer.seek(m.getArgAsFloat(1));
+        layer.timeNorm = m.getArgAsFloat(1);
     }
     else if (command == "/seek/random") {
-        layer.seek(ofRandom(1.f));
+        layer.timeNorm = ofRandom(1.f);
     }
     else if (command == "/reload") {
         layer.reload();
     }
     else if (command == "/noclear") {
-        layer.setNoClear(m.getArgAsBool(1));
+        layer.noClear = m.getArgAsBool(1);
     }
     else if (command == "/bri") {
-        layer.setBri(m.getArgAsFloat(1));
+        layer.bri = m.getArgAsFloat(1);
     }
     else if (command == "/alpha") {
-        layer.setAlpha(m.getArgAsFloat(1));
+        layer.alpha = m.getArgAsFloat(1);
     }
     else if (command == "/choose") {
         layer.choose();

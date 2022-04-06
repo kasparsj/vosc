@@ -28,13 +28,20 @@ public:
     void load(string source);
     void choose(string type = "");
     void unload();
-    void setBri(float bri);
-    void setAlpha(float alpha);
-    void seek(float pos);
     void reload();
-    void setNoClear(bool noClear);
     void clear();
     void reset();
+    
+    ofFloatColor getColor() {
+        if (useMFCC) {
+            return data->mfcc;
+        }
+        return color;
+    }
+    
+    bool randomShader() const {
+        return behaviour > 0 && behaviour & B_RANDOM_SHADER;
+    }
     
     int index;
     int total;
@@ -45,9 +52,12 @@ public:
     ofFloatColor color = ofFloatColor(0, 0);
     float speed = 1.f;
     int behaviour = -1;
+    float bri = 1.0;
+    float alpha = 1.0;
+    float timeNorm = 0;
+    bool noClear;
     bool useMFCC = false;
     bool isTidal = false;
-    Config config = Config(0);
-private:
+    int randomSeed = 0;
     vector<string> dataSources;
 };

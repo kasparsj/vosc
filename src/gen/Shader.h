@@ -10,7 +10,7 @@ public:
     
     Shader(string name) : FBOGen(name) {}
     ~Shader();
-	void update(LayerData *data, Config &config) override;
+	void update(Layer *layer, const Config &config) override;
 	void draw(int left, int top, int width, int height) override;
     void choose() override;
     void reload() override;

@@ -56,7 +56,7 @@ void Layer::setup(int index, int numVisuals, string dataSource)
     if (dataSource != "") {
         dataSources.push_back(dataSource);
     }
-    data = new LayerData(index, pos, size, color, speed, behaviour, useMFCC, config);
+    data = new LayerData(this);
 }
 
 void Layer::layout(Layout layout)
@@ -83,16 +83,16 @@ void Layer::layout(Layout layout)
     }
 }
 
-void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) { 
-    data->update(dataSources, sounds, notes, globalConfig);
+void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &config) {
+    data->update(sounds, notes, config);
     if (gen != NULL) {
-        gen->update(data, config);
+        gen->update(this, config);
     }
 }
 
 void Layer::draw(float left, float top, float width, float height) {
     if (gen != NULL) {
-        ofSetColor(255 * gen->bri, gen->alpha * 255);
+        ofSetColor(255 * bri, alpha * 255);
         gen->draw(left, top, width, height);
     }
 }
@@ -165,48 +165,12 @@ void Layer::unload() {
     }
 }
 
-void Layer::setBri(float bri) {
-    if (gen != NULL) {
-        gen->bri = bri;
-    }
-    else {
-        ofLog() << "cannot set brightness on layer " << index;
-    }
-}
-
-void Layer::setAlpha(float alpha) {
-    if (gen != NULL) {
-        gen->alpha = alpha;
-    }
-    else {
-        ofLog() << "cannot set alpha on layer " << index;
-    }
-}
-
-void Layer::seek(float pos) {
-    if (gen != NULL) {
-        gen->timeNorm = pos;
-    }
-    else {
-        ofLog() << "cannot seek on layer " << index;
-    }
-}
-
 void Layer::reload() {
     if (gen != NULL) {
         gen->reload();
     }
     else {
         ofLog() << "cannot reload layer " << index;
-    }
-}
-
-void Layer::setNoClear(bool noClear) {
-    if (gen != NULL) {
-        gen->noClear = noClear;
-    }
-    else {
-        ofLog() << "cannot set noClear on layer " << index;
     }
 }
 

@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include "Layer.h"
 
 map<string, ofShader> loadShaders()
 {
@@ -26,10 +27,10 @@ string Shader::random() {
 Shader::~Shader(){
 }
 
-void Shader::update(LayerData *data, Config &config) {
-    if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
+void Shader::update(Layer *layer, const Config &config) {
+    if (!fbo.isAllocated() || (fbo.getWidth() != layer->size.x || fbo.getHeight() != layer->size.y)) {
         fbo.clear();
-        fbo.allocate(data->size.x, data->size.y);
+        fbo.allocate(layer->size.x, layer->size.y);
     }
     if (name != prevName) {
         if (shaders.find(name) == shaders.end()) {
@@ -38,34 +39,34 @@ void Shader::update(LayerData *data, Config &config) {
             return;
         }
         prevName = name;
-        randomSeed = ofRandom(1000);
+        layer->randomSeed = ofRandom(1000);
     }
     if (!shaders[name].isLoaded()) {
         shaders[name].load("", "shaders/" + name + ".frag");
     }
     ofEnableAlphaBlending();
 	fbo.begin();
-    if (!noClear) {
+    if (!layer->noClear) {
         ofClear(0, 0, 0, 0);
     }
-    if (data->visible) {
+    if (layer->data->visible) {
         shaders[name].begin();
-        shaders[name].setUniform1f("time", data->time);
+        shaders[name].setUniform1f("time", layer->data->time);
         shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
-        shaders[name].setUniform2f("offset", data->pos.x, data->pos.y);
-        shaders[name].setUniform1i("index", data->index);
-        shaders[name].setUniform4f("color", data->getColor());
-        shaders[name].setUniform1i("random", randomSeed);
-        shaders[name].setUniform1i("num_values", data->values.size());
-        shaders[name].setUniform1fv("values", data->values.data(), data->values.size());
-        shaders[name].setUniform1i("visible", data->visible ? 1 : 0);
-        shaders[name].setUniform1i("onset", data->onset ? 1 : 0);
-        ofDrawRectangle(0, 0, data->size.x, data->size.y);
+        shaders[name].setUniform2f("offset", layer->pos.x, layer->pos.y);
+        shaders[name].setUniform1i("index", layer->index);
+        shaders[name].setUniform4f("color", layer->getColor());
+        shaders[name].setUniform1i("random", layer->randomSeed);
+        shaders[name].setUniform1i("num_values", layer->data->values.size());
+        shaders[name].setUniform1fv("values", layer->data->values.data(), layer->data->values.size());
+        shaders[name].setUniform1i("visible", layer->data->visible ? 1 : 0);
+        shaders[name].setUniform1i("onset", layer->data->onset ? 1 : 0);
+        ofDrawRectangle(0, 0, layer->size.x, layer->size.y);
         shaders[name].end();
     }
     fbo.end();
     ofDisableAlphaBlending();
-    if (data->randomShader()) {
+    if (layer->randomShader()) {
         choose();
     }
 }

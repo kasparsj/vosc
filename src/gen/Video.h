@@ -8,8 +8,8 @@ public:
     static string random();
     
     Video(string name) : Gen(name) {}
-    void update(LayerData *data, Config &config) override;
-    void resetPos();
+    void update(Layer *layer, const Config &config) override;
+    void seek(float pos);
     void draw(int left, int top, int width, int height) override;
     void choose() override;
     

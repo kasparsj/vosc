@@ -1,4 +1,5 @@
 #include "Video.h"
+#include "Layer.h"
 
 vector<string> loadVideos()
 {
@@ -20,23 +21,23 @@ string Video::random() {
     return videos[int(ofRandom(videos.size()))];
 }
 
-void Video::update(LayerData *data, Config &config) {
+void Video::update(Layer *layer, const Config &config) {
     if (!videoPlayer.isLoaded()) {
         videoPlayer.close();
         videoPlayer.load("videos/" + name + ".mov");
         videoPlayer.setVolume(0);
         videoPlayer.setLoopState(OF_LOOP_NORMAL);
-        resetPos();
+        seek(layer->timeNorm);
         videoPlayer.play();
     }
-    else if (data->onset) {
-        resetPos();
+    else if (layer->data->onset) {
+        seek(layer->timeNorm);
     }
     videoPlayer.update();
 }
 
-void Video::resetPos() {
-    videoPlayer.setPosition(timeNorm);
+void Video::seek(float pos) {
+    videoPlayer.setPosition(pos);
 }
 
 void Video::draw(int left, int top, int width, int height) {

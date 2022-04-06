@@ -2,14 +2,14 @@
 
 #include "ofMain.h"
 #include "Config.h"
-#include "LayerData.h"
+#include "Layer.h"
 
 class SketchImpl {
 public:
     virtual void init() {
         initialized = true;
     }
-    virtual void draw(LayerData *shaderData, Config &config) = 0;
+    virtual void draw(Layer *layer, const Config &config) = 0;
     
     bool initialized;
     ofFloatColor defaultColor = ofFloatColor(1.0);

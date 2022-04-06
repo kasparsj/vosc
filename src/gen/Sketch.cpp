@@ -1,4 +1,5 @@
 #include "Sketch.h"
+#include "Layer.h"
 #include "NoisySpirals.h"
 #include "WaveClock.h"
 #include "Spiral.h"
@@ -20,10 +21,10 @@ string Sketch::random() {
     return it->first;
 }
 
-void Sketch::update(LayerData *data, Config &config) {
-    if (!fbo.isAllocated() || (fbo.getWidth() != data->size.x || fbo.getHeight() != data->size.y)) {
+void Sketch::update(Layer *layer, const Config &config) {
+    if (!fbo.isAllocated() || (fbo.getWidth() != layer->size.x || fbo.getHeight() != layer->size.y)) {
         fbo.clear();
-        fbo.allocate(data->size.x, data->size.y);
+        fbo.allocate(layer->size.x, layer->size.y);
     }
     if (name != prevName) {
         if (sketches.find(name) == sketches.end()) {
@@ -32,9 +33,9 @@ void Sketch::update(LayerData *data, Config &config) {
             return;
         }
         prevName = name;
-        randomSeed = ofRandom(1000);
-        if (data->color == ofFloatColor(0, 0)) {
-            data->color = sketches[name]->defaultColor;
+        layer->randomSeed = ofRandom(1000);
+        if (layer->color == ofFloatColor(0, 0)) {
+            layer->color = sketches[name]->defaultColor;
         }
     }
     if (!sketches[name]->initialized) {
@@ -43,10 +44,10 @@ void Sketch::update(LayerData *data, Config &config) {
     }
     ofEnableAlphaBlending();
     fbo.begin();
-    sketches[name]->draw(data, config);
+    sketches[name]->draw(layer, config);
     fbo.end();
     ofDisableAlphaBlending();
-    if (data->randomShader()) {
+    if (layer->randomShader()) {
         choose();
     }
 }
