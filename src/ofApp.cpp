@@ -124,9 +124,6 @@ void ofApp::processQueue() {
         else if (command == "/loud/thresh") {
             config.threshLoud = m.getArgAsFloat(0);
         }
-        else if (command == "/behaviour") {
-            config.behaviour = m.getArgAsInt(0);
-        }
         else if (command == "/blendmode") {
             blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
         }
@@ -169,80 +166,80 @@ void ofApp::processQueue() {
     }
 }
 
-void ofApp::layerCommand(Layer &visual, string command, const ofxOscMessage &m) {
+void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     if (command == "/load") {
-        visual.load(m.getArgAsString(1));
+        layer.load(m.getArgAsString(1));
     }
     else if (command == "/seek") {
-        visual.seek(m.getArgAsFloat(1));
+        layer.seek(m.getArgAsFloat(1));
     }
     else if (command == "/seek/random") {
-        visual.seek(ofRandom(1.f));
+        layer.seek(ofRandom(1.f));
     }
     else if (command == "/reload") {
-        visual.reload();
+        layer.reload();
     }
     else if (command == "/noclear") {
-        visual.setNoClear(m.getArgAsBool(1));
+        layer.setNoClear(m.getArgAsBool(1));
     }
     else if (command == "/bri") {
-        visual.setBri(m.getArgAsFloat(1));
+        layer.setBri(m.getArgAsFloat(1));
     }
     else if (command == "/alpha") {
-        visual.setAlpha(m.getArgAsFloat(1));
+        layer.setAlpha(m.getArgAsFloat(1));
     }
     else if (command == "/choose") {
-        visual.choose();
+        layer.choose();
     }
     else if (command == "/clear") {
-        visual.clear();
+        layer.clear();
     }
     else if (command == "/reset") {
-        visual.reset();
+        layer.reset();
     }
     else if (command == "/pos") {
-        visual.pos = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
+        layer.pos = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
     }
     else if (command == "/size") {
-        visual.size = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
+        layer.size = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
     }
     else if (command == "/color") {
-        visual.color = parseColor(m);
+        layer.color = parseColor(m);
     }
     else if (command == "/color/random") {
-        visual.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+        layer.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
     }
     else if (command == "/color/lerp") {
         ofFloatColor fromColor = parseColor(m, 2);
         ofFloatColor toColor = parseColor(m, 5);
         float perc = m.getArgAsFloat(1);
-        visual.color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
+        layer.color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
     }
     else if (command == "/color/mfcc") {
-        visual.useMFCC = m.getArgAsBool(1);
-    }
-    else if (command == "/behaviour") {
-        visual.config.behaviour = m.getArgAsInt(1);
+        layer.useMFCC = m.getArgAsBool(1);
     }
     else if (command == "/data") {
         vector<string> ds;
         for (int i=1; i<m.getNumArgs(); i++) {
             ds.push_back(m.getArgAsString(i));
         }
-        visual.setDataSources(ds);
+        layer.setDataSources(ds);
     }
     else if (command == "/data/add") {
         vector<string> ds;
         for (int i=1; i<m.getNumArgs(); i++) {
             ds.push_back(m.getArgAsString(i));
         }
-        visual.addDataSources(ds);
+        layer.addDataSources(ds);
     }
     else if (command == "/unload") {
-        visual.unload();
+        layer.unload();
     }
     else if (command == "/speed") {
-        visual.speed = m.getArgAsFloat(1);
+        layer.speed = m.getArgAsFloat(1);
+    }
+    else if (command == "/behaviour") {
+        layer.behaviour = m.getArgAsInt(1);
     }
 }
 

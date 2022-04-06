@@ -60,7 +60,6 @@ public:
     Config(const Config &config) {
         maxAmp = config.maxAmp;
         maxLoud = config.maxLoud;
-        behaviour = config.behaviour;
         threshAmp = config.threshAmp;
         threshLoud = config.threshLoud;
     }
@@ -70,17 +69,12 @@ public:
     void merge(const Config &parent) {
         if (maxAmp == 0) maxAmp = parent.maxAmp;
         if (maxLoud == 0) maxLoud = parent.maxLoud;
-        if (behaviour < 0) behaviour = parent.behaviour;
         if (threshAmp < 0) threshAmp = parent.threshAmp;
         if (threshLoud < 0) threshLoud = parent.threshLoud;
-    }
-    bool randomShader() const {
-        return behaviour > 0 && behaviour & B_RANDOM_SHADER;
     }
     
     float maxAmp = 0.7;
     float maxLoud = 64.0;
-    int behaviour = -1;
     float threshAmp = -1;
     float threshLoud = -1;
 };

@@ -65,7 +65,7 @@ void Shader::update(LayerData *data, Config &config) {
     }
     fbo.end();
     ofDisableAlphaBlending();
-    if (data->mergedConfig.randomShader()) {
+    if (data->randomShader()) {
         choose();
     }
 }

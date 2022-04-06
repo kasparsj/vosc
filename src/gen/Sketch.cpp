@@ -46,7 +46,7 @@ void Sketch::update(LayerData *data, Config &config) {
     sketches[name]->draw(data, config);
     fbo.end();
     ofDisableAlphaBlending();
-    if (data->mergedConfig.randomShader()) {
+    if (data->randomShader()) {
         choose();
     }
 }
