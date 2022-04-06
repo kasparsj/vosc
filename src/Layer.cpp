@@ -56,7 +56,7 @@ void Layer::setup(int index, int numVisuals, string dataSource)
     if (dataSource != "") {
         dataSources.push_back(dataSource);
     }
-    data = new LayerData(index, pos, size, color, useMFCC, config);
+    data = new LayerData(index, pos, size, color, speed, useMFCC, config);
 }
 
 void Layer::layout(Layout layout)

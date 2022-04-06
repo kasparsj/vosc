@@ -3,7 +3,7 @@
 void LayerData::update(const vector<string> dataSources, const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig) {
     mergedConfig = Config(config);
     mergedConfig.merge(globalConfig);
-    time = ofGetElapsedTimef() * mergedConfig.speed;
+    time = ofGetElapsedTimef() * speed;
     tidal = dataSources.size() && dataSources[0].substr(0, 5) == "tidal";
     onset = false;
     values.clear();

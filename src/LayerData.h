@@ -6,8 +6,8 @@
 
 class LayerData {
 public:
-    LayerData(const int index, const glm::vec2 &pos, const glm::vec2 &size, ofFloatColor &color, bool &useMFCC, const Config &config) :
-        index(index), pos(pos), size(size), color(color), useMFCC(useMFCC), config(config) {
+    LayerData(const int index, const glm::vec2 &pos, const glm::vec2 &size, ofFloatColor &color, float &speed, bool &useMFCC, const Config &config) :
+        index(index), pos(pos), size(size), color(color), speed(speed), useMFCC(useMFCC), config(config) {
         
     }
     void update(const vector<string> dataSources, const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &globalConfig);
@@ -24,6 +24,7 @@ public:
     const glm::vec2 &pos;
     const glm::vec2 &size;
     ofFloatColor &color;
+    float &speed;
     bool &useMFCC;
     const Config &config;
     Config mergedConfig;

@@ -43,6 +43,7 @@ public:
     glm::vec2 pos;
     glm::vec2 size;
     ofFloatColor color = ofFloatColor(0, 0);
+    float speed = 1.f;
     bool useMFCC = false;
     bool isTidal = false;
     Config config = Config(0);

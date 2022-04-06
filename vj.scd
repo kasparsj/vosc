@@ -83,8 +83,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/loud/max', 32);
 ~visuals.sendMsg('/amp/thresh', 0.35);
 ~visuals.sendMsg('/amp/max', 0.1);
-~visuals.sendMsg('/speed', 0.5);
 
+~visuals.sendMsg('/speed', "*", 0.5);
 ~visuals.sendMsg('/choose', "*", "shader");
 ~visuals.sendMsg('/reload', "*");
 ~visuals.sendMsg('/noclear', "*", true);
@@ -160,7 +160,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/color/mfcc', 1, false);
 )
 
-~visuals.sendMsg('/speed', 1);
+~visuals.sendMsg('/speed', "*", 1);
 
 (
 ~visuals.sendMsg('/load', 0, "shader:OscCircle");

@@ -60,18 +60,16 @@ public:
     Config(const Config &config) {
         maxAmp = config.maxAmp;
         maxLoud = config.maxLoud;
-        speed = config.speed;
         behaviour = config.behaviour;
         threshAmp = config.threshAmp;
         threshLoud = config.threshLoud;
     }
-    Config(float initValue) : maxAmp(initValue), maxLoud(initValue), speed(initValue) {
+    Config(float initValue) : maxAmp(initValue), maxLoud(initValue) {
         
     }
     void merge(const Config &parent) {
         if (maxAmp == 0) maxAmp = parent.maxAmp;
         if (maxLoud == 0) maxLoud = parent.maxLoud;
-        if (speed == 0) speed = parent.speed;
         if (behaviour < 0) behaviour = parent.behaviour;
         if (threshAmp < 0) threshAmp = parent.threshAmp;
         if (threshLoud < 0) threshLoud = parent.threshLoud;
@@ -82,7 +80,6 @@ public:
     
     float maxAmp = 0.7;
     float maxLoud = 64.0;
-    float speed = 1.0;
     int behaviour = -1;
     float threshAmp = -1;
     float threshLoud = -1;

@@ -124,9 +124,6 @@ void ofApp::processQueue() {
         else if (command == "/loud/thresh") {
             config.threshLoud = m.getArgAsFloat(0);
         }
-        else if (command == "/speed") {
-            config.speed = m.getArgAsFloat(0);
-        }
         else if (command == "/behaviour") {
             config.behaviour = m.getArgAsInt(0);
         }
@@ -243,6 +240,9 @@ void ofApp::layerCommand(Layer &visual, string command, const ofxOscMessage &m) 
     }
     else if (command == "/unload") {
         visual.unload();
+    }
+    else if (command == "/speed") {
+        visual.speed = m.getArgAsFloat(1);
     }
 }
 
