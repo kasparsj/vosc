@@ -33,7 +33,7 @@ public:
     void reset();
     
     ofFloatColor getColor() {
-        if (useMFCCColor) {
+        if (useMFCCColor && data->mfcc.size() > 0) {
             return data->getMFCCColor();
         }
         return color;

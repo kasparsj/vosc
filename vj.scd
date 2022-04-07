@@ -138,7 +138,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/load', 0, "sketch:NoisySpirals");
 ~visuals.sendMsg('/alpha', 0, 1);
 ~visuals.sendMsg('/bri', 0, 1.0);
-~visuals.sendMsg('/color/mfcc', 0, false);
+~visuals.sendMsg('/color/mfcc', 0, true);
 )
 
 ~visuals.sendMsg('/color', 2, 0.15, 0.75, 1.0); // blue
