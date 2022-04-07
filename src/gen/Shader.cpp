@@ -27,7 +27,7 @@ string Shader::random() {
 Shader::~Shader(){
 }
 
-void Shader::update(Layer *layer, const Config &config) {
+void Shader::update(Layer *layer) {
     if (!fbo.isAllocated() || (fbo.getWidth() != layer->size.x || fbo.getHeight() != layer->size.y)) {
         fbo.clear();
         fbo.allocate(layer->size.x, layer->size.y);

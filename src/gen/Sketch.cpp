@@ -21,7 +21,7 @@ string Sketch::random() {
     return it->first;
 }
 
-void Sketch::update(Layer *layer, const Config &config) {
+void Sketch::update(Layer *layer) {
     if (!fbo.isAllocated() || (fbo.getWidth() != layer->size.x || fbo.getHeight() != layer->size.y)) {
         fbo.clear();
         fbo.allocate(layer->size.x, layer->size.y);
@@ -44,7 +44,7 @@ void Sketch::update(Layer *layer, const Config &config) {
     }
     ofEnableAlphaBlending();
     fbo.begin();
-    sketches[name]->draw(layer, config);
+    sketches[name]->draw(layer);
     fbo.end();
     ofDisableAlphaBlending();
     if (layer->randomShader()) {

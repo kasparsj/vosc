@@ -21,7 +21,7 @@ void ofApp::setupSounds(int numInsts) {
 void ofApp::setupLayers(int numVisuals) {
     layers.resize(numVisuals);
     for (int i=0; i<layers.size(); i++) {
-        layers[i].setup(i, numVisuals, sounds.size() > i ? "amp" + ofToString(i) : "");
+        layers[i].setup(i, numVisuals, sounds.size() > i ? "loud" + ofToString(i) : "");
     }
 }
 
@@ -38,7 +38,7 @@ void ofApp::update(){
         tidal->notes.erase(tidal->notes.begin());
     }
 	for (int i = 0; i < layers.size(); i++) {
-		layers[i].update(sounds, tidal->notes, config);
+		layers[i].update(sounds, tidal->notes);
 	}
 }
 
@@ -105,68 +105,42 @@ bool ofApp::checkOnset() {
     return isOnset;
 }
 
-void ofApp::processQueue() {
-    while (messageQueue.size()) {
-        ofxOscMessage &m = messageQueue[0];
-        string command = m.getAddress();
-        if (command == "/layout") {
-            layoutLayers(static_cast<Layout>(m.getArgAsInt(0)));
-        }
-        else if (command == "/amp/max") {
-            config.maxAmp = m.getArgAsFloat(0);
-        }
-        else if (command == "/amp/thresh") {
-            config.threshAmp = m.getArgAsFloat(0);
-        }
-        else if (command == "/loud/max") {
-            config.maxLoud = m.getArgAsFloat(0);
-        }
-        else if (command == "/loud/thresh") {
-            config.threshLoud = m.getArgAsFloat(0);
-        }
-        else if (command == "/blendmode") {
-            blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
-        }
-        else if (command == "/bgcolor") {
-            bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
-        }
-        else if (command == "/bgblendmode") {
-            bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
-        }
-        else {
-            bool all = false;
-            int idx = -1;
-            if (m.getArgType(0) == OFXOSC_TYPE_STRING) {
-                string which = m.getArgAsString(0);
-                all = which == "*" || which == "x" || which == "a";
-                if (!all) {
-                    try {
-                        idx = std::stoi(which);
-                    }
-                    catch (...) {
-                        ofLog() << "invalid layer index " << which;
-                    }
-                }
+auto parseIndex(const ofxOscMessage &m) {
+    bool all = false;
+    int idx = -1;
+    if (m.getArgType(0) == OFXOSC_TYPE_STRING) {
+        string which = m.getArgAsString(0);
+        all = which == "*" || which == "x" || which == "a";
+        if (!all) {
+            try {
+                idx = std::stoi(which);
             }
-            else {
-                idx = m.getArgAsInt(0);
-            }
-            if (all) {
-                for (int i=0; i<layers.size(); i++) {
-                    layerCommand(layers[i], command, m);
-                }
-            }
-            else {
-                if (idx > -1) {
-                    layerCommand(layers[idx], command, m);
-                }
+            catch (...) {
+                ofLog() << "invalid layer index " << which;
             }
         }
-        messageQueue.erase(messageQueue.begin());
     }
+    else {
+        idx = m.getArgAsInt(0);
+    }
+    struct retVals { bool all; int idx; };
+    return retVals { all, idx };
 }
 
-void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
+ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0) {
+    ofFloatColor color;
+    for (int i=idx; i<min(idx+3, (int) m.getNumArgs()); i++) {
+        if (m.getArgType(i) == OFXOSC_TYPE_FLOAT) {
+            color[i-idx] = m.getArgAsFloat(i);
+        }
+        else {
+            color[i-idx] = m.getArgAsInt(i) / 255.f;
+        }
+    }
+    return color;
+}
+
+void layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     if (command == "/load") {
         layer.load(m.getArgAsString(1));
     }
@@ -216,7 +190,7 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
         layer.color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
     }
     else if (command == "/color/mfcc") {
-        layer.useMFCC = m.getArgAsBool(1);
+        layer.useMFCCColor = m.getArgAsBool(1);
     }
     else if (command == "/data") {
         vector<string> ds;
@@ -243,17 +217,66 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     }
 }
 
-ofFloatColor ofApp::parseColor(const ofxOscMessage &m, int idx) {
-    ofFloatColor color;
-    for (int i=idx; i<min(idx+3, (int) m.getNumArgs()); i++) {
-        if (m.getArgType(i) == OFXOSC_TYPE_FLOAT) {
-            color[i-idx] = m.getArgAsFloat(i);
+void soundCommand(Sound &sound, string command, const ofxOscMessage &m) {
+    if (command == "/amp/max") {
+        sound.maxAmp = m.getArgAsFloat(1);
+    }
+    else if (command == "/amp/thresh") {
+        sound.threshAmp = m.getArgAsFloat(1);
+    }
+    else if (command == "/loud/max") {
+        sound.maxLoud = m.getArgAsFloat(1);
+    }
+    else if (command == "/loud/thresh") {
+        sound.threshLoud = m.getArgAsFloat(1);
+    }
+
+}
+
+void ofApp::processQueue() {
+    while (messageQueue.size()) {
+        ofxOscMessage &m = messageQueue[0];
+        string command = m.getAddress();
+        if (command == "/layout") {
+            layoutLayers(static_cast<Layout>(m.getArgAsInt(0)));
+        }
+        else if (command == "/blendmode") {
+            blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+        }
+        else if (command == "/bgcolor") {
+            bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
+        }
+        else if (command == "/bgblendmode") {
+            bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+        }
+        else if (command.substr(0, 4) == "/amp" || command.substr(0, 5) == "/loud") {
+            auto [all, idx] = parseIndex(m);
+            if (all) {
+                for (int i=0; i<sounds.size(); i++) {
+                    soundCommand(sounds[i], command, m);
+                }
+            }
+            else {
+                if (idx > -1) {
+                    soundCommand(sounds[idx], command, m);
+                }
+            }
         }
         else {
-            color[i-idx] = m.getArgAsInt(i) / 255.f;
+            auto [all, idx] = parseIndex(m);
+            if (all) {
+                for (int i=0; i<layers.size(); i++) {
+                    layerCommand(layers[i], command, m);
+                }
+            }
+            else {
+                if (idx > -1) {
+                    layerCommand(layers[idx], command, m);
+                }
+            }
         }
+        messageQueue.erase(messageQueue.begin());
     }
-    return color;
 }
 
 //--------------------------------------------------------------

@@ -21,7 +21,7 @@ string Video::random() {
     return videos[int(ofRandom(videos.size()))];
 }
 
-void Video::update(Layer *layer, const Config &config) {
+void Video::update(Layer *layer) {
     if (!videoPlayer.isLoaded()) {
         videoPlayer.close();
         videoPlayer.load("videos/" + name + ".mov");

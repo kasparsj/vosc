@@ -28,7 +28,7 @@ SynthDef(\soundin, {|out=0, in=0, rate=60|
 	onset = Onsets.kr(chain);
 	amp = Amplitude.kr(input);
     loudness = Loudness.kr(chain);
-	mfcc = MFCC.kr(chain, 3);
+	mfcc = MFCC.kr(chain);
     trig = Impulse.kr(rate);
     SendReply.kr(trig, '/visuals', [in, onset, amp, loudness] ++ mfcc);
 	Out.ar(out, input);
@@ -41,7 +41,7 @@ SynthDef(\buf, {|out=0, in=0, rate=60, bufnum|
 	onset = Onsets.kr(chain);
 	amp = Amplitude.kr(input);
     loudness = Loudness.kr(chain);
-	mfcc = MFCC.kr(chain, 3);
+	mfcc = MFCC.kr(chain);
     trig = Impulse.kr(rate);
     SendReply.kr(trig, '/visuals', [in, onset, amp, loudness] ++ mfcc);
 	Out.ar(out, Splay.ar(input));
@@ -79,10 +79,11 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 
 ~visuals.sendMsg('/layers', 8);
 ~visuals.sendMsg('/layout', 3);
-~visuals.sendMsg('/loud/thresh', 0);
-~visuals.sendMsg('/loud/max', 32);
-~visuals.sendMsg('/amp/thresh', 0.35);
-~visuals.sendMsg('/amp/max', 0.1);
+
+~visuals.sendMsg('/loud/thresh', "*", 0);
+~visuals.sendMsg('/loud/max', "*", 32);
+~visuals.sendMsg('/amp/thresh', "*", 0.35);
+~visuals.sendMsg('/amp/max', "*", 0.1);
 
 ~visuals.sendMsg('/speed', "*", 0.5);
 ~visuals.sendMsg('/choose', "*", "shader");
@@ -130,8 +131,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/clear', 1);
 
 (
-~visuals.sendMsg('/loud/max', 32);
-~visuals.sendMsg('/amp/max', 0.1);
+~visuals.sendMsg('/loud/max', "*", 32);
+~visuals.sendMsg('/amp/max', "*", 0.1);
 //~visuals.sendMsg('/data', 0, "loud:1");
 ~visuals.sendMsg('/data', 0, "noise");
 ~visuals.sendMsg('/load', 0, "sketch:NoisySpirals");
@@ -152,7 +153,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/color/random', 0); // random
 
 (
-~visuals.sendMsg('/loud/max', 24);
+~visuals.sendMsg('/loud/max', "*", 24);
 ~visuals.sendMsg('/data', 1, "loud:1");
 ~visuals.sendMsg('/load', 1, "sketch:WaveClock");
 ~visuals.sendMsg('/alpha', 1, 1.0);
@@ -163,8 +164,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/speed', "*", 1);
 
 (
+~visuals.sendMsg('/loud/thresh', "*", 0.7);
 ~visuals.sendMsg('/load', 0, "shader:OscCircle");
-~visuals.sendMsg('/loud/thresh', 0.7);
 ~visuals.sendMsg('/color', 0, 1.0, 1.0, 1.0);
 {
 	100.do { |i|
@@ -174,13 +175,13 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 		~visuals.sendMsg('/bri', 1, 1-(j/100.0));
 		0.6.wait;
 	};
-	~visuals.sendMsg('/loud/thresh', 0.6);
+	~visuals.sendMsg('/loud/thresh', "*", 0.6);
 	"bri fade done".postln;
 }.fork;
 )
 
 (
-~visuals.sendMsg('/loud/thresh', 0.8);
+~visuals.sendMsg('/loud/thresh', "*", 0.8);
 {
 	// lerp to blue
 	100.do { |i|
@@ -213,7 +214,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 
 (
 {
-	//~visuals.sendMsg('/loud/thresh', 0);
+	//~visuals.sendMsg('/loud/thresh', "*", 0);
 	~visuals.sendMsg('/load', 1, "sketch:Spiral");
 	~visuals.sendMsg('/bri', 1, 1.0);
 	100.do { |i|
@@ -244,7 +245,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 	~visuals.sendMsg('/color/mfcc', 3, true);
 	~visuals.sendMsg('/data', 4, "loud:0");
 	~visuals.sendMsg('/load', 4, "shader:AtmoScattering");
-	~visuals.sendMsg('/loud/thresh', 0.8);
+	~visuals.sendMsg('/loud/thresh', "*", 0.8);
 }.fork;
 )
 

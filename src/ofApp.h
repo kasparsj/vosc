@@ -18,9 +18,7 @@ public:
     void parseMessages();
     void parseMessage(const ofxOscMessage &m);
     void processQueue();
-    void layerCommand(Layer &visual, string command, const ofxOscMessage &m);
     bool checkOnset();
-    ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0);
 	void draw();
 	void exit();
 
@@ -38,7 +36,6 @@ public:
 
     ofxOscReceiver receiver;
     vector<ofxOscMessage> messageQueue;
-    Config config;
 	ofxTidalCycles *tidal;
     
     vector<Sound> sounds;

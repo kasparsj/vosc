@@ -20,7 +20,7 @@ public:
     }
     void setup(int index, int numVisuals, string dataSource = "");
     void layout(Layout layout);
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &config);
+    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
     void draw(float left, float top, float width, float height);
     void draw();
     void setDataSources(vector<string> ds);
@@ -33,8 +33,8 @@ public:
     void reset();
     
     ofFloatColor getColor() {
-        if (useMFCC) {
-            return data->mfcc;
+        if (useMFCCColor) {
+            return data->getMFCCColor();
         }
         return color;
     }
@@ -56,7 +56,7 @@ public:
     float alpha = 1.0;
     float timeNorm = 0;
     bool noClear;
-    bool useMFCC = false;
+    bool useMFCCColor = false;
     bool isTidal = false;
     int randomSeed = 0;
     vector<string> dataSources;

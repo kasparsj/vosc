@@ -50,31 +50,3 @@ static std::unordered_map<std::string, DataSource> const DataSourceMap = {
     {"onset", DataSource::DS_ONSET},
     {"tidal", DataSource::DS_TIDAL},
 };
-
-class Config {
-public:
-    Config() {
-        threshAmp = maxAmp / 2;
-        threshLoud = maxLoud / 2;
-    }
-    Config(const Config &config) {
-        maxAmp = config.maxAmp;
-        maxLoud = config.maxLoud;
-        threshAmp = config.threshAmp;
-        threshLoud = config.threshLoud;
-    }
-    Config(float initValue) : maxAmp(initValue), maxLoud(initValue) {
-        
-    }
-    void merge(const Config &parent) {
-        if (maxAmp == 0) maxAmp = parent.maxAmp;
-        if (maxLoud == 0) maxLoud = parent.maxLoud;
-        if (threshAmp < 0) threshAmp = parent.threshAmp;
-        if (threshLoud < 0) threshLoud = parent.threshLoud;
-    }
-    
-    float maxAmp = 0.7;
-    float maxLoud = 64.0;
-    float threshAmp = -1;
-    float threshLoud = -1;
-};

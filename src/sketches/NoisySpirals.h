@@ -4,7 +4,7 @@
 
 class NoisySpirals : public SketchImpl {
 public:
-    void draw(Layer *layer, const Config &config) override {
+    void draw(Layer *layer) override {
         float width = layer->size.x;
         float height = layer->size.y;
         if (radius >= endAngle) {

@@ -83,10 +83,10 @@ void Layer::layout(Layout layout)
     }
 }
 
-void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &config) {
-    data->update(sounds, notes, config);
+void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
+    data->update(sounds, notes);
     if (gen != NULL) {
-        gen->update(this, config);
+        gen->update(this);
     }
 }
 

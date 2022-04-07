@@ -9,7 +9,7 @@ public:
     static string random();
     
     Sketch(string name) : FBOGen(name) {}
-    void update(Layer *layer, const Config &config) override;
+    void update(Layer *layer) override;
     void draw(int left, int top, int width, int height) override;
     void choose() override;
     void reset() override;

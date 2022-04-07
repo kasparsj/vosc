@@ -5,5 +5,8 @@ void Sound::parse(const ofxOscMessage &m) {
     amplitude = m.getArgAsFloat(1);
     loudness = m.getArgAsFloat(2);
     onset = m.getArgAsInt(3);
-    mfcc = ofFloatColor(m.getArgAsFloat(4), m.getArgAsFloat(5), m.getArgAsFloat(6));
+    mfcc.resize(m.getNumArgs()-4);
+    for (int i=0; i<m.getNumArgs()-4; i++) {
+        mfcc[i] = m.getArgAsFloat(4+i);
+    }
 }

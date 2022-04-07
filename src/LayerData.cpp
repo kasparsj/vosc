@@ -1,14 +1,13 @@
 #include "LayerData.h"
 #include "Layer.h"
 
-void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const Config &config) {
+void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     const float timef = ofGetElapsedTimef();
     time += ((timef - prevTime) * layer->speed);
     prevTime = timef;
+    reset();
     const vector<string> &ds = layer->dataSources;
     tidal = ds.size() && ds[0].substr(0, 5) == "tidal";
-    onset = false;
-    values.clear();
     values.resize(ds.size());
     float thresh = 0;
     if (tidal) {
@@ -31,20 +30,22 @@ void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &not
     else {
         for (int i=0; i<ds.size(); i++) {
             if (i == 0) {
-                thresh = config.threshAmp;
+                thresh = 0.5;
             }
             if (ds[i].substr(0, 3) == "amp" || ds[i].substr(0, 4) == "loud") {
                 int j;
                 if (ds[i].substr(0, 3) == "amp") {
                     j = ofToInt(ds[i].substr(3));
-                    //values[i] += tanh(sounds[j].amplitude / config.maxAmp * M_PI);
-                    values[i] += int(sounds[j].amplitude > config.maxAmp / 2.f);
+                    values[i] += (sounds[j].amplitude / sounds[j].maxAmp);
+                    if (i == 0) {
+                        thresh = sounds[j].getThreshAmp();
+                    }
                 }
                 else {
                     j = ofToInt(ds[i].substr(4));
-                    values[i] += (sounds[j].loudness / config.maxLoud);
+                    values[i] += (sounds[j].loudness / sounds[j].maxLoud);
                     if (i == 0) {
-                        thresh = config.threshLoud;
+                        thresh = sounds[j].getThreshLoud();
                     }
                 }
                 onset = onset || (sounds[j].onset == 1);
