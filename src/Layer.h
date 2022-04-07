@@ -13,10 +13,7 @@ public:
     static Gen* factory(string source);
     
     ~Layer() {
-        if (data != NULL) {
-            delete data;
-            data = NULL;
-        }
+        unload();
     }
     void setup(int index, int numVisuals, string dataSource = "");
     void layout(Layout layout);

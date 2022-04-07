@@ -56,7 +56,6 @@ void Layer::setup(int index, int numVisuals, string dataSource)
     if (dataSource != "") {
         dataSources.push_back(dataSource);
     }
-    data = new LayerData(this);
 }
 
 void Layer::layout(Layout layout)
@@ -84,7 +83,9 @@ void Layer::layout(Layout layout)
 }
 
 void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
-    data->update(sounds, notes);
+    if (data != NULL) {
+        data->update(sounds, notes);
+    }
     if (gen != NULL) {
         gen->update(this);
     }
@@ -99,7 +100,9 @@ void Layer::draw(float left, float top, float width, float height) {
 
 void Layer::draw() {
     draw(pos.x, pos.y, size.x, size.y);
-    data->afterDraw();
+    if (data != NULL) {
+        data->afterDraw();
+    }
 }
 
 void Layer::setDataSources(vector<string> ds) {
@@ -129,7 +132,10 @@ void Layer::addDataSources(vector<string> ds) {
 void Layer::load(string source) {
     if (source.find(":") != string::npos) {
         gen = factory(source);
-        if (gen == NULL) {
+        if (gen != NULL) {
+            data = new LayerData(this);
+        }
+        else {
             ofLog() << "invalid source type " << source;
         }
     }
@@ -150,7 +156,10 @@ void Layer::choose(string type) {
         type = it->first;
     }
     gen = factory(type);
-    if (gen == NULL) {
+    if (gen != NULL) {
+        data = new LayerData(this);
+    }
+    else {
         ofLog() << "invalid source type " << type;
     }
 }
@@ -160,8 +169,9 @@ void Layer::unload() {
         delete gen;
         gen = NULL;
     }
-    else {
-        ofLog() << "layer " << index << " already unloaded";
+    if (data != NULL) {
+        delete data;
+        data = NULL;
     }
 }
 
