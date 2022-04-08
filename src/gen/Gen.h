@@ -17,5 +17,5 @@ public:
 
     string path = "";
     string prevPath = "";
-    bool maintainAspectRatio;
+    bool aspectRatio;
 };

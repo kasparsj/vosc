@@ -7,10 +7,7 @@ vector<string> loadLocalVideos()
     vector<string> videos;
     for (int i = 0; i < dir.getFiles().size(); i++){
         ofFile file = dir.getFile(i);
-        if (file.getExtension() == "mov") {
-            string fileName = file.getFileName();
-            videos.push_back(fileName.substr(0, fileName.find("." + file.getExtension())));
-        }
+        videos.push_back(file.getFileName());
     }
     return videos;
 }
@@ -24,7 +21,14 @@ string Video::random() {
 void Video::update(Layer *layer) {
     if (!videoPlayer.isLoaded()) {
         videoPlayer.close();
-        videoPlayer.load("videos/" + path + ".mov");
+        string absPath = path;
+        if (!ofFilePath::isAbsolute(absPath)) {
+            absPath = ofToDataPath("videos/" + path);
+            if (!ofFile(absPath).exists()) {
+                absPath = ofToDataPath(absPath);
+            }
+        }
+        videoPlayer.load(absPath);
         videoPlayer.setVolume(0);
         videoPlayer.setLoopState(OF_LOOP_NORMAL);
         seek(layer->timeNorm);
@@ -33,7 +37,7 @@ void Video::update(Layer *layer) {
     else if (layer->data->onset) {
         seek(layer->timeNorm);
     }
-    maintainAspectRatio = !layer->freeRatio;
+    aspectRatio = layer->aspectRatio;
     videoPlayer.update();
 }
 
@@ -42,7 +46,7 @@ void Video::seek(float pos) {
 }
 
 void Video::draw(int left, int top, int width, int height) {
-    if (maintainAspectRatio) {
+    if (aspectRatio) {
         if (videoPlayer.getWidth() > videoPlayer.getHeight()) {
             videoPlayer.draw(left, top, width, width/videoPlayer.getWidth() * videoPlayer.getHeight());
         }

@@ -51,7 +51,7 @@ public:
     int behaviour = -1;
     float bri = 1.0;
     float alpha = 1.0;
-    bool freeRatio = false;
+    bool aspectRatio = true;
     float timeNorm = 0;
     bool noClear;
     bool useMFCCColor = false;

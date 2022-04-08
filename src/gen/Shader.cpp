@@ -7,11 +7,8 @@ map<string, ofShader> loadLocalShaders()
     map<string, ofShader> shaders;
     for (int i = 0; i < dir.getFiles().size(); i++){
         ofFile file = dir.getFile(i);
-        if (file.getExtension() == "frag") {
-            ofShader sh;
-            string fileName = file.getFileName();
-            shaders[fileName.substr(0, fileName.find("." + file.getExtension()))] = sh;
-        }
+        ofShader sh;
+        shaders[file.getFileName()] = sh;
     }
     return shaders;
 }
@@ -42,7 +39,19 @@ void Shader::update(Layer *layer) {
         layer->randomSeed = ofRandom(1000);
     }
     if (!cache[path].isLoaded()) {
-        cache[path].load("", "shaders/" + path + ".frag");
+        string vertPath = "";
+        string fragPath = path;
+        if (!ofFilePath::isAbsolute(fragPath)) {
+            fragPath = ofToDataPath("shaders/" + path);
+            if (!ofFile(fragPath).exists()) {
+                fragPath = ofToDataPath(fragPath);
+            }
+        }
+        string tmpVertPath = fragPath.substr(0, fragPath.find("." + ofFilePath::getFileExt(fragPath))) + ".vert";
+        if (ofFile(tmpVertPath).exists()) {
+            vertPath = tmpVertPath;
+        }
+        cache[path].load(vertPath, fragPath);
     }
     ofEnableAlphaBlending();
 	fbo.begin();

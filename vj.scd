@@ -89,9 +89,10 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/choose', "*", "shader");
 ~visuals.sendMsg('/reload', "*");
 ~visuals.sendMsg('/noclear', "*", true);
-~visuals.sendMsg('/load', 0, "shader:OscCircle");
+~visuals.sendMsg('/load', 0, "shader:OscCircle.frag");
 ~visuals.sendMsg('/load', 0, "sketch:NoisySpirals");
 ~visuals.sendMsg('/load', 0, "image:black_hole.jpeg");
+~visuals.sendMsg('/load', 0, "image:/Users/kasparsj/Desktop/Screenshot 2022-04-05 at 13.12.05.png");
 ~visuals.sendMsg('/pos', "*", 0, 0);
 ~visuals.sendMsg('/size', "*", 960, 1080);
 ~visuals.sendMsg('/data', "*", "amp");
@@ -121,7 +122,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/data', 0, "noise");
 ~visuals.sendMsg('/data', 1, "noise");
 ~visuals.sendMsg('/data', "*", "loud:0");
-~visuals.sendMsg('/load', 0, "shader:AtmoScattering");
+~visuals.sendMsg('/load', 0, "shader:AtmoScattering.frag");
 ~visuals.sendMsg('/load', 0, "sketch:WaveClock");
 ~visuals.sendMsg('/load', 1, "sketch:NoisySpirals");
 ~visuals.sendMsg('/reset', 0);
@@ -166,7 +167,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 
 (
 ~visuals.sendMsg('/loud/thresh', "*", 0.7);
-~visuals.sendMsg('/load', 0, "shader:OscCircle");
+~visuals.sendMsg('/load', 0, "shader:OscCircle.frag");
 ~visuals.sendMsg('/color', 0, 1.0, 1.0, 1.0);
 {
 	100.do { |i|
@@ -242,10 +243,10 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 	~visuals.sendMsg('/load', 1, "");
 	~visuals.sendMsg('/load', 0 "");
 	~visuals.sendMsg('/data', 3, "loud:1");
-	~visuals.sendMsg('/load', 3, "shader:Ether");
+	~visuals.sendMsg('/load', 3, "shader:Ether.frag");
 	~visuals.sendMsg('/color/mfcc', 3, true);
 	~visuals.sendMsg('/data', 4, "loud:0");
-	~visuals.sendMsg('/load', 4, "shader:AtmoScattering");
+	~visuals.sendMsg('/load', 4, "shader:AtmoScattering.frag");
 	~visuals.sendMsg('/loud/thresh', "*", 0.8);
 }.fork;
 )
@@ -257,9 +258,9 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 
 ~visuals.sendMsg('/data', 2, "loud:1");
 ~visuals.sendMsg('/data', 3, "loud:0");
-~visuals.sendMsg('/load', 2, "shader:02");
-~visuals.sendMsg('/load', 2, "shader:04");
-~visuals.sendMsg('/load', 2, "shader:RotStringsH");
+~visuals.sendMsg('/load', 2, "shader:02.frag");
+~visuals.sendMsg('/load', 2, "shader:04.frag");
+~visuals.sendMsg('/load', 2, "shader:RotStringsH.frag");
 ~visuals.sendMsg('/alpha', 3, 1.0);
 ~visuals.sendMsg('/load', 3, "");
 ~visuals.sendMsg('/color/mfcc', 2, false);

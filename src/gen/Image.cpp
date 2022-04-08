@@ -7,9 +7,7 @@ vector<string> loadLocalImages()
     vector<string> images;
     for (int i = 0; i < dir.getFiles().size(); i++){
         ofFile file = dir.getFile(i);
-        if (file.getExtension() == "png" || file.getExtension() == "jpg" || file.getExtension() == "jpeg") {
-            images.push_back(file.getFileName());
-        }
+        images.push_back(file.getFileName());
     }
     return images;
 }
@@ -22,13 +20,20 @@ string Image::random() {
 
 void Image::update(Layer *layer) {
     if (!image.isAllocated()) {
-        image.load("images/" + path);
+        string absPath = path;
+        if (!ofFilePath::isAbsolute(absPath)) {
+            absPath = ofToDataPath("images/" + path);
+            if (!ofFile(absPath).exists()) {
+                absPath = ofToDataPath(absPath);
+            }
+        }
+        image.load(absPath);
     }
-    maintainAspectRatio = !layer->freeRatio;
+    aspectRatio = layer->aspectRatio;
 }
 
 void Image::draw(int left, int top, int width, int height) {
-    if (maintainAspectRatio) {
+    if (aspectRatio) {
         if (image.getWidth() > image.getHeight()) {
             image.draw(left, top, width, width/image.getWidth() * image.getHeight());
         }

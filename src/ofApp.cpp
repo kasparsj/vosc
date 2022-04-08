@@ -215,6 +215,9 @@ void layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     else if (command == "/behaviour") {
         layer.behaviour = m.getArgAsInt(1);
     }
+    else if (command == "/aspectratio") {
+        layer.aspectRatio = m.getArgAsBool(1);
+    }
 }
 
 void soundCommand(Sound &sound, string command, const ofxOscMessage &m) {
