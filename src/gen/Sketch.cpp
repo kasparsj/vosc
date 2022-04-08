@@ -26,25 +26,25 @@ void Sketch::update(Layer *layer) {
         fbo.clear();
         fbo.allocate(layer->size.x, layer->size.y);
     }
-    if (name != prevName) {
-        if (sketches.find(name) == sketches.end()) {
-            ofLog() << "sketch " << name << " does not exist";
-            name = prevName;
+    if (path != prevPath) {
+        if (sketches.find(path) == sketches.end()) {
+            ofLog() << "sketch " << path << " does not exist";
+            path = prevPath;
             return;
         }
-        prevName = name;
+        prevPath = path;
         layer->randomSeed = ofRandom(1000);
         if (layer->color == ofFloatColor(0, 0)) {
-            layer->color = sketches[name]->defaultColor;
+            layer->color = sketches[path]->defaultColor;
         }
     }
-    if (!sketches[name]->initialized) {
+    if (!sketches[path]->initialized) {
         clear();
-        sketches[name]->init();
+        sketches[path]->init();
     }
     ofEnableAlphaBlending();
     fbo.begin();
-    sketches[name]->draw(layer);
+    sketches[path]->draw(layer);
     fbo.end();
     ofDisableAlphaBlending();
     if (layer->randomShader()) {
@@ -57,11 +57,11 @@ void Sketch::draw(int left, int top, int width, int height) {
 }
 
 void Sketch::choose() {
-    name = random();
+    path = random();
 }
 
 void Sketch::reset() {
-    if (name != "") {
-        sketches[name]->initialized = false;
+    if (path != "") {
+        sketches[path]->initialized = false;
     }
 }

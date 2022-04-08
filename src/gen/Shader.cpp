@@ -1,7 +1,7 @@
 #include "Shader.h"
 #include "Layer.h"
 
-map<string, ofShader> loadShaders()
+map<string, ofShader> loadLocalShaders()
 {
     ofDirectory dir("shaders");
     map<string, ofShader> shaders;
@@ -16,11 +16,11 @@ map<string, ofShader> loadShaders()
     return shaders;
 }
 
-map<string, ofShader> Shader::shaders = loadShaders();
+map<string, ofShader> Shader::cache = loadLocalShaders();
 
 string Shader::random() {
-    auto it = shaders.begin();
-    advance(it, int(ofRandom(shaders.size())));
+    auto it = cache.begin();
+    advance(it, int(ofRandom(cache.size())));
     return it->first;
 }
 
@@ -32,17 +32,17 @@ void Shader::update(Layer *layer) {
         fbo.clear();
         fbo.allocate(layer->size.x, layer->size.y);
     }
-    if (name != prevName) {
-        if (shaders.find(name) == shaders.end()) {
-            ofLog() << "shader " << name << " does not exist";
-            name = prevName;
+    if (path != prevPath) {
+        if (cache.find(path) == cache.end()) {
+            ofLog() << "shader " << path << " does not exist";
+            path = prevPath;
             return;
         }
-        prevName = name;
+        prevPath = path;
         layer->randomSeed = ofRandom(1000);
     }
-    if (!shaders[name].isLoaded()) {
-        shaders[name].load("", "shaders/" + name + ".frag");
+    if (!cache[path].isLoaded()) {
+        cache[path].load("", "shaders/" + path + ".frag");
     }
     ofEnableAlphaBlending();
 	fbo.begin();
@@ -50,19 +50,19 @@ void Shader::update(Layer *layer) {
         ofClear(0, 0, 0, 0);
     }
     if (layer->data->visible) {
-        shaders[name].begin();
-        shaders[name].setUniform1f("time", layer->data->time);
-        shaders[name].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
-        shaders[name].setUniform2f("offset", layer->pos.x, layer->pos.y);
-        shaders[name].setUniform1i("index", layer->index);
-        shaders[name].setUniform4f("color", layer->getColor());
-        shaders[name].setUniform1i("random", layer->randomSeed);
-        shaders[name].setUniform1i("num_values", layer->data->values.size());
-        shaders[name].setUniform1fv("values", layer->data->values.data(), layer->data->values.size());
-        shaders[name].setUniform1i("visible", layer->data->visible ? 1 : 0);
-        shaders[name].setUniform1i("onset", layer->data->onset ? 1 : 0);
+        cache[path].begin();
+        cache[path].setUniform1f("time", layer->data->time);
+        cache[path].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
+        cache[path].setUniform2f("offset", layer->pos.x, layer->pos.y);
+        cache[path].setUniform1i("index", layer->index);
+        cache[path].setUniform4f("color", layer->getColor());
+        cache[path].setUniform1i("random", layer->randomSeed);
+        cache[path].setUniform1i("num_values", layer->data->values.size());
+        cache[path].setUniform1fv("values", layer->data->values.data(), layer->data->values.size());
+        cache[path].setUniform1i("visible", layer->data->visible ? 1 : 0);
+        cache[path].setUniform1i("onset", layer->data->onset ? 1 : 0);
         ofDrawRectangle(0, 0, layer->size.x, layer->size.y);
-        shaders[name].end();
+        cache[path].end();
     }
     fbo.end();
     ofDisableAlphaBlending();
@@ -76,10 +76,12 @@ void Shader::draw(int left, int top, int width, int height) {
 }
 
 void Shader::choose() {
-    name = random();
+    path = random();
 }
 
 void Shader::reload() {
-    ofShader sh;
-    shaders[name] = sh;
+    if (path != "") {
+        ofShader sh;
+        cache[path] = sh;
+    }
 }

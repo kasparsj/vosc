@@ -5,7 +5,7 @@
 
 class Shader : public FBOGen {
 public:
-    static map<string, ofShader> shaders;
+    static map<string, ofShader> cache;
     static string random();
     
     Shader(string name) : FBOGen(name) {}

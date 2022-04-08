@@ -7,7 +7,7 @@ class Layer;
 
 class Gen {
 public:
-    Gen(string name) : name(name) {}
+    Gen(string path) : path(path) {}
     virtual void update(Layer *layer) = 0;
     virtual void draw(int left, int top, int width, int height) = 0;
     virtual void choose() = 0;
@@ -15,6 +15,7 @@ public:
     virtual void clear() {};
     virtual void reset() {};
 
-    string name = "";
-    string prevName = "";
+    string path = "";
+    string prevPath = "";
+    bool maintainAspectRatio;
 };

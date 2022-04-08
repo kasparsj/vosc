@@ -2,20 +2,24 @@
 #include "Shader.h"
 #include "Video.h"
 #include "Sketch.h"
+#include "Image.h"
 
-Gen* Layer::factory(string type, string name) {
+Gen* Layer::factory(string type, string path) {
     Gen *gen = NULL;
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
             case S_VIDEO:
-                gen = new Video(name);
+                gen = new Video(path);
                 break;
             case S_SHADER:
-                gen = new Shader(name);
+                gen = new Shader(path);
                 break;
             case S_SKETCH:
-                gen = new Sketch(name);
+                gen = new Sketch(path);
+                break;
+            case S_IMAGE:
+                gen = new Image(path);
                 break;
         }
     }
@@ -24,28 +28,31 @@ Gen* Layer::factory(string type, string name) {
 
 Gen* Layer::factory(string source) {
     string type = source;
-    string name = "";
+    string path = "";
     if (source.find(":") != string::npos) {
         type = source.substr(0, source.find(":"));
-        name = source.substr(source.find(":") + 1);
+        path = source.substr(source.find(":") + 1);
     }
-    if (name == "") {
+    if (path == "") {
         auto it = SourceMap.find(type);
         if (it != SourceMap.end()) {
             switch (it->second) {
                 case S_VIDEO:
-                    name = Video::random();
+                    path = Video::random();
                     break;
                 case S_SHADER:
-                    name = Shader::random();
+                    path = Shader::random();
                     break;
                 case S_SKETCH:
-                    name = Sketch::random();
+                    path = Sketch::random();
+                    break;
+                case S_IMAGE:
+                    path = Image::random();
                     break;
             }
         }
     }
-    return factory(type, name);
+    return factory(type, path);
 }
 
 void Layer::setup(int index, int numVisuals, string dataSource)

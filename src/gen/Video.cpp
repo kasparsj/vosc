@@ -1,7 +1,7 @@
 #include "Video.h"
 #include "Layer.h"
 
-vector<string> loadVideos()
+vector<string> loadLocalVideos()
 {
     ofDirectory dir("videos");
     vector<string> videos;
@@ -15,16 +15,16 @@ vector<string> loadVideos()
     return videos;
 }
 
-vector<string> Video::videos = loadVideos();
+vector<string> Video::cache = loadLocalVideos();
 
 string Video::random() {
-    return videos[int(ofRandom(videos.size()))];
+    return cache[int(ofRandom(cache.size()))];
 }
 
 void Video::update(Layer *layer) {
     if (!videoPlayer.isLoaded()) {
         videoPlayer.close();
-        videoPlayer.load("videos/" + name + ".mov");
+        videoPlayer.load("videos/" + path + ".mov");
         videoPlayer.setVolume(0);
         videoPlayer.setLoopState(OF_LOOP_NORMAL);
         seek(layer->timeNorm);
@@ -33,6 +33,7 @@ void Video::update(Layer *layer) {
     else if (layer->data->onset) {
         seek(layer->timeNorm);
     }
+    maintainAspectRatio = !layer->freeRatio;
     videoPlayer.update();
 }
 
@@ -41,10 +42,20 @@ void Video::seek(float pos) {
 }
 
 void Video::draw(int left, int top, int width, int height) {
-    videoPlayer.draw(left, top, width, height);
+    if (maintainAspectRatio) {
+        if (videoPlayer.getWidth() > videoPlayer.getHeight()) {
+            videoPlayer.draw(left, top, width, width/videoPlayer.getWidth() * videoPlayer.getHeight());
+        }
+        else {
+            videoPlayer.draw(left, top, height/videoPlayer.getHeight() * videoPlayer.getWidth(), height);
+        }
+    }
+    else {
+        videoPlayer.draw(left, top, width, height);
+    }
 }
 
 void Video::choose() {
-    name = random();
+    path = random();
 }
 

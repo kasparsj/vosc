@@ -89,8 +89,9 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/choose', "*", "shader");
 ~visuals.sendMsg('/reload', "*");
 ~visuals.sendMsg('/noclear', "*", true);
-~visuals.sendMsg('/load', "*", "shader:OscCircle"); // good
-~visuals.sendMsg('/load', "*", "shader:NoisySpirals");
+~visuals.sendMsg('/load', 0, "shader:OscCircle");
+~visuals.sendMsg('/load', 0, "sketch:NoisySpirals");
+~visuals.sendMsg('/load', 0, "image:black_hole.jpeg");
 ~visuals.sendMsg('/pos', "*", 0, 0);
 ~visuals.sendMsg('/size', "*", 960, 1080);
 ~visuals.sendMsg('/data', "*", "amp");

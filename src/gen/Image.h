@@ -2,17 +2,16 @@
 
 #include "Gen.h"
 
-class Video : public Gen {
+class Image : public Gen {
 public:
     static vector<string> cache;
     static string random();
     
-    Video(string name) : Gen(name) {}
+    Image(string path) : Gen(path) {}
     void update(Layer *layer) override;
-    void seek(float pos);
     void draw(int left, int top, int width, int height) override;
     void choose() override;
     
 private:
-    ofVideoPlayer videoPlayer;
+    ofImage image;
 };

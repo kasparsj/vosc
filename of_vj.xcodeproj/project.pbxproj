@@ -13,6 +13,7 @@
 		1EF68DFFFDB46A876B77338B /* ColorUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55138D8657D9D09949E54626 /* ColorUtil.cpp */; };
 		231BF86FC8A2A84536B0CBE0 /* Video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9C35AB5202DEE1FAE587B8D /* Video.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
+		2BF8FD7928009370000B4793 /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BC1B3AF2800898C004E65D7 /* Image.cpp */; };
 		3C625574DC7EC9AD63808D34 /* LayerData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24387067D514D4E422DDB29A /* LayerData.cpp */; };
 		3D6BA46406CE29B32055340C /* Analogous.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24317A596BC892793AEA0706 /* Analogous.cpp */; };
 		3D839E120AFEABE9CA2B91D4 /* Monochrome.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C5EDF65915908821C72E565 /* Monochrome.cpp */; };
@@ -177,6 +178,8 @@
 		2B0E029327F86087003DB743 /* 18.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 18.frag; sourceTree = "<group>"; };
 		2B0E029427F86087003DB743 /* Fluid.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Fluid.frag; sourceTree = "<group>"; };
 		2B0E029527F86087003DB743 /* ZebraH.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ZebraH.frag; sourceTree = "<group>"; };
+		2BC1B3AF2800898C004E65D7 /* Image.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Image.cpp; path = gen/Image.cpp; sourceTree = "<group>"; };
+		2BC1B3B02800898C004E65D7 /* Image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Image.h; path = gen/Image.h; sourceTree = "<group>"; };
 		2FD4B0329909D3527F003494 /* UdpSocket.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = UdpSocket.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/UdpSocket.h; sourceTree = SOURCE_ROOT; };
 		3724F9226258771751FF584D /* Monochrome.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Monochrome.h; path = ../../../addons/ofxColorTheory/src/Rules/Monochrome.h; sourceTree = SOURCE_ROOT; };
 		3B361208CD4107E479F04E7B /* NetworkingUtils.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = NetworkingUtils.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/posix/NetworkingUtils.cpp; sourceTree = SOURCE_ROOT; };
@@ -437,6 +440,7 @@
 		2B0E022927F86087003DB743 /* data */ = {
 			isa = PBXGroup;
 			children = (
+				2BC1B3B128008C3F004E65D7 /* images */,
 				2B0E022A27F86087003DB743 /* 100fragments */,
 				2B0E027427F86087003DB743 /* empty.frag */,
 				2B0E027527F86087003DB743 /* .gitkeep */,
@@ -571,6 +575,13 @@
 			path = shaders;
 			sourceTree = "<group>";
 		};
+		2BC1B3B128008C3F004E65D7 /* images */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = images;
+			sourceTree = "<group>";
+		};
 		30CB364908817057B430D528 /* osc */ = {
 			isa = PBXGroup;
 			children = (
@@ -635,6 +646,8 @@
 				5A2FEA06065174419FD1BB14 /* SketchImpl.h */,
 				E9C35AB5202DEE1FAE587B8D /* Video.cpp */,
 				27959D03B9B02B84FE8D7790 /* Video.h */,
+				2BC1B3AF2800898C004E65D7 /* Image.cpp */,
+				2BC1B3B02800898C004E65D7 /* Image.h */,
 			);
 			name = gen;
 			sourceTree = "<group>";
@@ -1194,6 +1207,7 @@
 				CEDEE1DEF2CD954B8F4B0557 /* Layer.cpp in Sources */,
 				64419FBCCF52F2F13D35A292 /* Sketch.cpp in Sources */,
 				231BF86FC8A2A84536B0CBE0 /* Video.cpp in Sources */,
+				2BF8FD7928009370000B4793 /* Image.cpp in Sources */,
 				C1104C02B7261C2D5DEF27CD /* Shader.cpp in Sources */,
 				9D5B5A7556CEF2DF185DA036 /* FBOGen.cpp in Sources */,
 				6C8551DB2C641E610EA107BE /* Sound.cpp in Sources */,

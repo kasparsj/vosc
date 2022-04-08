@@ -4,7 +4,7 @@
 
 class FBOGen : public Gen {
 public:
-    FBOGen(string name) : Gen(name) {}
+    FBOGen(string path) : Gen(path) {}
     void clear() override;
     
     ofFbo fbo;
