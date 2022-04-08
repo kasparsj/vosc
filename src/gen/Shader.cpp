@@ -21,22 +21,14 @@ string Shader::random() {
     return it->first;
 }
 
-Shader::~Shader(){
-}
-
 void Shader::update(Layer *layer) {
     if (!fbo.isAllocated() || (fbo.getWidth() != layer->size.x || fbo.getHeight() != layer->size.y)) {
         fbo.clear();
         fbo.allocate(layer->size.x, layer->size.y);
     }
-    if (path != prevPath) {
-        if (cache.find(path) == cache.end()) {
-            ofLog() << "shader " << path << " does not exist";
-            path = prevPath;
-            return;
-        }
-        prevPath = path;
-        layer->randomSeed = ofRandom(1000);
+    if (cache.find(path) == cache.end()) {
+        ofShader sh;
+        cache[path] = sh;
     }
     if (!cache[path].isLoaded()) {
         string vertPath = "";
@@ -51,7 +43,15 @@ void Shader::update(Layer *layer) {
         if (ofFile(tmpVertPath).exists()) {
             vertPath = tmpVertPath;
         }
-        cache[path].load(vertPath, fragPath);
+        if (cache[path].load(vertPath, fragPath)) {
+            prevPath = path;
+            layer->randomSeed = ofRandom(1000);
+        }
+        else {
+            ofLog() << "could not load shader: " << path;
+            path = prevPath;
+            return;
+        }
     }
     ofEnableAlphaBlending();
 	fbo.begin();
@@ -89,8 +89,5 @@ void Shader::choose() {
 }
 
 void Shader::reload() {
-    if (path != "") {
-        ofShader sh;
-        cache[path] = sh;
-    }
+    cache.erase(path);
 }

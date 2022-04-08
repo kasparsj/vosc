@@ -137,6 +137,7 @@ void Layer::addDataSources(vector<string> ds) {
 }
 
 void Layer::load(string source) {
+    unload();
     if (source.find(":") != string::npos) {
         gen = factory(source);
         if (gen != NULL) {
@@ -147,12 +148,7 @@ void Layer::load(string source) {
         }
     }
     else {
-        if (source == "") {
-            unload();
-        }
-        else {
-            ofLog() << "invalid source " << source;
-        }
+        ofLog() << "invalid source " << source;
     }
 }
 

@@ -28,11 +28,19 @@ void Video::update(Layer *layer) {
                 absPath = ofToDataPath(absPath);
             }
         }
-        videoPlayer.load(absPath);
-        videoPlayer.setVolume(0);
-        videoPlayer.setLoopState(OF_LOOP_NORMAL);
-        seek(layer->timeNorm);
-        videoPlayer.play();
+        if (videoPlayer.load(absPath)) {
+            videoPlayer.setVolume(0);
+            videoPlayer.setLoopState(OF_LOOP_NORMAL);
+            seek(layer->timeNorm);
+            videoPlayer.play();
+            prevPath = path;
+            layer->randomSeed = ofRandom(1000);
+        }
+        else {
+            ofLog() << "could not load video: " << path;
+            path = prevPath;
+            return;
+        }
     }
     else if (layer->data->onset) {
         seek(layer->timeNorm);

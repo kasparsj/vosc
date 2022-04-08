@@ -8,6 +8,7 @@ class Layer;
 class Gen {
 public:
     Gen(string path) : path(path) {}
+    virtual ~Gen() = default;
     virtual void update(Layer *layer) = 0;
     virtual void draw(int left, int top, int width, int height) = 0;
     virtual void choose() = 0;

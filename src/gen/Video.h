@@ -8,6 +8,7 @@ public:
     static string random();
     
     Video(string name) : Gen(name) {}
+    ~Video() {}
     void update(Layer *layer) override;
     void seek(float pos);
     void draw(int left, int top, int width, int height) override;

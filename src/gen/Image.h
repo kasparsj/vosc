@@ -8,6 +8,7 @@ public:
     static string random();
     
     Image(string path) : Gen(path) {}
+    ~Image() {}
     void update(Layer *layer) override;
     void draw(int left, int top, int width, int height) override;
     void choose() override;

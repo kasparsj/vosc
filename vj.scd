@@ -93,6 +93,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/load', 0, "sketch:NoisySpirals");
 ~visuals.sendMsg('/load', 0, "image:black_hole.jpeg");
 ~visuals.sendMsg('/load', 0, "image:/Users/kasparsj/Desktop/Screenshot 2022-04-05 at 13.12.05.png");
+~visuals.sendMsg('/load', 0, "image:http://1.bp.blogspot.com/-8PQ_NKjf5MI/UK_iuF92QUI/AAAAAAAAAYI/GV0NCn74Ly0/s1600/oh-happy-day.jpg");
 ~visuals.sendMsg('/pos', "*", 0, 0);
 ~visuals.sendMsg('/size', "*", 960, 1080);
 ~visuals.sendMsg('/data', "*", "amp");

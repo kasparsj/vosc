@@ -21,13 +21,21 @@ string Image::random() {
 void Image::update(Layer *layer) {
     if (!image.isAllocated()) {
         string absPath = path;
-        if (!ofFilePath::isAbsolute(absPath)) {
+        if (absPath.substr(0, 7) != "http://" && absPath.substr(0, 8) != "https://" && !ofFilePath::isAbsolute(absPath)) {
             absPath = ofToDataPath("images/" + path);
             if (!ofFile(absPath).exists()) {
                 absPath = ofToDataPath(absPath);
             }
         }
-        image.load(absPath);
+        if (image.load(absPath)) {
+            prevPath = path;
+            layer->randomSeed = ofRandom(1000);
+        }
+        else {
+            ofLog() << "could not load image: " << path;
+            path = prevPath;
+            return;
+        }
     }
     aspectRatio = layer->aspectRatio;
 }

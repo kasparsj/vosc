@@ -42,8 +42,8 @@ public:
     
     int index;
     int total;
-    LayerData *data;
-    Gen *gen;
+    LayerData *data = NULL;
+    Gen *gen = NULL;
     glm::vec2 pos;
     glm::vec2 size;
     ofFloatColor color = ofFloatColor(0, 0);
