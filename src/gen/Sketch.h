@@ -6,6 +6,7 @@
 class Sketch : public FBOGen {
 public:
     static map<string, SketchImpl*> sketches;
+    static bool exists(string path);
     static string random();
     
     Sketch(string name) : FBOGen(name) {}

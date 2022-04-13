@@ -15,6 +15,10 @@ map<string, SketchImpl*> createSketches()
 
 map<string, SketchImpl*> Sketch::sketches = createSketches();
 
+bool Sketch::exists(string path) {
+    return sketches.find(path) != sketches.end();
+}
+
 string Sketch::random() {
     auto it = sketches.begin();
     advance(it, int(ofRandom(sketches.size())));
@@ -27,7 +31,7 @@ void Sketch::update(Layer *layer) {
         fbo.allocate(layer->size.x, layer->size.y);
     }
     if (path != prevPath) {
-        if (sketches.find(path) == sketches.end()) {
+        if (!exists(path)) {
             ofLog() << "sketch " << path << " does not exist";
             path = prevPath;
             return;

@@ -29,7 +29,8 @@ Gen* Layer::factory(string type, string path) {
 Gen* Layer::factory(string source) {
     string type = source;
     string path = "";
-    if (source.find(":") != string::npos) {
+    bool explicitType = source.find(":") != string::npos;
+    if (explicitType) {
         type = source.substr(0, source.find(":"));
         path = source.substr(source.find(":") + 1);
     }
@@ -138,14 +139,32 @@ void Layer::addDataSources(vector<string> ds) {
 
 void Layer::load(string source) {
     unload();
-    if (source.find(":") != string::npos) {
+    bool explicitType = source.find(":") != string::npos;
+    if (explicitType) {
         gen = factory(source);
-        if (gen != NULL) {
-            data = new LayerData(this);
+    }
+    else {
+        string extension = ofFile(source).getExtension();
+        for (int i=0; i<extension.size(); i++) {
+            extension[i] = tolower(extension[i]);
+        }
+        if (extension == "frag") {
+            gen = factory("shader", source);
+        }
+        else if (extension == "jpg" || extension == "jpeg" || extension == "png") {
+            gen = factory("image", source);
+        }
+        else if (extension == "mov") {
+            gen = factory("video", source);
         }
         else {
-            ofLog() << "invalid source type " << source;
+            if (Sketch::exists(source)) {
+                gen = factory("sketch", source);
+            }
         }
+    }
+    if (gen != NULL) {
+        data = new LayerData(this);
     }
     else {
         ofLog() << "invalid source " << source;
