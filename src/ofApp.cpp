@@ -178,7 +178,7 @@ void layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
         layer.size = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
     }
     else if (command == "/color") {
-        layer.color = parseColor(m);
+        layer.color = parseColor(m, 1);
     }
     else if (command == "/color/random") {
         layer.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
