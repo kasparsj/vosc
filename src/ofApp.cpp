@@ -147,7 +147,7 @@ void layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     else if (command == "/seek") {
         layer.timeNorm = m.getArgAsFloat(1);
     }
-    else if (command == "/seek/random") {
+    else if (command == "/seek/rand") {
         layer.timeNorm = ofRandom(1.f);
     }
     else if (command == "/reload") {
@@ -180,7 +180,7 @@ void layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     else if (command == "/color") {
         layer.color = parseColor(m, 1);
     }
-    else if (command == "/color/random") {
+    else if (command == "/color/rand") {
         layer.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
     }
     else if (command == "/color/lerp") {
