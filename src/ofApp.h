@@ -6,6 +6,15 @@
 #include "Sound.h"
 #include "Layer.h"
 #include "Config.h"
+#include "ofxEasing.h"
+
+struct Tween {
+    float from;
+    float to;
+    float dur;
+    float start;
+    ofxeasing::function ease;
+};
 
 class ofApp : public ofBaseApp {
 
@@ -33,6 +42,20 @@ public:
 	void windowResized(int w, int h);
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
+    
+    void layerCommand(Layer &layer, string command, const ofxOscMessage &m);
+    void handleFloat(float *value, const ofxOscMessage &m);
+    void createTween(float *value, float target, float dur, ofxeasing::function ease);
+    void createTween(float *value, float target, float dur, string ease) {
+        // todo: implement
+        createTween(value, target, dur, ofxeasing::linear::easeNone);
+    }
+    void createTween(float *value, float target, float dur) {
+        createTween(value, target, dur, ofxeasing::linear::easeNone);
+    }
+    void createTween(float *value, float target) {
+        createTween(value, target, 1.0, ofxeasing::linear::easeNone);
+    }
 
     ofxOscReceiver receiver;
     vector<ofxOscMessage> messageQueue;
@@ -49,4 +72,5 @@ public:
     ofColor bgColor = ofColor(0);
     bool showDebug = false;
     Layout layout = L_STACK;
+    map<float*, Tween> tweens;
 };

@@ -1,3 +1,4 @@
 ofxColorTheory
+ofxEasing
 ofxOsc
 ofxTidalCycles

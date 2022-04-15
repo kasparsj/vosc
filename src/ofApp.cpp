@@ -40,6 +40,20 @@ void ofApp::update(){
 	for (int i = 0; i < layers.size(); i++) {
 		layers[i].update(sounds, tidal->notes);
 	}
+    vector<float*> toDelete;
+    for (auto const& [key, tween] : tweens) {
+        float endTime = tween.start + tween.dur;
+        if (*key == tween.to || ofGetElapsedTimef() >= endTime) {
+            *key = tween.to;
+            toDelete.push_back(key);
+        }
+        else {
+            *key = ofxeasing::map(ofGetElapsedTimef(), tween.start, endTime, tween.from, tween.to, tween.ease);
+        }
+    }
+    for (int i=0; i<toDelete.size(); i++) {
+        tweens.erase(toDelete[i]);
+    }
 }
 
 void ofApp::parseMessages(){
@@ -140,12 +154,12 @@ ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0) {
     return color;
 }
 
-void layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
+void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     if (command == "/load") {
         layer.load(m.getArgAsString(1));
     }
     else if (command == "/seek") {
-        layer.timeNorm = m.getArgAsFloat(1);
+        handleFloat(&layer.timeNorm, m);
     }
     else if (command == "/seek/rand") {
         layer.timeNorm = ofRandom(1.f);
@@ -157,10 +171,10 @@ void layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
         layer.noClear = m.getArgAsBool(1);
     }
     else if (command == "/bri") {
-        layer.bri = m.getArgAsFloat(1);
+        handleFloat(&layer.bri, m);
     }
     else if (command == "/alpha") {
-        layer.alpha = m.getArgAsFloat(1);
+        handleFloat(&layer.alpha, m);
     }
     else if (command == "/choose") {
         layer.choose();
@@ -210,7 +224,7 @@ void layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
         layer.unload();
     }
     else if (command == "/speed") {
-        layer.speed = m.getArgAsFloat(1);
+        handleFloat(&layer.speed, m);
     }
     else if (command == "/behaviour") {
         layer.behaviour = m.getArgAsInt(1);
@@ -219,10 +233,10 @@ void layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
         layer.aspectRatio = m.getArgAsBool(1);
     }
     else if (command == "/thresh") {
-        layer.thresh = m.getArgAsFloat(1);
+        handleFloat(&layer.thresh, m);
     }
     else if (command == "/thresh/onset" || command == "/onset/thresh") {
-        layer.onsetThresh = m.getArgAsFloat(1);
+        handleFloat(&layer.onsetThresh, m);
     }
 }
 
@@ -234,6 +248,30 @@ void soundCommand(Sound &sound, string command, const ofxOscMessage &m) {
         sound.maxLoud = m.getArgAsFloat(1);
     }
 
+}
+
+void ofApp::handleFloat(float *value, const ofxOscMessage &m) {
+    if (m.getNumArgs() > 2) {
+        if (m.getNumArgs() > 3) {
+            createTween(value, m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsString(3));
+        }
+        else {
+            createTween(value, m.getArgAsFloat(1), m.getArgAsFloat(2));
+        }
+    }
+    else {
+        *value = m.getArgAsFloat(1);
+    }
+}
+
+void ofApp::createTween(float *value, float target, float dur, ofxeasing::function ease) {
+    Tween tween;
+    tween.from = *value;
+    tween.to = target;
+    tween.dur = dur;
+    tween.start = ofGetElapsedTimef();
+    tween.ease = ease;
+    tweens[value] = tween;
 }
 
 void ofApp::processQueue() {

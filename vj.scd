@@ -151,8 +151,6 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/color/mfcc', 0, false);
 )
 
-~visuals.sendMsg('/alpha', 1, 1.0); // blue
-
 ~visuals.sendMsg('/color', 0, 0.15, 0.75, 1.0); // blue
 ~visuals.sendMsg('/color', 0, 1.0, 0.45, 0); // orange
 ~visuals.sendMsg('/color', 0, 0.4615, 0.615, 1.0); // blue2
@@ -182,21 +180,21 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/bri', 0, 0);
 ~visuals.sendMsg('/color', 0, 1.0, 1.0, 1.0);
 
+~visuals.sendMsg('/alpha', 2, 1, 10);
+
 (
 ~visuals.sendMsg('/thresh', 2, 0.7);
 ~visuals.sendMsg('/data', 2, "rand");
 ~visuals.sendMsg('/load', 2, "OscCircle.frag");
 ~visuals.sendMsg('/color', 2, 1.0, 1.0, 1.0);
+~visuals.sendMsg('/alpha', 2, 0);
+~visuals.sendMsg('/alpha', 2, 1.0, 60);
+~visuals.sendMsg('/bri', 0, 0, 60);
+~visuals.sendMsg('/bri', 1, 0, 60);
 {
-	100.do { |i|
-		var j = (i+1);
-		~visuals.sendMsg('/alpha', 2, j/100.0);
-		~visuals.sendMsg('/bri', 0, 1-(j/100.0));
-		~visuals.sendMsg('/bri', 1, 1-(j/100.0));
-		0.6.wait;
-	};
-	~visuals.sendMsg('/thresh', "*", 0.1);
+	60.wait;
 	"bri fade done".postln;
+	~visuals.sendMsg('/thresh', "*", 0.1);
 }.fork;
 )
 
