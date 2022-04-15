@@ -107,8 +107,10 @@ void Layer::draw(float left, float top, float width, float height) {
 }
 
 void Layer::draw() {
-    draw(pos.x, pos.y, size.x, size.y);
     if (data != NULL) {
+        if (data->visible) {
+            draw(pos.x, pos.y, size.x, size.y);
+        }
         data->afterDraw();
     }
 }

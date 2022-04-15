@@ -218,20 +218,20 @@ void layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     else if (command == "/aspectratio") {
         layer.aspectRatio = m.getArgAsBool(1);
     }
+    else if (command == "/thresh") {
+        layer.thresh = m.getArgAsFloat(1);
+    }
+    else if (command == "/thresh/onset" || command == "/onset/thresh") {
+        layer.onsetThresh = m.getArgAsFloat(1);
+    }
 }
 
 void soundCommand(Sound &sound, string command, const ofxOscMessage &m) {
     if (command == "/amp/max") {
         sound.maxAmp = m.getArgAsFloat(1);
     }
-    else if (command == "/amp/thresh") {
-        sound.threshAmp = m.getArgAsFloat(1);
-    }
     else if (command == "/loud/max") {
         sound.maxLoud = m.getArgAsFloat(1);
-    }
-    else if (command == "/loud/thresh") {
-        sound.threshLoud = m.getArgAsFloat(1);
     }
 
 }
@@ -307,12 +307,16 @@ void ofApp::draw(){
     fbo.draw(0, 0);
     
     if (showDebug) {
+        ofPushStyle();
         for (int i=0; i<layers.size(); i++) {
             ofSetColor(255);
-            if (layers[i].gen != NULL) {
-                layers[i].draw(20+i*120, ofGetHeight()-120, 100, 100);
+            layers[i].draw(20+i*120, ofGetHeight()-120, 100, 100);
+            if (layers[i].data != NULL && layers[i].data->values.size() > 0) {
+                ofFill();
+                ofDrawRectangle(20+i*120, ofGetHeight()-120, layers[i].data->values[0]*100.f, 10);
             }
         }
+        ofPopStyle();
     }
     ofDisableBlendMode();
 }

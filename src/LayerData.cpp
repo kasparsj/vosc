@@ -5,11 +5,12 @@ void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &not
     const float timef = ofGetElapsedTimef();
     time += ((timef - prevTime) * layer->speed);
     prevTime = timef;
-    reset();
     const vector<string> &ds = layer->dataSources;
     tidal = ds.size() && ds[0].substr(0, 5) == "tidal";
+    if (!tidal) {
+        reset();
+    }
     values.resize(ds.size());
-    float thresh = 0;
     if (tidal) {
         for (int i = 0; i < notes.size(); i++) {
             if (ofGetElapsedTimef() - notes[i].timeStamp < 32) {
@@ -29,45 +30,42 @@ void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &not
     }
     else {
         for (int i=0; i<ds.size(); i++) {
-            if (i == 0) {
-                thresh = 0.5;
-            }
             if (ds[i].substr(0, 3) == "amp" || ds[i].substr(0, 4) == "loud") {
                 int j;
                 if (ds[i].substr(0, 3) == "amp") {
                     j = ofToInt(ds[i].substr(3));
                     values[i] += (sounds[j].amplitude / sounds[j].maxAmp);
-                    if (i == 0) {
-                        thresh = sounds[j].getThreshAmp();
-                    }
                 }
                 else {
                     j = ofToInt(ds[i].substr(4));
                     values[i] += (sounds[j].loudness / sounds[j].maxLoud);
-                    if (i == 0) {
-                        thresh = sounds[j].getThreshLoud();
-                    }
                 }
                 onset = onset || (sounds[j].onset == 1);
                 mfcc = sounds[j].mfcc;
             }
-            else if (ds[i].substr(0, 5) == "const") {
-                values[i] = (ds[i].size() > 5 ? std::stof(ds[i].substr(5)) : 1.0);
-            }
-            else if (ds[i].substr(0, 5) == "noise") {
-                values[i] = ofNoise(i, time) * (ds[i].size() > 5 ? std::stof(ds[i].substr(5)) : 1.0);
-            }
-            else if (ds[i].substr(0, 4) == "rand") {
-                values[i] = ofRandom(ds[i].size() > 4 ? std::stof(ds[i].substr(4)) : 1.0);
+            else {
+                if (ds[i].substr(0, 5) == "const") {
+                    values[i] = (ds[i].size() > 5 ? std::stof(ds[i].substr(5)) : 1.0);
+                }
+                else if (ds[i].substr(0, 5) == "noise") {
+                    values[i] = ofNoise(i, time) * (ds[i].size() > 5 ? std::stof(ds[i].substr(5)) : 1.0);
+                }
+                else if (ds[i].substr(0, 4) == "rand") {
+                    values[i] = ofRandom(ds[i].size() > 4 ? std::stof(ds[i].substr(4)) : 1.0);
+                }
+                else if (ds[i].substr(0, 3) == "sin") {
+                    values[i] = abs(sin(time));
+                }
+                if (values.size() > 0 && i == 0) {
+                    onset = values[0] > layer->onsetThresh;
+                }
             }
         }
     }
-    visible = onset || (!values.size() || values[0] > thresh);
-    for (int i=0; i<values.size(); i++) {
-        if (values[i] > 1.f) {
-            values[i] = 1.f;
-        }
+    if (values.size() > 0 && values[0] > 1.f) {
+        values[0] = 1.f;
     }
+    visible = onset || (values.size() == 0 || values[0] > layer->thresh);
 }
 
 void LayerData::afterDraw() {

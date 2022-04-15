@@ -58,4 +58,6 @@ public:
     bool isTidal = false;
     int randomSeed = 0;
     vector<string> dataSources;
+    float thresh = 0.5;
+    float onsetThresh = 0.5;
 };
