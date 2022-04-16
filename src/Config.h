@@ -22,7 +22,8 @@ enum Source {
     S_SHADER,
     S_SKETCH,
     S_IMAGE,
-    S_LAST = S_IMAGE,
+    S_3D,
+    S_LAST = S_3D,
 };
 
 static std::unordered_map<std::string, Source> const SourceMap = {
@@ -30,6 +31,7 @@ static std::unordered_map<std::string, Source> const SourceMap = {
     {"shader", Source::S_SHADER},
     {"sketch", Source::S_SKETCH},
     {"image", Source::S_IMAGE},
+    {"3d", Source::S_3D},
 };
 
 enum DataSource {

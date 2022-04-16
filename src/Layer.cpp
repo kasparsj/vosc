@@ -3,6 +3,7 @@
 #include "Video.h"
 #include "Sketch.h"
 #include "Image.h"
+#include "Three.h"
 
 Gen* Layer::factory(string type, string path) {
     Gen *gen = NULL;
@@ -20,6 +21,9 @@ Gen* Layer::factory(string type, string path) {
                 break;
             case S_IMAGE:
                 gen = new Image(path);
+                break;
+            case S_3D:
+                gen = new Three(path);
                 break;
         }
     }
@@ -49,6 +53,9 @@ Gen* Layer::factory(string source) {
                     break;
                 case S_IMAGE:
                     path = Image::random();
+                    break;
+                case S_3D:
+                    path = Three::random();
                     break;
             }
         }
@@ -94,6 +101,7 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
     if (data != NULL) {
         data->update(sounds, notes);
     }
+    rotAngle += rotSpeed;
     if (gen != NULL) {
         gen->update(this);
     }
@@ -102,7 +110,7 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
 void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     if (gen != NULL) {
         ofPushStyle();
-        ofSetColor(255 * bri, alpha * 255);
+        ofSetColor(gen->getTint(this) * bri, alpha * 255);
         ofPushMatrix();
         ofTranslate(ofGetWidth()/2.f, ofGetHeight()/2.f);
         ofRotateDeg(rotAngle, rotAxis.x, rotAxis.y, rotAxis.z);
@@ -167,7 +175,10 @@ void Layer::load(string source) {
             gen = factory("video", source);
         }
         else {
-            if (Sketch::exists(source)) {
+            if (Three::exists(source)) {
+                gen = factory("3d", source);
+            }
+            else if (Sketch::exists(source)) {
                 gen = factory("sketch", source);
             }
         }

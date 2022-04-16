@@ -182,7 +182,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/bri', 0, 0);
 ~visuals.sendMsg('/color', 0, 1.0, 1.0, 1.0);
 
-~visuals.sendMsg('/alpha', 2, 1, 10);
+~visuals.sendMsg('/alpha', 2, 1.0);
+~visuals.sendMsg('/bri', 2, 1.0);
 
 (
 //var secs = 60;
@@ -202,7 +203,10 @@ var secs = 10;
 }.fork;
 )
 
+~visuals.sendMsg('/load', 2, "box");
+~visuals.sendMsg('/load', 2, "cylinder");
 ~visuals.sendMsg('/rot', 2, 360, 1);
+~visuals.sendMsg('/rot/speed', 2, 1);
 ~visuals.sendMsg('/scale', 2, 0.2, 0.2, 0.2, 1);
 
 (
@@ -221,15 +225,12 @@ var secs = 30;
 )
 
 (
+var secs = 30;
+// ~visuals.sendMsg('/color', 2, 1.0, 0.45, 0, secs); // orange
+// ~visuals.sendMsg('/color', 2, 0.4615, 0.615, 1.0, secs); // blue2
+~visuals.sendMsg('/color', 2, 1.0, 1.0, 0.25, secs); // yellow
 {
-	// lerp to orange
-	100.do { |i|
-		var j = (i+1);
-		// ~visuals.sendMsg('/color/lerp', 2, j/100.0, 0.15, 0.75, 1.0, 1.0, 0.45, 0); // orange
-		// ~visuals.sendMsg('/color/lerp', 2, j/100.0, 1.0, 1.0, 0.45, 0, 0.4615, 0.615, 1.0); // blue2
-		~visuals.sendMsg('/color/lerp', 2, j/100.0, 0.4615, 0.615, 1.0, 1.0, 1.0, 0.25); // yellow
-		0.3.wait;
-	};
+	secs.wait;
 	"colorlerp done".postln;
 }.fork;
 )

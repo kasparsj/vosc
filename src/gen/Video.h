@@ -13,6 +13,7 @@ public:
     void seek(float pos);
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
     void choose() override;
+    ofFloatColor getTint(Layer *layer) override;
     
 private:
     ofVideoPlayer videoPlayer;

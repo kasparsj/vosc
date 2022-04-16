@@ -71,3 +71,6 @@ void Video::choose() {
     path = random();
 }
 
+ofFloatColor Video::getTint(Layer *layer) {
+    return layer->getColor();
+}

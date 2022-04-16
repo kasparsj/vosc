@@ -15,8 +15,12 @@ public:
     virtual void reload() {};
     virtual void clear() {};
     virtual void reset() {};
+    virtual ofFloatColor getTint(Layer *layer) {
+        return ofFloatColor(1);
+    }
 
     string path = "";
     string prevPath = "";
     bool aspectRatio;
+    ofFloatColor color;
 };

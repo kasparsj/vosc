@@ -252,6 +252,9 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     else if (command == "/rot/axis") {
         handleVec3(&layer.rotAxis, m);
     }
+    else if (command == "/rot/speed") {
+        handleFloat(&layer.rotSpeed, m);
+    }
     else if (command == "/scale") {
         handleVec3(&layer.scale, m);
     }
