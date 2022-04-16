@@ -205,6 +205,7 @@ var secs = 10;
 
 ~visuals.sendMsg('/load', 2, "box");
 ~visuals.sendMsg('/load', 2, "cylinder");
+~visuals.sendMsg('/load', 2, "cone");
 ~visuals.sendMsg('/rot', 2, 360, 1);
 ~visuals.sendMsg('/rot/speed', 2, 1);
 ~visuals.sendMsg('/scale', 2, 0.2, 0.2, 0.2, 1);

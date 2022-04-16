@@ -1,7 +1,7 @@
 #include "Three.h"
 #include "Layer.h"
 
-vector<string> Three::primitives = {"box", "sphere", "cylinder", "plane"};
+vector<string> Three::primitives = {"box", "sphere", "icosphere", "cylinder", "plane", "cone"};
 
 bool Three::exists(string path) {
     return find(primitives.begin(), primitives.end(), path) != primitives.end();
@@ -19,11 +19,17 @@ void Three::update(Layer *layer) {
         else if (path == "sphere") {
             primitive = new ofSpherePrimitive();
         }
+        else if (path == "icosphere") {
+            primitive = new ofIcoSpherePrimitive();
+        }
         else if (path == "cylinder") {
             primitive = new ofCylinderPrimitive();
         }
         else if (path == "plane") {
             primitive = new ofPlanePrimitive();
+        }
+        else if (path == "cone") {
+            primitive = new ofConePrimitive();
         }
         if (primitive == NULL) {
             ofLog() << "could not load image: " << path;
