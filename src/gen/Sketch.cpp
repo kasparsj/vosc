@@ -57,7 +57,7 @@ void Sketch::update(Layer *layer) {
 }
 
 void Sketch::draw(const glm::vec3 &pos, const glm::vec3 &size) {
-    fbo.draw(pos, size.x, size.y);
+    fbo.draw(pos - size/2.f, size.x, size.y);
 }
 
 void Sketch::choose() {

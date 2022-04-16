@@ -101,8 +101,14 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
 
 void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     if (gen != NULL) {
+        ofPushStyle();
         ofSetColor(255 * bri, alpha * 255);
+        ofPushMatrix();
+        ofTranslate(ofGetWidth()/2.f, ofGetHeight()/2.f);
+        ofRotateDeg(rotAngle, rotAxis.x, rotAxis.y, rotAxis.z);
         gen->draw(pos, size);
+        ofPopMatrix();
+        ofPopStyle();
     }
 }
 

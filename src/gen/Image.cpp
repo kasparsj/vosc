@@ -43,14 +43,14 @@ void Image::update(Layer *layer) {
 void Image::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     if (aspectRatio) {
         if (image.getWidth() > image.getHeight()) {
-            image.draw(pos, size.x, size.x/image.getWidth() * image.getHeight());
+            image.draw(pos - size/2.f, size.x, size.x/image.getWidth() * image.getHeight());
         }
         else {
-            image.draw(pos, size.y/image.getHeight() * image.getWidth(), size.y);
+            image.draw(pos - size/2.f, size.y/image.getHeight() * image.getWidth(), size.y);
         }
     }
     else {
-        image.draw(pos, size.x, size.y);
+        image.draw(pos - size/2.f, size.x, size.y);
     }
 }
 

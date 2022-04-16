@@ -185,7 +185,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/alpha', 2, 1, 10);
 
 (
-var secs = 60;
+//var secs = 60;
+var secs = 10;
 ~visuals.sendMsg('/thresh', 2, 0.7);
 ~visuals.sendMsg('/data', 2, "rand");
 ~visuals.sendMsg('/load', 2, "OscCircle.frag");
@@ -200,6 +201,8 @@ var secs = 60;
 	~visuals.sendMsg('/thresh', "*", 0.1);
 }.fork;
 )
+
+~visuals.sendMsg('/rot', 2, 0, 1);
 
 (
 var secs = 30;

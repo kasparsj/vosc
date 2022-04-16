@@ -246,6 +246,12 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     else if (command == "/size") {
         handleVec3(&layer.size, m);
     }
+    else if (command == "/rot") {
+        handleFloat(&layer.rotAngle, m);
+    }
+    else if (command == "/rot/axis") {
+        handleVec3(&layer.rotAxis, m);
+    }
     else if (command == "/color") {
         handleColor(&layer.color, m);
     }
@@ -429,11 +435,8 @@ void ofApp::draw(){
     for (int i=0; i<layers.size(); i++) {
         if (useCam) {
             cam.begin();
-            ofPushMatrix();
-            ofTranslate(-ofGetWidth()/2, -ofGetHeight()/2);
         }
         layers[i].draw();
-        ofPopMatrix();
         if (useCam) {
             cam.end();
         }

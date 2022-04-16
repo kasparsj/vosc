@@ -46,6 +46,8 @@ public:
     Gen *gen = NULL;
     glm::vec3 pos;
     glm::vec3 size;
+    float rotAngle;
+    glm::vec3 rotAxis = glm::vec3(0, 1, 0);
     ofFloatColor color = ofFloatColor(0, 0);
     float speed = 1.f;
     int behaviour = -1;
