@@ -18,7 +18,7 @@ public:
     void setup(int index, int numVisuals, string dataSource = "");
     void layout(Layout layout);
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
-    void draw(float left, float top, float width, float height);
+    void draw(const glm::vec3 &pos, const glm::vec3 &size);
     void draw();
     void setDataSources(vector<string> ds);
     void addDataSources(vector<string> ds);
@@ -44,8 +44,8 @@ public:
     int total;
     LayerData *data = NULL;
     Gen *gen = NULL;
-    glm::vec2 pos;
-    glm::vec2 size;
+    glm::vec3 pos;
+    glm::vec3 size;
     ofFloatColor color = ofFloatColor(0, 0);
     float speed = 1.f;
     int behaviour = -1;

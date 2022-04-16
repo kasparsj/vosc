@@ -11,7 +11,7 @@ public:
     ~Video() {}
     void update(Layer *layer) override;
     void seek(float pos);
-    void draw(int left, int top, int width, int height) override;
+    void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
     void choose() override;
     
 private:

@@ -70,22 +70,22 @@ void Layer::layout(Layout layout)
 {
     switch (layout) {
         case L_COLUMN:
-            pos = glm::vec2(0, ofGetHeight() / total * index);
-            size = glm::vec2(ofGetWidth(), ofGetHeight() / total);
+            pos = glm::vec3(0, ofGetHeight() / total * index, 0);
+            size = glm::vec3(ofGetWidth(), ofGetHeight() / total, 0);
             break;
         case L_ROW:
-            pos = glm::vec2(ofGetWidth() / total * index, 0);
-            size = glm::vec2(ofGetWidth() / total, ofGetHeight());
+            pos = glm::vec3(ofGetWidth() / total * index, 0, 0);
+            size = glm::vec3(ofGetWidth() / total, ofGetHeight(), 0);
             break;
         case L_GRID: {
             int half = (int) ceil(total / 2.f);
-            pos = glm::vec2(ofGetWidth() / half * (index % half), ofGetHeight() / 2 * floor(index / half));
-            size = glm::vec2(ofGetWidth() / half, ofGetHeight() / 2);
+            pos = glm::vec3(ofGetWidth() / half * (index % half), ofGetHeight() / 2 * floor(index / half), 0);
+            size = glm::vec3(ofGetWidth() / half, ofGetHeight() / 2, 0);
             break;
         }
         case L_STACK:
-            pos = glm::vec2(0, 0);
-            size = glm::vec2(ofGetWidth(), ofGetHeight());
+            pos = glm::vec3(0, 0, 0);
+            size = glm::vec3(ofGetWidth(), ofGetHeight(), 0);
             break;
     }
 }
@@ -99,17 +99,17 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
     }
 }
 
-void Layer::draw(float left, float top, float width, float height) {
+void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     if (gen != NULL) {
         ofSetColor(255 * bri, alpha * 255);
-        gen->draw(left, top, width, height);
+        gen->draw(pos, size);
     }
 }
 
 void Layer::draw() {
     if (data != NULL) {
         if (data->visible) {
-            draw(pos.x, pos.y, size.x, size.y);
+            draw(pos, size);
         }
         data->afterDraw();
     }

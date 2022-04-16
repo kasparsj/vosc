@@ -73,4 +73,5 @@ public:
     bool showDebug = false;
     Layout layout = L_STACK;
     map<float*, Tween> tweens;
+    ofCamera cam;
 };

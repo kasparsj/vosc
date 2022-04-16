@@ -12,6 +12,8 @@ void ofApp::setup(){
     setupSounds(MAX_SOUNDS);
     setupLayers(MAX_VISUALS);
     windowResized(ofGetWidth(), ofGetHeight());
+    
+    cam.setPosition(0, 0, -870);
 }
 
 void ofApp::setupSounds(int numInsts) {
@@ -54,6 +56,7 @@ void ofApp::update(){
     for (int i=0; i<toDelete.size(); i++) {
         tweens.erase(toDelete[i]);
     }
+    cam.lookAt(glm::vec3(0));
 }
 
 void ofApp::parseMessages(){
@@ -97,6 +100,9 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
         if (m.getNumArgs() > 1) {
             layoutLayers(static_cast<Layout>(m.getArgAsInt(1)));
         }
+    }
+    else if (command == "/cam/pos") {
+        cam.setPosition(m.getArgAsFloat(0), m.getArgAsFloat(1), m.getNumArgs() > 2 ? m.getArgAsFloat(2) : cam.getPosition().z);
     }
     else {
         messageQueue.push_back(m);
@@ -186,10 +192,10 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
         layer.reset();
     }
     else if (command == "/pos") {
-        layer.pos = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
+        layer.pos = glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 0);
     }
     else if (command == "/size") {
-        layer.size = glm::vec2(m.getArgAsFloat(1), m.getArgAsFloat(2));
+        layer.size = glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 0);
     }
     else if (command == "/color") {
         layer.color = parseColor(m, 1);
@@ -334,7 +340,12 @@ void ofApp::draw(){
     }
     ofEnableBlendMode(blendMode);
     for (int i=0; i<layers.size(); i++) {
+        cam.begin();
+        ofPushMatrix();
+        ofTranslate(-ofGetWidth()/2, -ofGetHeight()/2);
         layers[i].draw();
+        ofPopMatrix();
+        cam.end();
     }
     ofDisableBlendMode();
     fbo.end();
@@ -348,12 +359,13 @@ void ofApp::draw(){
         ofPushStyle();
         for (int i=0; i<layers.size(); i++) {
             ofSetColor(255);
-            layers[i].draw(20+i*120, ofGetHeight()-120, 100, 100);
+            layers[i].draw(glm::vec3(20+i*120, ofGetHeight()-120, 0), glm::vec3(100, 100, 0));
             if (layers[i].data != NULL && layers[i].data->values.size() > 0) {
                 ofFill();
                 ofDrawRectangle(20+i*120, ofGetHeight()-120, layers[i].data->values[0]*100.f, 10);
             }
         }
+        ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
         ofPopStyle();
     }
     ofDisableBlendMode();

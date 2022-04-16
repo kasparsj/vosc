@@ -115,6 +115,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/color', 0, 256.rand, 256.rand, 256.rand); // random
 ~visuals.sendMsg('/color/rand', 0); // random
 
+~visuals.sendMsg('/cam/pos', 0, 0, -100);
+
 //~visuals.sendMsg('/onset/force'); // force onset
 //~visuals.sendMsg('/onset', false); // toggle onset
 ~visuals.sendMsg('/data', 0, "const");
@@ -200,13 +202,13 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 
 (
 ~visuals.sendMsg('/thresh', "*", 0.8);
+~visuals.sendMsg('/alpha', 0, 0, 30);
+~visuals.sendMsg('/alpha', 1, 0, 30);
 {
 	// lerp to blue
 	100.do { |i|
 		var j = (i+1);
 		~visuals.sendMsg('/color/lerp', 2, j/100.0, 1.0, 1.0, 1.0, 0.15, 0.75, 1.0);
-		~visuals.sendMsg('/alpha', 0, 1-(j/100.0));
-		~visuals.sendMsg('/alpha', 1, 1-(j/100.0));
 		0.3.wait;
 	};
 	//~visuals.sendMsg('/color', 0, 0, 0, 0);

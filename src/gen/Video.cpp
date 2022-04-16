@@ -53,17 +53,17 @@ void Video::seek(float pos) {
     videoPlayer.setPosition(pos);
 }
 
-void Video::draw(int left, int top, int width, int height) {
+void Video::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     if (aspectRatio) {
         if (videoPlayer.getWidth() > videoPlayer.getHeight()) {
-            videoPlayer.draw(left, top, width, width/videoPlayer.getWidth() * videoPlayer.getHeight());
+            videoPlayer.draw(pos, size.x, size.x/videoPlayer.getWidth() * videoPlayer.getHeight());
         }
         else {
-            videoPlayer.draw(left, top, height/videoPlayer.getHeight() * videoPlayer.getWidth(), height);
+            videoPlayer.draw(pos, size.y/videoPlayer.getHeight() * videoPlayer.getWidth(), size.y);
         }
     }
     else {
-        videoPlayer.draw(left, top, width, height);
+        videoPlayer.draw(pos, size.x, size.y);
     }
 }
 
