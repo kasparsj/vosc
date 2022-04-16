@@ -185,32 +185,30 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/alpha', 2, 1, 10);
 
 (
+var secs = 60;
 ~visuals.sendMsg('/thresh', 2, 0.7);
 ~visuals.sendMsg('/data', 2, "rand");
 ~visuals.sendMsg('/load', 2, "OscCircle.frag");
 ~visuals.sendMsg('/color', 2, 1.0, 1.0, 1.0);
 ~visuals.sendMsg('/alpha', 2, 0);
-~visuals.sendMsg('/alpha', 2, 1.0, 60);
-~visuals.sendMsg('/bri', 0, 0, 60);
-~visuals.sendMsg('/bri', 1, 0, 60);
+~visuals.sendMsg('/alpha', 2, 1.0, secs);
+~visuals.sendMsg('/bri', 0, 0, secs);
+~visuals.sendMsg('/bri', 1, 0, secs);
 {
-	60.wait;
+	secs.wait;
 	"bri fade done".postln;
 	~visuals.sendMsg('/thresh', "*", 0.1);
 }.fork;
 )
 
 (
+var secs = 30;
 ~visuals.sendMsg('/thresh', "*", 0.8);
-~visuals.sendMsg('/alpha', 0, 0, 30);
-~visuals.sendMsg('/alpha', 1, 0, 30);
+~visuals.sendMsg('/alpha', 0, 0, secs);
+~visuals.sendMsg('/alpha', 1, 0, secs);
+~visuals.sendMsg('/color', 2, 0.15, 0.75, 1.0, secs); // lerp to blue
 {
-	// lerp to blue
-	100.do { |i|
-		var j = (i+1);
-		~visuals.sendMsg('/color/lerp', 2, j/100.0, 1.0, 1.0, 1.0, 0.15, 0.75, 1.0);
-		0.3.wait;
-	};
+	secs.wait;
 	//~visuals.sendMsg('/color', 0, 0, 0, 0);
 	~visuals.sendMsg('/load', 0, "");
 	~visuals.sendMsg('/load', 1, "");

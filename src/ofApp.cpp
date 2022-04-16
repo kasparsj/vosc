@@ -39,11 +39,18 @@ void ofApp::update(){
     while (tidal->notes.size() > MAX_NOTES) {
         tidal->notes.erase(tidal->notes.begin());
     }
+    updateFloats();
+    updateVecs();
+    updateColors();
 	for (int i = 0; i < layers.size(); i++) {
 		layers[i].update(sounds, tidal->notes);
 	}
+    cam.lookAt(glm::vec3(0));
+}
+
+void ofApp::updateFloats() {
     vector<float*> toDelete;
-    for (auto const& [key, tween] : tweens) {
+    for (auto const& [key, tween] : floatTweens) {
         float endTime = tween.start + tween.dur;
         if (*key == tween.to || ofGetElapsedTimef() >= endTime) {
             *key = tween.to;
@@ -54,9 +61,47 @@ void ofApp::update(){
         }
     }
     for (int i=0; i<toDelete.size(); i++) {
-        tweens.erase(toDelete[i]);
+        floatTweens.erase(toDelete[i]);
     }
-    cam.lookAt(glm::vec3(0));
+}
+
+void ofApp::updateVecs() {
+    vector<glm::vec3*> toDelete;
+    for (auto const& [key, tween] : vec3Tweens) {
+        float endTime = tween.start + tween.dur;
+        if (*key == tween.to || ofGetElapsedTimef() >= endTime) {
+            *key = tween.to;
+            toDelete.push_back(key);
+        }
+        else {
+            glm::vec3 value;
+            value.x = ofxeasing::map(ofGetElapsedTimef(), tween.start, endTime, tween.from.x, tween.to.x, tween.ease);
+            value.y = ofxeasing::map(ofGetElapsedTimef(), tween.start, endTime, tween.from.y, tween.to.y, tween.ease);
+            value.z = ofxeasing::map(ofGetElapsedTimef(), tween.start, endTime, tween.from.z, tween.to.z, tween.ease);
+            *key = value;
+        }
+    }
+    for (int i=0; i<toDelete.size(); i++) {
+        vec3Tweens.erase(toDelete[i]);
+    }
+}
+
+void ofApp::updateColors() {
+    vector<ofFloatColor*> toDelete;
+    for (auto const& [key, tween] : colorTweens) {
+        float endTime = tween.start + tween.dur;
+        if (*key == tween.to || ofGetElapsedTimef() >= endTime) {
+            *key = tween.to;
+            toDelete.push_back(key);
+        }
+        else {
+            float perc = (ofGetElapsedTimef() - tween.start) / tween.dur;
+            *key = ofxColorTheory::ColorUtil::lerpLch(tween.from, tween.to, perc);
+        }
+    }
+    for (int i=0; i<toDelete.size(); i++) {
+        colorTweens.erase(toDelete[i]);
+    }
 }
 
 void ofApp::parseMessages(){
@@ -101,7 +146,11 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
             layoutLayers(static_cast<Layout>(m.getArgAsInt(1)));
         }
     }
+    else if (command == "/cam") {
+        useCam = m.getNumArgs() > 0 ? m.getArgAsBool(0) : !useCam;
+    }
     else if (command == "/cam/pos") {
+        useCam = true;
         cam.setPosition(m.getArgAsFloat(0), m.getArgAsFloat(1), m.getNumArgs() > 2 ? m.getArgAsFloat(2) : cam.getPosition().z);
     }
     else {
@@ -192,13 +241,13 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
         layer.reset();
     }
     else if (command == "/pos") {
-        layer.pos = glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 0);
+        handleVec3(&layer.pos, m);
     }
     else if (command == "/size") {
-        layer.size = glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 0);
+        handleVec3(&layer.size, m);
     }
     else if (command == "/color") {
-        layer.color = parseColor(m, 1);
+        handleColor(&layer.color, m);
     }
     else if (command == "/color/rand") {
         layer.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
@@ -246,12 +295,12 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     }
 }
 
-void soundCommand(Sound &sound, string command, const ofxOscMessage &m) {
+void ofApp::soundCommand(Sound &sound, string command, const ofxOscMessage &m) {
     if (command == "/amp/max") {
-        sound.maxAmp = m.getArgAsFloat(1);
+        handleFloat(&sound.maxAmp, m);
     }
     else if (command == "/loud/max") {
-        sound.maxLoud = m.getArgAsFloat(1);
+        handleFloat(&sound.maxLoud, m);
     }
 
 }
@@ -270,14 +319,52 @@ void ofApp::handleFloat(float *value, const ofxOscMessage &m) {
     }
 }
 
+void ofApp::handleVec3(glm::vec3 *value, const ofxOscMessage &m) {
+    if (m.getNumArgs() > 4) {
+        createTween(value, glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsFloat(3)), m.getArgAsFloat(4));
+    }
+    else {
+        *value = glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 0);
+    }
+}
+
+void ofApp::handleColor(ofFloatColor *value, const ofxOscMessage &m) {
+    if (m.getNumArgs() > 4) {
+        createTween(value, parseColor(m, 1), m.getArgAsFloat(4));
+    }
+    else {
+        *value = parseColor(m, 1);
+    }
+}
+
 void ofApp::createTween(float *value, float target, float dur, ofxeasing::function ease) {
-    Tween tween;
+    Tween<float> tween;
     tween.from = *value;
     tween.to = target;
     tween.dur = dur;
     tween.start = ofGetElapsedTimef();
     tween.ease = ease;
-    tweens[value] = tween;
+    floatTweens[value] = tween;
+}
+
+void ofApp::createTween(glm::vec3 *value, const glm::vec3 &target, float dur, ofxeasing::function ease) {
+    Tween<glm::vec3> tween;
+    tween.from = *value;
+    tween.to = target;
+    tween.dur = dur;
+    tween.start = ofGetElapsedTimef();
+    tween.ease = ease;
+    vec3Tweens[value] = tween;
+}
+
+void ofApp::createTween(ofFloatColor *value, const ofFloatColor &target, float dur, ofxeasing::function ease) {
+    Tween<ofFloatColor> tween;
+    tween.from = *value;
+    tween.to = target;
+    tween.dur = dur;
+    tween.start = ofGetElapsedTimef();
+    tween.ease = ease;
+    colorTweens[value] = tween;
 }
 
 void ofApp::processQueue() {
@@ -340,12 +427,16 @@ void ofApp::draw(){
     }
     ofEnableBlendMode(blendMode);
     for (int i=0; i<layers.size(); i++) {
-        cam.begin();
-        ofPushMatrix();
-        ofTranslate(-ofGetWidth()/2, -ofGetHeight()/2);
+        if (useCam) {
+            cam.begin();
+            ofPushMatrix();
+            ofTranslate(-ofGetWidth()/2, -ofGetHeight()/2);
+        }
         layers[i].draw();
         ofPopMatrix();
-        cam.end();
+        if (useCam) {
+            cam.end();
+        }
     }
     ofDisableBlendMode();
     fbo.end();
