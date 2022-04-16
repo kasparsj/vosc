@@ -106,6 +106,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
         ofPushMatrix();
         ofTranslate(ofGetWidth()/2.f, ofGetHeight()/2.f);
         ofRotateDeg(rotAngle, rotAxis.x, rotAxis.y, rotAxis.z);
+        ofScale(scale);
         gen->draw(pos, size);
         ofPopMatrix();
         ofPopStyle();

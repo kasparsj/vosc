@@ -48,6 +48,7 @@ public:
     glm::vec3 size;
     float rotAngle;
     glm::vec3 rotAxis = glm::vec3(0, 1, 0);
+    glm::vec3 scale = glm::vec3(1);
     ofFloatColor color = ofFloatColor(0, 0);
     float speed = 1.f;
     int behaviour = -1;

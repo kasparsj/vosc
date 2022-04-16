@@ -202,7 +202,8 @@ var secs = 10;
 }.fork;
 )
 
-~visuals.sendMsg('/rot', 2, 0, 1);
+~visuals.sendMsg('/rot', 2, 360, 1);
+~visuals.sendMsg('/scale', 2, 0.2, 0.2, 0.2, 1);
 
 (
 var secs = 30;
@@ -234,18 +235,16 @@ var secs = 30;
 )
 
 (
+var secs = 10;
+//~visuals.sendMsg('/thresh', "*", 0);
+~visuals.sendMsg('/color', 1, 1.0, 1.0, 1.0);
+~visuals.sendMsg('/data', 1, "const");
+~visuals.sendMsg('/thresh', 1, 0);
+~visuals.sendMsg('/load', 1, "Spiral");
+~visuals.sendMsg('/bri', 1, 1.0);
+~visuals.sendMsg('/alpha', 1, 1.0, secs);
 {
-	//~visuals.sendMsg('/thresh', "*", 0);
-	~visuals.sendMsg('/color', 1, 1.0, 1.0, 1.0);
-	~visuals.sendMsg('/data', 1, "const");
-	~visuals.sendMsg('/thresh', 1, 0);
-	~visuals.sendMsg('/load', 1, "Spiral");
-	~visuals.sendMsg('/bri', 1, 1.0);
-	100.do { |i|
-		var j = (i+1);
-		~visuals.sendMsg('/alpha', 1, (j/100.0));
-		0.1.wait;
-	};
+	secs.wait;
 	"spiral fade done".postln;
 }.fork;
 )
