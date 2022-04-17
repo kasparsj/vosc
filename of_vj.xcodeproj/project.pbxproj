@@ -554,6 +554,17 @@
 			name = ofxEasing;
 			sourceTree = "<group>";
 		};
+		2B5F0189280C9D6900CC2A92 /* todo */ = {
+			isa = PBXGroup;
+			children = (
+				2BEBF179280C243400E80B4D /* AudioEclipse.frag */,
+				2BEBF17E280C243400E80B4D /* Star.frag */,
+				2BEBF174280C243400E80B4D /* Grid.frag */,
+				2BEBF166280C243400E80B4D /* Grid.vert */,
+			);
+			path = todo;
+			sourceTree = "<group>";
+		};
 		2BEBF111280C243400E80B4D /* data */ = {
 			isa = PBXGroup;
 			children = (
@@ -669,35 +680,32 @@
 		2BEBF165280C243400E80B4D /* shaders */ = {
 			isa = PBXGroup;
 			children = (
+				2B5F0189280C9D6900CC2A92 /* todo */,
+				2BEBF17B280C243400E80B4D /* 02.frag */,
+				2BEBF17A280C243400E80B4D /* 03.frag */,
+				2BEBF176280C243400E80B4D /* 04.frag */,
+				2BEBF16F280C243400E80B4D /* 05.frag */,
+				2BEBF16E280C243400E80B4D /* 10.frag */,
+				2BEBF17F280C243400E80B4D /* 18.frag */,
+				2BEBF171280C243400E80B4D /* 33.frag */,
+				2BEBF16D280C243400E80B4D /* AtmoScattering.frag */,
 				2BEBF15C280C243400E80B4D /* Empty.frag */,
-				2BEBF166280C243400E80B4D /* Grid.vert */,
-				2BEBF167280C243400E80B4D /* ScanGrid.frag */,
+				2BEBF16C280C243400E80B4D /* Ether.frag */,
+				2BEBF180280C243400E80B4D /* Fluid.frag */,
 				2BEBF168280C243400E80B4D /* Lights1.frag */,
-				2BEBF169280C243400E80B4D /* Water.frag */,
 				2BEBF16A280C243400E80B4D /* Lights2.frag */,
 				2BEBF16B280C243400E80B4D /* Milk.frag */,
-				2BEBF16C280C243400E80B4D /* Ether.frag */,
-				2BEBF16D280C243400E80B4D /* AtmoScattering.frag */,
-				2BEBF16E280C243400E80B4D /* 10.frag */,
-				2BEBF16F280C243400E80B4D /* 05.frag */,
-				2BEBF170280C243400E80B4D /* ZebraV.frag */,
-				2BEBF171280C243400E80B4D /* 33.frag */,
-				2BEBF172280C243400E80B4D /* TerrainGrid.frag */,
-				2BEBF173280C243400E80B4D /* RotStringsV.frag */,
-				2BEBF174280C243400E80B4D /* Grid.frag */,
-				2BEBF175280C243400E80B4D /* StarNest.frag */,
-				2BEBF176280C243400E80B4D /* 04.frag */,
-				2BEBF177280C243400E80B4D /* RotRainbow.frag */,
-				2BEBF178280C243400E80B4D /* ScanLines.frag */,
-				2BEBF179280C243400E80B4D /* AudioEclipse.frag */,
-				2BEBF17A280C243400E80B4D /* 03.frag */,
-				2BEBF17B280C243400E80B4D /* 02.frag */,
 				2BEBF17C280C243400E80B4D /* OscCircle.frag */,
+				2BEBF177280C243400E80B4D /* RotRainbow.frag */,
 				2BEBF17D280C243400E80B4D /* RotStringsH.frag */,
-				2BEBF17E280C243400E80B4D /* Star.frag */,
-				2BEBF17F280C243400E80B4D /* 18.frag */,
-				2BEBF180280C243400E80B4D /* Fluid.frag */,
+				2BEBF173280C243400E80B4D /* RotStringsV.frag */,
+				2BEBF167280C243400E80B4D /* ScanGrid.frag */,
+				2BEBF178280C243400E80B4D /* ScanLines.frag */,
+				2BEBF175280C243400E80B4D /* StarNest.frag */,
+				2BEBF172280C243400E80B4D /* TerrainGrid.frag */,
+				2BEBF169280C243400E80B4D /* Water.frag */,
 				2BEBF181280C243400E80B4D /* ZebraH.frag */,
+				2BEBF170280C243400E80B4D /* ZebraV.frag */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
