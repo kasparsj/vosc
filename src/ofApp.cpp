@@ -267,12 +267,16 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
             string value = m.getArgAsString(1);
             if (value == "rand") {
-                layer->useRandomColor = m.getNumArgs() > 1 ? m.getArgAsBool(2) : true;
-                layer->useMFCCColor = !layer->useRandomColor;
+                layer->useRandomColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
+                if (layer->useRandomColor) {
+                    layer->useMFCCColor = false;
+                }
             }
             else if (value == "mfcc") {
                 layer->useMFCCColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-                layer->useRandomColor = !layer->useMFCCColor;
+                if (layer->useMFCCColor) {
+                    layer->useRandomColor = false;
+                }
             }
             else if (value == "lerp") {
                 ofFloatColor fromColor = parseColor(m, 3);
