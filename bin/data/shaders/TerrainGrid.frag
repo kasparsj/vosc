@@ -1,10 +1,21 @@
 #version 120
 
+#define DEFAULT_COLOR vec3(1, 1, 1)
+#define MAX_VALUES 8
+
+uniform float time;
+uniform vec2 resolution;
+uniform vec2 offset;
+uniform int index;
+uniform vec4 color;
+uniform int random;
+uniform float values[MAX_VALUES];
+
 // references:
 // http://madebyevan.com/shaders/grid/
 // Hash without sine: https://www.shadertoy.com/view/4djSRW
 
-const mat3 rotationMatrix = mat3(1.0,0.0,0.0,0.0,0.7,-0.7,0.0,0.7,0.7);
+const mat3 rotationMatrix = mat3(1.0,0.0,0.0,0.0,0.7,-0.5,0.0,0.7,0.7);
 
 float hash(vec2 p)
 {
@@ -63,9 +74,9 @@ bool raymarch( inout vec3 ro, vec3 rd)
     return false;
 }
 
-vec3 shading( vec3 ro, vec3 rd )
+float shading( vec3 ro, vec3 rd )
 {
-    vec3 c = vec3(rd.y*2.0) * 0.1;
+    float c = rd.y * 2.0 * 0.1;
     vec3 sk = ro;
     if (raymarch(ro,rd))
     {
@@ -73,9 +84,9 @@ vec3 shading( vec3 ro, vec3 rd )
         vec2 g = abs(fract(p - 0.5) - 0.5) / fwidth(p);
         float s = min(g.x, g.y);
         float f = min(length(ro-sk)/64.,1.);
-        return mix(1.5-vec3(s,s,s), c, f);
+        return mix(1.5-s, c, f);
     }
-    return vec3(0.0);
+    return 0;
 }
 
 void main(void)
@@ -83,6 +94,9 @@ void main(void)
     vec2 fragCoord = offset + gl_FragCoord.xy;
     vec2 uv = (2.*fragCoord.xy - resolution.xy)/resolution.y;
     vec3 ro = vec3(0.5,25,time * 5.0);
-    vec3 rd = normalize(vec3(uv,2.0)) * rotationMatrix;
-    gl_FragColor = vec4(shading(ro,rd), 1.0);
+    vec3 rd = normalize(vec3(-uv,2.0)) * rotationMatrix;
+    float bri = shading(ro,rd);
+    vec4 col = color;
+    if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
+    gl_FragColor = vec4(col.rgb, col.a * bri);
 }

@@ -68,7 +68,6 @@ void Shader::update(Layer *layer) {
         cache[path].setUniform1i("random", layer->randomSeed);
         cache[path].setUniform1i("num_values", layer->data->values.size());
         cache[path].setUniform1fv("values", layer->data->values.data(), layer->data->values.size());
-        cache[path].setUniform1i("visible", layer->data->visible ? 1 : 0);
         cache[path].setUniform1i("onset", layer->data->onset ? 1 : 0);
         ofDrawRectangle(0, 0, layer->size.x, layer->size.y);
         cache[path].end();

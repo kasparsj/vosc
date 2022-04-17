@@ -7,6 +7,7 @@
 #include "Layer.h"
 #include "Config.h"
 #include "ofxEasing.h"
+#include "ofxPostProcessing.h"
 
 template <typename T>
 struct Tween {
@@ -45,6 +46,7 @@ public:
 	void gotMessage(ofMessage msg);
     
     void layerCommand(Layer &layer, string command, const ofxOscMessage &m);
+    void allLayersCommand(string command, const ofxOscMessage &m);
     void soundCommand(Sound &sound, string command, const ofxOscMessage &m);
     void handleFloat(float *value, const ofxOscMessage &m);
     void handleVec3(glm::vec3 *value, const ofxOscMessage &m);
@@ -96,14 +98,12 @@ public:
     bool forceOnset;
     
     ofFbo fbo;
-    ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
-    ofBlendMode bgBlendMode = OF_BLENDMODE_ALPHA;
-    ofColor bgColor = ofColor(0);
     bool showDebug = false;
     Layout layout = L_STACK;
     map<float*, Tween<float>> floatTweens;
     map<glm::vec3*, Tween<glm::vec3>> vec3Tweens;
     map<ofFloatColor*, Tween<ofFloatColor>> colorTweens;
     ofCamera cam;
+    ofxPostProcessing post;
     bool useCam = false;
 };

@@ -10,7 +10,6 @@ uniform int index;
 uniform vec4 color;
 uniform int random;
 uniform float values[MAX_VALUES];
-uniform int visible;
 
 void main(void){
     vec2 m;

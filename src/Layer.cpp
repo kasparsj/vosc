@@ -102,6 +102,9 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
         data->update(sounds, notes);
     }
     rotAngle += rotSpeed;
+    if (useRandomColor) {
+        color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+    }
     if (gen != NULL) {
         gen->update(this);
     }
@@ -124,7 +127,18 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
 void Layer::draw() {
     if (data != NULL) {
         if (data->visible) {
+            switch (blendMode) {
+                case OF_BLENDMODE_ALPHA:
+                    // todo: total should be totalVisible
+                    ofSetColor(255, 255, 255, 255 / total);
+                    break;
+                default:
+                    ofSetColor(255);
+                    break;
+            }
+            ofEnableBlendMode(blendMode);
             draw(pos, size);
+            ofDisableBlendMode();
         }
         data->afterDraw();
     }

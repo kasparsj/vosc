@@ -1,4 +1,5 @@
 ofxColorTheory
 ofxEasing
 ofxOsc
+ofxPostProcessing
 ofxTidalCycles

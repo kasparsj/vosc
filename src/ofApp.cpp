@@ -262,7 +262,7 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
         handleColor(&layer.color, m);
     }
     else if (command == "/color/rand") {
-        layer.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+        layer.useRandomColor = m.getNumArgs() > 1 ? m.getArgAsBool(1) : !layer.useRandomColor;
     }
     else if (command == "/color/lerp") {
         ofFloatColor fromColor = parseColor(m, 2);
@@ -304,6 +304,15 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
     }
     else if (command == "/thresh/onset" || command == "/onset/thresh") {
         handleFloat(&layer.onsetThresh, m);
+    }
+    else if (command == "/blendmode") {
+        layer.blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+    }
+}
+
+void ofApp::allLayersCommand(string command, const ofxOscMessage &m) {
+    for (int i=0; i<layers.size(); i++) {
+        layerCommand(layers[i], command, m);
     }
 }
 
@@ -386,15 +395,6 @@ void ofApp::processQueue() {
         if (command == "/layout") {
             layoutLayers(static_cast<Layout>(m.getArgAsInt(0)));
         }
-        else if (command == "/blendmode") {
-            blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
-        }
-        else if (command == "/bgcolor") {
-            bgColor = ofColor(m.getArgAsInt(0), m.getArgAsInt(1), m.getArgAsInt(2));
-        }
-        else if (command == "/bgblendmode") {
-            bgBlendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
-        }
         else if (command.substr(0, 4) == "/amp" || command.substr(0, 5) == "/loud") {
             auto [all, idx] = parseIndex(m);
             if (all) {
@@ -411,9 +411,7 @@ void ofApp::processQueue() {
         else {
             auto [all, idx] = parseIndex(m);
             if (all) {
-                for (int i=0; i<layers.size(); i++) {
-                    layerCommand(layers[i], command, m);
-                }
+                allLayersCommand(command, m);
             }
             else {
                 if (idx > -1) {
@@ -427,33 +425,17 @@ void ofApp::processQueue() {
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    fbo.begin();
+    if (useCam) {
+        post.begin(cam);
+    }
+    else {
+        post.begin();
+    }
     ofClear(0, 0, 0, 0);
-    switch (blendMode) {
-        case OF_BLENDMODE_ALPHA:
-            ofSetColor(255, 255, 255, 255 / layers.size());
-            break;
-        default:
-            ofSetColor(255);
-            break;
-    }
-    ofEnableBlendMode(blendMode);
     for (int i=0; i<layers.size(); i++) {
-        if (useCam) {
-            cam.begin();
-        }
         layers[i].draw();
-        if (useCam) {
-            cam.end();
-        }
     }
-    ofDisableBlendMode();
-    fbo.end();
-    
-    ofEnableBlendMode(bgBlendMode);
-    ofBackground(bgColor);
-    ofSetColor(255);
-    fbo.draw(0, 0);
+    post.end();
     
     if (showDebug) {
         ofPushStyle();
@@ -480,24 +462,28 @@ void ofApp::keyPressed(int key){
         case 'f':
             ofToggleFullscreen();
             break;
-        case '0':
-            blendMode = OF_BLENDMODE_DISABLED;
+        case '0': {
+            ofxOscMessage m;
+            m.addIntArg(OF_BLENDMODE_DISABLED);
+            allLayersCommand("/blendmode", m);
             break;
+        }
         case '1':
         case '2':
         case '3':
         case '4':
-        case '5':
-            blendMode = static_cast<ofBlendMode>(key - '1' + 1);
+        case '5': {
+            ofxOscMessage m;
+            m.addIntArg(static_cast<ofBlendMode>(key - '1' + 1));
+            allLayersCommand("/blendmode", m);
             break;
+        }
         case 'd':
             showDebug = !showDebug;
             break;
         case 'r': {
-            for (int i=0; i<layers.size(); i++) {
-                ofxOscMessage m;
-                layerCommand(layers[i], "/reload", m);
-            }
+            ofxOscMessage m;
+            allLayersCommand("/reload", m);
             break;
         }
         default:
@@ -543,6 +529,7 @@ void ofApp::mouseExited(int x, int y){
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
     fbo.allocate(ofGetWidth(), ofGetHeight());
+    post.init(ofGetWidth(), ofGetHeight());
     layoutLayers(layout);
 }
 

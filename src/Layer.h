@@ -63,5 +63,8 @@ public:
     int randomSeed = 0;
     vector<string> dataSources;
     float thresh = 0.5;
+    // todo: maybe should by default fallback to thresh
     float onsetThresh = 0.5;
+    ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
+    bool useRandomColor = false;
 };

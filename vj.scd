@@ -311,3 +311,11 @@ var secs = 10;
 ~visuals.sendMsg('/data', 3, "rand");
 ~visuals.sendMsg('/data', 4, "rand");
 )
+
+(
+~visuals.sendMsg('/load', 0, "Empty.frag");
+~visuals.sendMsg('/load', 1, "TerrainGrid.frag");
+~visuals.sendMsg('/color/rand', 0);
+~visuals.sendMsg('/thresh', 0, 0.9);
+~visuals.sendMsg('/thresh/onset', 0, 0.9);
+)
