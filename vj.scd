@@ -113,7 +113,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/color', 1, 0, 0, 0); // white
 ~visuals.sendMsg('/color', 0, 1.0, 0, 0); // red
 ~visuals.sendMsg('/color', 0, 256.rand, 256.rand, 256.rand); // random
-~visuals.sendMsg('/color/rand', 0); // random
+~visuals.sendMsg('/color', 0, "rand"); // random
 
 ~visuals.sendMsg('/cam', true);
 ~visuals.sendMsg('/cam/pos', 0, 0, -100);
@@ -134,8 +134,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/data', 0, "sin");
 ~visuals.sendMsg('/thresh', 0, 0);
 ~visuals.sendMsg('/thresh/onset', 0, 0.9);
-~visuals.sendMsg('/load', 0, "DSC_0081.mov");
-// ~visuals.sendMsg('/load', 0, "bbb_export.hpv");
+// ~visuals.sendMsg('/load', 0, "DSC_0081.mov");
+~visuals.sendMsg('/load', 0, "bbb_export.hpv");
 )
 
 /// PERFORMANCE
@@ -152,7 +152,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/load', 0, "NoisySpirals");
 ~visuals.sendMsg('/alpha', 0, 1);
 ~visuals.sendMsg('/bri', 0, 1.0);
-~visuals.sendMsg('/color/mfcc', 0, false);
+~visuals.sendMsg('/color', 0, "mfcc", false);
 )
 
 ~visuals.sendMsg('/color', 0, 0.15, 0.75, 1.0); // blue
@@ -164,7 +164,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/color', 0, 0, 0, 0); // white
 ~visuals.sendMsg('/color', 0, 1.0, 0, 0); // red
 ~visuals.sendMsg('/color', 0, 256.rand, 256.rand, 256.rand); // random
-~visuals.sendMsg('/color/rand', 0); // random
+~visuals.sendMsg('/color', 0, "rand"); // random
 
 (
 ~visuals.sendMsg('/loud/max', "*", 24);
@@ -174,7 +174,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/load', 1, "WaveClock");
 ~visuals.sendMsg('/alpha', 1, 1.0);
 ~visuals.sendMsg('/bri', 1, 1.0);
-~visuals.sendMsg('/color/mfcc', 4, true);
+~visuals.sendMsg('/color', 4, "mfcc", true);
 )
 
 ~visuals.sendMsg('/speed', "*", 1);
@@ -278,8 +278,8 @@ var secs = 10;
 )
 
 (
-~visuals.sendMsg('/color/mfcc', 3, false);
-~visuals.sendMsg('/color/random', 3, true);
+~visuals.sendMsg('/color', 3, "mfcc", false);
+~visuals.sendMsg('/color', 3, "rand", true);
 )
 
 ~visuals.sendMsg('/data', 2, "loud:1");
@@ -289,7 +289,7 @@ var secs = 10;
 ~visuals.sendMsg('/load', 2, "RotStringsH.frag");
 ~visuals.sendMsg('/alpha', 3, 1.0);
 ~visuals.sendMsg('/load', 3, "");
-~visuals.sendMsg('/color/mfcc', 2, false);
+~visuals.sendMsg('/color', 2, "mfcc", false);
 ~visuals.sendMsg('/alpha', 2, 1.0);
 ~visuals.sendMsg('/alpha', 4, 1.0);
 
@@ -315,7 +315,7 @@ var secs = 10;
 (
 ~visuals.sendMsg('/load', 0, "Empty.frag");
 ~visuals.sendMsg('/load', 1, "TerrainGrid.frag");
-~visuals.sendMsg('/color/rand', 0);
+~visuals.sendMsg('/color', 0, "rand");
 ~visuals.sendMsg('/thresh', 0, 0.9);
 ~visuals.sendMsg('/thresh/onset', 0, 0.9);
 ~visuals.sendMsg('/post', "invert");

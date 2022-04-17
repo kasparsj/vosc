@@ -264,19 +264,30 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         handleVec3(&layer->scale, m);
     }
     else if (command == "/color") {
-        handleColor(&layer->color, m);
-    }
-    else if (command == "/color/rand") {
-        layer->useRandomColor = m.getNumArgs() > 1 ? m.getArgAsBool(1) : !layer->useRandomColor;
-    }
-    else if (command == "/color/lerp") {
-        ofFloatColor fromColor = parseColor(m, 2);
-        ofFloatColor toColor = parseColor(m, 5);
-        float perc = m.getArgAsFloat(1);
-        layer->color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
-    }
-    else if (command == "/color/mfcc") {
-        layer->useMFCCColor = m.getArgAsBool(1);
+        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            string value = m.getArgAsString(1);
+            if (value == "rand") {
+                layer->useRandomColor = m.getNumArgs() > 1 ? m.getArgAsBool(2) : true;
+                layer->useMFCCColor = !layer->useRandomColor;
+            }
+            else if (value == "mfcc") {
+                layer->useMFCCColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
+                layer->useRandomColor = !layer->useMFCCColor;
+            }
+            else if (value == "lerp") {
+                ofFloatColor fromColor = parseColor(m, 3);
+                ofFloatColor toColor = parseColor(m, 6);
+                float perc = m.getArgAsFloat(2);
+                layer->color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
+                layer->useMFCCColor = false;
+                layer->useRandomColor = false;
+            }
+        }
+        else {
+            handleColor(&layer->color, m);
+            layer->useMFCCColor = false;
+            layer->useRandomColor = false;
+        }
     }
     else if (command == "/data") {
         vector<string> ds;
