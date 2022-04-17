@@ -219,10 +219,14 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         layer->load(m.getArgAsString(1));
     }
     else if (command == "/seek") {
-        handleFloat(&layer->timePct, m);
-    }
-    else if (command == "/seek/rand") {
-        layer->timePct = ofRandom(1.f);
+        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            if (m.getArgAsString(1) == "rand") {
+                layer->timePct = ofRandom(1.f);
+            }
+        }
+        else {
+            handleFloat(&layer->timePct, m);
+        }
     }
     else if (command == "/reload") {
         layer->reload();
