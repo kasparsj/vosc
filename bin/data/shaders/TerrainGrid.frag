@@ -1,7 +1,7 @@
-#version 120
+#version 150
 
-#define DEFAULT_COLOR vec3(1, 1, 1)
-#define MAX_VALUES 8
+const vec3 DEFAULT_COLOR = vec3(1, 1, 1);
+const int MAX_VALUES = 8;
 
 uniform float time;
 uniform vec2 resolution;
@@ -10,6 +10,8 @@ uniform int index;
 uniform vec4 color;
 uniform int random;
 uniform float values[MAX_VALUES];
+
+out vec4 fragColor;
 
 // references:
 // http://madebyevan.com/shaders/grid/
@@ -98,5 +100,5 @@ void main(void)
     float bri = shading(ro,rd);
     vec4 col = color;
     if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
-    gl_FragColor = vec4(col.rgb, col.a * bri);
+    fragColor = vec4(col.rgb, col.a * bri);
 }

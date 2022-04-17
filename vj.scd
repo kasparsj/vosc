@@ -282,9 +282,9 @@ var secs = 10;
 
 ~visuals.sendMsg('/data', 2, "loud:1");
 ~visuals.sendMsg('/data', 3, "loud:0");
-~visuals.sendMsg('/load', 2, "shader:02.frag");
-~visuals.sendMsg('/load', 2, "shader:04.frag");
-~visuals.sendMsg('/load', 2, "shader:RotStringsH.frag");
+~visuals.sendMsg('/load', 2, "02.frag");
+~visuals.sendMsg('/load', 2, "04.frag");
+~visuals.sendMsg('/load', 2, "RotStringsH.frag");
 ~visuals.sendMsg('/alpha', 3, 1.0);
 ~visuals.sendMsg('/load', 3, "");
 ~visuals.sendMsg('/color/mfcc', 2, false);
@@ -292,14 +292,12 @@ var secs = 10;
 ~visuals.sendMsg('/alpha', 4, 1.0);
 
 (
+var secs = 10;
+~visuals.sendMsg('/alpha', 2, 0);
+~visuals.sendMsg('/alpha', 3, 0);
+~visuals.sendMsg('/alpha', 4, 0);
 {
-	100.do { |i|
-		var j = (i+1);
-		~visuals.sendMsg('/alpha', 2, 1-(j/100.0));
-		~visuals.sendMsg('/alpha', 3, 1-(j/100.0));
-		~visuals.sendMsg('/alpha', 4, 1-(j/100.0));
-		1.0.wait;
-	};
+	secs.wait;
 	"fade out done".postln;
 }.fork;
 )
@@ -318,4 +316,5 @@ var secs = 10;
 ~visuals.sendMsg('/color/rand', 0);
 ~visuals.sendMsg('/thresh', 0, 0.9);
 ~visuals.sendMsg('/thresh/onset', 0, 0.9);
+~visuals.sendMsg('/post', "invert");
 )

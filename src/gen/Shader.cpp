@@ -31,7 +31,7 @@ void Shader::update(Layer *layer) {
         cache[path] = sh;
     }
     if (!cache[path].isLoaded()) {
-        string vertPath = "";
+        string vertPath = "shaders/passthru.vert";
         string fragPath = path;
         if (!ofFilePath::isAbsolute(fragPath)) {
             fragPath = ofToDataPath("shaders/" + path);

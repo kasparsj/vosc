@@ -87,6 +87,7 @@ public:
     void updateFloats();
     void updateVecs();
     void updateColors();
+    void createPostPass(string passName);
 
     ofxOscReceiver receiver;
     vector<ofxOscMessage> messageQueue;
@@ -99,7 +100,7 @@ public:
     
     ofFbo fbo;
     bool showDebug = false;
-    Layout layout = L_STACK;
+    Layout layout = Layout::STACK;
     map<float*, Tween<float>> floatTweens;
     map<glm::vec3*, Tween<glm::vec3>> vec3Tweens;
     map<ofFloatColor*, Tween<ofFloatColor>> colorTweens;

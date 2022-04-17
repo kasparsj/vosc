@@ -10,19 +10,19 @@ Gen* Layer::factory(string type, string path) {
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
-            case S_VIDEO:
+            case Source::VIDEO:
                 gen = new Video(path);
                 break;
-            case S_SHADER:
+            case Source::SHADER:
                 gen = new Shader(path);
                 break;
-            case S_SKETCH:
+            case Source::SKETCH:
                 gen = new Sketch(path);
                 break;
-            case S_IMAGE:
+            case Source::IMAGE:
                 gen = new Image(path);
                 break;
-            case S_3D:
+            case Source::THREE:
                 gen = new Three(path);
                 break;
         }
@@ -42,19 +42,19 @@ Gen* Layer::factory(string source) {
         auto it = SourceMap.find(type);
         if (it != SourceMap.end()) {
             switch (it->second) {
-                case S_VIDEO:
+                case Source::VIDEO:
                     path = Video::random();
                     break;
-                case S_SHADER:
+                case Source::SHADER:
                     path = Shader::random();
                     break;
-                case S_SKETCH:
+                case Source::SKETCH:
                     path = Sketch::random();
                     break;
-                case S_IMAGE:
+                case Source::IMAGE:
                     path = Image::random();
                     break;
-                case S_3D:
+                case Source::THREE:
                     path = Three::random();
                     break;
             }
@@ -76,21 +76,21 @@ void Layer::setup(int index, int numVisuals, string dataSource)
 void Layer::layout(Layout layout)
 {
     switch (layout) {
-        case L_COLUMN:
+        case Layout::COLUMN:
             pos = glm::vec3(0, ofGetHeight() / total * index, 0);
             size = glm::vec3(ofGetWidth(), ofGetHeight() / total, 0);
             break;
-        case L_ROW:
+        case Layout::ROW:
             pos = glm::vec3(ofGetWidth() / total * index, 0, 0);
             size = glm::vec3(ofGetWidth() / total, ofGetHeight(), 0);
             break;
-        case L_GRID: {
+        case Layout::GRID: {
             int half = (int) ceil(total / 2.f);
             pos = glm::vec3(ofGetWidth() / half * (index % half), ofGetHeight() / 2 * floor(index / half), 0);
             size = glm::vec3(ofGetWidth() / half, ofGetHeight() / 2, 0);
             break;
         }
-        case L_STACK:
+        case Layout::STACK:
             pos = glm::vec3(0, 0, 0);
             size = glm::vec3(ofGetWidth(), ofGetHeight(), 0);
             break;

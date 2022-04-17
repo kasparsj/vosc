@@ -37,7 +37,7 @@ public:
     }
     
     bool randomShader() const {
-        return behaviour > 0 && behaviour & B_RANDOM_SHADER;
+        return behaviour > 0 && behaviour & (int) Behaviour::RANDOM_SHADER;
     }
     
     int index;

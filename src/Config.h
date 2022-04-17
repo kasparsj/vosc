@@ -6,53 +6,53 @@
 #define MAX_VISUALS 8
 #define MAX_NOTES 10
 
-enum Behaviour {
-    B_RANDOM_SHADER = 1,
+enum class Behaviour {
+    RANDOM_SHADER = 1,
 };
 
-enum Layout {
-    L_COLUMN,
-    L_ROW,
-    L_GRID,
-    L_STACK,
+enum class Layout {
+    COLUMN,
+    ROW,
+    GRID,
+    STACK,
 };
 
-enum Source {
-    S_VIDEO,
-    S_SHADER,
-    S_SKETCH,
-    S_IMAGE,
-    S_3D,
-    S_LAST = S_3D,
+enum class Source {
+    VIDEO,
+    SHADER,
+    SKETCH,
+    IMAGE,
+    THREE,
+    LAST = THREE,
 };
 
 static std::unordered_map<std::string, Source> const SourceMap = {
-    {"video", Source::S_VIDEO},
-    {"shader", Source::S_SHADER},
-    {"sketch", Source::S_SKETCH},
-    {"image", Source::S_IMAGE},
-    {"3d", Source::S_3D},
+    {"video", Source::VIDEO},
+    {"shader", Source::SHADER},
+    {"sketch", Source::SKETCH},
+    {"image", Source::IMAGE},
+    {"3d", Source::THREE},
 };
 
-enum DataSource {
-    DS_CONST,
-    DS_RAND,
-    DS_NOISE,
-    DS_SINE,
-    DS_AMP,
-    DS_LOUD,
-    DS_ONSET,
-    DS_TIDAL,
-    DS_LAST = DS_TIDAL,
+enum class DataSource {
+    CONST,
+    RAND,
+    NOISE,
+    SINE,
+    AMP,
+    LOUD,
+    ONSET,
+    TIDAL,
+    LAST = TIDAL,
 };
 
 static std::unordered_map<std::string, DataSource> const DataSourceMap = {
-    {"const", DataSource::DS_CONST},
-    {"rand", DataSource::DS_RAND},
-    {"noise", DataSource::DS_NOISE},
-    {"sin", DataSource::DS_SINE},
-    {"amp", DataSource::DS_AMP},
-    {"loud", DataSource::DS_LOUD},
-    {"onset", DataSource::DS_ONSET},
-    {"tidal", DataSource::DS_TIDAL},
+    {"const", DataSource::CONST},
+    {"rand", DataSource::RAND},
+    {"noise", DataSource::NOISE},
+    {"sin", DataSource::SINE},
+    {"amp", DataSource::AMP},
+    {"loud", DataSource::LOUD},
+    {"onset", DataSource::ONSET},
+    {"tidal", DataSource::TIDAL},
 };

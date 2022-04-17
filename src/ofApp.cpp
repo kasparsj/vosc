@@ -408,6 +408,13 @@ void ofApp::processQueue() {
                 }
             }
         }
+        else if (command.substr(0, 5) == "/post") {
+            post.getPasses().clear();
+            for (int i=0; i<m.getNumArgs(); i++) {
+                string passName = m.getArgAsString(i);
+                createPostPass(passName);
+            }
+        }
         else {
             auto [all, idx] = parseIndex(m);
             if (all) {
@@ -420,6 +427,99 @@ void ofApp::processQueue() {
             }
         }
         messageQueue.erase(messageQueue.begin());
+    }
+}
+
+void ofApp::createPostPass(string passName) {
+    if (passName == "bloom") {
+        post.createPass<itg::BloomPass>();
+    }
+    else if (passName == "convolution") {
+        post.createPass<itg::ConvolutionPass>();
+    }
+    else if (passName == "dof") {
+        post.createPass<itg::DofPass>();
+    }
+    else if (passName == "dofalt") {
+        post.createPass<itg::DofAltPass>();
+    }
+    else if (passName == "edge") {
+        post.createPass<itg::EdgePass>();
+    }
+    else if (passName == "fxaa") {
+        post.createPass<itg::FxaaPass>();
+    }
+    else if (passName == "kaleidoscope") {
+        post.createPass<itg::KaleidoscopePass>();
+    }
+    else if (passName == "noisewarp") {
+        post.createPass<itg::NoiseWarpPass>();
+    }
+    else if (passName == "pixelate") {
+        post.createPass<itg::PixelatePass>();
+    }
+    else if (passName == "lut") {
+        post.createPass<itg::LUTPass>();
+    }
+    else if (passName == "contrast") {
+        post.createPass<itg::ContrastPass>();
+    }
+    else if (passName == "ssao") {
+        post.createPass<itg::SSAOPass>();
+    }
+    else if (passName == "htiltshift") {
+        post.createPass<itg::HorizontalTiltShifPass>();
+    }
+    else if (passName == "vtiltshift") {
+        post.createPass<itg::VerticalTiltShifPass>();
+    }
+    else if (passName == "rgbshift") {
+        post.createPass<itg::RGBShiftPass>();
+    }
+    else if (passName == "fakesss") {
+        post.createPass<itg::FakeSSSPass>();
+    }
+    else if (passName == "zoomblur") {
+        post.createPass<itg::ZoomBlurPass>();
+    }
+    else if (passName == "bleachbypass") {
+        post.createPass<itg::BleachBypassPass>();
+    }
+    else if (passName == "toon") {
+        post.createPass<itg::ToonPass>();
+    }
+    else if (passName == "godrays") {
+        post.createPass<itg::GodRaysPass>();
+    }
+    else if (passName == "rimhighlighting") {
+        post.createPass<itg::RimHighlightingPass>();
+    }
+    else if (passName == "limbdarkening") {
+        post.createPass<itg::LimbDarkeningPass>();
+    }
+    else if (passName == "invert") {
+        post.createPass<itg::Invert>();
+    }
+    else if (passName == "glitch") {
+        post.createPass<itg::Glitch>();
+    }
+    else if (passName == "rotate") {
+        post.createPass<itg::Rotate>();
+    }
+    else if (passName == "pixelsort") {
+        post.createPass<itg::Pixelsort>();
+    }
+    else if (passName == "beyoon") {
+        post.createPass<itg::Beyoon>();
+    }
+    else if (passName == "reflectx") {
+        post.createPass<itg::ReflectX>();
+    }
+    else if (passName == "reflecty") {
+        post.createPass<itg::ReflectY>();
+    }
+    else if (passName == "split") {
+        post.createPass<itg::Split>();
     }
 }
 
