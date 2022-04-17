@@ -1,14 +1,17 @@
 #pragma once
 
 #include "Gen.h"
+#include "ofxHPVPlayer.h"
 
-class Video : public Gen {
+class HPVideo : public Gen {
 public:
     static vector<string> cache;
     static string random();
     
-    Video(string name) : Gen(name) {}
-    ~Video() {}
+    HPVideo(string name) : Gen(name) {
+        hpvPlayer.init(HPV::NewPlayer());
+    }
+    ~HPVideo() {}
     void update(Layer *layer) override;
     void seek(float pct);
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
@@ -16,5 +19,5 @@ public:
     ofFloatColor getTint(Layer *layer) override;
     
 private:
-    ofVideoPlayer videoPlayer;
+    ofxHPVPlayer hpvPlayer;
 };

@@ -1,5 +1,6 @@
 #include "ofApp.h"
 #include "ColorUtil.h"
+#include "ofxHPVPlayer.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -14,6 +15,7 @@ void ofApp::setup(){
     windowResized(ofGetWidth(), ofGetHeight());
     
     cam.setPosition(0, 0, -870);
+    HPV::InitHPVEngine();
 }
 
 void ofApp::setupSounds(int numInsts) {
@@ -46,6 +48,7 @@ void ofApp::update(){
 		layers[i].update(sounds, tidal->notes);
 	}
     cam.lookAt(glm::vec3(0));
+    HPV::Update();
 }
 
 void ofApp::updateFloats() {
@@ -214,10 +217,10 @@ void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
         layer.load(m.getArgAsString(1));
     }
     else if (command == "/seek") {
-        handleFloat(&layer.timeNorm, m);
+        handleFloat(&layer.timePct, m);
     }
     else if (command == "/seek/rand") {
-        layer.timeNorm = ofRandom(1.f);
+        layer.timePct = ofRandom(1.f);
     }
     else if (command == "/reload") {
         layer.reload();
@@ -554,6 +557,7 @@ void ofApp::draw(){
 }
 
 void ofApp::exit() {
+    HPV::DestroyHPVEngine();
 }
 
 //--------------------------------------------------------------

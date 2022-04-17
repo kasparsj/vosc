@@ -4,6 +4,7 @@
 #include "Sketch.h"
 #include "Image.h"
 #include "Three.h"
+#include "HPVideo.h"
 
 Gen* Layer::factory(string type, string path) {
     Gen *gen = NULL;
@@ -12,6 +13,9 @@ Gen* Layer::factory(string type, string path) {
         switch (it->second) {
             case Source::VIDEO:
                 gen = new Video(path);
+                break;
+            case Source::HPV:
+                gen = new HPVideo(path);
                 break;
             case Source::SHADER:
                 gen = new Shader(path);
@@ -44,6 +48,9 @@ Gen* Layer::factory(string source) {
             switch (it->second) {
                 case Source::VIDEO:
                     path = Video::random();
+                    break;
+                case Source::HPV:
+                    path = HPVideo::random();
                     break;
                 case Source::SHADER:
                     path = Shader::random();
@@ -171,7 +178,7 @@ void Layer::addDataSources(vector<string> ds) {
 void Layer::load(string source) {
     unload();
     bool explicitType = source.find(":") != string::npos;
-    if (explicitType) {
+    if (explicitType && source.substr(0, 4) != "http") {
         gen = factory(source);
     }
     else {
@@ -187,6 +194,9 @@ void Layer::load(string source) {
         }
         else if (extension == "mov") {
             gen = factory("video", source);
+        }
+        else if (extension == "hpv") {
+            gen = factory("hpv", source);
         }
         else {
             if (Three::exists(source)) {

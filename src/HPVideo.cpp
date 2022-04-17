@@ -1,28 +1,27 @@
-#include "Video.h"
+#include "HPVideo.h"
 #include "Layer.h"
 
-vector<string> loadLocalVideos()
+vector<string> loadLocalHPVs()
 {
     ofDirectory dir("videos");
     vector<string> videos;
     for (int i = 0; i < dir.getFiles().size(); i++){
         ofFile file = dir.getFile(i);
-        if (file.getExtension() == "mov") {
+        if (file.getExtension() == "hpv") {
             videos.push_back(file.getFileName());
         }
     }
     return videos;
 }
 
-vector<string> Video::cache = loadLocalVideos();
+vector<string> HPVideo::cache = loadLocalHPVs();
 
-string Video::random() {
+string HPVideo::random() {
     return cache[int(ofRandom(cache.size()))];
 }
 
-void Video::update(Layer *layer) {
-    if (!videoPlayer.isLoaded()) {
-        videoPlayer.close();
+void HPVideo::update(Layer *layer) {
+    if (!hpvPlayer.isLoaded()) {
         string absPath = path;
         if (!ofFilePath::isAbsolute(absPath)) {
             absPath = ofToDataPath("videos/" + path);
@@ -30,11 +29,11 @@ void Video::update(Layer *layer) {
                 absPath = ofToDataPath(absPath);
             }
         }
-        if (videoPlayer.load(absPath)) {
-            videoPlayer.setVolume(0);
-            videoPlayer.setLoopState(OF_LOOP_NORMAL);
+        if (hpvPlayer.load(absPath)) {
+            //hpvPlayer.setVolume(0);
+            hpvPlayer.setLoopState(OF_LOOP_NORMAL);
             seek(layer->timePct);
-            videoPlayer.play();
+            hpvPlayer.play();
             prevPath = path;
             layer->randomSeed = ofRandom(1000);
             if (layer->color == ofFloatColor(0, 0)) {
@@ -42,7 +41,7 @@ void Video::update(Layer *layer) {
             }
         }
         else {
-            ofLog() << "could not load video: " << path;
+            ofLog() << "could not load hpv: " << path;
             path = prevPath;
             return;
         }
@@ -51,31 +50,31 @@ void Video::update(Layer *layer) {
         seek(layer->timePct);
     }
     aspectRatio = layer->aspectRatio;
-    videoPlayer.update();
 }
 
-void Video::seek(float pct) {
-    videoPlayer.setPosition(pct);
+void HPVideo::seek(float pct) {
+    hpvPlayer.setPosition(pct);
 }
 
-void Video::draw(const glm::vec3 &pos, const glm::vec3 &size) {
+void HPVideo::draw(const glm::vec3 &pos, const glm::vec3 &size) {
+    const glm::vec3 posCenter = pos - size/2.f;
     if (aspectRatio) {
-        if (videoPlayer.getWidth() > videoPlayer.getHeight()) {
-            videoPlayer.draw(pos - size/2.f, size.x, size.x/videoPlayer.getWidth() * videoPlayer.getHeight());
+        if (hpvPlayer.getWidth() > hpvPlayer.getHeight()) {
+            hpvPlayer.draw(posCenter.x, posCenter.y, size.x, size.x/hpvPlayer.getWidth() * hpvPlayer.getHeight());
         }
         else {
-            videoPlayer.draw(pos - size/2.f, size.y/videoPlayer.getHeight() * videoPlayer.getWidth(), size.y);
+            hpvPlayer.draw(posCenter.x, posCenter.y, size.y/hpvPlayer.getHeight() * hpvPlayer.getWidth(), size.y);
         }
     }
     else {
-        videoPlayer.draw(pos - size/2.f, size.x, size.y);
+        hpvPlayer.draw(posCenter.x, posCenter.y, size.x, size.y);
     }
 }
 
-void Video::choose() {
+void HPVideo::choose() {
     path = random();
 }
 
-ofFloatColor Video::getTint(Layer *layer) {
+ofFloatColor HPVideo::getTint(Layer *layer) {
     return layer->getColor();
 }

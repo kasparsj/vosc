@@ -30,6 +30,9 @@ void Image::update(Layer *layer) {
         if (image.load(absPath)) {
             prevPath = path;
             layer->randomSeed = ofRandom(1000);
+            if (layer->color == ofFloatColor(0, 0)) {
+                layer->color = ofFloatColor(1);
+            }
         }
         else {
             ofLog() << "could not load image: " << path;

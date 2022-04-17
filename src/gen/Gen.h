@@ -22,5 +22,4 @@ public:
     string path = "";
     string prevPath = "";
     bool aspectRatio;
-    ofFloatColor color;
 };

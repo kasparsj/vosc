@@ -57,7 +57,14 @@ void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &not
                     values[i] = abs(sin(time));
                 }
                 if (values.size() > 0 && i == 0) {
-                    onset = values[0] > layer->onsetThresh;
+                    onset = values[0] >= layer->onsetThresh;
+                    if (onset && prevOnset) {
+                        onset = false;
+                        prevOnset = true;
+                    }
+                    else {
+                        prevOnset = onset;
+                    }
                 }
             }
         }
@@ -65,7 +72,7 @@ void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &not
     if (values.size() > 0 && values[0] > 1.f) {
         values[0] = 1.f;
     }
-    visible = onset || (values.size() == 0 || values[0] > layer->thresh);
+    visible = onset || (values.size() == 0 || values[0] >= layer->thresh);
 }
 
 void LayerData::afterDraw() {

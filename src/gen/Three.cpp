@@ -42,7 +42,6 @@ void Three::update(Layer *layer) {
             layer->color = ofFloatColor(1);
         }
     }
-    color = layer->getColor();
 }
 
 void Three::draw(const glm::vec3 &pos, const glm::vec3 &size) {

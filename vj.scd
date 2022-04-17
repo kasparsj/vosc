@@ -115,6 +115,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/color', 0, 256.rand, 256.rand, 256.rand); // random
 ~visuals.sendMsg('/color/rand', 0); // random
 
+~visuals.sendMsg('/cam', true);
 ~visuals.sendMsg('/cam/pos', 0, 0, -100);
 
 //~visuals.sendMsg('/onset/force'); // force onset
@@ -132,8 +133,9 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 (
 ~visuals.sendMsg('/data', 0, "sin");
 ~visuals.sendMsg('/thresh', 0, 0);
-~visuals.sendMsg('/thresh/onset', 0, 0.5);
+~visuals.sendMsg('/thresh/onset', 0, 0.9);
 ~visuals.sendMsg('/load', 0, "DSC_0081.mov");
+// ~visuals.sendMsg('/load', 0, "bbb_export.hpv");
 )
 
 /// PERFORMANCE

@@ -56,7 +56,7 @@ public:
     float bri = 1.0;
     float alpha = 1.0;
     bool aspectRatio = true;
-    float timeNorm = 0;
+    float timePct = 0;
     bool noClear;
     bool useMFCCColor = false;
     bool isTidal = false;

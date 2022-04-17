@@ -37,6 +37,7 @@ public:
     vector<float> values;
     bool visible;
     bool onset;
+    bool prevOnset;
     bool tidal;
     vector<float> mfcc;
     ofFloatColor mfccColor = ofFloatColor(0);

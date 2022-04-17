@@ -19,6 +19,7 @@ enum class Layout {
 
 enum class Source {
     VIDEO,
+    HPV,
     SHADER,
     SKETCH,
     IMAGE,
@@ -28,6 +29,7 @@ enum class Source {
 
 static std::unordered_map<std::string, Source> const SourceMap = {
     {"video", Source::VIDEO},
+    {"hpv", Source::HPV},
     {"shader", Source::SHADER},
     {"sketch", Source::SKETCH},
     {"image", Source::IMAGE},
