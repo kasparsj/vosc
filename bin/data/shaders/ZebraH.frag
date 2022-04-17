@@ -1,7 +1,9 @@
-#version 120
+#version 150
 
 uniform float time;
 uniform vec2 resolution;
+
+out vec4 fragColor;
 
 float random (in vec2 st) {
     return fract(sin(dot(st.xy,
@@ -41,5 +43,5 @@ void main() {
     float pattern = pos.x;
     pos = rotate2d( noise(pos + time) ) * pos;
     pattern = lines(pos,.5);
-    gl_FragColor = vec4(vec3(pattern),1.0);
+    fragColor = vec4(vec3(pattern),1.0);
 }

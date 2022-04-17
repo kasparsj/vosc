@@ -1,7 +1,7 @@
-#version 120
+#version 150
 
-#define DEFAULT_COLOR vec3(0.0, 0.35, 0.5)
-#define MAX_VALUES 8
+const vec3 DEFAULT_COLOR = vec3(0.0, 0.35, 0.5);
+const int MAX_VALUES = 8;
 
 // Found this on GLSL sandbox. I really liked it, changed a few things and made it tileable.
 // :)
@@ -19,10 +19,11 @@ uniform float time;
 uniform vec2 resolution;
 uniform vec2 offset;
 uniform int index;
-uniform vec4 color = vec4(DEFAULT_COLOR, 1.0);
+uniform vec4 color;
 uniform int random;
 uniform float values[MAX_VALUES];
-uniform int visible;
+
+out vec4 fragColor;
 
 void main(void)
 {
@@ -49,7 +50,9 @@ void main(void)
     c /= float(MAX_ITER);
     c = 1.17-pow(c, 1.4);
     vec3 colour = vec3(pow(abs(c), 8.0));
-    colour = clamp(colour + color.rgb, 0.0, 1.0);
+    vec4 col = color;
+    if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
+    colour = clamp(colour + col.rgb, 0.0, 1.0);
 
     #ifdef SHOW_TILING
     // Flash tile borders...
@@ -61,5 +64,5 @@ void main(void)
     colour = mix(colour, vec3(1.0, 1.0, 0.0), (uv.x + uv.y) * first.x * first.y); // Yellow line
     #endif
     
-    gl_FragColor = vec4(colour, color.a);
+    fragColor = vec4(colour, col.a);
 }

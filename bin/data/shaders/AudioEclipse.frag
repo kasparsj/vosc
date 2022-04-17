@@ -1,3 +1,9 @@
+#version 150
+
+uniform float time;
+uniform vec2 resolution;
+
+out vec4 fragColor;
 
 const float dots = 40.; //number of lights
 const float radius = .25; //radius of light ring
@@ -10,9 +16,9 @@ vec3 hsv2rgb(vec3 c){
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
         
-void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+void main(void) {
     
-    vec2 p=(fragCoord.xy-.5*iResolution.xy)/min(iResolution.x,iResolution.y);
+    vec2 p=(gl_FragCoord.xy-.5*resolution.xy)/min(resolution.x,resolution.y);
     vec3 c=vec3(0,0,0.1); //background color
         
     for(float i=0.;i<dots; i++){

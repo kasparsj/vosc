@@ -1,8 +1,10 @@
-#version 120
+#version 150
 
 uniform float time;
 uniform vec2 resolution;
 uniform vec2 offset;
+
+out vec4 fragColor;
 
 void main() {
     float r, g, b;
@@ -14,5 +16,5 @@ void main() {
         g += sin(length(m - p) * 1002.0 - time * 10.0) * 0.5;
         b += sin(length(m - p) * 1004.0 - time * 10.0) * 0.5;
     }
-    gl_FragColor = vec4(r, g, b, 1.0);
+    fragColor = vec4(r, g, b, 1.0);
 }

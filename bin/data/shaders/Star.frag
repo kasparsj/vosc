@@ -1,3 +1,7 @@
+#version 150
+
+out vec4 fragColor;
+
 // based on https://www.shadertoy.com/view/lsf3RH by
 // trisomie21 (THANKS!)
 // My apologies for the ugly code.
@@ -27,7 +31,7 @@ float snoise(vec3 uv, float res)    // by trisomie21
 
 float freqs[4];
 
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
+void main(void)
 {
     freqs[0] = texture( iChannel1, vec2( 0.01, 0.25 ) ).x;
     freqs[1] = texture( iChannel1, vec2( 0.07, 0.25 ) ).x;

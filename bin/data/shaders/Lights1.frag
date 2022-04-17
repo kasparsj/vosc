@@ -1,4 +1,4 @@
-#version 120
+#version 150
 
 #define DEFAULT_COLOR vec3(0.4615, 0.615, 1.0)
 #define MAX_VALUES 8
@@ -11,6 +11,8 @@ uniform vec4 color;
 uniform int random;
 uniform float values[MAX_VALUES];
 
+out vec4 fragColor;
+
 void main(void){
     vec2 m;
     float t;
@@ -22,5 +24,5 @@ void main(void){
     }
     vec4 col = color;
     if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
-    gl_FragColor = vec4(col.rgb * 1.3 * t, col.a);
+    fragColor = vec4(col.rgb * 1.3 * t, col.a);
 }

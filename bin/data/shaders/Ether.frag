@@ -1,7 +1,7 @@
-#version 120
+#version 150
 
-#define DEFAULT_COLOR vec3(0.1,0.3,.4)
-#define MAX_VALUES 8
+const vec3 DEFAULT_COLOR = vec3(0.1,0.3,.4);
+const int MAX_VALUES = 8;
 
 // Ether by nimitz 2014 (twitter: @stormoid)
 // https://www.shadertoy.com/view/MsjSW3
@@ -12,10 +12,11 @@ uniform float time;
 uniform vec2 resolution;
 uniform vec2 offset;
 uniform int index;
-uniform vec4 color = vec4(DEFAULT_COLOR, 1.0);
+uniform vec4 color;
 uniform int random;
 uniform float values[MAX_VALUES];
-uniform int visible;
+
+out vec4 fragColor;
 
 #define t time
 
@@ -42,5 +43,5 @@ void main(void){
         cl = cl*l + smoothstep(2.5, .0, rz)*.7*l;
         d += min(rz, 1.);
     }
-    gl_FragColor = vec4(cl, col.a);
+    fragColor = vec4(cl, col.a);
 }

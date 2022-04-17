@@ -1,9 +1,11 @@
-#version 120
+#version 150
 
 #define TWO_PI 6.28318530718
 
 uniform float time;
 uniform vec2 resolution;
+
+out vec4 fragColor;
 
 vec3 hsb2rgb(vec3 c){
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -17,5 +19,5 @@ void main(){
     float angle = atan(toCenter.y, toCenter.x);
     float radius = length(toCenter) * 2.0;
     vec3 color = hsb2rgb(vec3((angle / TWO_PI)+mod(time * 0.2, 1.0), radius, 1.0));
-    gl_FragColor = vec4(color,1.0);
+    fragColor = vec4(color,1.0);
 }

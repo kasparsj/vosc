@@ -1,7 +1,9 @@
-#version 120
+#version 150
 
 uniform float time;
 uniform vec2 resolution;
+
+out vec4 fragColor;
 
 void main(void){
     vec2 m;
@@ -12,5 +14,5 @@ void main(void){
         t += (sin(i * 30.0) * 0.3 + 1.0) / length(m - pos);
     }    
     vec3 col = mod(vec3 (t) * vec3(1.6, 0.8, 2.3), 1.7);
-    gl_FragColor = vec4(col, 1.0);
+    fragColor = vec4(col, 1.0);
 }

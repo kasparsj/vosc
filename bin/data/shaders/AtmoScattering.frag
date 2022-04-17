@@ -1,16 +1,17 @@
-#version 120
+#version 150
 
-#define DEFAULT_COLOR vec3(0.0, 0.35, 0.5)
-#define MAX_VALUES 8
+const vec3 DEFAULT_COLOR = vec3(0.0, 0.35, 0.5);
+const int MAX_VALUES = 8;
 
 uniform float time;
 uniform vec2 resolution;
 uniform vec2 offset;
 uniform int index;
-uniform vec4 color = vec4(DEFAULT_COLOR, 1.0);
+uniform vec4 color;
 uniform int random;
 uniform float values[MAX_VALUES];
-uniform int visible;
+
+out vec4 fragColor;
 
 // Written by GLtracy
 
@@ -178,7 +179,7 @@ void main(void)
               
     vec2 e = ray_vs_sphere( eye, dir, R );
     if ( e.x > e.y ) {
-        gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );
+        fragColor = vec4( 0.0, 0.0, 0.0, 1.0 );
         return;
     }
     
@@ -190,5 +191,5 @@ void main(void)
     vec4 col = color;
     if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
     
-    gl_FragColor = vec4( pow( I, vec3( 1.0 / 2.2 ) ), col.a );
+    fragColor = vec4( pow( I, vec3( 1.0 / 2.2 ) ), col.a );
 }
