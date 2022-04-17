@@ -28,6 +28,7 @@ public:
     void reload();
     void clear();
     void reset();
+    void resetTransform();
     
     ofFloatColor getColor() {
         if (useMFCCColor && data->mfcc.size() > 0) {
@@ -46,7 +47,7 @@ public:
     Gen *gen = NULL;
     glm::vec3 pos;
     glm::vec3 size;
-    float rotAngle;
+    float rotAngle = 0;
     glm::vec3 rotAxis = glm::vec3(0, 1, 0);
     float rotSpeed = 0;
     glm::vec3 scale = glm::vec3(1);

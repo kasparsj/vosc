@@ -261,9 +261,21 @@ void Layer::clear() {
 
 void Layer::reset() {
     if (gen != NULL) {
+        resetTransform();
         gen->reset();
     }
     else {
         ofLog() << "cannot reset layer " << index;
     }
+}
+
+void Layer::resetTransform() {
+    speed = 1.f;
+    alpha = 1.f;
+    bri = 1.f;
+    color = ofFloatColor(0, 0);
+    rotAngle = 0;
+    rotAxis = glm::vec3(0, 1, 0);
+    rotSpeed = 0;
+    scale = glm::vec3(1);
 }
