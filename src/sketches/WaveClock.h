@@ -24,20 +24,18 @@ class WaveClock : public SketchImpl {
         float _w = layer->size.x;
         float _h = layer->size.y;
         float _r = min(_w, _h) - 150;
-        float _x = layer->pos.x;
-        float _y = layer->pos.y;
         _radiusNoise += 0.005;
-        _radius = (ofNoise(_radiusNoise) * _r) +1;
+        _radius = (ofNoise(_radiusNoise, layer->randomSeed) * _r) +1;
     
         _angNoise += 0.005;
-        _angle += (ofNoise(_angNoise) * 6) -3;
+        _angle += (ofNoise(_angNoise, layer->randomSeed) * 6) -3;
         if (_angle > 360)  { _angle -= 360;}
         if (_angle < 0)    { _angle += 360;}
         
         _xNoise += 0.01;
         _yNoise += 0.01;
-        float centerX = _w/2 + (ofNoise(_xNoise) * 100) - 50;
-        float centerY = _h/2 + (ofNoise(_yNoise) * 100) - 50;
+        float centerX = _w/2 + (ofNoise(_xNoise, layer->randomSeed) * 100) - 50;
+        float centerY = _h/2 + (ofNoise(_yNoise, layer->randomSeed) * 100) - 50;
         
         float rad = ofDegToRad(_angle);
         float x1 = centerX + (_radius * cos(rad));
@@ -61,7 +59,6 @@ class WaveClock : public SketchImpl {
         ofSetLineWidth(1);
 
         ofPushMatrix();
-        ofTranslate(_x, _y);
         switch (_mode) {
           case 0:
             ofDrawLine(x1,y1,x2,y2);

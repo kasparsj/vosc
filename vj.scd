@@ -320,3 +320,12 @@ var secs = 10;
 ~visuals.sendMsg('/thresh/onset', 0, 0.9);
 ~visuals.sendMsg('/post', "invert");
 )
+
+(
+9.do { |i|
+	~visuals.sendMsg('/data', i, "noise");
+	~visuals.sendMsg('/thresh', i, 0);
+	~visuals.sendMsg('/load', i, "WaveClock");
+};
+~visuals.sendMsg('/layout', 3, *(0..8));
+)

@@ -15,11 +15,11 @@ public:
     ~Layer() {
         unload();
     }
-    void setup(int index, int numVisuals, string dataSource = "");
-    void layout(Layout layout);
+    void setup(int index, string dataSource = "");
+    void layout(Layout layout, int layoutIndex, int layoutTotal);
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
     void draw(const glm::vec3 &pos, const glm::vec3 &size);
-    void draw();
+    void draw(int totalVisible);
     void setDataSources(vector<string> ds);
     void addDataSources(vector<string> ds);
     void load(string source);
@@ -42,7 +42,6 @@ public:
     }
     
     int index;
-    int total;
     LayerData *data = NULL;
     Gen *gen = NULL;
     glm::vec3 pos;

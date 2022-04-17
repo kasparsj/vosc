@@ -70,31 +70,30 @@ Gen* Layer::factory(string source) {
     return factory(type, path);
 }
 
-void Layer::setup(int index, int numVisuals, string dataSource)
+void Layer::setup(int index, string dataSource)
 {
     this->index = index;
-    this->total = numVisuals;
     dataSources.clear();
     if (dataSource != "") {
         dataSources.push_back(dataSource);
     }
 }
 
-void Layer::layout(Layout layout)
+void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 {
     switch (layout) {
         case Layout::COLUMN:
-            pos = glm::vec3(0, ofGetHeight() / total * index, 0);
-            size = glm::vec3(ofGetWidth(), ofGetHeight() / total, 0);
+            pos = glm::vec3(0, ofGetHeight() / layoutTotal * layoutIndex, 0);
+            size = glm::vec3(ofGetWidth(), ofGetHeight() / layoutTotal, 0);
             break;
         case Layout::ROW:
-            pos = glm::vec3(ofGetWidth() / total * index, 0, 0);
-            size = glm::vec3(ofGetWidth() / total, ofGetHeight(), 0);
+            pos = glm::vec3(ofGetWidth() / layoutTotal * layoutIndex, 0, 0);
+            size = glm::vec3(ofGetWidth() / layoutTotal, ofGetHeight(), 0);
             break;
         case Layout::GRID: {
-            int half = (int) ceil(total / 2.f);
-            pos = glm::vec3(ofGetWidth() / half * (index % half), ofGetHeight() / 2 * floor(index / half), 0);
-            size = glm::vec3(ofGetWidth() / half, ofGetHeight() / 2, 0);
+            int root = (int) sqrt(layoutTotal);
+            pos = glm::vec3(ofGetWidth() / root * (layoutIndex % root), ofGetHeight() / root * floor(layoutIndex / root), 0);
+            size = glm::vec3(ofGetWidth() / root, ofGetHeight() / root, 0);
             break;
         }
         case Layout::STACK:
@@ -122,7 +121,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
         ofPushStyle();
         ofSetColor(gen->getTint(this) * bri, alpha * 255);
         ofPushMatrix();
-        ofTranslate(ofGetWidth()/2.f, ofGetHeight()/2.f);
+        ofTranslate(size.x/2.f, size.y/2.f);
         ofRotateDeg(rotAngle, rotAxis.x, rotAxis.y, rotAxis.z);
         ofScale(scale);
         gen->draw(pos, size);
@@ -131,13 +130,12 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     }
 }
 
-void Layer::draw() {
+void Layer::draw(int totalVisible) {
     if (data != NULL) {
         if (data->visible) {
             switch (blendMode) {
                 case OF_BLENDMODE_ALPHA:
-                    // todo: total should be totalVisible
-                    ofSetColor(255, 255, 255, 255 / total);
+                    ofSetColor(255, 255, 255, 255 / totalVisible);
                     break;
                 default:
                     ofSetColor(255);

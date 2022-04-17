@@ -3,7 +3,7 @@
 #include "ofMain.h"
 
 #define INITIAL_SOUNDS 0
-#define INITIAL_VISUALS 8
+#define INITIAL_VISUALS 9
 #define MAX_NOTES 10
 
 enum class Behaviour {
@@ -11,10 +11,10 @@ enum class Behaviour {
 };
 
 enum class Layout {
-    COLUMN,
-    ROW,
-    GRID,
-    STACK,
+    COLUMN = 1,
+    ROW = 2,
+    GRID = 3,
+    STACK = 4,
 };
 
 enum class Source {

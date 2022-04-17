@@ -24,7 +24,7 @@ public:
 	void setup();
     void setupSounds(int numInsts);
     void setupLayers(int numLayers);
-    void layoutLayers(Layout layout);
+    void layoutLayers(Layout layout, const vector<Layer*> &layers);
 	void update();
     void parseMessages();
     void parseMessage(const ofxOscMessage &m);
@@ -45,7 +45,7 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
     
-    void layerCommand(Layer &layer, string command, const ofxOscMessage &m);
+    void layerCommand(Layer *layer, string command, const ofxOscMessage &m);
     void allLayersCommand(string command, const ofxOscMessage &m);
     void soundCommand(Sound &sound, string command, const ofxOscMessage &m);
     void handleFloat(float *value, const ofxOscMessage &m);
@@ -94,7 +94,7 @@ public:
 	ofxTidalCycles *tidal;
     
     vector<Sound> sounds;
-    vector<Layer> layers;
+    vector<Layer*> layers = {0};
     int waitOnset = -1;
     bool forceOnset;
     

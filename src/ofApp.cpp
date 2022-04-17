@@ -26,13 +26,16 @@ void ofApp::setupSounds(int numInsts) {
 void ofApp::setupLayers(int numVisuals) {
     layers.resize(numVisuals);
     for (int i=0; i<layers.size(); i++) {
-        layers[i].setup(i, numVisuals, sounds.size() > i ? "loud" + ofToString(i) : "");
+        if (layers[i] == NULL) {
+            layers[i] = new Layer();
+        }
+        layers[i]->setup(i, sounds.size() > i ? "loud" + ofToString(i) : "");
     }
 }
 
-void ofApp::layoutLayers(Layout layout) {
+void ofApp::layoutLayers(Layout layout, const vector<Layer*> &layers) {
     for (int i=0; i<layers.size(); i++) {
-        layers[i].layout(layout);
+        layers[i]->layout(layout, i, layers.size());
     }
 }
 
@@ -46,7 +49,7 @@ void ofApp::update(){
     updateVecs();
     updateColors();
 	for (int i = 0; i < layers.size(); i++) {
-		layers[i].update(sounds, tidal->notes);
+		layers[i]->update(sounds, tidal->notes);
 	}
     cam.lookAt(glm::vec3(0));
     HPV::Update();
@@ -147,7 +150,7 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     else if (command == "/layers") {
         setupLayers(m.getArgAsInt(0));
         if (m.getNumArgs() > 1) {
-            layoutLayers(static_cast<Layout>(m.getArgAsInt(1)));
+            layoutLayers(static_cast<Layout>(m.getArgAsInt(1)), layers);
         }
     }
     else if (command == "/cam") {
@@ -213,104 +216,104 @@ ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0) {
     return color;
 }
 
-void ofApp::layerCommand(Layer &layer, string command, const ofxOscMessage &m) {
+void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command == "/load") {
-        layer.load(m.getArgAsString(1));
+        layer->load(m.getArgAsString(1));
     }
     else if (command == "/seek") {
-        handleFloat(&layer.timePct, m);
+        handleFloat(&layer->timePct, m);
     }
     else if (command == "/seek/rand") {
-        layer.timePct = ofRandom(1.f);
+        layer->timePct = ofRandom(1.f);
     }
     else if (command == "/reload") {
-        layer.reload();
+        layer->reload();
     }
     else if (command == "/noclear") {
-        layer.noClear = m.getArgAsBool(1);
+        layer->noClear = m.getArgAsBool(1);
     }
     else if (command == "/bri") {
-        handleFloat(&layer.bri, m);
+        handleFloat(&layer->bri, m);
     }
     else if (command == "/alpha") {
-        handleFloat(&layer.alpha, m);
+        handleFloat(&layer->alpha, m);
     }
     else if (command == "/choose") {
-        layer.choose();
+        layer->choose();
     }
     else if (command == "/clear") {
-        layer.clear();
+        layer->clear();
     }
     else if (command == "/reset") {
-        layer.reset();
+        layer->reset();
     }
     else if (command == "/pos") {
-        handleVec3(&layer.pos, m);
+        handleVec3(&layer->pos, m);
     }
     else if (command == "/size") {
-        handleVec3(&layer.size, m);
+        handleVec3(&layer->size, m);
     }
     else if (command == "/rot") {
-        handleFloat(&layer.rotAngle, m);
+        handleFloat(&layer->rotAngle, m);
     }
     else if (command == "/rot/axis") {
-        handleVec3(&layer.rotAxis, m);
+        handleVec3(&layer->rotAxis, m);
     }
     else if (command == "/rot/speed") {
-        handleFloat(&layer.rotSpeed, m);
+        handleFloat(&layer->rotSpeed, m);
     }
     else if (command == "/scale") {
-        handleVec3(&layer.scale, m);
+        handleVec3(&layer->scale, m);
     }
     else if (command == "/color") {
-        handleColor(&layer.color, m);
+        handleColor(&layer->color, m);
     }
     else if (command == "/color/rand") {
-        layer.useRandomColor = m.getNumArgs() > 1 ? m.getArgAsBool(1) : !layer.useRandomColor;
+        layer->useRandomColor = m.getNumArgs() > 1 ? m.getArgAsBool(1) : !layer->useRandomColor;
     }
     else if (command == "/color/lerp") {
         ofFloatColor fromColor = parseColor(m, 2);
         ofFloatColor toColor = parseColor(m, 5);
         float perc = m.getArgAsFloat(1);
-        layer.color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
+        layer->color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
     }
     else if (command == "/color/mfcc") {
-        layer.useMFCCColor = m.getArgAsBool(1);
+        layer->useMFCCColor = m.getArgAsBool(1);
     }
     else if (command == "/data") {
         vector<string> ds;
         for (int i=1; i<m.getNumArgs(); i++) {
             ds.push_back(m.getArgAsString(i));
         }
-        layer.setDataSources(ds);
+        layer->setDataSources(ds);
     }
     else if (command == "/data/add") {
         vector<string> ds;
         for (int i=1; i<m.getNumArgs(); i++) {
             ds.push_back(m.getArgAsString(i));
         }
-        layer.addDataSources(ds);
+        layer->addDataSources(ds);
     }
     else if (command == "/unload") {
-        layer.unload();
+        layer->unload();
     }
     else if (command == "/speed") {
-        handleFloat(&layer.speed, m);
+        handleFloat(&layer->speed, m);
     }
     else if (command == "/behaviour") {
-        layer.behaviour = m.getArgAsInt(1);
+        layer->behaviour = m.getArgAsInt(1);
     }
     else if (command == "/aspectratio") {
-        layer.aspectRatio = m.getArgAsBool(1);
+        layer->aspectRatio = m.getArgAsBool(1);
     }
     else if (command == "/thresh") {
-        handleFloat(&layer.thresh, m);
+        handleFloat(&layer->thresh, m);
     }
     else if (command == "/thresh/onset" || command == "/onset/thresh") {
-        handleFloat(&layer.onsetThresh, m);
+        handleFloat(&layer->onsetThresh, m);
     }
     else if (command == "/blendmode") {
-        layer.blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+        layer->blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
     }
 }
 
@@ -397,7 +400,17 @@ void ofApp::processQueue() {
         ofxOscMessage &m = messageQueue[0];
         string command = m.getAddress();
         if (command == "/layout") {
-            layoutLayers(static_cast<Layout>(m.getArgAsInt(0)));
+            vector<Layer*> layers;
+            if (m.getNumArgs() > 1) {
+                layers.resize(m.getNumArgs()-1);
+                for (int i=0; i<m.getNumArgs()-1; i++) {
+                    layers[i] = this->layers[m.getArgAsInt(1+i)];
+                }
+            }
+            else {
+                layers = this->layers;
+            }
+            layoutLayers(static_cast<Layout>(m.getArgAsInt(0)), layers);
         }
         else if (command.substr(0, 4) == "/amp" || command.substr(0, 5) == "/loud") {
             auto [all, idx] = parseIndex(m);
@@ -536,8 +549,14 @@ void ofApp::draw(){
         post.begin();
     }
     ofClear(0, 0, 0, 0);
+    int totalVisible = 0;
     for (int i=0; i<layers.size(); i++) {
-        layers[i].draw();
+        if (layers[i]->data != NULL && layers[i]->data->visible) {
+            totalVisible++;
+        }
+    }
+    for (int i=0; i<layers.size(); i++) {
+        layers[i]->draw(totalVisible);
     }
     post.end();
     
@@ -545,10 +564,10 @@ void ofApp::draw(){
         ofPushStyle();
         for (int i=0; i<layers.size(); i++) {
             ofSetColor(255);
-            layers[i].draw(glm::vec3(20+i*120, ofGetHeight()-120, 0), glm::vec3(100, 100, 0));
-            if (layers[i].data != NULL && layers[i].data->values.size() > 0) {
+            layers[i]->draw(glm::vec3(20+i*120, ofGetHeight()-120, 0), glm::vec3(100, 100, 0));
+            if (layers[i]->data != NULL && layers[i]->data->values.size() > 0) {
                 ofFill();
-                ofDrawRectangle(20+i*120, ofGetHeight()-120, layers[i].data->values[0]*100.f, 10);
+                ofDrawRectangle(20+i*120, ofGetHeight()-120, layers[i]->data->values[0]*100.f, 10);
             }
         }
         ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
@@ -635,7 +654,7 @@ void ofApp::mouseExited(int x, int y){
 void ofApp::windowResized(int w, int h){
     fbo.allocate(ofGetWidth(), ofGetHeight());
     post.init(ofGetWidth(), ofGetHeight());
-    layoutLayers(layout);
+    layoutLayers(layout, layers);
 }
 
 //--------------------------------------------------------------
