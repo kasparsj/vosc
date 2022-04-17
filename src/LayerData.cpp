@@ -58,6 +58,7 @@ void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &not
                 }
                 if (values.size() > 0 && i == 0) {
                     onset = values[0] >= layer->onsetThresh;
+                    // trigger onset once - only when crossing thresh going up
                     if (onset && prevOnset) {
                         onset = false;
                         prevOnset = true;

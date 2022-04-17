@@ -774,6 +774,7 @@
 			children = (
 				298C5F9F580CD9596624E489 /* NoisySpirals.h */,
 				01455AAEF0E0EDFB4DEFABB5 /* WaveClock.h */,
+				E2EFCD7760CB41C97429D91E /* Spiral.h */,
 			);
 			name = sketches;
 			sourceTree = "<group>";
@@ -1088,7 +1089,6 @@
 				D668F2E5BEDA9E0D5669F52C /* sketches */,
 				ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */,
 				3E8911C6B8ABF8D32A950348 /* Sound.h */,
-				E2EFCD7760CB41C97429D91E /* Spiral.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
