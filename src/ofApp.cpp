@@ -15,8 +15,6 @@ void ofApp::setup(){
     windowResized(ofGetWidth(), ofGetHeight());
     
     cam.setPosition(0, 0, -870);
-    // todo: lazy init
-    HPV::InitHPVEngine();
 }
 
 void ofApp::setupSounds(int numInsts) {

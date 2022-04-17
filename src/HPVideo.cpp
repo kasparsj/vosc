@@ -16,6 +16,8 @@ vector<string> loadLocalHPVs()
 
 vector<string> HPVideo::cache = loadLocalHPVs();
 
+bool HPVideo::engineInitialized = false;
+
 string HPVideo::random() {
     return cache[int(ofRandom(cache.size()))];
 }

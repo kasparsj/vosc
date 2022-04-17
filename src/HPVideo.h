@@ -7,8 +7,12 @@ class HPVideo : public Gen {
 public:
     static vector<string> cache;
     static string random();
+    static bool engineInitialized;
     
     HPVideo(string name) : Gen(name) {
+        if (!engineInitialized) {
+            HPV::InitHPVEngine();
+        }
         hpvPlayer.init(HPV::NewPlayer());
     }
     ~HPVideo() {}
