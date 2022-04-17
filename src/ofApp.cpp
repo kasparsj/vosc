@@ -10,8 +10,8 @@ void ofApp::setup(){
 
     receiver.setup(33333);
 	tidal = new ofxTidalCycles(1);
-    setupSounds(MAX_SOUNDS);
-    setupLayers(MAX_VISUALS);
+    setupSounds(INITIAL_SOUNDS);
+    setupLayers(INITIAL_VISUALS);
     windowResized(ofGetWidth(), ofGetHeight());
     
     cam.setPosition(0, 0, -870);

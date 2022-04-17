@@ -2,8 +2,8 @@
 
 #include "ofMain.h"
 
-#define MAX_SOUNDS 2
-#define MAX_VISUALS 8
+#define INITIAL_SOUNDS 0
+#define INITIAL_VISUALS 8
 #define MAX_NOTES 10
 
 enum class Behaviour {
