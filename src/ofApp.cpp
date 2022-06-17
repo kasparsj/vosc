@@ -141,6 +141,9 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     string command = m.getAddress();
     if (command == "/sound/data") {
         int instNum = m.getArgAsInt(0);
+        if ((instNum+1) > sounds.size()) {
+            setupSounds(instNum+1);
+        }
         sounds[instNum].parse(m);
         if (waitOnset == -1) {
             waitOnset = 1;
