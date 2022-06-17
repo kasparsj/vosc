@@ -241,7 +241,7 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
             }
         }
         else {
-            handleFloat(&layer->timePct, m);
+            handlePercent(&layer->timePct, m);
         }
     }
     else if (command == "/reload") {
@@ -380,12 +380,34 @@ void ofApp::handleFloat(float *value, const ofxOscMessage &m) {
     }
 }
 
+void ofApp::handlePercent(float *value, const ofxOscMessage &m) {
+    if (m.getNumArgs() > 2) {
+        if (m.getNumArgs() > 3) {
+            createTween(value,
+                        m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1),
+                        m.getArgAsFloat(2) > 1.f ? m.getArgAsFloat(2) / 100.f : m.getArgAsFloat(2),
+                        m.getArgAsString(3));
+        }
+        else {
+            createTween(value,
+                        m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1),
+                        m.getArgAsFloat(2) > 1.f ? m.getArgAsFloat(2) / 100.f : m.getArgAsFloat(2));
+        }
+    }
+    else {
+        *value = m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1);
+    }
+}
+
 void ofApp::handleVec3(glm::vec3 *value, const ofxOscMessage &m) {
     if (m.getNumArgs() > 4) {
         createTween(value, glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsFloat(3)), m.getArgAsFloat(4));
     }
-    else {
+    else if (m.getNumArgs() > 2) {
         *value = glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 0);
+    }
+    else {
+        *value = glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(1), m.getArgAsFloat(1));
     }
 }
 

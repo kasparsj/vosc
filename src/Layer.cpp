@@ -121,6 +121,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
         ofPushStyle();
         ofSetColor(gen->getTint(this) * bri, alpha * 255);
         ofPushMatrix();
+        // todo: centering should be optional, also fix with scale
         ofTranslate(size.x/2.f, size.y/2.f);
         ofRotateDeg(rotAngle, rotAxis.x, rotAxis.y, rotAxis.z);
         ofScale(scale);

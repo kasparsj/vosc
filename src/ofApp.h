@@ -49,6 +49,7 @@ public:
     void allLayersCommand(string command, const ofxOscMessage &m);
     void soundCommand(Sound &sound, string command, const ofxOscMessage &m);
     void handleFloat(float *value, const ofxOscMessage &m);
+    void handlePercent(float *value, const ofxOscMessage &m);
     void handleVec3(glm::vec3 *value, const ofxOscMessage &m);
     void handleColor(ofFloatColor *value, const ofxOscMessage &m);
     void createTween(float *value, float target, float dur, ofxeasing::function ease);
