@@ -16,6 +16,14 @@ Setup layers.
 Arguments:
 - **numLayers** (int)
 - layout (int|string)
+Examples:
+```
+// sc
+~visuals.sendMsg('/layers', 9, "grid");
+9.do { |i|
+	~visuals.sendMsg('/load', i, "black_hole.jpeg");
+};
+```
 
 `"/layout"`
 Change layout.
