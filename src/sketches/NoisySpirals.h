@@ -48,7 +48,7 @@ public:
             }
             lastx=x;
             lasty=y;
-            ang += angleStep;
+            ang += (angleStep * layer->speed);
         }
     }
     
