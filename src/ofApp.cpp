@@ -254,10 +254,10 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         layer->noClear = m.getArgAsBool(1);
     }
     else if (command == "/bri") {
-        handleFloat(&layer->bri, m);
+        handlePercent(&layer->bri, m);
     }
     else if (command == "/alpha") {
-        handleFloat(&layer->alpha, m);
+        handlePercent(&layer->alpha, m);
     }
     else if (command == "/choose") {
         layer->choose(m.getNumArgs() > 1 ? m.getArgAsString(1) : "");
@@ -387,18 +387,18 @@ void ofApp::handlePercent(float *value, const ofxOscMessage &m) {
     if (m.getNumArgs() > 2) {
         if (m.getNumArgs() > 3) {
             createTween(value,
-                        m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1),
-                        m.getArgAsFloat(2) > 1.f ? m.getArgAsFloat(2) / 100.f : m.getArgAsFloat(2),
+                        m.getArgType(1) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1),
+                        m.getArgType(2) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(2) > 1.f ? m.getArgAsFloat(2) / 100.f : m.getArgAsFloat(2),
                         m.getArgAsString(3));
         }
         else {
             createTween(value,
-                        m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1),
-                        m.getArgAsFloat(2) > 1.f ? m.getArgAsFloat(2) / 100.f : m.getArgAsFloat(2));
+                        m.getArgType(1) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1),
+                        m.getArgType(2) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(2) > 1.f ? m.getArgAsFloat(2) / 100.f : m.getArgAsFloat(2));
         }
     }
     else {
-        *value = m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1);
+        *value = m.getArgType(1) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1);
     }
 }
 
