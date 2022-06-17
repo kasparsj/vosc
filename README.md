@@ -16,7 +16,8 @@ Arguments:
 Examples:
 ```
 // sc
-~visuals.sendMsg('/layers', 9, "grid");
+~visuals.sendMsg('/layers', 8); // initializes 8 layers with stack layout
+~visuals.sendMsg('/layers', 9, "grid"); // initializes 9 layers with grid layout
 9.do { |i|
 	~visuals.sendMsg('/load', i, "black_hole.jpeg");
 };
