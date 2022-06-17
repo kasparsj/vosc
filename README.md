@@ -14,6 +14,7 @@ OSC VJing software built on openFrameworks
 - `/choose` [Choose content at random](#choose)
 - `/pos` [Set layer position](#position)
 - `/size` [Set layer size](#size)
+- `/speed` [Set layer speed](#speed)
 - `/reset` [Reset layer](#reset)
 
 # Command reference
@@ -146,9 +147,26 @@ Examples:
 ~visuals.sendMsg('/pos', 0, 100, 150, 0, 1); // animate first layer position to w:100, h:150, over 1 second
 ```
 
+### Speed
+
+`"/speed"`
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **speed** (float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/speed', 0, 2); // speed up 2x first layer
+~visuals.sendMsg('/speed', 0, 0.5); // slow down 2x first layer
+~visuals.sendMsg('/speed', 0, 100); // speed up 100x first layer
+```
+
 ### Reset
 
 `"/reset"`
+
+Reset layer properties (position, size, speed)
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 
