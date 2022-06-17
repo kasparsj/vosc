@@ -18,6 +18,9 @@ OSC VJing software built on openFrameworks
 - `/size` [Set layer size](#size)
 - `/reset` [Reset layer](#reset)
 
+## Data
+- `/data` [Set layer data source](#data)
+
 ## Color
 - `/color` [Set layer color](#color)
 
@@ -197,6 +200,20 @@ Examples:
 ~visuals.sendMsg('/reset', 0); // reset first layers
 ```
 
+## Data
+
+### Data
+
+`"/data"`
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- [**datasource**](#datasource) (string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/data', 0, "loud:0"); // set first layer data source to channel 1 loudness
+```
+
 ## Color
 
 ### Color
@@ -271,3 +288,13 @@ Examples:
 - `"cylinder"`
 - `"plane"`
 - `"cone"`
+
+## Datasource
+- "const"
+- "rand"
+- "noise"
+- "sin"
+- "amp"
+- "loud"
+- "onset"
+- "tidal"
