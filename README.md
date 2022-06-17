@@ -23,6 +23,8 @@ OSC VJing software built on openFrameworks
 
 ## Color
 - `/color` [Set layer color](#color)
+- `/alpha` [Set layer alpha](#alpha)
+- `/bri` [Set layer brightness](#brightness)
 
 ## Time
 - `/speed` [Set layer speed](#speed)
@@ -238,6 +240,42 @@ Examples:
 ~visuals.sendMsg('/color', 0, "rand"); // tint first layer to random color
 ~visuals.sendMsg('/color', 0, "mfcc"); // map first layer tint to mfcc data as color
 ~visuals.sendMsg('/color', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // ting first layer to 10% between red and blue
+```
+
+### Alpha
+
+`"/alpha"`
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **alpha** (float)
+- duration (float)
+- easing (string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/alpha', 0, 1.0); // set first layer opacity to 100%
+~visuals.sendMsg('/alpha', 0, 100); // set first layer opacity to 100%
+~visuals.sendMsg('/alpha', 0, 0.5, 2); // animate first layer opacity to 50% over 2 seconds
+~visuals.sendMsg('/alpha', 0, 50, 2); // animate first layer opacity to 50% over 2 seconds
+~visuals.sendMsg('/alpha', 0, 10, 2, "expo"); // animate first layer opacity to 10% over 2 seconds with exponential easing
+```
+
+### Brightness
+
+`"/bri"`
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **bri** (float)
+- duration (float)
+- easing (string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/bri', 0, 1.0); // set first layer brightness to 100%
+~visuals.sendMsg('/bri', 0, 100); // set first layer brightness to 100%
+~visuals.sendMsg('/bri', 0, 0.5, 2); // animate first layer brightness to 50% over 2 seconds
+~visuals.sendMsg('/bri', 0, 50, 2); // animate first layer brightness to 50% over 2 seconds
+~visuals.sendMsg('/bri', 0, 10, 2, "expo"); // animate first layer brightness to 10% over 2 seconds with exponential easing
 ```
 
 ## Time
