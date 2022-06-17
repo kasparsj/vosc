@@ -100,7 +100,7 @@ Examples:
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
-- [**source**](#source) (string) source type
+- [source](#source) (string) source type
 
 Examples:
 ```supercollider
