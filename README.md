@@ -30,6 +30,12 @@ Arguments:
 - [**layout**](#layout) (int|string)
 - numLayers (int)
 
+Examples:
+```supercollider
+~visuals.sendMsg('/layout', 3); // change layout to grid
+~visuals.sendMsg('/layout', "grid"); // change layout to grid
+```
+
 ## Enumerations
 
 ### Layout
