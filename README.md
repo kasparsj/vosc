@@ -290,11 +290,11 @@ Examples:
 - `"cone"`
 
 ## Datasource
-- "const"
-- "rand"
-- "noise"
-- "sin"
-- "amp"
-- "loud"
-- "onset"
-- "tidal"
+- `"const"`
+- `"rand"`
+- `"noise"`
+- `"sin"`
+- `"amp"`
+- `"loud"`
+- `"onset"`
+- `"tidal"`
