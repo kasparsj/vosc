@@ -11,6 +11,7 @@ OSC VJing software built on openFrameworks
 - `/load` [Load content](#load)
 - `/reload` [Reload content](#reload)
 - `/unload` [Unload content](#unload)
+- `/choose` [Choose content at random](#choose)
 
 # Command reference
 
@@ -93,6 +94,21 @@ Examples:
 ~visuals.sendMsg('/load', "*", ""); // unload all layers
 ```
 
+### Choose
+
+`"/choose"`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- [**source**](#source) (string) source type
+
+Examples:
+```supercollider
+~visuals.sendMsg('/choose', 0, "3d"); // load random 3d mesh
+~visuals.sendMsg('/choose', 0, "video"); // load random video from library
+~visuals.sendMsg('/choose', 0, "image"); // load random image from library
+```
+
 ## Enumerations
 
 ### Layout
@@ -100,3 +116,19 @@ Examples:
 2. `"row"`
 3. `"grid"`
 4. `"stack"`
+
+### Source
+- `"3d"` [see 3d](#3d)
+- `"hpv"`
+- `"image"`
+- `"shader"`
+- `"sketch"`
+- `"video"`
+
+### 3d
+- `"box"`
+- `"sphere"`
+- `"icosphere"`
+- `"cylinder"`
+- `"plane"`
+- `"cone"`
