@@ -7,7 +7,7 @@ OSC VJing software built on openFrameworks
 - `/layers` [Setup layers](#setup-layers)
 - `/layout` [Change layout](#change-layout)
 
-## Content
+## Layer
 - `/load` [Load content](#load)
 - `/reload` [Reload content](#reload)
 - `/unload` [Unload content](#unload)
@@ -15,6 +15,10 @@ OSC VJing software built on openFrameworks
 - `/pos` [Set layer position](#position)
 - `/size` [Set layer size](#size)
 - `/reset` [Reset layer](#reset)
+
+## Time
+- `/speed` [Set layer speed](#speed)
+- `/seek` [Seek video layer](#seek)
 
 # Command reference
 
@@ -51,7 +55,7 @@ Examples:
 ~visuals.sendMsg('/layout', "grid"); // change layout to grid
 ```
 
-## Content
+## Layer
 
 ### Load
 
@@ -149,12 +153,48 @@ Examples:
 ### Reset
 
 `"/reset"`
+
+Reset layer properties (position, size, speed)
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 
 Examples:
 ```supercollider
 ~visuals.sendMsg('/reset', 0); // reset first layers
+```
+
+## Time
+
+### Speed
+
+`"/speed"`
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **speed** (float)
+- 
+Examples:
+```supercollider
+~visuals.sendMsg('/speed', 0, 2); // speed up 2x first layer
+~visuals.sendMsg('/speed', 0, 0.5); // slow down 2x first layer
+~visuals.sendMsg('/speed', 0, 100); // speed up 100x first layer
+~visuals.sendMsg('/speed', "*", 10); // speed up 10x all layers
+```
+
+### Seek
+
+`"/seek"`
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **time** (float|string) time position as percentage
+- duration (float)
+- easing (int)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/seek', 0, 0.5); // seek video to middle position
+~visuals.sendMsg('/seek', 0, 50); // seek video to middle position
+~visuals.sendMsg('/seek', 0, 0.25, 3); // animate video position to quarter of length in 3 seconds
 ```
 
 ## Enumerations
