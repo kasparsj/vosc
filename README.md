@@ -14,8 +14,7 @@ Arguments:
 - [layout](#layout) (int|string)
 
 Examples:
-```
-// sc
+```supercollider
 ~visuals.sendMsg('/layers', 8); // initializes 8 layers with stack layout
 ~visuals.sendMsg('/layers', 9, "grid"); // initializes 9 layers with grid layout
 9.do { |i|
