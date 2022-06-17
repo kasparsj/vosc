@@ -9,6 +9,7 @@ OSC VJing software built on openFrameworks
 
 ## Content
 - `/load` [Load content](#load)
+- `/unload` [Unload content](#unload)
 
 # Command reference
 
@@ -63,6 +64,20 @@ Examples:
 ~visuals.sendMsg('/load', 0, "DSC_0081.mov"); // load a movie into first layer
 ~visuals.sendMsg('/load', 0, "bbb_export.hpv"); // load high performance video into first layer
 ~visuals.sendMsg('/load', 0, ""); // unload first layer content
+```
+
+### Unload
+
+`"/unload"`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+
+Examples:
+```supercollider
+~visuals.sendMsg('/unload', "*"); // unload all layers
+// same as:
+~visuals.sendMsg('/load', "*", ""); // unload all layers
 ```
 
 ## Enumerations
