@@ -5,11 +5,17 @@ OSC VJing software built on openFrameworks
 
 ## Setup
 
+### Layouts
+1. `"col"`
+2. `"row"`
+3. `"grid"`
+4. `"stack"`
+
 `"/layers"`
 Setup layers.
 Arguments:
 - **numLayers** (int)
-- layers (int|string)
+- layout (int|string)
 
 `"/layout"`
 Change layout.
