@@ -12,6 +12,7 @@ OSC VJing software built on openFrameworks
 - `/reload` [Reload content](#reload)
 - `/unload` [Unload content](#unload)
 - `/choose` [Choose content at random](#choose)
+- `/pos` [Set content position](#position)
 
 # Command reference
 
@@ -107,6 +108,23 @@ Examples:
 ~visuals.sendMsg('/choose', 0, "3d"); // load random 3d mesh
 ~visuals.sendMsg('/choose', 0, "video"); // load random video from library
 ~visuals.sendMsg('/choose', 0, "image"); // load random image from library
+```
+
+### Position
+
+`"/pos"`
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **x** (float)
+- **y** (float)
+- z (float)
+- duration (float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/pos', 0, 100, 150); // offset first layer by x:100, y:150
+~visuals.sendMsg('/pos', 0, 100, 150, 200); // offset first layer by x:100, y:150, z:200
+~visuals.sendMsg('/pos', 0, 100, 150, 0, 1); // animate first layer position to x:100, y:150, over 1 second
 ```
 
 ## Enumerations
