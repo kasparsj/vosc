@@ -23,6 +23,8 @@ OSC VJing software built on openFrameworks
 
 ## Color
 - `/color` [Set layer color](#color)
+- `/alpha` [Set layer alpha](#alpha)
+- `/bri` [Set layer brightness](#brightness)
 
 ## Time
 - `/speed` [Set layer speed](#speed)
@@ -34,7 +36,7 @@ OSC VJing software built on openFrameworks
 
 ### Setup sounds
 
-`"/sounds"`
+`/sounds`
 
 Arguments:
 - **numChannels** (int)
@@ -47,7 +49,7 @@ Examples:
 
 ### Setup layers
 
-`"/layers"`
+`/layers`
 
 Arguments:
 - **numLayers** (int)
@@ -64,7 +66,7 @@ Examples:
 
 ### Change layout
 
-`"/layout"`
+`/layout`
 
 Arguments:
 - [**layout**](#layout) (int|string)
@@ -80,7 +82,7 @@ Examples:
 
 ### Load
 
-`"/load"`
+`/load`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -98,7 +100,7 @@ Examples:
 
 ### Reload
 
-`"/reload"`
+`/reload`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -110,7 +112,7 @@ Examples:
 
 ### Unload
 
-`"/unload"`
+`/unload`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -124,7 +126,7 @@ Examples:
 
 ### Choose
 
-`"/choose"`
+`/choose`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -139,7 +141,8 @@ Examples:
 
 ### Position
 
-`"/pos"`
+`/pos`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **x** (float)
@@ -156,7 +159,8 @@ Examples:
 
 ### Scale
 
-`"/scale"`
+`/scale`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **x** (float) width scale as percentage
@@ -171,7 +175,8 @@ Examples:
 
 ### Size
 
-`"/size"`
+`/size`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **w** (float) width
@@ -188,7 +193,7 @@ Examples:
 
 ### Reset
 
-`"/reset"`
+`/reset`
 
 Reset layer properties (position, size, speed)
 
@@ -204,7 +209,8 @@ Examples:
 
 ### Data
 
-`"/data"`
+`/data`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - [**datasource**](#datasource) (string)
@@ -226,7 +232,8 @@ Examples:
 
 ### Color
 
-`"/color"`
+`/color`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **r, g, b** or **function** (float, float, float or string)
@@ -240,11 +247,50 @@ Examples:
 ~visuals.sendMsg('/color', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // ting first layer to 10% between red and blue
 ```
 
+### Alpha
+
+`/alpha`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **alpha** (float)
+- duration (float)
+- easing (string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/alpha', 0, 1.0); // set first layer opacity to 100%
+~visuals.sendMsg('/alpha', 0, 100); // set first layer opacity to 100%
+~visuals.sendMsg('/alpha', 0, 0.5, 2); // animate first layer opacity to 50% over 2 seconds
+~visuals.sendMsg('/alpha', 0, 50, 2); // animate first layer opacity to 50% over 2 seconds
+~visuals.sendMsg('/alpha', 0, 10, 2, "expo"); // animate first layer opacity to 10% over 2 seconds with exponential easing
+```
+
+### Brightness
+
+`/bri`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **bri** (float)
+- duration (float)
+- easing (string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/bri', 0, 1.0); // set first layer brightness to 100%
+~visuals.sendMsg('/bri', 0, 100); // set first layer brightness to 100%
+~visuals.sendMsg('/bri', 0, 0.5, 2); // animate first layer brightness to 50% over 2 seconds
+~visuals.sendMsg('/bri', 0, 50, 2); // animate first layer brightness to 50% over 2 seconds
+~visuals.sendMsg('/bri', 0, 10, 2, "expo"); // animate first layer brightness to 10% over 2 seconds with exponential easing
+```
+
 ## Time
 
 ### Speed
 
-`"/speed"`
+`/speed`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **speed** (float)
@@ -259,7 +305,8 @@ Examples:
 
 ### Seek
 
-`"/seek"`
+`/seek`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **time** (float|string) time position as percentage
