@@ -52,8 +52,8 @@ Examples:
 `"/load"`
 
 Arguments:
-- **layer** (int)
-- content (string)
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- content (string) relative or absolute path or URL
 
 Examples:
 ```supercollider
