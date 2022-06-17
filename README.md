@@ -13,6 +13,7 @@ OSC VJing software built on openFrameworks
 - `/unload` [Unload content](#unload)
 - `/choose` [Choose content at random](#choose)
 - `/pos` [Set layer position](#position)
+- `/scale` [Set layer scale](#scale)
 - `/size` [Set layer size](#size)
 - `/reset` [Reset layer](#reset)
 
@@ -131,6 +132,21 @@ Examples:
 ~visuals.sendMsg('/pos', 0, 100, 150); // offset first layer by x:100, y:150
 ~visuals.sendMsg('/pos', 0, 100, 150, 200); // offset first layer by x:100, y:150, z:200
 ~visuals.sendMsg('/pos', 0, 100, 150, 0, 1); // animate first layer position to x:100, y:150, over 1 second
+```
+
+### Scale
+
+`"/scale"`
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **x** (float) width scale as percentage
+- **y** (float) height scale as percentage
+- **z** (float) depth scale as percentage
+- duration (float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/scale', 0, 2); // scale first layer 2x
 ```
 
 ### Size
