@@ -4,6 +4,7 @@ OSC VJing software built on openFrameworks
 # Command overview
 
 ## Setup
+- `/sounds` [Setup sounds](#setup-sounds)
 - `/layers` [Setup layers](#setup-layers)
 - `/layout` [Change layout](#change-layout)
 
@@ -27,6 +28,19 @@ OSC VJing software built on openFrameworks
 # Command reference
 
 ## Setup
+
+### Setup sounds
+
+`"/sounds"`
+
+Arguments:
+- **numChannels** (int)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/sounds', 1); // initializes 1 channel audio data listener
+~visuals.sendMsg('/sounds', 0); // deletes all audio data listeners
+```
 
 ### Setup layers
 
