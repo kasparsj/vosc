@@ -7,7 +7,7 @@ OSC VJing software built on openFrameworks
 - `/layers` [Setup layers](#setup-layers)
 - `/layout` [Change layout](#change-layout)
 
-## Content
+## Layer
 - `/load` [Load content](#load)
 - `/reload` [Reload content](#reload)
 - `/unload` [Unload content](#unload)
