@@ -1,7 +1,13 @@
 # osc_vj
 OSC VJing software built on openFrameworks
 
-# Commands
+# Command overview
+
+## Setup
+- `/layers` [Setup layers](#setup-layers)
+- `/layout` [Change layout](#change-layout)
+
+# Command reference
 
 ## Setup
 
