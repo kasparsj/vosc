@@ -211,7 +211,15 @@ Arguments:
 
 Examples:
 ```supercollider
+~visuals.sendMsg('/data', 0, "const"); // set first layer data source to constant 1
+~visuals.sendMsg('/data', 0, "const:23"); // set first layer data source to constant 23
+~visuals.sendMsg('/data', 0, "rand"); // set first layer data source to random
+~visuals.sendMsg('/data', 0, "rand:100"); // set first layer data source to random of 100
+~visuals.sendMsg('/data', 0, "noise"); // set first layer data source to perlin noise
+~visuals.sendMsg('/data', 0, "noise:50"); // set first layer data source to perlin noise of 50
 ~visuals.sendMsg('/data', 0, "loud:0"); // set first layer data source to channel 1 loudness
+~visuals.sendMsg('/data', 0, "amp:1"); // set first layer data source to channel 2 loudness
+// todo: perhaps allow setting loud & amp max values after second ":"
 ```
 
 ## Color
