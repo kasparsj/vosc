@@ -10,7 +10,7 @@ OSC VJing software built on openFrameworks
 `"/layers"`
 
 Arguments:
-- [**numLayers**](#layouts) (int)
+- [**numLayers**](#layout) (int)
 - layout (int|string)
 
 Examples:
@@ -27,7 +27,7 @@ Examples:
 `"/layout"`
 
 Arguments:
-- [**layout**](#layouts) (int|string)
+- [**layout**](#layout) (int|string)
 - numLayers (int)
 
 ## Enumerations
