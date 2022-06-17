@@ -121,6 +121,21 @@ void ofApp::parseMessages(){
     }
 }
 
+Layout parseLayout(const ofxOscMessage &m, int idx)
+{
+    Layout layout;
+    if (m.getArgType(idx) == 's') {
+        auto it = LayoutMap.find(m.getArgAsString(idx));
+        if (it != LayoutMap.end()) {
+            layout = it->second;
+        }
+    }
+    else {
+        layout = static_cast<Layout>(m.getArgAsInt(idx));
+    }
+    return layout;
+}
+
 void ofApp::parseMessage(const ofxOscMessage &m) {
     string command = m.getAddress();
     if (command == "/sound/data") {
@@ -148,7 +163,7 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     else if (command == "/layers") {
         setupLayers(m.getArgAsInt(0));
         if (m.getNumArgs() > 1) {
-            layoutLayers(static_cast<Layout>(m.getArgAsInt(1)), layers);
+            layoutLayers(parseLayout(m, 1), layers);
         }
     }
     else if (command == "/cam") {
@@ -427,7 +442,7 @@ void ofApp::processQueue() {
             else {
                 layers = this->layers;
             }
-            layoutLayers(static_cast<Layout>(m.getArgAsInt(0)), layers);
+            layoutLayers(parseLayout(m, 0), layers);
         }
         else if (command.substr(0, 4) == "/amp" || command.substr(0, 5) == "/loud") {
             auto [all, idx] = parseIndex(m);

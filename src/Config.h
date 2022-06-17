@@ -17,6 +17,13 @@ enum class Layout {
     STACK = 4,
 };
 
+static std::unordered_map<std::string, Layout> const LayoutMap = {
+    {"col", Layout::COLUMN},
+    {"row", Layout::ROW},
+    {"grid", Layout::GRID},
+    {"stack", Layout::STACK},
+};
+
 enum class Source {
     VIDEO,
     HPV,
