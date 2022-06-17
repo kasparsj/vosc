@@ -142,6 +142,7 @@ Examples:
 ### Position
 
 `/pos`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **x** (float)
@@ -159,6 +160,7 @@ Examples:
 ### Scale
 
 `/scale`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **x** (float) width scale as percentage
@@ -174,6 +176,7 @@ Examples:
 ### Size
 
 `/size`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **w** (float) width
@@ -207,6 +210,7 @@ Examples:
 ### Data
 
 `/data`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - [**datasource**](#datasource) (string)
@@ -229,6 +233,7 @@ Examples:
 ### Color
 
 `/color`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **r, g, b** or **function** (float, float, float or string)
@@ -245,6 +250,7 @@ Examples:
 ### Alpha
 
 `/alpha`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **alpha** (float)
@@ -263,6 +269,7 @@ Examples:
 ### Brightness
 
 `/bri`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **bri** (float)
@@ -283,6 +290,7 @@ Examples:
 ### Speed
 
 `/speed`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **speed** (float)
@@ -298,6 +306,7 @@ Examples:
 ### Seek
 
 `/seek`
+
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **time** (float|string) time position as percentage
