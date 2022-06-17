@@ -55,7 +55,7 @@ Examples:
 ~visuals.sendMsg('/layout', "grid"); // change layout to grid
 ```
 
-## Content
+## Layer
 
 ### Load
 
