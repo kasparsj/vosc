@@ -17,6 +17,9 @@ OSC VJing software built on openFrameworks
 - `/size` [Set layer size](#size)
 - `/reset` [Reset layer](#reset)
 
+## Color
+- `/color` [Set layer color](#color)
+
 ## Time
 - `/speed` [Set layer speed](#speed)
 - `/seek` [Seek video layer](#seek)
@@ -180,6 +183,24 @@ Examples:
 ~visuals.sendMsg('/reset', 0); // reset first layers
 ```
 
+## Color
+
+### Color
+
+`"/color"`
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **r, g, b** or **function** (float, float, float or string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/color', 0, 1.0, 0, 0); // tint first layer red
+~visuals.sendMsg('/color', 0, 255, 0, 0); // tint first layer red
+~visuals.sendMsg('/color', 0, "rand"); // tint first layer to random color
+~visuals.sendMsg('/color', 0, "mfcc"); // map first layer tint to mfcc data as color
+~visuals.sendMsg('/color', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // ting first layer to 10% between red and blue
+```
+
 ## Time
 
 ### Speed
@@ -188,7 +209,7 @@ Examples:
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **speed** (float)
-- 
+ 
 Examples:
 ```supercollider
 ~visuals.sendMsg('/speed', 0, 2); // speed up 2x first layer
