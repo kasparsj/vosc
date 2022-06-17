@@ -32,6 +32,7 @@ void ofApp::setupLayers(int numVisuals) {
 }
 
 void ofApp::layoutLayers(Layout layout, const vector<Layer*> &layers) {
+    this->layout = layout;
     for (int i=0; i<layers.size(); i++) {
         layers[i]->layout(layout, i, layers.size());
     }
@@ -256,7 +257,7 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         handleFloat(&layer->alpha, m);
     }
     else if (command == "/choose") {
-        layer->choose();
+        layer->choose(m.getNumArgs() > 1 ? m.getArgAsString(1) : "");
     }
     else if (command == "/clear") {
         layer->clear();
