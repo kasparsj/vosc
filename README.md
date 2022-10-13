@@ -192,9 +192,9 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/pos', 0, 100, 150); // resize first layer to w:100, h:150
-~visuals.sendMsg('/pos', 0, 100, 150, 200); // offset first layer by w:100, h:150, d:200
-~visuals.sendMsg('/pos', 0, 100, 150, 0, 1); // animate first layer position to w:100, h:150, over 1 second
+~visuals.sendMsg('/size', 0, 100, 150); // resize first layer to w:100, h:150
+~visuals.sendMsg('/size', 0, 100, 150, 200); // offset first layer by w:100, h:150, d:200
+~visuals.sendMsg('/size', 0, 100, 150, 0, 1); // animate first layer position to w:100, h:150, over 1 second
 ```
 
 ### Rotation
