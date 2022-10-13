@@ -31,7 +31,8 @@ enum class Source {
     SKETCH,
     IMAGE,
     THREE,
-    LAST = THREE,
+    WEBCAM,
+    LAST = WEBCAM,
 };
 
 static std::unordered_map<std::string, Source> const SourceMap = {
@@ -41,6 +42,7 @@ static std::unordered_map<std::string, Source> const SourceMap = {
     {"sketch", Source::SKETCH},
     {"image", Source::IMAGE},
     {"3d", Source::THREE},
+    {"webcam", Source::WEBCAM},
 };
 
 enum class DataSource {

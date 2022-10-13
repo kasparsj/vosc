@@ -5,6 +5,7 @@
 #include "Image.h"
 #include "Three.h"
 #include "HPVideo.h"
+#include "Webcam.h"
 
 Gen* Layer::factory(string type, string path) {
     Gen *gen = NULL;
@@ -28,6 +29,9 @@ Gen* Layer::factory(string type, string path) {
                 break;
             case Source::THREE:
                 gen = new Three(path);
+                break;
+            case Source::WEBCAM:
+                gen = new Webcam(path);
                 break;
         }
     }
@@ -63,6 +67,9 @@ Gen* Layer::factory(string source) {
                     break;
                 case Source::THREE:
                     path = Three::random();
+                    break;
+                case Source::WEBCAM:
+                    path = Webcam::random();
                     break;
             }
         }
