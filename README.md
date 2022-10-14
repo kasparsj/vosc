@@ -181,6 +181,7 @@ Examples:
 ~visuals.sendMsg('/scale', 0, 2); // scale first layer 2x
 ~visuals.sendMsg('/scale', 0, 2, 1); // scale width of first layer 2x
 ~visuals.sendMsg('/scale', 0, 2, 3, 1, 3); // scale width (2x) and height (3x) of first layer in 3 seconds tween
+~visuals.sendMsg('/scale', 0, -1, -1, 1); // flip first layer both on x and y axis
 ```
 
 ### Size
