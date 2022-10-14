@@ -371,6 +371,7 @@ Examples:
 - `"shader"`
 - `"sketch"`
 - `"video"`
+- `"webcam"`
 
 ### 3d
 - `"box"`
