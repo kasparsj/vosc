@@ -32,6 +32,7 @@ OSC VJing software built on openFrameworks
 - `/bri` [Set layer brightness](#brightness)
 
 ## Time
+- `/looper` [Activate layer looper](#looper)
 - `/speed` [Set layer speed](#speed)
 - `/seek` [Seek video layer](#seek)
 
@@ -181,6 +182,7 @@ Examples:
 ~visuals.sendMsg('/scale', 0, 2); // scale first layer 2x
 ~visuals.sendMsg('/scale', 0, 2, 1); // scale width of first layer 2x
 ~visuals.sendMsg('/scale', 0, 2, 3, 1, 3); // scale width (2x) and height (3x) of first layer in 3 seconds tween
+~visuals.sendMsg('/scale', 0, -1, -1, 1); // flip first layer both on x and y axis
 ```
 
 ### Size
@@ -343,6 +345,22 @@ Examples:
 ```
 
 ## Time
+
+### Looper
+
+`/looper`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **duration** (float) seconds
+- fps (int) fps
+- speed (float) speed
+
+Examples:
+```supercollider
+~visuals.sendMsg('/looper', 0, 10, 30, 2); // enable looper 10 seconds durations, 30 fps, double speed
+~visuals.sendMsg('/looper', 0, 0); // disable looper
+```
 
 ### Speed
 
