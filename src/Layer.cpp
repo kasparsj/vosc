@@ -121,6 +121,13 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
     if (gen != NULL) {
         gen->update(this);
     }
+    if (looper != NULL) {
+        looper->swapBuffers(/*forceSwap*/);
+        if (gen->isFrameNew()){
+            looper->addFrame(gen->getPixels());
+        }
+        looper->update();
+    }
 }
 
 void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
@@ -161,7 +168,13 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
             ofTranslate(0, 0, -scale.z * size.z);
         }
         ofScale(scale);
-        gen->draw(pos, size);
+        if (looper == NULL) {
+            gen->draw(pos, size);
+        }
+        else {
+            ofSetColor(255);
+            looper->draw(pos.x, pos.y, size.x, size.y);
+        }
         ofPopMatrix();
         ofPopStyle();
     }

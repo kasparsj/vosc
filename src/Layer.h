@@ -6,6 +6,7 @@
 #include "Config.h"
 #include "LayerData.h"
 #include "Gen.h"
+#include "ofxLooper.h"
 
 class Layer {
 public:
@@ -42,8 +43,9 @@ public:
     }
     
     int index;
-    LayerData *data = NULL;
-    Gen *gen = NULL;
+    LayerData* data = NULL;
+    Gen* gen = NULL;
+    ofxLooper* looper = NULL;
     glm::vec3 pos;
     glm::vec3 size;
     glm::vec3 rotation = glm::vec3(0, 0, 0);

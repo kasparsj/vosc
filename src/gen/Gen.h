@@ -18,6 +18,10 @@ public:
     virtual ofFloatColor getTint(Layer *layer) {
         return ofFloatColor(1);
     }
+    virtual bool isFrameNew() {
+        return true;
+    }
+    virtual ofPixels& getPixels() = 0;
 
     string path = "";
     string prevPath = "";

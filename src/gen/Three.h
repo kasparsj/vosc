@@ -18,7 +18,12 @@ public:
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
     void choose() override;
     ofFloatColor getTint(Layer *layer) override;
+    ofPixels& getPixels() override {
+        // todo: not implemented
+        return pixels;
+    }
 
 private:
     of3dPrimitive *primitive = NULL;
+    ofPixels pixels;
 };

@@ -1,6 +1,7 @@
 ofxColorTheory
 ofxEasing
 ofxHPVPlayer
+ofxLooper
 ofxOsc
 ofxPostProcessing
 ofxTidalCycles

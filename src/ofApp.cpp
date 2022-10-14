@@ -392,6 +392,26 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     else if (command == "/speed") {
         handleFloat(&layer->speed, m);
     }
+    else if (command == "/looper") {
+        if (m.getArgAsFloat(1) == 0) {
+            delete layer->looper;
+            layer->looper = NULL;
+        }
+        else {
+            float maxDuration = m.getArgAsFloat(1);
+            int fps = m.getNumArgs() > 2 ? m.getArgAsInt(2) : 30;
+            int speed = m.getNumArgs() > 3 ? m.getArgAsInt(3) : 2.0;
+            if (layer->looper == NULL) {
+                layer->looper = new ofxLooper();
+                layer->looper->setup(maxDuration, fps, speed);
+            }
+            else {
+                layer->looper->setMaxDuration(maxDuration);
+                layer->looper->setFps(fps);
+                layer->looper->setPlaySpeed(speed);
+            }
+        }
+    }
     else if (command == "/behaviour") {
         layer->behaviour = m.getArgAsInt(1);
     }

@@ -15,6 +15,12 @@ public:
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
     void choose() override;
     ofFloatColor getTint(Layer *layer) override;
+    bool isFrameNew() override {
+        return vidGrabber.isFrameNew();
+    }
+    ofPixels& getPixels() override {
+        return vidGrabber.getPixels();
+    }
 
 private:
     ofVideoGrabber vidGrabber;
