@@ -21,9 +21,9 @@ OSC VJing software built on openFrameworks
 - `/pos` [Set layer position](#position)
 - `/scale` [Set layer scale](#scale)
 - `/size` [Set layer size](#size)
-- `/rotation` [Set layer rotation](#rotation)
-- `/rotation/point` [Set layer rotation point](#rotation-point)
-- `/rotation/speed` [Set layer rotation speed](#rotation-speed)
+- `/rot` [Set layer rotation](#rotation)
+- `/rot/point` [Set layer rotation point](#rotation-point)
+- `/rot/speed` [Set layer rotation speed](#rotation-speed)
 - `/reset` [Reset layer](#reset)
 
 ## Color
@@ -203,7 +203,7 @@ Examples:
 
 ### Rotation
 
-`/rotation`
+`/rot`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -214,13 +214,13 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/rotation', 0, 0, 0, 90); // set first layer rotation to 90 on the z axis
-~visuals.sendMsg('/rotation', 0, 0, 0, 360, 10); // animate first layer rotation to 360 on the x axis
+~visuals.sendMsg('/rot', 0, 0, 0, 90); // set first layer rotation to 90 on the z axis
+~visuals.sendMsg('/rot', 0, 0, 0, 360, 10); // animate first layer rotation to 360 on the x axis
 ```
 
 ### Rotation point
 
-`/rotation/point`
+`/rot/point`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -229,13 +229,13 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/rotation/point', 0, 0.5, 0.5); // set first layer rotation point to center
-~visuals.sendMsg('/rotation/point', 0, "center"); // set first layer rotation point to center
+~visuals.sendMsg('/rot/point', 0, 0.5, 0.5); // set first layer rotation point to center
+~visuals.sendMsg('/rot/point', 0, "center"); // set first layer rotation point to center
 ```
 
 ### Rotation speed
 
-`/rotation/speed`
+`/rot/speed`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -244,8 +244,8 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/rotation/speed', 0, 100); // set first layer rotation speed to 1 degree
-~visuals.sendMsg('/rotation/speed', 0, 360, 2); // increase first layer rotation speed to 360 degrees over 2 seconds
+~visuals.sendMsg('/rot/speed', 0, 100); // set first layer rotation speed to 1 degree
+~visuals.sendMsg('/rot/speed', 0, 360, 2); // increase first layer rotation speed to 360 degrees over 2 seconds
 ```
 
 ### Reset

@@ -274,13 +274,13 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     else if (command == "/size") {
         handleVec3(&layer->size, m);
     }
-    else if (command == "/rotation") {
+    else if (command == "/rot") {
         handleVec3(&layer->rotation, m);
     }
-    else if (command == "/rotation/speed") {
+    else if (command == "/rot/speed") {
         handleFloat(&layer->rotationSpeed, m);
     }
-    else if (command == "/rotation/point") {
+    else if (command == "/rot/point") {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
             string argH = m.getArgAsString(1);
             string argV = m.getNumArgs() > 2 ? m.getArgAsString(2) : argH;

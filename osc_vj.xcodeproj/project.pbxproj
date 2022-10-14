@@ -247,6 +247,7 @@
 		2B11413C285C6CE900C9530D /* ZebraH.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ZebraH.frag; sourceTree = "<group>"; };
 		2B56DBC128F8A979002F9E9A /* Webcam.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Webcam.cpp; path = gen/Webcam.cpp; sourceTree = "<group>"; };
 		2B56DBC228F8A979002F9E9A /* Webcam.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Webcam.h; path = gen/Webcam.h; sourceTree = "<group>"; };
+		2B70702828F9DC6300F4172E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		2BB3695E280CAD3D00C50B92 /* HPVideo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HPVideo.cpp; sourceTree = "<group>"; };
 		2BB3695F280CAD3D00C50B92 /* HPVideo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HPVideo.h; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
@@ -1348,6 +1349,7 @@
 		E4B69B4A0A3A1720003C02F2 = {
 			isa = PBXGroup;
 			children = (
+				2B70702828F9DC6300F4172E /* README.md */,
 				2B1140C5285C6CE900C9530D /* bin */,
 				E4B6FCAD0C3E899E008CF71C /* openFrameworks-Info.plist */,
 				E4EB6923138AFD0F00A09F29 /* Project.xcconfig */,
