@@ -23,6 +23,7 @@ OSC VJing software built on openFrameworks
 - `/size` [Set layer size](#size)
 - `/rot` [Set layer rotation](#rotation)
 - `/rot/speed` [Set layer rotation speed](#rotation-speed)
+- `/rot/axis` [Set layer rotation axis](#rotation-axis)
 - `/reset` [Reset layer](#reset)
 
 ## Color
@@ -213,6 +214,21 @@ Examples:
 ```supercollider
 ~visuals.sendMsg('/rot', 0, 100); // set first layer rotation to 100 degrees
 ~visuals.sendMsg('/rot', 0, 360, 2); // animate first layer rotation to 360 degrees over 2 seconds
+```
+
+### Rotation axis
+
+`/rot/axis`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **x** (float) x axis rotation multiplier (usually 0 or 1)
+- **y** (float) y axis rotation multiplier (usually 0 or 1)
+- **z** (float) z axis rotation multiplier (usually 0 or 1)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/rot/axis', 0, 1, 0, 0); // set first layer rotation axis to the x axis
 ```
 
 ### Rotation speed
