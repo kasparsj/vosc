@@ -8,18 +8,22 @@ OSC VJing software built on openFrameworks
 - `/layers` [Setup layers](#setup-layers)
 - `/layout` [Change layout](#change-layout)
 
-## Layer
+## Content
 - `/load` [Load content](#load)
 - `/reload` [Reload content](#reload)
 - `/unload` [Unload content](#unload)
 - `/choose` [Choose content at random](#choose)
-- `/pos` [Set layer position](#position)
-- `/scale` [Set layer scale](#scale)
-- `/size` [Set layer size](#size)
-- `/reset` [Reset layer](#reset)
 
 ## Data
 - `/data` [Set layer data source](#data)
+
+## Transform
+- `/pos` [Set layer position](#position)
+- `/scale` [Set layer scale](#scale)
+- `/size` [Set layer size](#size)
+- `/rot` [Set layer rotation](#rotation)
+- `/rot/speed` [Set layer rotation speed](#rotation-speed)
+- `/reset` [Reset layer](#reset)
 
 ## Color
 - `/color` [Set layer color](#color)
@@ -78,7 +82,7 @@ Examples:
 ~visuals.sendMsg('/layout', "grid"); // change layout to grid
 ```
 
-## Layer
+## Content
 
 ### Load
 
@@ -95,6 +99,7 @@ Examples:
 ~visuals.sendMsg('/load', 0, "NoisySpirals"); // load a c++ sketch into first layer
 ~visuals.sendMsg('/load', 0, "DSC_0081.mov"); // load a movie into first layer
 ~visuals.sendMsg('/load', 0, "bbb_export.hpv"); // load high performance video into first layer
+~visuals.sendMsg('/load', 0, "webcam:0"); // load first webcam device into first layer
 ~visuals.sendMsg('/load', 0, ""); // unload first layer content
 ```
 
@@ -138,6 +143,8 @@ Examples:
 ~visuals.sendMsg('/choose', 0, "video"); // load random video from library
 ~visuals.sendMsg('/choose', 0, "image"); // load random image from library
 ```
+
+## Transform
 
 ### Position
 
@@ -186,9 +193,39 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/pos', 0, 100, 150); // resize first layer to w:100, h:150
-~visuals.sendMsg('/pos', 0, 100, 150, 200); // offset first layer by w:100, h:150, d:200
-~visuals.sendMsg('/pos', 0, 100, 150, 0, 1); // animate first layer position to w:100, h:150, over 1 second
+~visuals.sendMsg('/size', 0, 100, 150); // resize first layer to w:100, h:150
+~visuals.sendMsg('/size', 0, 100, 150, 200); // offset first layer by w:100, h:150, d:200
+~visuals.sendMsg('/size', 0, 100, 150, 0, 1); // animate first layer position to w:100, h:150, over 1 second
+```
+
+### Rotation
+
+`/rot`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **angle** (float) angle in degrees
+- duration (float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/rot', 0, 100); // set first layer rotation to 100 degrees
+~visuals.sendMsg('/rot', 0, 360, 2); // animate first layer rotation to 360 degrees over 2 seconds
+```
+
+### Rotation speed
+
+`/rot/speed`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **angle** (float)
+- duration (float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/rot/speed', 0, 100); // set first layer rotation speed to 1 degree
+~visuals.sendMsg('/rot/speed', 0, 360, 2); // increase first layer rotation speed to 360 degrees over 2 seconds
 ```
 
 ### Reset
@@ -335,6 +372,7 @@ Examples:
 - `"shader"`
 - `"sketch"`
 - `"video"`
+- `"webcam"`
 
 ### 3d
 - `"box"`
