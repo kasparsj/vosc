@@ -99,6 +99,7 @@ Examples:
 ~visuals.sendMsg('/load', 0, "NoisySpirals"); // load a c++ sketch into first layer
 ~visuals.sendMsg('/load', 0, "DSC_0081.mov"); // load a movie into first layer
 ~visuals.sendMsg('/load', 0, "bbb_export.hpv"); // load high performance video into first layer
+~visuals.sendMsg('/load', 0, "webcam:0"); // load first webcam device into first layer
 ~visuals.sendMsg('/load', 0, ""); // unload first layer content
 ```
 
