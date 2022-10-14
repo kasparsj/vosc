@@ -32,6 +32,7 @@ OSC VJing software built on openFrameworks
 - `/bri` [Set layer brightness](#brightness)
 
 ## Time
+- `/looper` [Activate layer looper](#looper)
 - `/speed` [Set layer speed](#speed)
 - `/seek` [Seek video layer](#seek)
 
@@ -344,6 +345,21 @@ Examples:
 ```
 
 ## Time
+
+### Looper
+
+`/looper`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **duration** (float) seconds
+- **fps** (int) fps
+- **speed** (float) speed
+
+Examples:
+```supercollider
+~visuals.sendMsg('/looper', 0, 10, 30, 2);
+```
 
 ### Speed
 
