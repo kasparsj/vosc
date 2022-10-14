@@ -21,9 +21,9 @@ OSC VJing software built on openFrameworks
 - `/pos` [Set layer position](#position)
 - `/scale` [Set layer scale](#scale)
 - `/size` [Set layer size](#size)
-- `/rot` [Set layer rotation](#rotation)
-- `/rot/speed` [Set layer rotation speed](#rotation-speed)
-- `/rot/axis` [Set layer rotation axis](#rotation-axis)
+- `/rotation` [Set layer rotation](#rotation)
+- `/rotation/point` [Set layer rotation point](#rotation-point)
+- `/rotation/speed` [Set layer rotation speed](#rotation-speed)
 - `/reset` [Reset layer](#reset)
 
 ## Color
@@ -203,37 +203,39 @@ Examples:
 
 ### Rotation
 
-`/rot`
-
-Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- **angle** (float) angle in degrees
-- duration (float)
-
-Examples:
-```supercollider
-~visuals.sendMsg('/rot', 0, 100); // set first layer rotation to 100 degrees
-~visuals.sendMsg('/rot', 0, 360, 2); // animate first layer rotation to 360 degrees over 2 seconds
-```
-
-### Rotation axis
-
-`/rot/axis`
+`/rotation`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **x** (float) x axis rotation multiplier (usually 0 or 1)
 - **y** (float) y axis rotation multiplier (usually 0 or 1)
 - **z** (float) z axis rotation multiplier (usually 0 or 1)
+- duration (float)
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/rot/axis', 0, 1, 0, 0); // set first layer rotation axis to the x axis
+~visuals.sendMsg('/rotation', 0, 0, 0, 90); // set first layer rotation to 90 on the z axis
+~visuals.sendMsg('/rotation', 0, 0, 0, 360, 10); // animate first layer rotation to 360 on the x axis
+```
+
+### Rotation point
+
+`/rotation/point`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **x** (float|string) x axis rotation point (0 to 1)
+- **y** (float|string) y axis rotation point (0 to 1)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/rotation/point', 0, 0.5, 0.5); // set first layer rotation point to center
+~visuals.sendMsg('/rotation/point', 0, "center"); // set first layer rotation point to center
 ```
 
 ### Rotation speed
 
-`/rot/speed`
+`/rotation/speed`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -242,8 +244,8 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/rot/speed', 0, 100); // set first layer rotation speed to 1 degree
-~visuals.sendMsg('/rot/speed', 0, 360, 2); // increase first layer rotation speed to 360 degrees over 2 seconds
+~visuals.sendMsg('/rotation/speed', 0, 100); // set first layer rotation speed to 1 degree
+~visuals.sendMsg('/rotation/speed', 0, 360, 2); // increase first layer rotation speed to 360 degrees over 2 seconds
 ```
 
 ### Reset
