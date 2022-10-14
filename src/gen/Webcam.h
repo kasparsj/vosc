@@ -8,7 +8,9 @@ public:
     static int random();
     
     Webcam(string path) : Gen(path) {}
-    ~Webcam() {}
+    ~Webcam() {
+        vidGrabber.close();
+    }
     void update(Layer *layer) override;
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
     void choose() override;

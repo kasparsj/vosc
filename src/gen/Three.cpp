@@ -32,7 +32,7 @@ void Three::update(Layer *layer) {
             primitive = new ofConePrimitive();
         }
         if (primitive == NULL) {
-            ofLog() << "could not load image: " << path;
+            ofLog() << "could not load 3d: " << path;
             path = prevPath;
             return;
         }
@@ -45,9 +45,11 @@ void Three::update(Layer *layer) {
 }
 
 void Three::draw(const glm::vec3 &pos, const glm::vec3 &size) {
-    primitive->setPosition(pos);
-    //primitive->setScale(size);
-    primitive->draw();
+    if (primitive != NULL) {
+        primitive->setPosition(pos);
+        //primitive->setScale(size);
+        primitive->draw();
+    }
 }
 
 void Three::choose() {

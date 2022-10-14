@@ -80,7 +80,7 @@ void Shader::update(Layer *layer) {
 }
 
 void Shader::draw(const glm::vec3 &pos, const glm::vec3 &size) {
-    fbo.draw(pos - size/2.f, size.x, size.y);
+    fbo.draw(pos, size.x, size.y);
 }
 
 void Shader::choose() {

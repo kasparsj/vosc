@@ -274,17 +274,73 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     else if (command == "/size") {
         handleVec3(&layer->size, m);
     }
-    else if (command == "/rot") {
-        handleFloat(&layer->rotAngle, m);
+    else if (command == "/rotation") {
+        handleVec3(&layer->rotation, m);
     }
-    else if (command == "/rot/axis") {
-        handleVec3(&layer->rotAxis, m);
+    else if (command == "/rotation/speed") {
+        handleFloat(&layer->rotationSpeed, m);
     }
-    else if (command == "/rot/speed") {
-        handleFloat(&layer->rotSpeed, m);
+    else if (command == "/rotation/point") {
+        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            string argH = m.getArgAsString(1);
+            string argV = m.getNumArgs() > 2 ? m.getArgAsString(2) : argH;
+            if (argH == "center") {
+                layer->rotationPoint.x = 0.5f;
+            }
+            else if (argH == "left") {
+                layer->rotationPoint.x = 0.f;
+            }
+            else if (argH == "right") {
+                layer->rotationPoint.x = 1.f;
+            }
+            if (argV == "center") {
+                layer->rotationPoint.y = 0.5f;
+            }
+            else if (argV == "top") {
+                layer->rotationPoint.y = 0.f;
+            }
+            else if (argV == "bottom") {
+                layer->rotationPoint.y = 1.f;
+            }
+        }
+        else {
+            handleVec3(&layer->rotationPoint, m);
+        }
     }
     else if (command == "/scale") {
         handleVec3(&layer->scale, m);
+    }
+    else if (command == "/align") {
+        ofAlignHorz alignH;
+        ofAlignVert alignV;
+        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            string argH = m.getArgAsString(1);
+            string argV = m.getNumArgs() > 2 ? m.getArgAsString(2) : argH;
+            if (argH == "center") {
+                alignH = OF_ALIGN_HORZ_CENTER;
+            }
+            else if (argH == "left") {
+                alignH = OF_ALIGN_HORZ_LEFT;
+            }
+            else if (argH == "right") {
+                alignH = OF_ALIGN_HORZ_RIGHT;
+            }
+            if (argV == "center") {
+                alignV = OF_ALIGN_VERT_CENTER;
+            }
+            else if (argV == "top") {
+                alignV = OF_ALIGN_VERT_TOP;
+            }
+            else if (argV == "bottom") {
+                alignV = OF_ALIGN_VERT_BOTTOM;
+            }
+        }
+        else {
+            alignH = static_cast<ofAlignHorz>(m.getArgAsInt(1));
+            alignV = static_cast<ofAlignVert>(m.getNumArgs() > 2 ? m.getArgAsInt(2) : m.getArgAsInt(1) * 16);
+        }
+        layer->alignH = alignH;
+        layer->alignV = alignV;
     }
     else if (command == "/color") {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {

@@ -29,7 +29,7 @@ void Webcam::update(Layer *layer) {
 void Webcam::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     ofPushStyle();
     ofSetColor(255);
-    vidGrabber.draw(pos.x-size.x/2.f, pos.y-size.y/2.f, size.x, size.y);
+    vidGrabber.draw(pos.x, pos.y, size.x, size.y);
     ofPopStyle();
 }
 

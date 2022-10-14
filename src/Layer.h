@@ -46,11 +46,13 @@ public:
     Gen *gen = NULL;
     glm::vec3 pos;
     glm::vec3 size;
-    float rotAngle = 0;
-    glm::vec3 rotAxis = glm::vec3(0, 1, 0);
-    float rotSpeed = 0;
+    glm::vec3 rotation = glm::vec3(0, 0, 0);
+    glm::vec3 rotationPoint = glm::vec3(0, 0, 0);
+    float rotationSpeed = 0;
     glm::vec3 scale = glm::vec3(1);
     ofFloatColor color = ofFloatColor(0, 0);
+    ofAlignHorz alignH;
+    ofAlignVert alignV;
     float speed = 1.f;
     int behaviour = -1;
     float bri = 1.0;

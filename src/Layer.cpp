@@ -114,7 +114,7 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
     if (data != NULL) {
         data->update(sounds, notes);
     }
-    rotAngle += rotSpeed;
+    rotation += rotationSpeed;
     if (useRandomColor) {
         color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
     }
@@ -128,9 +128,38 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
         ofPushStyle();
         ofSetColor(gen->getTint(this) * bri, alpha * 255);
         ofPushMatrix();
-        // todo: centering should be optional, also fix with scale
-        ofTranslate(size.x/2.f, size.y/2.f);
-        ofRotateDeg(rotAngle, rotAxis.x, rotAxis.y, rotAxis.z);
+        switch (alignH) {
+            case OF_ALIGN_HORZ_CENTER:
+                ofTranslate(ofGetWidth()/2.f - size.x * abs(scale.x) / 2.f, 0);
+                break;
+            case OF_ALIGN_HORZ_RIGHT:
+                ofTranslate(ofGetWidth() - size.x * abs(scale.x), 0);
+                break;
+        }
+        switch (alignV) {
+            case OF_ALIGN_VERT_CENTER:
+                ofTranslate(0, ofGetHeight()/2.f - size.y * abs(scale.y) / 2.f);
+                break;
+            case OF_ALIGN_VERT_BOTTOM:
+                ofTranslate(0, ofGetHeight() - size.y * abs(scale.y));
+                break;
+        }
+        float degrees = glm::length(rotation);
+        if (degrees != 0) {
+            glm::vec3 axis = glm::normalize(rotation);
+            ofTranslate(rotationPoint.x * size.x * abs(scale.x), rotationPoint.y * size.y * abs(scale.y));
+            ofRotateDeg(degrees, axis.x, axis.y, axis.z);
+            ofTranslate(-rotationPoint.x * size.x * abs(scale.x), -rotationPoint.y * size.y * abs(scale.y));
+        }
+        if (scale.x < 0) {
+            ofTranslate(-scale.x * size.x, 0);
+        }
+        if (scale.y < 0) {
+            ofTranslate(0, -scale.y * size.y);
+        }
+        if (scale.z < 0) {
+            ofTranslate(0, 0, -scale.z * size.z);
+        }
         ofScale(scale);
         gen->draw(pos, size);
         ofPopMatrix();
@@ -280,8 +309,7 @@ void Layer::resetTransform() {
     alpha = 1.f;
     bri = 1.f;
     color = ofFloatColor(0, 0);
-    rotAngle = 0;
-    rotAxis = glm::vec3(0, 1, 0);
-    rotSpeed = 0;
+    rotation = glm::vec3(0, 0, 0);
+    rotationSpeed = 0;
     scale = glm::vec3(1);
 }

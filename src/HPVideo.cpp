@@ -59,17 +59,16 @@ void HPVideo::seek(float pct) {
 }
 
 void HPVideo::draw(const glm::vec3 &pos, const glm::vec3 &size) {
-    const glm::vec3 posCenter = pos - size/2.f;
     if (aspectRatio) {
         if (hpvPlayer.getWidth() > hpvPlayer.getHeight()) {
-            hpvPlayer.draw(posCenter.x, posCenter.y, size.x, size.x/hpvPlayer.getWidth() * hpvPlayer.getHeight());
+            hpvPlayer.draw(pos.x, pos.y, size.x, size.x/hpvPlayer.getWidth() * hpvPlayer.getHeight());
         }
         else {
-            hpvPlayer.draw(posCenter.x, posCenter.y, size.y/hpvPlayer.getHeight() * hpvPlayer.getWidth(), size.y);
+            hpvPlayer.draw(pos.x, pos.y, size.y/hpvPlayer.getHeight() * hpvPlayer.getWidth(), size.y);
         }
     }
     else {
-        hpvPlayer.draw(posCenter.x, posCenter.y, size.x, size.y);
+        hpvPlayer.draw(pos.x, pos.y, size.x, size.y);
     }
 }
 

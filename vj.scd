@@ -84,9 +84,10 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/loud/max', "*", 32);
 ~visuals.sendMsg('/amp/max', "*", 0.1);
 
-~visuals.sendMsg('/speed', "*", 0.5);
+~visuals.sendMsg('/speed', "*", 0.1);
 ~visuals.sendMsg('/choose', "*", "shader");
 ~visuals.sendMsg('/reload', "*");
+~visuals.sendMsg('/unload', "*");
 ~visuals.sendMsg('/noclear', "*", true);
 ~visuals.sendMsg('/load', 0, "OscCircle.frag");
 ~visuals.sendMsg('/load', 0, "NoisySpirals");
@@ -208,8 +209,8 @@ var secs = 10;
 ~visuals.sendMsg('/load', 2, "box");
 ~visuals.sendMsg('/load', 2, "cylinder");
 ~visuals.sendMsg('/load', 2, "cone");
-~visuals.sendMsg('/rot', 2, 360, 1);
-~visuals.sendMsg('/rot/speed', 2, 1);
+~visuals.sendMsg('/rotation', 2, 360, 1);
+~visuals.sendMsg('/rotation/speed', 2, 1);
 ~visuals.sendMsg('/scale', 2, 0.2, 0.2, 0.2, 1);
 
 (
