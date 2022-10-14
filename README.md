@@ -353,12 +353,13 @@ Examples:
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 - **duration** (float) seconds
-- **fps** (int) fps
-- **speed** (float) speed
+- fps (int) fps
+- speed (float) speed
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/looper', 0, 10, 30, 2);
+~visuals.sendMsg('/looper', 0, 10, 30, 2); // enable looper 10 seconds durations, 30 fps, double speed
+~visuals.sendMsg('/looper', 0, 0); // disable looper
 ```
 
 ### Speed
