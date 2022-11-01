@@ -278,7 +278,7 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         handleVec3(&layer->rotation, m);
     }
     else if (command == "/rot/speed") {
-        handleFloat(&layer->rotationSpeed, m);
+        handleVec3(&layer->rotationSpeed, m);
     }
     else if (command == "/rot/point") {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
@@ -411,6 +411,9 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
                 layer->looper->setPlaySpeed(speed);
             }
         }
+    }
+    else if (command == "/delay") {
+        layer->delay = m.getArgAsFloat(1);
     }
     else if (command == "/behaviour") {
         layer->behaviour = m.getArgAsInt(1);

@@ -36,7 +36,3 @@ void Webcam::draw(const glm::vec3 &pos, const glm::vec3 &size) {
 void Webcam::choose() {
     path = ofToString(random());
 }
-
-ofFloatColor Webcam::getTint(Layer *layer) {
-    return layer->getColor();
-}

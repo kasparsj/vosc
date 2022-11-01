@@ -55,7 +55,3 @@ void Three::draw(const glm::vec3 &pos, const glm::vec3 &size) {
 void Three::choose() {
     path = random();
 }
-
-ofFloatColor Three::getTint(Layer *layer) {
-    return layer->getColor();
-}

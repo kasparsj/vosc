@@ -130,34 +130,53 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
     }
 }
 
+void Layer::drawToFbo() {
+    ofFbo& fbo = frames[curFbo];
+    curFbo = (curFbo + 1) % 120;
+    if (!fbo.isAllocated()) {
+        fbo.allocate(size.x, size.y);
+    }
+    fbo.begin();
+    ofClear(0, 0, 0, 0);
+    ofPushMatrix();
+    switch (alignH) {
+        case OF_ALIGN_HORZ_CENTER:
+            ofTranslate(ofGetWidth()/2.f - size.x * abs(scale.x) / 2.f, 0);
+            break;
+        case OF_ALIGN_HORZ_RIGHT:
+            ofTranslate(ofGetWidth() - size.x * abs(scale.x), 0);
+            break;
+    }
+    switch (alignV) {
+        case OF_ALIGN_VERT_CENTER:
+            ofTranslate(0, ofGetHeight()/2.f - size.y * abs(scale.y) / 2.f);
+            break;
+        case OF_ALIGN_VERT_BOTTOM:
+            ofTranslate(0, ofGetHeight() - size.y * abs(scale.y));
+            break;
+    }
+    float degrees = glm::length(rotation);
+    if (degrees != 0) {
+        glm::vec3 axis = glm::normalize(rotation);
+        ofTranslate(rotationPoint.x * size.x * abs(scale.x), rotationPoint.y * size.y * abs(scale.y));
+        ofRotateDeg(degrees, axis.x, axis.y, axis.z);
+        ofTranslate(-rotationPoint.x * size.x * abs(scale.x), -rotationPoint.y * size.y * abs(scale.y));
+    }
+    if (looper == NULL) {
+        gen->draw(glm::vec3(0), size);
+    }
+    else {
+        ofSetColor(255);
+        looper->draw(0, 0, size.x, size.y);
+    }
+    fbo.end();
+    ofPopMatrix();
+}
+
 void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     if (gen != NULL) {
-        ofPushStyle();
-        ofSetColor(gen->getTint(this) * bri, alpha * 255);
+        drawToFbo();
         ofPushMatrix();
-        switch (alignH) {
-            case OF_ALIGN_HORZ_CENTER:
-                ofTranslate(ofGetWidth()/2.f - size.x * abs(scale.x) / 2.f, 0);
-                break;
-            case OF_ALIGN_HORZ_RIGHT:
-                ofTranslate(ofGetWidth() - size.x * abs(scale.x), 0);
-                break;
-        }
-        switch (alignV) {
-            case OF_ALIGN_VERT_CENTER:
-                ofTranslate(0, ofGetHeight()/2.f - size.y * abs(scale.y) / 2.f);
-                break;
-            case OF_ALIGN_VERT_BOTTOM:
-                ofTranslate(0, ofGetHeight() - size.y * abs(scale.y));
-                break;
-        }
-        float degrees = glm::length(rotation);
-        if (degrees != 0) {
-            glm::vec3 axis = glm::normalize(rotation);
-            ofTranslate(rotationPoint.x * size.x * abs(scale.x), rotationPoint.y * size.y * abs(scale.y));
-            ofRotateDeg(degrees, axis.x, axis.y, axis.z);
-            ofTranslate(-rotationPoint.x * size.x * abs(scale.x), -rotationPoint.y * size.y * abs(scale.y));
-        }
         if (scale.x < 0) {
             ofTranslate(-scale.x * size.x, 0);
         }
@@ -168,15 +187,13 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
             ofTranslate(0, 0, -scale.z * size.z);
         }
         ofScale(scale);
-        if (looper == NULL) {
-            gen->draw(pos, size);
-        }
-        else {
-            ofSetColor(255);
-            looper->draw(pos.x, pos.y, size.x, size.y);
-        }
-        ofPopMatrix();
+        int i = curFbo - delay;
+        while (i<0) i += 120;
+        ofPushStyle();
+        ofSetColor(gen->getTint(this) * bri, alpha * 255);
+        frames[MIN(120, i)].draw(pos, size.x, size.y);
         ofPopStyle();
+        ofPopMatrix();
     }
 }
 
@@ -279,6 +296,8 @@ void Layer::choose(string type) {
 }
 
 void Layer::unload() {
+    frames.clear();
+    frames.resize(120);
     if (gen != NULL) {
         delete gen;
         gen = NULL;
@@ -323,6 +342,7 @@ void Layer::resetTransform() {
     bri = 1.f;
     color = ofFloatColor(0, 0);
     rotation = glm::vec3(0, 0, 0);
-    rotationSpeed = 0;
+    rotationPoint = glm::vec3(0, 0, 0);
+    rotationSpeed = glm::vec3(0, 0, 0);
     scale = glm::vec3(1);
 }

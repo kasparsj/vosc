@@ -19,6 +19,7 @@ public:
     void setup(int index, string dataSource = "");
     void layout(Layout layout, int layoutIndex, int layoutTotal);
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
+    void drawToFbo();
     void draw(const glm::vec3 &pos, const glm::vec3 &size);
     void draw(int totalVisible);
     void setDataSources(vector<string> ds);
@@ -43,6 +44,7 @@ public:
     }
     
     int index;
+    vector<ofFbo> frames;
     LayerData* data = NULL;
     Gen* gen = NULL;
     ofxLooper* looper = NULL;
@@ -50,7 +52,7 @@ public:
     glm::vec3 size;
     glm::vec3 rotation = glm::vec3(0, 0, 0);
     glm::vec3 rotationPoint = glm::vec3(0, 0, 0);
-    float rotationSpeed = 0;
+    glm::vec3 rotationSpeed = glm::vec3(0, 0, 0);
     glm::vec3 scale = glm::vec3(1);
     ofFloatColor color = ofFloatColor(0, 0);
     ofAlignHorz alignH;
@@ -71,4 +73,6 @@ public:
     float onsetThresh = 0.5;
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
     bool useRandomColor = false;
+    uint8_t delay = 0;
+    uint8_t curFbo = 0;
 };

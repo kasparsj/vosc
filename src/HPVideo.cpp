@@ -75,7 +75,3 @@ void HPVideo::draw(const glm::vec3 &pos, const glm::vec3 &size) {
 void HPVideo::choose() {
     path = random();
 }
-
-ofFloatColor HPVideo::getTint(Layer *layer) {
-    return layer->getColor();
-}

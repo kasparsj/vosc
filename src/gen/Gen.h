@@ -15,9 +15,7 @@ public:
     virtual void reload() {};
     virtual void clear() {};
     virtual void reset() {};
-    virtual ofFloatColor getTint(Layer *layer) {
-        return ofFloatColor(1);
-    }
+    virtual ofFloatColor getTint(Layer *layer) const;
     virtual bool isFrameNew() {
         return true;
     }

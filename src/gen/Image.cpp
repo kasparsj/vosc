@@ -60,7 +60,3 @@ void Image::draw(const glm::vec3 &pos, const glm::vec3 &size) {
 void Image::choose() {
     path = random();
 }
-
-ofFloatColor Image::getTint(Layer *layer) {
-    return layer->getColor();
-}

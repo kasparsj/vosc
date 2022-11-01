@@ -75,7 +75,3 @@ void Video::draw(const glm::vec3 &pos, const glm::vec3 &size) {
 void Video::choose() {
     path = random();
 }
-
-ofFloatColor Video::getTint(Layer *layer) {
-    return layer->getColor();
-}
