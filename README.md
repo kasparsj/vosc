@@ -411,6 +411,36 @@ Examples:
 ~visuals.sendMsg('/seek', 0, 0.25, 3); // animate video position to quarter of length in 3 seconds
 ```
 
+## Camera
+
+### Use camera
+
+`/cam`
+
+Arguments:
+- **enabled** (bool) enable/disable camera
+
+Examples:
+```supercollider
+~visuals.sendMsg('/cam', 1); // enable camera
+~visuals.sendMsg('/cam', 0); // disable camera
+```
+
+### Camera position
+
+`/cam/pos`
+
+Arguments:
+- **x** (float)
+- **y** (float)
+- **z** (float)
+- duration (float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/cam/pos', 0, 0, -3000, 10); // zoom out camera over 10 seconds
+```
+
 ## Enumerations
 
 ### Layout
