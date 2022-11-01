@@ -37,6 +37,10 @@ OSC VJing software built on openFrameworks
 - `/speed` [Set layer speed](#speed)
 - `/seek` [Seek video layer](#seek)
 
+## Camera
+- `/cam` [Use camera](#use-camera)
+- `/cam/pos` [Camera position](#camera-position)
+
 # Command reference
 
 ## Setup
