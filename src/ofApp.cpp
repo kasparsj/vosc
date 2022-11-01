@@ -50,6 +50,7 @@ void ofApp::update(){
 	for (int i = 0; i < layers.size(); i++) {
 		layers[i]->update(sounds, tidal->notes);
 	}
+    cam.setPosition(camPos);
     cam.lookAt(glm::vec3(0));
     HPV::Update();
 }
@@ -175,7 +176,7 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     }
     else if (command == "/cam/pos") {
         useCam = true;
-        cam.setPosition(m.getArgAsFloat(0), m.getArgAsFloat(1), m.getNumArgs() > 2 ? m.getArgAsFloat(2) : cam.getPosition().z);
+        handleVec3(&camPos, m, 0);
     }
     else {
         messageQueue.push_back(m);
@@ -481,15 +482,15 @@ void ofApp::handlePercent(float *value, const ofxOscMessage &m) {
     }
 }
 
-void ofApp::handleVec3(glm::vec3 *value, const ofxOscMessage &m) {
-    if (m.getNumArgs() > 4) {
-        createTween(value, glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsFloat(3)), m.getArgAsFloat(4));
+void ofApp::handleVec3(glm::vec3 *value, const ofxOscMessage &m, int firstArg) {
+    if (m.getNumArgs() > firstArg + 3) {
+        createTween(value, glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg+1), m.getArgAsFloat(firstArg+2)), m.getArgAsFloat(firstArg+3));
     }
-    else if (m.getNumArgs() > 2) {
-        *value = glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 0);
+    else if (m.getNumArgs() > firstArg+1) {
+        *value = glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg+1), m.getNumArgs() > firstArg+2 ? m.getArgAsFloat(firstArg+2) : 0);
     }
     else {
-        *value = glm::vec3(m.getArgAsFloat(1), m.getArgAsFloat(1), m.getArgAsFloat(1));
+        *value = glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg));
     }
 }
 
@@ -679,8 +680,10 @@ void ofApp::createPostPass(string passName) {
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+    ofPushMatrix();
     if (useCam) {
         post.begin(cam);
+        ofTranslate(-ofGetWidth()/2.f, -ofGetHeight()/2);
     }
     else {
         post.begin();
@@ -696,6 +699,7 @@ void ofApp::draw(){
         layers[i]->draw(totalVisible);
     }
     post.end();
+    ofPopMatrix();
     
     if (showDebug) {
         ofPushStyle();
