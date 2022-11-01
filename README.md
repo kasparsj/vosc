@@ -32,6 +32,7 @@ OSC VJing software built on openFrameworks
 - `/bri` [Set layer brightness](#brightness)
 
 ## Time
+- `/delay` [Set layer delay](#delay)
 - `/looper` [Activate layer looper](#looper)
 - `/speed` [Set layer speed](#speed)
 - `/seek` [Seek video layer](#seek)
@@ -241,13 +242,15 @@ Examples:
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
-- **angle** (float)
+- **x** (float)
+- **y** (float)
+- **z** (float)
 - duration (float)
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/rot/speed', 0, 100); // set first layer rotation speed to 1 degree
-~visuals.sendMsg('/rot/speed', 0, 360, 2); // increase first layer rotation speed to 360 degrees over 2 seconds
+~visuals.sendMsg('/rot/speed', 0, 100, 0, 0); // set first layer rotation speed to 1 degree
+~visuals.sendMsg('/rot/speed', 0, 360, 0, 0, 2); // increase first layer rotation speed to 360 degrees over 2 seconds
 ```
 
 ### Reset
@@ -345,6 +348,19 @@ Examples:
 ```
 
 ## Time
+
+### Delay
+
+`/delay`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **delay** (int) number of frames
+
+Examples:
+```supercollider
+~visuals.sendMsg('/delay', 0, 60); // set layer 0 delay to 60 frames (1 second)
+```
 
 ### Looper
 
