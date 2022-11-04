@@ -1,6 +1,5 @@
 # osc_vj
 OSC VJing software built on openFrameworks
-
 # Command overview
 
 ## Setup
@@ -30,7 +29,7 @@ OSC VJing software built on openFrameworks
 - `/reset` [Reset layer](#reset)
 
 ## Color
-- `/color` [Set layer color](#color)
+- `/tint` [Set layer tint](#tint)
 - `/alpha` [Set layer alpha](#alpha)
 - `/bri` [Set layer brightness](#brightness)
 
@@ -104,6 +103,7 @@ Arguments:
 
 Examples:
 ```supercollider
+~visuals.sendMsg('/load', 0, "0xff0000"); // load red color into first layer
 ~visuals.sendMsg('/load', 0, "black_hole.jpeg"); // load image into first layer
 ~visuals.sendMsg('/load', 0, "OscCircle.frag"); // load a fragment shader into first layer
 ~visuals.sendMsg('/load', 0, "NoisySpirals"); // load a c++ sketch into first layer
@@ -316,9 +316,9 @@ Examples:
 
 ## Color
 
-### Color
+### Tint
 
-`/color`
+`/tint`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -326,11 +326,11 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/color', 0, 1.0, 0, 0); // tint first layer red
-~visuals.sendMsg('/color', 0, 255, 0, 0); // tint first layer red
-~visuals.sendMsg('/color', 0, "rand"); // tint first layer to random color
-~visuals.sendMsg('/color', 0, "mfcc"); // map first layer tint to mfcc data as color
-~visuals.sendMsg('/color', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // ting first layer to 10% between red and blue
+~visuals.sendMsg('/tint', 0, 1.0, 0, 0); // tint first layer red
+~visuals.sendMsg('/tint', 0, 255, 0, 0); // tint first layer red
+~visuals.sendMsg('/tint', 0, "rand"); // tint first layer to random color
+~visuals.sendMsg('/tint', 0, "mfcc"); // map first layer tint to mfcc data as color
+~visuals.sendMsg('/tint', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // ting first layer to 10% between red and blue
 ```
 
 ### Alpha
@@ -474,7 +474,7 @@ Examples:
 4. `"stack"`
 
 ### Source
-- `"3d"` [see 3d](#3d)
+- `"color"`
 - `"hpv"`
 - `"image"`
 - `"shader"`
