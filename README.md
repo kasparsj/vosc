@@ -276,7 +276,7 @@ Examples:
 
 ## Geometry
 
-### Geometry
+### Geom
 
 `/geom`
 
