@@ -1,9 +1,11 @@
-m = ServerMeter.new(s, 2, 2);
+//m = ServerMeter.new(s, 2, 2);
+m = ServerMeter.new(s, 1, 2);
 
 (
 ~visuals = NetAddr("127.0.0.1", 33333);
 ~fakeDirtPlay = false;
 ~synths = [];
+~file = nil;
 // ~file = "/Users/kasparsj/Music/ivars/tema1.wav";
 // ~file = "/Users/kasparsj/Music/ivars/tema1_2.wav";
 // ~file = "/Users/kasparsj/Music/ivars/tema1_1.wav";
@@ -77,8 +79,9 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 }
 )
 
-~visuals.sendMsg('/layers', 8);
-~visuals.sendMsg('/layout', 3);
+~visuals.sendMsg('/sounds', 1);
+~visuals.sendMsg('/layers', 9);
+~visuals.sendMsg('/layout', 4);
 
 ~visuals.sendMsg('/thresh', "*", 0.35);
 ~visuals.sendMsg('/loud/max', "*", 32);
@@ -89,20 +92,22 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/reload', "*");
 ~visuals.sendMsg('/unload', "*");
 ~visuals.sendMsg('/noclear', "*", true);
+~visuals.sendMsg('/load', 0, "Empty.frag");
 ~visuals.sendMsg('/load', 0, "OscCircle.frag");
 ~visuals.sendMsg('/load', 0, "NoisySpirals");
 ~visuals.sendMsg('/load', 0, "black_hole.jpeg");
 ~visuals.sendMsg('/load', 0, "/Users/kasparsj/Desktop/Screenshot 2022-04-05 at 13.12.05.png");
 ~visuals.sendMsg('/load', 0, "http://1.bp.blogspot.com/-8PQ_NKjf5MI/UK_iuF92QUI/AAAAAAAAAYI/GV0NCn74Ly0/s1600/oh-happy-day.jpg");
 ~visuals.sendMsg('/pos', "*", 0, 0);
-~visuals.sendMsg('/size', "*", 960, 1080);
+~visuals.sendMsg('/size', "*");
+~visuals.sendMsg('/scale', 0, 2);
 ~visuals.sendMsg('/data', "*", "amp");
 ~visuals.sendMsg('/data', "*", "loud");
 ~visuals.sendMsg('/color', "*", 256.rand, 256.rand, 256.rand);
 ~visuals.sendMsg('/load', "*", "");
 ~visuals.sendMsg('/unload', "*");
-~visuals.sendMsg('/choose', "*", "video");
-~visuals.sendMsg('/seek/rand', "*");
+~visuals.sendMsg('/choose', 0, "shader");
+~visuals.sendMsg('/seek', "*", "rand");
 ~visuals.sendMsg('/reset', "*");
 
 ~visuals.sendMsg('/color', 0, 0.15, 0.75, 1.0); // blue
@@ -131,6 +136,18 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/load', 1, "NoisySpirals");
 ~visuals.sendMsg('/reset', 0);
 
+~visuals.sendMsg('/load', 0, "3d:box");
+
+~visuals.sendMsg('/load', 0, "webcam:0");
+~visuals.sendMsg('/looper', 0, 2, 60, 2.0);
+~visuals.sendMsg('/size', 0, 100, 150);
+~visuals.sendMsg('/size', 0, -100, -150);
+~visuals.sendMsg('/scale', 0, -1);
+~visuals.sendMsg('/align', 0, "center");
+~visuals.sendMsg('/align', 0, "right", "bottom");
+~visuals.sendMsg('/rot', 0, 0, 0, 90);
+~visuals.sendMsg('/rot/point', 0, 0.5, 0.5);
+
 (
 ~visuals.sendMsg('/data', 0, "sin");
 ~visuals.sendMsg('/thresh', 0, 0);
@@ -148,8 +165,8 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/loud/max', "*", 28);
 ~visuals.sendMsg('/amp/max', "*", 0.1);
 ~visuals.sendMsg('/thresh', 0, 0);
-//~visuals.sendMsg('/data', 0, "loud:0");
-~visuals.sendMsg('/data', 0, "rand");
+~visuals.sendMsg('/data', 0, "loud:0");
+//~visuals.sendMsg('/data', 0, "rand");
 ~visuals.sendMsg('/load', 0, "NoisySpirals");
 ~visuals.sendMsg('/alpha', 0, 1);
 ~visuals.sendMsg('/bri', 0, 1.0);
@@ -257,24 +274,23 @@ var secs = 10;
 
 
 (
-~visuals.sendMsg('/data', 2, "const");
-~visuals.sendMsg('/load', 2, "StarNest");
+var secs = 60;
+~visuals.sendMsg('/thresh', 2, 0.2);
+~visuals.sendMsg('/data', 2, "loud:0");
+~visuals.sendMsg('/load', 2, "");
+~visuals.sendMsg('/alpha', 2, 1.0, secs);
+~visuals.sendMsg('/alpha', 0, 0, secs);
+~visuals.sendMsg('/alpha', 1, 0, secs);
 {
-	100.do { |i|
-		var j = (i+1);
-		~visuals.sendMsg('/alpha', 2, j/100.0);
-		~visuals.sendMsg('/alpha', 0, 1-(j/100.0));
-		~visuals.sendMsg('/alpha', 1, 1-(j/100.0));
-		0.6.wait;
-	};
+	secs.wait;
 	~visuals.sendMsg('/load', 1, "");
-	~visuals.sendMsg('/load', 0 "");
-	~visuals.sendMsg('/data', 3, "loud:1");
-	~visuals.sendMsg('/load', 3, "shader:Ether.frag");
-	~visuals.sendMsg('/color/mfcc', 3, true);
+	~visuals.sendMsg('/load', 0, "");
+	~visuals.sendMsg('/data', 3, "loud:0");
+	~visuals.sendMsg('/load', 3, "");
+	~visuals.sendMsg('/color', 3, "mfcc", true);
 	~visuals.sendMsg('/data', 4, "loud:0");
-	~visuals.sendMsg('/load', 4, "shader:AtmoScattering.frag");
-	~visuals.sendMsg('/loud/thresh', "*", 0.8);
+	~visuals.sendMsg('/load', 4, "");
+	~visuals.sendMsg('/thresh', "*", 0.8);
 }.fork;
 )
 
@@ -330,3 +346,27 @@ var secs = 10;
 };
 ~visuals.sendMsg('/layout', 3, *(0..8));
 )
+
+// introduction about vjing
+// why use OSC
+// strategies
+// shaders
+// 3d / sketches with memory
+// distorting shapes
+// practical jamming
+
+(
+~visuals.sendMsg('/layers', 9, "grid"); // initializes 9 layers with grid layout
+9.do { |i|
+	~visuals.sendMsg('/load', i, "webcam:0");
+	~visuals.sendMsg('/rot', i, 0, 0, 0);
+	~visuals.sendMsg('/rot/speed', i, 0, 0, 0);
+	~visuals.sendMsg('/rot/point', i, "center");
+	~visuals.sendMsg('/delay', i, i*13);
+};
+)
+
+~visuals.sendMsg('/cam', 1);
+~visuals.sendMsg('/cam/pos', 0, 0, -3000, 10);
+
+~visuals.sendMsg('/load', 0, "0xff0000"); // load red color into first layer
