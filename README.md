@@ -14,6 +14,9 @@ OSC VJing software built on openFrameworks
 - `/unload` [Unload content](#unload)
 - `/choose` [Choose content at random](#choose)
 
+## Geometry
+- `/geom` [Set layer geometry](#geometry)
+
 ## Data
 - `/data` [Set layer data source](#data)
 
@@ -269,6 +272,23 @@ Arguments:
 Examples:
 ```supercollider
 ~visuals.sendMsg('/reset', 0); // reset first layers
+```
+
+## Geometry
+
+### Geometry
+
+`/geom`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- [**geom**](#geom) (string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/geom', 0, "plane"); // set first layer geometry to the default plane
+~visuals.sendMsg('/geom', 0, "box"); // set first layer geometry to box/cube
+~visuals.sendMsg('/geom', 0, "sphere"); // set first layer geometry to sphere
 ```
 
 ## Data
