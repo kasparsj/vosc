@@ -343,7 +343,7 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         layer->alignH = alignH;
         layer->alignV = alignV;
     }
-    else if (command == "/color") {
+    else if (command == "/tint") {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
             string value = m.getArgAsString(1);
             if (value == "rand") {
@@ -708,7 +708,7 @@ void ofApp::draw(){
         ofPushStyle();
         for (int i=0; i<layers.size(); i++) {
             ofSetColor(255);
-            layers[i]->draw(glm::vec3(20+i*120, ofGetHeight()-120, 0), glm::vec3(100, 100, 0));
+            layers[i]->frames[0].draw(20+i*120, ofGetHeight()-120, 100, 100);
             if (layers[i]->data != NULL && layers[i]->data->values.size() > 0) {
                 ofFill();
                 ofDrawRectangle(20+i*120, ofGetHeight()-120, layers[i]->data->values[0]*100.f, 10);
@@ -752,6 +752,12 @@ void ofApp::keyPressed(int key){
         case 'r': {
             ofxOscMessage m;
             allLayersCommand("/reload", m);
+            break;
+        }
+        case 'w': {
+            for (int i=0; i<layers.size(); i++) {
+                layers[i]->drawWireframe = !layers[i]->drawWireframe;
+            }
             break;
         }
         default:

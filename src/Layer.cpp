@@ -5,6 +5,7 @@
 #include "Image.h"
 #include "HPVideo.h"
 #include "Webcam.h"
+#include "Color.h"
 
 Gen* Layer::factory(string type, string path) {
     Gen *gen = NULL;
@@ -28,6 +29,9 @@ Gen* Layer::factory(string type, string path) {
                 break;
             case Source::WEBCAM:
                 gen = new Webcam(path);
+                break;
+            case Source::COLOR:
+                gen = new Color(path);
                 break;
         }
     }
@@ -63,6 +67,9 @@ Gen* Layer::factory(string source) {
                     break;
                 case Source::WEBCAM:
                     path = Webcam::random();
+                    break;
+                case Source::COLOR:
+                    path = Color::random();
                     break;
             }
         }
@@ -171,36 +178,39 @@ void Layer::drawToFbo() {
 void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     if (gen != NULL) {
         drawToFbo();
-        ofPushMatrix();
-        if (scale.x < 0) {
-            ofTranslate(-scale.x * size.x, 0);
-        }
-        if (scale.y < 0) {
-            ofTranslate(0, -scale.y * size.y);
-        }
-        if (scale.z < 0) {
-            ofTranslate(0, 0, -scale.z * size.z);
-        }
-        ofScale(scale);
-        int i = curFbo - delay;
-        while (i<0) i += frames.size();
-        ofPushStyle();
-        ofSetColor(gen->getTint(this) * bri, alpha * 255);
-        const ofFbo& fbo = frames[MIN(frames.size()-1, i)];
-        const ofTexture& tex = fbo.getTexture();
-        ofTranslate(pos + size/2.f);
-        ofScale(size / glm::vec3(100, -100, 100));
-        if (fbo.isAllocated() && tex.isAllocated()) {
-            tex.bind();
-            geom.getMesh().draw();
-            tex.unbind();
-        }
-        else {
-            geom.getMesh().drawWireframe();
-        }
-        ofPopStyle();
-        ofPopMatrix();
     }
+    ofPushMatrix();
+    if (scale.x < 0) {
+        ofTranslate(-scale.x * size.x, 0);
+    }
+    if (scale.y < 0) {
+        ofTranslate(0, -scale.y * size.y);
+    }
+    if (scale.z < 0) {
+        ofTranslate(0, 0, -scale.z * size.z);
+    }
+    ofScale(scale);
+    int i = curFbo - delay;
+    while (i<0) i += frames.size();
+    ofPushStyle();
+    ofSetColor(gen->getTint(this) * bri, alpha * 255);
+    const ofFbo& fbo = frames[MIN(frames.size()-1, i)];
+    const ofTexture& tex = fbo.getTexture();
+    ofTranslate(pos + size/2.f);
+    ofScale(size / glm::vec3(100, -100, 100));
+    if (fbo.isAllocated() && tex.isAllocated()) {
+        tex.bind();
+        geom.getMesh().draw();
+        tex.unbind();
+    }
+    else {
+        geom.getMesh().draw();
+    }
+    if (drawWireframe) {
+        geom.getMesh().drawWireframe();
+    }
+    ofPopStyle();
+    ofPopMatrix();
 }
 
 void Layer::draw(int totalVisible) {
@@ -275,8 +285,13 @@ void Layer::load(string source) {
         else if (extension == "hpv") {
             gen = factory("hpv", source);
         }
-        else if (Sketch::exists(source)) {
-            gen = factory("sketch", source);
+        else {
+            if (Color::exists(source)) {
+                gen = factory("color", source);
+            }
+            else if (Sketch::exists(source)) {
+                gen = factory("sketch", source);
+            }
         }
     }
     if (gen != NULL) {

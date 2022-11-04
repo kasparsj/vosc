@@ -80,4 +80,5 @@ public:
     bool useRandomColor = false;
     uint8_t delay = 0;
     int curFbo = -1;
+    bool drawWireframe;
 };

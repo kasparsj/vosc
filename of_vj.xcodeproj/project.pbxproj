@@ -23,6 +23,7 @@
 		28AFD6FA9B9C885AFD9FF1C7 /* HorizontalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
 		2B5443DD29117EBB00FB44D8 /* Gen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B5443DC29117E6100FB44D8 /* Gen.cpp */; };
+		2BE51A5B29154F3F00324F1C /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BE51A5929154D5C00324F1C /* Color.cpp */; };
 		33DB731E964056D7E35604A7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
 		3A499904889C490DCF533C6E /* BloomPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41ED8C8083845703AA1FDFA /* BloomPass.cpp */; };
 		3D6BA46406CE29B32055340C /* Analogous.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24317A596BC892793AEA0706 /* Analogous.cpp */; };
@@ -252,6 +253,8 @@
 		2B5443DA29117BDF00FB44D8 /* Fluid.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Fluid.frag; sourceTree = "<group>"; };
 		2B5443DB29117BDF00FB44D8 /* ZebraH.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ZebraH.frag; sourceTree = "<group>"; };
 		2B5443DC29117E6100FB44D8 /* Gen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Gen.cpp; path = gen/Gen.cpp; sourceTree = "<group>"; };
+		2BE51A5929154D5C00324F1C /* Color.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Color.cpp; path = gen/Color.cpp; sourceTree = "<group>"; };
+		2BE51A5A29154D5C00324F1C /* Color.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Color.h; path = gen/Color.h; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
 		2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VerticalTiltShifPass.cpp; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.cpp; sourceTree = SOURCE_ROOT; };
@@ -836,6 +839,8 @@
 		3A0FAA05CE9137B817C89D95 /* gen */ = {
 			isa = PBXGroup;
 			children = (
+				2BE51A5929154D5C00324F1C /* Color.cpp */,
+				2BE51A5A29154D5C00324F1C /* Color.h */,
 				1AF23F0A21D95F5FB5E37082 /* FBOGen.cpp */,
 				E4CC104694390A8799972684 /* FBOGen.h */,
 				2B5443DC29117E6100FB44D8 /* Gen.cpp */,
@@ -1530,6 +1535,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2BE51A5B29154F3F00324F1C /* Color.cpp in Sources */,
 				2B5443DD29117EBB00FB44D8 /* Gen.cpp in Sources */,
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,

@@ -25,6 +25,7 @@ static std::unordered_map<std::string, Layout> const LayoutMap = {
 };
 
 enum class Source {
+    COLOR,
     VIDEO,
     HPV,
     SHADER,
@@ -35,6 +36,7 @@ enum class Source {
 };
 
 static std::unordered_map<std::string, Source> const SourceMap = {
+    {"color", Source::COLOR},
     {"video", Source::VIDEO},
     {"hpv", Source::HPV},
     {"shader", Source::SHADER},
