@@ -15,7 +15,7 @@ OSC VJing software built on openFrameworks
 - `/choose` [Choose content at random](#choose)
 
 ## Geometry
-- `/geom` [Set layer geometry](#geometry)
+- `/geom` [Set layer geometry](#geom)
 
 ## Data
 - `/data` [Set layer data source](#data)
