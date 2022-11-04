@@ -1,5 +1,5 @@
 # osc_vj
-OSC VJing software built on openFrameworks
+OSC VJing software built on openFrameworks. This is work in progress!
 # Command overview
 
 ## Setup
