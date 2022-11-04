@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		04C13EEA813A786CC1D8137A /* FxaaPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9425843AEC3118B8FDEF1B0B /* FxaaPass.cpp */; };
-		05023EB0D03AC01FFFE28F7A /* Three.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0B06ADC96F9B461820BF4467 /* Three.cpp */; };
+		05023EB0D03AC01FFFE28F7A /* Geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0B06ADC96F9B461820BF4467 /* Geom.cpp */; };
 		0546D1A38E13BD319CC9755B /* OscReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9BF3AA0D4FAA89D0F8A0E545 /* OscReceivedElements.cpp */; };
 		07F0761DF15EC42437CC8402 /* ColorScheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7F9AE8283BEDCBB358ACC40A /* ColorScheme.cpp */; };
 		08C23182D394C53F6ECE6CCC /* easing_terms_of_use.html in Sources */ = {isa = PBXBuildFile; fileRef = 528CB0EB22F0A199A5F479D5 /* easing_terms_of_use.html */; };
@@ -118,7 +118,7 @@
 		05F3D9211F202EAD5E2AA9FA /* FlippedCompound.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FlippedCompound.cpp; path = ../../../addons/ofxColorTheory/src/Rules/FlippedCompound.cpp; sourceTree = SOURCE_ROOT; };
 		0AC8B4DE8CD341280FDE798A /* EdgePass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = EdgePass.cpp; path = ../../../addons/ofxPostProcessing/src/EdgePass.cpp; sourceTree = SOURCE_ROOT; };
 		0AED834CE4DEC5260AF302A2 /* ofxOscParameterSync.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscParameterSync.cpp; path = ../../../addons/ofxOsc/src/ofxOscParameterSync.cpp; sourceTree = SOURCE_ROOT; };
-		0B06ADC96F9B461820BF4467 /* Three.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Three.cpp; path = src/gen/Three.cpp; sourceTree = SOURCE_ROOT; };
+		0B06ADC96F9B461820BF4467 /* Geom.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Geom.cpp; path = src/Geom.cpp; sourceTree = SOURCE_ROOT; };
 		0BC82FF9BACF54030E42E808 /* RGBShiftPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RGBShiftPass.h; path = ../../../addons/ofxPostProcessing/src/RGBShiftPass.h; sourceTree = SOURCE_ROOT; };
 		0D811F3E1817C17351F97CCF /* BleachBypassPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BleachBypassPass.h; path = ../../../addons/ofxPostProcessing/src/BleachBypassPass.h; sourceTree = SOURCE_ROOT; };
 		108C4DB0C398388D00027091 /* KaleidoscopePass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = KaleidoscopePass.cpp; path = ../../../addons/ofxPostProcessing/src/KaleidoscopePass.cpp; sourceTree = SOURCE_ROOT; };
@@ -361,7 +361,7 @@
 		C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FakeSSSPass.cpp; path = ../../../addons/ofxPostProcessing/src/FakeSSSPass.cpp; sourceTree = SOURCE_ROOT; };
 		C6937888E126BADC8777423B /* OscTypes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscTypes.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscTypes.h; sourceTree = SOURCE_ROOT; };
 		C69CBE4E4FA9530657A6CD23 /* FakeSSSPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FakeSSSPass.h; path = ../../../addons/ofxPostProcessing/src/FakeSSSPass.h; sourceTree = SOURCE_ROOT; };
-		C7578940BC9DA4CCD86DF56F /* Three.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Three.h; path = src/gen/Three.h; sourceTree = SOURCE_ROOT; };
+		C7578940BC9DA4CCD86DF56F /* Geom.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Geom.h; path = src/Geom.h; sourceTree = SOURCE_ROOT; };
 		CC725CAE0A003458E5573DF9 /* GodRaysPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GodRaysPass.h; path = ../../../addons/ofxPostProcessing/src/GodRaysPass.h; sourceTree = SOURCE_ROOT; };
 		CCA10A4CF59EBAE5E0E4916B /* Split.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Split.h; path = ../../../addons/ofxPostProcessing/src/Split.h; sourceTree = SOURCE_ROOT; };
 		D09A011EA9E66CDCAAB4FD25 /* ColorWheelScheme.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorWheelScheme.cpp; path = ../../../addons/ofxColorTheory/src/ColorWheelScheme.cpp; sourceTree = SOURCE_ROOT; };
@@ -849,8 +849,6 @@
 				BDF81F38A399D38B0C59F700 /* Sketch.cpp */,
 				894A32AEB783A4469CFF3C4E /* Sketch.h */,
 				5A2FEA06065174419FD1BB14 /* SketchImpl.h */,
-				0B06ADC96F9B461820BF4467 /* Three.cpp */,
-				C7578940BC9DA4CCD86DF56F /* Three.h */,
 				E9C35AB5202DEE1FAE587B8D /* Video.cpp */,
 				27959D03B9B02B84FE8D7790 /* Video.h */,
 				04414BC56F941B5BDBD35834 /* Webcam.cpp */,
@@ -1396,6 +1394,8 @@
 				D668F2E5BEDA9E0D5669F52C /* sketches */,
 				ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */,
 				3E8911C6B8ABF8D32A950348 /* Sound.h */,
+				0B06ADC96F9B461820BF4467 /* Geom.cpp */,
+				C7578940BC9DA4CCD86DF56F /* Geom.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1541,7 +1541,7 @@
 				231BF86FC8A2A84536B0CBE0 /* Video.cpp in Sources */,
 				C1104C02B7261C2D5DEF27CD /* Shader.cpp in Sources */,
 				9D5B5A7556CEF2DF185DA036 /* FBOGen.cpp in Sources */,
-				05023EB0D03AC01FFFE28F7A /* Three.cpp in Sources */,
+				05023EB0D03AC01FFFE28F7A /* Geom.cpp in Sources */,
 				E01DFE7C5776D7A83326D7F9 /* Webcam.cpp in Sources */,
 				6C8551DB2C641E610EA107BE /* Sound.cpp in Sources */,
 				07F0761DF15EC42437CC8402 /* ColorScheme.cpp in Sources */,

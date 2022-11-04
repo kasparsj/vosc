@@ -30,7 +30,6 @@ enum class Source {
     SHADER,
     SKETCH,
     IMAGE,
-    THREE,
     WEBCAM,
     LAST = WEBCAM,
 };
@@ -41,7 +40,6 @@ static std::unordered_map<std::string, Source> const SourceMap = {
     {"shader", Source::SHADER},
     {"sketch", Source::SKETCH},
     {"image", Source::IMAGE},
-    {"3d", Source::THREE},
     {"webcam", Source::WEBCAM},
 };
 

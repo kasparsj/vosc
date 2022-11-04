@@ -373,6 +373,9 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
             layer->useRandomColor = false;
         }
     }
+    else if (command == "/geom") {
+        layer->setGeometry(m.getArgAsString(1));
+    }
     else if (command == "/data") {
         vector<string> ds;
         for (int i=1; i<m.getNumArgs(); i++) {

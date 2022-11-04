@@ -3,7 +3,6 @@
 #include "Video.h"
 #include "Sketch.h"
 #include "Image.h"
-#include "Three.h"
 #include "HPVideo.h"
 #include "Webcam.h"
 
@@ -26,9 +25,6 @@ Gen* Layer::factory(string type, string path) {
                 break;
             case Source::IMAGE:
                 gen = new Image(path);
-                break;
-            case Source::THREE:
-                gen = new Three(path);
                 break;
             case Source::WEBCAM:
                 gen = new Webcam(path);
@@ -64,9 +60,6 @@ Gen* Layer::factory(string source) {
                     break;
                 case Source::IMAGE:
                     path = Image::random();
-                    break;
-                case Source::THREE:
-                    path = Three::random();
                     break;
                 case Source::WEBCAM:
                     path = Webcam::random();
@@ -128,11 +121,13 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
         }
         looper->update();
     }
+    geom.update();
+    ofDisableArbTex();
 }
 
 void Layer::drawToFbo() {
+    curFbo = (curFbo + 1) % frames.size();
     ofFbo& fbo = frames[curFbo];
-    curFbo = (curFbo + 1) % 120;
     if (!fbo.isAllocated()) {
         fbo.allocate(size.x, size.y);
     }
@@ -188,10 +183,21 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
         }
         ofScale(scale);
         int i = curFbo - delay;
-        while (i<0) i += 120;
+        while (i<0) i += frames.size();
         ofPushStyle();
         ofSetColor(gen->getTint(this) * bri, alpha * 255);
-        frames[MIN(120, i)].draw(pos, size.x, size.y);
+        const ofFbo& fbo = frames[MIN(frames.size()-1, i)];
+        const ofTexture& tex = fbo.getTexture();
+        ofTranslate(pos + size/2.f);
+        ofScale(size / glm::vec3(100, -100, 100));
+        if (fbo.isAllocated() && tex.isAllocated()) {
+            tex.bind();
+            geom.getMesh().draw();
+            tex.unbind();
+        }
+        else {
+            geom.getMesh().drawWireframe();
+        }
         ofPopStyle();
         ofPopMatrix();
     }
@@ -213,6 +219,12 @@ void Layer::draw(int totalVisible) {
             ofDisableBlendMode();
         }
         data->afterDraw();
+    }
+}
+
+void Layer::setGeometry(string key) {
+    if (Geom::exists(key)) {
+        geom.set(key);
     }
 }
 
@@ -263,13 +275,8 @@ void Layer::load(string source) {
         else if (extension == "hpv") {
             gen = factory("hpv", source);
         }
-        else {
-            if (Three::exists(source)) {
-                gen = factory("3d", source);
-            }
-            else if (Sketch::exists(source)) {
-                gen = factory("sketch", source);
-            }
+        else if (Sketch::exists(source)) {
+            gen = factory("sketch", source);
         }
     }
     if (gen != NULL) {
@@ -297,7 +304,7 @@ void Layer::choose(string type) {
 
 void Layer::unload() {
     frames.clear();
-    frames.resize(120);
+    frames.resize(MAX_DELAY);
     if (gen != NULL) {
         delete gen;
         gen = NULL;

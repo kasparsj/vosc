@@ -7,6 +7,9 @@
 #include "LayerData.h"
 #include "Gen.h"
 #include "ofxLooper.h"
+#include "Geom.h"
+
+#define MAX_DELAY 120
 
 class Layer {
 public:
@@ -22,6 +25,7 @@ public:
     void drawToFbo();
     void draw(const glm::vec3 &pos, const glm::vec3 &size);
     void draw(int totalVisible);
+    void setGeometry(string key);
     void setDataSources(vector<string> ds);
     void addDataSources(vector<string> ds);
     void load(string source);
@@ -44,6 +48,7 @@ public:
     }
     
     int index;
+    Geom geom;
     vector<ofFbo> frames;
     LayerData* data = NULL;
     Gen* gen = NULL;
@@ -74,5 +79,5 @@ public:
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
     bool useRandomColor = false;
     uint8_t delay = 0;
-    uint8_t curFbo = 0;
+    int curFbo = -1;
 };
