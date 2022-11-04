@@ -482,12 +482,12 @@ Examples:
 - `"video"`
 - `"webcam"`
 
-### 3d
+### geom
+- `"plane"`
 - `"box"`
 - `"sphere"`
 - `"icosphere"`
 - `"cylinder"`
-- `"plane"`
 - `"cone"`
 
 ## Datasource
