@@ -21,13 +21,17 @@
 
 ### Geometry
 - `/geom` [Set layer geometry](#geom)
-- `/geom/shader` [Set layer shader](#shader)
 - `/geom/instanced` [Use instanced draw](#instanced)
-- `/geom/mat/diffuse` [Set material diffuse color](#diffuse)
-- `/geom/mat/ambient` [Set material ambient color](#ambient)
-- `/geom/mat/specular` [Set material specular color](#specular)
-- `/geom/mat/emissive` [Set material emissive color](#emissive)
-- `/geom/mat/shininess` [Set material shininess color](#shininess)
+
+### Shader
+- `/shader` [Set layer shader](#shader)
+
+### Material
+- `/mat/diffuse` [Set material diffuse color](#diffuse)
+- `/mat/ambient` [Set material ambient color](#ambient)
+- `/mat/specular` [Set material specular color](#specular)
+- `/mat/emissive` [Set material emissive color](#emissive)
+- `/mat/shininess` [Set material shininess color](#shininess)
 
 ### Data
 - `/data` [Set layer data source](#data)
