@@ -2,32 +2,36 @@
 
 #include "ofMain.h"
 
-class Geom {
+class Layer;
+
+class LayerGeom {
 public:
     static vector<string> primitives;
     static bool exists(string path);
     static string random();
 
-    Geom(string path);
-    Geom() { set("plane"); }
-    ~Geom() {
+    ~LayerGeom() {
         if (primitive != NULL) {
             delete primitive;
         }
     }
-    void set(string newPath) {
-        if (primitive != NULL) {
-            delete primitive;
-        }
-        primitive = NULL;
-        prevPath = path;
-        path = newPath;
+    void setup(Layer* layer) {
+        this->layer = layer;
+        load("plane");
     }
-    void update();
+    void load(string newPath);
     void choose();
+    void setShader(string path);
+    void update();
+    void draw();
+    void _draw();
     const ofVboMesh& getMesh() const { return mesh; }
+    
+    bool drawWireframe;
+    int drawInstanced = 0;
 
 private:
+    Layer* layer;
     string path = "";
     string prevPath = "";
     of3dPrimitive *primitive = NULL;

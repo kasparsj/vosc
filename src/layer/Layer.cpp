@@ -52,38 +52,18 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
         looper->update();
     }
     geom.update();
+    // needed for tex2.bind() inside draw
     ofDisableArbTex();
 }
 
 void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     tex.draw();
+    
     ofPushMatrix();
-    if (scale.x < 0) {
-        ofTranslate(-scale.x * size.x, 0);
-    }
-    if (scale.y < 0) {
-        ofTranslate(0, -scale.y * size.y);
-    }
-    if (scale.z < 0) {
-        ofTranslate(0, 0, -scale.z * size.z);
-    }
-    ofScale(scale);
-    ofTranslate(pos + size/2.f);
-    ofScale(size / glm::vec3(100, -100, 100));
+    transform();
     ofPushStyle();
     ofSetColor(tex.getTint() * bri, alpha * 255);
-    if (tex.hasTexture()) {
-        const ofTexture& tex2 = tex.getFbo().getTexture();
-        tex2.bind();
-        geom.getMesh().draw();
-        tex2.unbind();
-    }
-    else {
-        geom.getMesh().draw();
-    }
-    if (drawWireframe) {
-        geom.getMesh().drawWireframe();
-    }
+    geom.draw();
     ofPopStyle();
     ofPopMatrix();
 }
@@ -108,6 +88,21 @@ void Layer::draw(int totalVisible) {
 }
 
 void Layer::transform() {
+    if (scale.x < 0) {
+        ofTranslate(-scale.x * size.x, 0);
+    }
+    if (scale.y < 0) {
+        ofTranslate(0, -scale.y * size.y);
+    }
+    if (scale.z < 0) {
+        ofTranslate(0, 0, -scale.z * size.z);
+    }
+    ofScale(scale);
+    ofTranslate(pos + size/2.f);
+    ofScale(size / glm::vec3(100, -100, 100));
+}
+
+void Layer::align() {
     switch (alignH) {
         case OF_ALIGN_HORZ_CENTER:
             ofTranslate(ofGetWidth()/2.f - size.x * abs(scale.x) / 2.f, 0);
@@ -124,18 +119,15 @@ void Layer::transform() {
             ofTranslate(0, ofGetHeight() - size.y * abs(scale.y));
             break;
     }
+}
+
+void Layer::rotate() {
     float degrees = glm::length(rotation);
     if (degrees != 0) {
         glm::vec3 axis = glm::normalize(rotation);
         ofTranslate(rotationPoint.x * size.x * abs(scale.x), rotationPoint.y * size.y * abs(scale.y));
         ofRotateDeg(degrees, axis.x, axis.y, axis.z);
         ofTranslate(-rotationPoint.x * size.x * abs(scale.x), -rotationPoint.y * size.y * abs(scale.y));
-    }
-}
-
-void Layer::loadGeom(string key) {
-    if (Geom::exists(key)) {
-        geom.set(key);
     }
 }
 

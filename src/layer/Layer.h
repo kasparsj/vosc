@@ -6,7 +6,7 @@
 #include "Config.h"
 #include "LayerData.h"
 #include "ofxLooper.h"
-#include "Geom.h"
+#include "LayerGeom.h"
 #include "LayerTex.h"
 
 #define MAX_DELAY 120
@@ -20,7 +20,8 @@ public:
     void draw(const glm::vec3 &pos, const glm::vec3 &size);
     void draw(int totalVisible);
     void transform();
-    void loadGeom(string key);
+    void align();
+    void rotate();
     void setDataSources(vector<string> ds);
     void addDataSources(vector<string> ds);
     void reset();
@@ -39,7 +40,7 @@ public:
     
     int index;
     LayerTex tex;
-    Geom geom;
+    LayerGeom geom;
     LayerData data;
     ofxLooper* looper = NULL;
     glm::vec3 pos;
@@ -68,5 +69,4 @@ public:
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
     bool useRandomColor = false;
     uint8_t delay = 0;
-    bool drawWireframe;
 };

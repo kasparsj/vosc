@@ -1,20 +1,39 @@
-#include "Geom.h"
+#include "LayerGeom.h"
+#include "Layer.h"
 
-vector<string> Geom::primitives = {"box", "sphere", "icosphere", "cylinder", "plane", "cone"};
+vector<string> LayerGeom::primitives = {"box", "sphere", "icosphere", "cylinder", "plane", "cone"};
 
-bool Geom::exists(string path) {
+bool LayerGeom::exists(string path) {
     return find(primitives.begin(), primitives.end(), path) != primitives.end();
 }
 
-string Geom::random() {
+string LayerGeom::random() {
     return primitives[int(ofRandom(primitives.size()))];
 }
 
-Geom::Geom(string path) {
-    set(path);
+void LayerGeom::load(string newPath) {
+    if (exists(newPath)) {
+        if (primitive != NULL) {
+            delete primitive;
+        }
+        primitive = NULL;
+        prevPath = path;
+        path = newPath;
+    }
+    else {
+        ofLog() << "invalid geom " << newPath;
+    }
 }
 
-void Geom::update() {
+void LayerGeom::choose() {
+    path = random();
+}
+
+void LayerGeom::setShader(string path) {
+    
+}
+
+void LayerGeom::update() {
     if (primitive == NULL) {
         if (path == "plane") {
             primitive = new ofPlanePrimitive(100, 100, 2, 2);
@@ -49,6 +68,26 @@ void Geom::update() {
     }
 }
 
-void Geom::choose() {
-    path = random();
+void LayerGeom::draw() {
+    if (layer->tex.hasTexture()) {
+        const ofTexture& tex2 = layer->tex.getFbo().getTexture();
+        tex2.bind();
+        _draw();
+        tex2.unbind();
+    }
+    else {
+        _draw();
+    }
+    if (drawWireframe) {
+        mesh.drawWireframe();
+    }
+}
+
+void LayerGeom::_draw() {
+    if (drawInstanced > 1) {
+        mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
+    }
+    else {
+        mesh.draw();
+    }
 }

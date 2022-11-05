@@ -254,7 +254,13 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         layer->noClear = m.getArgAsBool(1);
     }
     else if (command == "/geom") {
-        layer->loadGeom(m.getArgAsString(1));
+        layer->geom.load(m.getArgAsString(1));
+    }
+    else if (command == "/geom/shader") {
+        layer->geom.setShader(m.getArgAsString(1));
+    }
+    else if (command == "/geom/instanced") {
+        layer->geom.drawInstanced = m.getArgAsInt(1);
     }
     else if (command == "/bri") {
         handlePercent(&layer->bri, m);
@@ -765,7 +771,7 @@ void ofApp::keyPressed(int key){
         }
         case 'w': {
             for (int i=0; i<layers.size(); i++) {
-                layers[i]->drawWireframe = !layers[i]->drawWireframe;
+                layers[i]->geom.drawWireframe = !layers[i]->geom.drawWireframe;
             }
             break;
         }

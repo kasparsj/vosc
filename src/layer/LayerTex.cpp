@@ -166,7 +166,8 @@ void LayerTex::drawToFbo() {
     fbo.begin();
     ofClear(0, 0, 0, 0);
     ofPushMatrix();
-    layer->transform();
+    layer->align();
+    layer->rotate();
     if (layer->looper == NULL) {
         gen->draw(glm::vec3(0), layer->size);
     }
