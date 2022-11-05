@@ -7,11 +7,11 @@
 - `/layers` [Setup layers](#setup-layers)
 - `/layout` [Change layout](#change-layout)
 
-## Content
-- `/load` [Load content](#load)
-- `/reload` [Reload content](#reload)
-- `/unload` [Unload content](#unload)
-- `/choose` [Choose content at random](#choose)
+## Texture
+- `/load` [Load texture](#load)
+- `/reload` [Reload texture](#reload)
+- `/unload` [Unload texture](#unload)
+- `/choose` [Choose texture at random](#choose)
 
 ## Geometry
 - `/geom` [Set layer geometry](#geom)
