@@ -13,14 +13,14 @@
 
 ## Layers
 
+### Geometry
+- `/geom` [Set layer geometry](#geom)
+
 ### Texture
 - `/load` [Load texture](#load)
 - `/reload` [Reload texture](#reload)
 - `/unload` [Unload texture](#unload)
 - `/choose` [Choose texture at random](#choose)
-
-### Geometry
-- `/geom` [Set layer geometry](#geom)
 
 ### Data
 - `/data` [Set layer data source](#data)
@@ -124,6 +124,25 @@ Examples:
 ```
 
 ## Layers
+
+### Geometry
+
+By default layer geometry is set to 2D ("plane" geometry).
+
+#### Geom
+
+`/geom`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- [**geom**](#geom) (string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/geom', 0, "plane"); // set first layer geometry to the default plane
+~visuals.sendMsg('/geom', 0, "box"); // set first layer geometry to box/cube
+~visuals.sendMsg('/geom', 0, "sphere"); // set first layer geometry to sphere
+```
 
 ### Texture
 
@@ -306,23 +325,6 @@ Arguments:
 Examples:
 ```supercollider
 ~visuals.sendMsg('/reset', 0); // reset first layers
-```
-
-### Geometry
-
-#### Geom
-
-`/geom`
-
-Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- [**geom**](#geom) (string)
-
-Examples:
-```supercollider
-~visuals.sendMsg('/geom', 0, "plane"); // set first layer geometry to the default plane
-~visuals.sendMsg('/geom', 0, "box"); // set first layer geometry to box/cube
-~visuals.sendMsg('/geom', 0, "sphere"); // set first layer geometry to sphere
 ```
 
 ### Data
