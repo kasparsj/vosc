@@ -82,7 +82,7 @@ Examples:
 ~visuals.sendMsg('/layers', 8); // initializes 8 layers with stack layout
 ~visuals.sendMsg('/layers', 9, "grid"); // initializes 9 layers with grid layout
 9.do { |i|
-	~visuals.sendMsg('/load', i, "black_hole.jpeg");
+	~visuals.sendMsg('/tex', i, "black_hole.jpeg");
 };
 ```
 
@@ -155,7 +155,7 @@ Examples:
 
 #### Load
 
-`/load`
+`/tex`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -163,14 +163,14 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/load', 0, "0xff0000"); // load red color into first layer
-~visuals.sendMsg('/load', 0, "black_hole.jpeg"); // load image into first layer
-~visuals.sendMsg('/load', 0, "OscCircle.frag"); // load a fragment shader into first layer
-~visuals.sendMsg('/load', 0, "NoisySpirals"); // load a c++ sketch into first layer
-~visuals.sendMsg('/load', 0, "DSC_0081.mov"); // load a movie into first layer
-~visuals.sendMsg('/load', 0, "bbb_export.hpv"); // load high performance video into first layer
-~visuals.sendMsg('/load', 0, "webcam:0"); // load first webcam device into first layer
-~visuals.sendMsg('/load', 0, ""); // unload first layer texture
+~visuals.sendMsg('/tex', 0, "0xff0000"); // load red color into first layer
+~visuals.sendMsg('/tex', 0, "black_hole.jpeg"); // load image into first layer
+~visuals.sendMsg('/tex', 0, "OscCircle.frag"); // load a fragment shader into first layer
+~visuals.sendMsg('/tex', 0, "NoisySpirals"); // load a c++ sketch into first layer
+~visuals.sendMsg('/tex', 0, "DSC_0081.mov"); // load a movie into first layer
+~visuals.sendMsg('/tex', 0, "bbb_export.hpv"); // load high performance video into first layer
+~visuals.sendMsg('/tex', 0, "webcam:0"); // load first webcam device into first layer
+~visuals.sendMsg('/tex', 0, ""); // unload first layer texture
 ```
 
 #### Reload
