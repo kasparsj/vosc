@@ -52,8 +52,6 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
         looper->update();
     }
     geom.update();
-    // needed for tex2.bind() inside draw
-    ofDisableArbTex();
 }
 
 void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {

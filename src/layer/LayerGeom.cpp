@@ -34,6 +34,7 @@ void LayerGeom::setShader(string path) {
 }
 
 void LayerGeom::update() {
+    material.setup(matSettings);
     if (primitive == NULL) {
         if (path == "plane") {
             primitive = new ofPlanePrimitive(100, 100, 2, 2);
@@ -66,14 +67,16 @@ void LayerGeom::update() {
         //primitive->draw();
         mesh = primitive->getMesh();
     }
+    // needed for tex.bind() inside draw
+    ofDisableArbTex();
 }
 
 void LayerGeom::draw() {
     if (layer->tex.hasTexture()) {
-        const ofTexture& tex2 = layer->tex.getFbo().getTexture();
-        tex2.bind();
+        const ofTexture& tex = layer->tex.getFbo().getTexture();
+        tex.bind();
         _draw();
-        tex2.unbind();
+        tex.unbind();
     }
     else {
         _draw();
@@ -84,10 +87,12 @@ void LayerGeom::draw() {
 }
 
 void LayerGeom::_draw() {
+    material.begin();
     if (drawInstanced > 1) {
         mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
     }
     else {
         mesh.draw();
     }
+    material.end();
 }

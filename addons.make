@@ -1,3 +1,4 @@
+ofxAutoReloadedShader
 ofxColorTheory
 ofxEasing
 ofxHPVPlayer

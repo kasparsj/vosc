@@ -8,12 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		04C13EEA813A786CC1D8137A /* FxaaPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9425843AEC3118B8FDEF1B0B /* FxaaPass.cpp */; };
-		05023EB0D03AC01FFFE28F7A /* LayerGeom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0B06ADC96F9B461820BF4467 /* LayerGeom.cpp */; };
 		0546D1A38E13BD319CC9755B /* OscReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9BF3AA0D4FAA89D0F8A0E545 /* OscReceivedElements.cpp */; };
 		07F0761DF15EC42437CC8402 /* ColorScheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7F9AE8283BEDCBB358ACC40A /* ColorScheme.cpp */; };
+		081251DFDA2F64A94FA7FE19 /* Layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BA986CF673F742569173F979 /* Layer.cpp */; };
 		08C23182D394C53F6ECE6CCC /* easing_terms_of_use.html in Sources */ = {isa = PBXBuildFile; fileRef = 528CB0EB22F0A199A5F479D5 /* easing_terms_of_use.html */; };
 		114C00B13F753E59BB0984BB /* DofPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E837DEBFAEA1CAD833A377DF /* DofPass.cpp */; };
 		1516DF100C1636ACDFEAC173 /* FlippedCompound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 05F3D9211F202EAD5E2AA9FA /* FlippedCompound.cpp */; };
+		17474A172614F63589066020 /* LayerTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7F0E68045434798E8DBE1412 /* LayerTex.cpp */; };
 		1DABF50C769AD89161B557AE /* FramesBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 347D0C39A1C7D6331C7B8E07 /* FramesBuffer.cpp */; };
 		1E615236D6D182DED6C8A8B2 /* RenderPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 54F36382628E4D0FF07206D7 /* RenderPass.cpp */; };
 		1EF68DFFFDB46A876B77338B /* ColorUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55138D8657D9D09949E54626 /* ColorUtil.cpp */; };
@@ -22,20 +23,18 @@
 		231BF86FC8A2A84536B0CBE0 /* Video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9C35AB5202DEE1FAE587B8D /* Video.cpp */; };
 		28AFD6FA9B9C885AFD9FF1C7 /* HorizontalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
-		2B5265572916949F0071D8BF /* LayerTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B5265552916949F0071D8BF /* LayerTex.cpp */; };
-		2B5443DD29117EBB00FB44D8 /* Gen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B5443DC29117E6100FB44D8 /* Gen.cpp */; };
-		2BE51A5B29154F3F00324F1C /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BE51A5929154D5C00324F1C /* Color.cpp */; };
 		33DB731E964056D7E35604A7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
 		3A499904889C490DCF533C6E /* BloomPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41ED8C8083845703AA1FDFA /* BloomPass.cpp */; };
 		3D6BA46406CE29B32055340C /* Analogous.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24317A596BC892793AEA0706 /* Analogous.cpp */; };
 		3D839E120AFEABE9CA2B91D4 /* Monochrome.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C5EDF65915908821C72E565 /* Monochrome.cpp */; };
+		3EBCD03048ED03CCB70D6972 /* LayerData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C23F79F9BFBAD0F41FB354FD /* LayerData.cpp */; };
 		4355FD81C3F9DDE40B10CE94 /* SSAOPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C127DCF305861E6D5D6332E6 /* SSAOPass.cpp */; };
 		4A2B684DF41F7779B2947319 /* RimHighlightingPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74BDDD14F49833AD24862E87 /* RimHighlightingPass.cpp */; };
 		4ADB88E2FB52E76A471065DE /* ofxOscParameterSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0AED834CE4DEC5260AF302A2 /* ofxOscParameterSync.cpp */; };
-		4FB14F2E5A6B0B0ECFEA44A7 /* LayerData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87E590E3B037E6968906BDB3 /* LayerData.cpp */; };
 		510CAFE035E576A4E1502D52 /* UdpSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DEF695B88BA5FAACEAA937 /* UdpSocket.cpp */; };
 		5790F39566203E0212580DB0 /* ReflectX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7648D86674A13C326B506A34 /* ReflectX.cpp */; };
 		5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DF49D76C45D5DB505A234880 /* ofxOscMessage.cpp */; };
+		622F2B6B3FFAA37224C22AD2 /* ofxAutoReloadedShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */; };
 		62545D179C94265CA1389D4A /* OscOutboundPacketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */; };
 		640279EE111671BD026CB013 /* ofxOscReceiver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C2FAC65C491D4231379F3298 /* ofxOscReceiver.cpp */; };
 		64419FBCCF52F2F13D35A292 /* Sketch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BDF81F38A399D38B0C59F700 /* Sketch.cpp */; };
@@ -43,7 +42,6 @@
 		6A505EAE8088949A9180FFE7 /* GodRaysPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07AAE715D8853EDA76BC909 /* GodRaysPass.cpp */; };
 		6C8551DB2C641E610EA107BE /* Sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */; };
 		72A929D3561B8232A182ABFC /* ofxOscBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65EEFA3DA3526E9CDD9C21F9 /* ofxOscBundle.cpp */; };
-		7455350C809AAAADD1A8E9BF /* Layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 961049863D8C691271E7D396 /* Layer.cpp */; };
 		778DCA6792476E5B9F57F175 /* ConvolutionPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3AACD9661AF21261E24A05A4 /* ConvolutionPass.cpp */; };
 		79308B05C4D0A9B9E404FFED /* BleachBypassPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C5313A8CC477A5ECC0A7E4E8 /* BleachBypassPass.cpp */; };
 		7AB51F1099DC01486D18FAF6 /* LimbDarkeningPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9222AE2464AE1CF72876A4ED /* LimbDarkeningPass.cpp */; };
@@ -77,10 +75,12 @@
 		C4782ECC372420ACE0615B74 /* OscPrintReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BC8881B3C8C0A1C45F042E7A /* OscPrintReceivedElements.cpp */; };
 		C6D227F5B8C686EF7F391BA6 /* Tetrad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5BE5C3443286643DF629CB82 /* Tetrad.cpp */; };
 		CC7496C750B49DFCA0D43427 /* ColorWheelScheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D09A011EA9E66CDCAAB4FD25 /* ColorWheelScheme.cpp */; };
+		CD003A65432BA73FDA3F1F69 /* Gen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5AAD7137CBC357F67BA0E698 /* Gen.cpp */; };
 		CEA24AEB74ADBDFB0AE926F3 /* lz4.c in Sources */ = {isa = PBXBuildFile; fileRef = 9144546E5481902E77870A52 /* lz4.c */; };
 		D04ED2A93B5FDDA28935E888 /* Beyoon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4176D2EC3811F1A6586B49A5 /* Beyoon.cpp */; };
 		D736C6549BC0F3AC000D3E46 /* ofxHPVPLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CA80722114B53E79572651A /* ofxHPVPLayer.cpp */; };
 		D752EB8BA905C25F5E7F2B30 /* ZoomBlurPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF8D27B3DEDC121DE85F5B7B /* ZoomBlurPass.cpp */; };
+		D8677E18BE8001D8515C2521 /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5BE614E7C4F4FC6E884832B4 /* Color.cpp */; };
 		D91BBD56E65F1B0195ABD2FB /* ofxTidalCycles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A5288DE681747CD43B30E8C3 /* ofxTidalCycles.cpp */; };
 		DBCA40F59B84917A76F45942 /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D58FD3055EBD404755645BEA /* Image.cpp */; };
 		DFB75F1EBE744A456AC999F4 /* ContrastPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6788311DC7D945282047837A /* ContrastPass.cpp */; };
@@ -91,6 +91,7 @@
 		E6EB0253C7456C2442D3560C /* Invert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 20CE1E405861E6EFEDA0A144 /* Invert.cpp */; };
 		F1E2E1DCD30D314AF182EDE0 /* HPVideo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 82CAB34AEEA60C0C60BC248B /* HPVideo.cpp */; };
 		F56110F5281631EA7D770D38 /* SplitComplementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4E2B4BC4A65212574815E669 /* SplitComplementary.cpp */; };
+		F7B83E7D0CAB59D9E8F8C9CD /* LayerGeom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1574D98230A5FA3F640B62D0 /* LayerGeom.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -111,6 +112,7 @@
 		016251DAB9DFE7D35B003202 /* HPVHeader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVHeader.h; path = ../../../addons/ofxHPVPlayer/src/HPVHeader.h; sourceTree = SOURCE_ROOT; };
 		01BD99D6CAAE9353615A1AC5 /* Complementary.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Complementary.h; path = ../../../addons/ofxColorTheory/src/Rules/Complementary.h; sourceTree = SOURCE_ROOT; };
 		0217829E621698E1FD8D9876 /* EdgePass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = EdgePass.h; path = ../../../addons/ofxPostProcessing/src/EdgePass.h; sourceTree = SOURCE_ROOT; };
+		0261DFB3A4808E21B3543B62 /* LayerTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerTex.h; path = src/layer/LayerTex.h; sourceTree = SOURCE_ROOT; };
 		02706B3C55F11A1F7823CDB0 /* Image.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Image.h; path = src/gen/Image.h; sourceTree = SOURCE_ROOT; };
 		029684CF678F70F6D3537A29 /* OscOutboundPacketStream.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscOutboundPacketStream.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscOutboundPacketStream.h; sourceTree = SOURCE_ROOT; };
 		04414BC56F941B5BDBD35834 /* Webcam.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Webcam.cpp; path = src/gen/Webcam.cpp; sourceTree = SOURCE_ROOT; };
@@ -120,17 +122,17 @@
 		05F3D9211F202EAD5E2AA9FA /* FlippedCompound.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FlippedCompound.cpp; path = ../../../addons/ofxColorTheory/src/Rules/FlippedCompound.cpp; sourceTree = SOURCE_ROOT; };
 		0AC8B4DE8CD341280FDE798A /* EdgePass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = EdgePass.cpp; path = ../../../addons/ofxPostProcessing/src/EdgePass.cpp; sourceTree = SOURCE_ROOT; };
 		0AED834CE4DEC5260AF302A2 /* ofxOscParameterSync.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscParameterSync.cpp; path = ../../../addons/ofxOsc/src/ofxOscParameterSync.cpp; sourceTree = SOURCE_ROOT; };
-		0B06ADC96F9B461820BF4467 /* LayerGeom.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerGeom.cpp; path = src/layer/LayerGeom.cpp; sourceTree = SOURCE_ROOT; };
 		0BC82FF9BACF54030E42E808 /* RGBShiftPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RGBShiftPass.h; path = ../../../addons/ofxPostProcessing/src/RGBShiftPass.h; sourceTree = SOURCE_ROOT; };
 		0D811F3E1817C17351F97CCF /* BleachBypassPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BleachBypassPass.h; path = ../../../addons/ofxPostProcessing/src/BleachBypassPass.h; sourceTree = SOURCE_ROOT; };
 		108C4DB0C398388D00027091 /* KaleidoscopePass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = KaleidoscopePass.cpp; path = ../../../addons/ofxPostProcessing/src/KaleidoscopePass.cpp; sourceTree = SOURCE_ROOT; };
 		10BDAD77820FDBCBF144C28A /* lz4hc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = lz4hc.h; path = ../../../addons/ofxHPVPlayer/src/lz4hc.h; sourceTree = SOURCE_ROOT; };
+		144656B571305328D7DB94BB /* LayerData.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerData.h; path = src/layer/LayerData.h; sourceTree = SOURCE_ROOT; };
 		14F8B4286F653202B881D865 /* ToonPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ToonPass.h; path = ../../../addons/ofxPostProcessing/src/ToonPass.h; sourceTree = SOURCE_ROOT; };
 		15644D27B8AD78E007263288 /* Rotate.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Rotate.cpp; path = ../../../addons/ofxPostProcessing/src/Rotate.cpp; sourceTree = SOURCE_ROOT; };
+		1574D98230A5FA3F640B62D0 /* LayerGeom.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerGeom.cpp; path = src/layer/LayerGeom.cpp; sourceTree = SOURCE_ROOT; };
 		15FB2E86C44B0C97D2B82E65 /* ofxLooper.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxLooper.cpp; path = ../../../addons/ofxLooper/src/ofxLooper.cpp; sourceTree = SOURCE_ROOT; };
 		199A2F0F6EFDD17E50C9FD34 /* Pixelsort.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Pixelsort.cpp; path = ../../../addons/ofxPostProcessing/src/Pixelsort.cpp; sourceTree = SOURCE_ROOT; };
 		1AF23F0A21D95F5FB5E37082 /* FBOGen.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FBOGen.cpp; path = src/gen/FBOGen.cpp; sourceTree = SOURCE_ROOT; };
-		1C3FC205572A90EBFD149170 /* LayerData.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerData.h; path = src/layer/LayerData.h; sourceTree = SOURCE_ROOT; };
 		1E952AF032B351FB32CCBD2B /* Split.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Split.cpp; path = ../../../addons/ofxPostProcessing/src/Split.cpp; sourceTree = SOURCE_ROOT; };
 		1F14BB101CDA8E3ECB95EFE9 /* Triad.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Triad.h; path = ../../../addons/ofxColorTheory/src/Rules/Triad.h; sourceTree = SOURCE_ROOT; };
 		20CE1E405861E6EFEDA0A144 /* Invert.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Invert.cpp; path = ../../../addons/ofxPostProcessing/src/Invert.cpp; sourceTree = SOURCE_ROOT; };
@@ -141,124 +143,6 @@
 		27959D03B9B02B84FE8D7790 /* Video.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Video.h; path = src/gen/Video.h; sourceTree = SOURCE_ROOT; };
 		27F1AFE400331DE8F477F084 /* ColorWheelSchemes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorWheelSchemes.cpp; path = ../../../addons/ofxColorTheory/src/ColorWheelSchemes.cpp; sourceTree = SOURCE_ROOT; };
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
-		2B526553291693EF0071D8BF /* Spiral.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Spiral.h; path = sketches/Spiral.h; sourceTree = "<group>"; };
-		2B5265552916949F0071D8BF /* LayerTex.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = LayerTex.cpp; sourceTree = "<group>"; };
-		2B5265562916949F0071D8BF /* LayerTex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LayerTex.h; sourceTree = "<group>"; };
-		2B54436829117BDF00FB44D8 /* 21.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 21.frag; sourceTree = "<group>"; };
-		2B54436929117BDF00FB44D8 /* 76.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 76.frag; sourceTree = "<group>"; };
-		2B54436A29117BDF00FB44D8 /* 99.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 99.frag; sourceTree = "<group>"; };
-		2B54436B29117BDF00FB44D8 /* 60.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 60.frag; sourceTree = "<group>"; };
-		2B54436C29117BDF00FB44D8 /* 37.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 37.frag; sourceTree = "<group>"; };
-		2B54436D29117BDF00FB44D8 /* 01.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 01.frag; sourceTree = "<group>"; };
-		2B54436E29117BDF00FB44D8 /* 56.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 56.frag; sourceTree = "<group>"; };
-		2B54436F29117BDF00FB44D8 /* 95.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 95.frag; sourceTree = "<group>"; };
-		2B54437029117BDF00FB44D8 /* 83.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 83.frag; sourceTree = "<group>"; };
-		2B54437129117BDF00FB44D8 /* 82.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 82.frag; sourceTree = "<group>"; };
-		2B54437229117BDF00FB44D8 /* 94.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 94.frag; sourceTree = "<group>"; };
-		2B54437329117BDF00FB44D8 /* 57.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 57.frag; sourceTree = "<group>"; };
-		2B54437429117BDF00FB44D8 /* 16.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 16.frag; sourceTree = "<group>"; };
-		2B54437529117BDF00FB44D8 /* 41.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 41.frag; sourceTree = "<group>"; };
-		2B54437629117BDF00FB44D8 /* 36.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 36.frag; sourceTree = "<group>"; };
-		2B54437729117BDF00FB44D8 /* 61.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 61.frag; sourceTree = "<group>"; };
-		2B54437829117BDF00FB44D8 /* 77.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 77.frag; sourceTree = "<group>"; };
-		2B54437929117BDF00FB44D8 /* 98.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 98.frag; sourceTree = "<group>"; };
-		2B54437A29117BDF00FB44D8 /* 46.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 46.frag; sourceTree = "<group>"; };
-		2B54437B29117BDF00FB44D8 /* 93.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 93.frag; sourceTree = "<group>"; };
-		2B54437C29117BDF00FB44D8 /* 85.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 85.frag; sourceTree = "<group>"; };
-		2B54437D29117BDF00FB44D8 /* 70.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 70.frag; sourceTree = "<group>"; };
-		2B54437E29117BDF00FB44D8 /* 66.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 66.frag; sourceTree = "<group>"; };
-		2B54437F29117BDF00FB44D8 /* 89.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 89.frag; sourceTree = "<group>"; };
-		2B54438029117BDF00FB44D8 /* 67.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 67.frag; sourceTree = "<group>"; };
-		2B54438129117BDF00FB44D8 /* 88.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 88.frag; sourceTree = "<group>"; };
-		2B54438229117BDF00FB44D8 /* 71.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 71.frag; sourceTree = "<group>"; };
-		2B54438329117BDF00FB44D8 /* 84.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 84.frag; sourceTree = "<group>"; };
-		2B54438429117BDF00FB44D8 /* 92.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 92.frag; sourceTree = "<group>"; };
-		2B54438529117BDF00FB44D8 /* 51.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 51.frag; sourceTree = "<group>"; };
-		2B54438629117BDF00FB44D8 /* 06.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 06.frag; sourceTree = "<group>"; };
-		2B54438729117BDF00FB44D8 /* 47.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 47.frag; sourceTree = "<group>"; };
-		2B54438829117BDF00FB44D8 /* 87.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 87.frag; sourceTree = "<group>"; };
-		2B54438929117BDF00FB44D8 /* 68.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 68.frag; sourceTree = "<group>"; };
-		2B54438A29117BDF00FB44D8 /* 91.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 91.frag; sourceTree = "<group>"; };
-		2B54438B29117BDF00FB44D8 /* 52.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 52.frag; sourceTree = "<group>"; };
-		2B54438C29117BDF00FB44D8 /* 13.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 13.frag; sourceTree = "<group>"; };
-		2B54438D29117BDF00FB44D8 /* 44.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 44.frag; sourceTree = "<group>"; };
-		2B54438E29117BDF00FB44D8 /* 64.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 64.frag; sourceTree = "<group>"; };
-		2B54438F29117BDF00FB44D8 /* 72.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 72.frag; sourceTree = "<group>"; };
-		2B54439029117BDF00FB44D8 /* 25.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 25.frag; sourceTree = "<group>"; };
-		2B54439129117BDF00FB44D8 /* 09.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 09.frag; sourceTree = "<group>"; };
-		2B54439229117BDF00FB44D8 /* 48.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 48.frag; sourceTree = "<group>"; };
-		2B54439329117BDF00FB44D8 /* 24.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 24.frag; sourceTree = "<group>"; };
-		2B54439429117BDF00FB44D8 /* 73.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 73.frag; sourceTree = "<group>"; };
-		2B54439529117BDF00FB44D8 /* 65.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 65.frag; sourceTree = "<group>"; };
-		2B54439629117BDF00FB44D8 /* 12.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 12.frag; sourceTree = "<group>"; };
-		2B54439729117BDF00FB44D8 /* 53.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 53.frag; sourceTree = "<group>"; };
-		2B54439829117BDF00FB44D8 /* 90.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 90.frag; sourceTree = "<group>"; };
-		2B54439929117BDF00FB44D8 /* 86.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 86.frag; sourceTree = "<group>"; };
-		2B54439A29117BDF00FB44D8 /* 69.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 69.frag; sourceTree = "<group>"; };
-		2B54439B29117BDF00FB44D8 /* 35.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 35.frag; sourceTree = "<group>"; };
-		2B54439C29117BDF00FB44D8 /* 62.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 62.frag; sourceTree = "<group>"; };
-		2B54439D29117BDF00FB44D8 /* 74.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 74.frag; sourceTree = "<group>"; };
-		2B54439E29117BDF00FB44D8 /* 23.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 23.frag; sourceTree = "<group>"; };
-		2B54439F29117BDF00FB44D8 /* 58.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 58.frag; sourceTree = "<group>"; };
-		2B5443A029117BDF00FB44D8 /* 100.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 100.frag; sourceTree = "<group>"; };
-		2B5443A129117BDF00FB44D8 /* 81.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 81.frag; sourceTree = "<group>"; };
-		2B5443A229117BDF00FB44D8 /* 97.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 97.frag; sourceTree = "<group>"; };
-		2B5443A329117BDF00FB44D8 /* 78.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 78.frag; sourceTree = "<group>"; };
-		2B5443A429117BDF00FB44D8 /* 54.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 54.frag; sourceTree = "<group>"; };
-		2B5443A529117BDF00FB44D8 /* 15.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 15.frag; sourceTree = "<group>"; };
-		2B5443A629117BDF00FB44D8 /* 42.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 42.frag; sourceTree = "<group>"; };
-		2B5443A729117BDF00FB44D8 /* 14.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 14.frag; sourceTree = "<group>"; };
-		2B5443A829117BDF00FB44D8 /* 55.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 55.frag; sourceTree = "<group>"; };
-		2B5443A929117BDF00FB44D8 /* 96.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 96.frag; sourceTree = "<group>"; };
-		2B5443AA29117BDF00FB44D8 /* 79.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 79.frag; sourceTree = "<group>"; };
-		2B5443AB29117BDF00FB44D8 /* 80.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 80.frag; sourceTree = "<group>"; };
-		2B5443AC29117BDF00FB44D8 /* 59.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 59.frag; sourceTree = "<group>"; };
-		2B5443AD29117BDF00FB44D8 /* 22.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 22.frag; sourceTree = "<group>"; };
-		2B5443AE29117BDF00FB44D8 /* 75.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 75.frag; sourceTree = "<group>"; };
-		2B5443AF29117BDF00FB44D8 /* 63.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 63.frag; sourceTree = "<group>"; };
-		2B5443B029117BDF00FB44D8 /* 34.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 34.frag; sourceTree = "<group>"; };
-		2B5443B229117BDF00FB44D8 /* black_hole.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = black_hole.jpeg; sourceTree = "<group>"; };
-		2B5443B329117BDF00FB44D8 /* .gitkeep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
-		2B5443B529117BDF00FB44D8 /* bbb_export.hpv */ = {isa = PBXFileReference; lastKnownFileType = file; path = bbb_export.hpv; sourceTree = "<group>"; };
-		2B5443B629117BDF00FB44D8 /* DSC_0084.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = DSC_0084.mov; sourceTree = "<group>"; };
-		2B5443B729117BDF00FB44D8 /* DSC_0082.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = DSC_0082.mov; sourceTree = "<group>"; };
-		2B5443B829117BDF00FB44D8 /* DSC_0083.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = DSC_0083.mov; sourceTree = "<group>"; };
-		2B5443B929117BDF00FB44D8 /* DSC_0081.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = DSC_0081.mov; sourceTree = "<group>"; };
-		2B5443BB29117BDF00FB44D8 /* Empty.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Empty.frag; sourceTree = "<group>"; };
-		2B5443BC29117BDF00FB44D8 /* Water.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Water.frag; sourceTree = "<group>"; };
-		2B5443BD29117BDF00FB44D8 /* of_default_vertex_in_attributes.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = of_default_vertex_in_attributes.glsl; sourceTree = "<group>"; };
-		2B5443BE29117BDF00FB44D8 /* Lights1.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Lights1.frag; sourceTree = "<group>"; };
-		2B5443BF29117BDF00FB44D8 /* Ether.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Ether.frag; sourceTree = "<group>"; };
-		2B5443C029117BDF00FB44D8 /* AtmoScattering.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = AtmoScattering.frag; sourceTree = "<group>"; };
-		2B5443C129117BDF00FB44D8 /* of_default_uniforms.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = of_default_uniforms.glsl; sourceTree = "<group>"; };
-		2B5443C229117BDF00FB44D8 /* 10.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 10.frag; sourceTree = "<group>"; };
-		2B5443C429117BDF00FB44D8 /* Grid.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grid.vert; sourceTree = "<group>"; };
-		2B5443C529117BDF00FB44D8 /* Grid.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grid.frag; sourceTree = "<group>"; };
-		2B5443C629117BDF00FB44D8 /* AudioEclipse.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = AudioEclipse.frag; sourceTree = "<group>"; };
-		2B5443C729117BDF00FB44D8 /* Star.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Star.frag; sourceTree = "<group>"; };
-		2B5443C829117BDF00FB44D8 /* passthru.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = passthru.vert; sourceTree = "<group>"; };
-		2B5443C929117BDF00FB44D8 /* 05.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 05.frag; sourceTree = "<group>"; };
-		2B5443CA29117BDF00FB44D8 /* ZebraV.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ZebraV.frag; sourceTree = "<group>"; };
-		2B5443CB29117BDF00FB44D8 /* 33.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 33.frag; sourceTree = "<group>"; };
-		2B5443CC29117BDF00FB44D8 /* ScanLines.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ScanLines.frag; sourceTree = "<group>"; };
-		2B5443CD29117BDF00FB44D8 /* TerrainGrid.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = TerrainGrid.frag; sourceTree = "<group>"; };
-		2B5443CE29117BDF00FB44D8 /* RotStringsV.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RotStringsV.frag; sourceTree = "<group>"; };
-		2B5443CF29117BDF00FB44D8 /* Lights2.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Lights2.frag; sourceTree = "<group>"; };
-		2B5443D029117BDF00FB44D8 /* StarNest.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = StarNest.frag; sourceTree = "<group>"; };
-		2B5443D129117BDF00FB44D8 /* 04.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 04.frag; sourceTree = "<group>"; };
-		2B5443D229117BDF00FB44D8 /* RotRainbow.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RotRainbow.frag; sourceTree = "<group>"; };
-		2B5443D329117BDF00FB44D8 /* Milk.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Milk.frag; sourceTree = "<group>"; };
-		2B5443D429117BDF00FB44D8 /* 03.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 03.frag; sourceTree = "<group>"; };
-		2B5443D529117BDF00FB44D8 /* ScanGrid.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ScanGrid.frag; sourceTree = "<group>"; };
-		2B5443D629117BDF00FB44D8 /* 02.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 02.frag; sourceTree = "<group>"; };
-		2B5443D729117BDF00FB44D8 /* OscCircle.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = OscCircle.frag; sourceTree = "<group>"; };
-		2B5443D829117BDF00FB44D8 /* RotStringsH.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RotStringsH.frag; sourceTree = "<group>"; };
-		2B5443D929117BDF00FB44D8 /* 18.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 18.frag; sourceTree = "<group>"; };
-		2B5443DA29117BDF00FB44D8 /* Fluid.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Fluid.frag; sourceTree = "<group>"; };
-		2B5443DB29117BDF00FB44D8 /* ZebraH.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ZebraH.frag; sourceTree = "<group>"; };
-		2B5443DC29117E6100FB44D8 /* Gen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Gen.cpp; path = gen/Gen.cpp; sourceTree = "<group>"; };
-		2BE51A5929154D5C00324F1C /* Color.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Color.cpp; path = gen/Color.cpp; sourceTree = "<group>"; };
-		2BE51A5A29154D5C00324F1C /* Color.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Color.h; path = gen/Color.h; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
 		2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VerticalTiltShifPass.cpp; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.cpp; sourceTree = SOURCE_ROOT; };
@@ -277,14 +161,15 @@
 		3C39EA8CB1911093FD56F9ED /* HorizontalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HorizontalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/HorizontalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		3E8911C6B8ABF8D32A950348 /* Sound.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Sound.h; path = src/Sound.h; sourceTree = SOURCE_ROOT; };
 		3F8A1741CC4F784D8B130531 /* HsbShiftPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HsbShiftPass.cpp; path = ../../../addons/ofxPostProcessing/src/HsbShiftPass.cpp; sourceTree = SOURCE_ROOT; };
+		402AF494E736B54C67F4D3BF /* Layer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Layer.h; path = src/layer/Layer.h; sourceTree = SOURCE_ROOT; };
 		40E3B175D68EA99116024843 /* FramesBuffer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FramesBuffer.h; path = ../../../addons/ofxLooper/src/FramesBuffer.h; sourceTree = SOURCE_ROOT; };
 		4176D2EC3811F1A6586B49A5 /* Beyoon.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Beyoon.cpp; path = ../../../addons/ofxPostProcessing/src/Beyoon.cpp; sourceTree = SOURCE_ROOT; };
+		41E6B72EDC9285BBE9191004 /* Color.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Color.h; path = src/gen/Color.h; sourceTree = SOURCE_ROOT; };
 		444657A12E59D0ED86981498 /* TimerListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = TimerListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/TimerListener.h; sourceTree = SOURCE_ROOT; };
 		484F662699DFE8176E1B750F /* PostProcessing.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostProcessing.cpp; path = ../../../addons/ofxPostProcessing/src/PostProcessing.cpp; sourceTree = SOURCE_ROOT; };
 		48974F980F51769171D0B2F5 /* IpEndpointName.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IpEndpointName.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/IpEndpointName.h; sourceTree = SOURCE_ROOT; };
 		48E4AC9F455A87F0448C70B2 /* ofxPostProcessing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxPostProcessing.h; path = ../../../addons/ofxPostProcessing/src/ofxPostProcessing.h; sourceTree = SOURCE_ROOT; };
 		49CAE27DC1D138037CF88ACF /* FxaaPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FxaaPass.h; path = ../../../addons/ofxPostProcessing/src/FxaaPass.h; sourceTree = SOURCE_ROOT; };
-		4B82061ED0004B83EF63B969 /* Layer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Layer.h; path = src/layer/Layer.h; sourceTree = SOURCE_ROOT; };
 		4C14E0ED476E874ADE1E028D /* ColorWheelSchemes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ColorWheelSchemes.h; path = ../../../addons/ofxColorTheory/src/ColorWheelSchemes.h; sourceTree = SOURCE_ROOT; };
 		4E2B4BC4A65212574815E669 /* SplitComplementary.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = SplitComplementary.cpp; path = ../../../addons/ofxColorTheory/src/Rules/SplitComplementary.cpp; sourceTree = SOURCE_ROOT; };
 		4E95FB446A9C9C6F0DE12D75 /* OscPrintReceivedElements.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscPrintReceivedElements.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPrintReceivedElements.h; sourceTree = SOURCE_ROOT; };
@@ -296,11 +181,16 @@
 		532314368EF973BD38C13AED /* ofxHPVPlayer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxHPVPlayer.h; path = ../../../addons/ofxHPVPlayer/src/ofxHPVPlayer.h; sourceTree = SOURCE_ROOT; };
 		54F36382628E4D0FF07206D7 /* RenderPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = RenderPass.cpp; path = ../../../addons/ofxPostProcessing/src/RenderPass.cpp; sourceTree = SOURCE_ROOT; };
 		55138D8657D9D09949E54626 /* ColorUtil.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorUtil.cpp; path = ../../../addons/ofxColorTheory/src/ColorUtil.cpp; sourceTree = SOURCE_ROOT; };
+		57B6FEE57FB75BD3A937508D /* Spiral.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Spiral.h; path = src/sketches/Spiral.h; sourceTree = SOURCE_ROOT; };
 		57B986EA2D2AB951677C2AED /* Gen.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Gen.h; path = src/gen/Gen.h; sourceTree = SOURCE_ROOT; };
+		57DBCDF6EAF0B2339FC73E55 /* LayerGeom.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerGeom.h; path = src/layer/LayerGeom.h; sourceTree = SOURCE_ROOT; };
 		5A2FEA06065174419FD1BB14 /* SketchImpl.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SketchImpl.h; path = src/gen/SketchImpl.h; sourceTree = SOURCE_ROOT; };
+		5AAD7137CBC357F67BA0E698 /* Gen.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Gen.cpp; path = src/gen/Gen.cpp; sourceTree = SOURCE_ROOT; };
 		5BC56A60E911F7488A58830A /* NoiseWarpPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = NoiseWarpPass.cpp; path = ../../../addons/ofxPostProcessing/src/NoiseWarpPass.cpp; sourceTree = SOURCE_ROOT; };
 		5BE5C3443286643DF629CB82 /* Tetrad.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Tetrad.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Tetrad.cpp; sourceTree = SOURCE_ROOT; };
+		5BE614E7C4F4FC6E884832B4 /* Color.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Color.cpp; path = src/gen/Color.cpp; sourceTree = SOURCE_ROOT; };
 		63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscOutboundPacketStream.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscOutboundPacketStream.cpp; sourceTree = SOURCE_ROOT; };
+		65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxAutoReloadedShader.cpp; path = ../../../addons/ofxAutoReloadedShader/src/ofxAutoReloadedShader.cpp; sourceTree = SOURCE_ROOT; };
 		65EEFA3DA3526E9CDD9C21F9 /* ofxOscBundle.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscBundle.cpp; path = ../../../addons/ofxOsc/src/ofxOscBundle.cpp; sourceTree = SOURCE_ROOT; };
 		6788311DC7D945282047837A /* ContrastPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ContrastPass.cpp; path = ../../../addons/ofxPostProcessing/src/ContrastPass.cpp; sourceTree = SOURCE_ROOT; };
 		697B169C0F7B7A765EB7BECB /* Log.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Log.cpp; path = ../../../addons/ofxHPVPlayer/src/Log.cpp; sourceTree = SOURCE_ROOT; };
@@ -315,11 +205,11 @@
 		7689F8A0F3D0B7635A8C3104 /* ofxOscArg.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscArg.h; path = ../../../addons/ofxOsc/src/ofxOscArg.h; sourceTree = SOURCE_ROOT; };
 		7809B234B888B369B724B134 /* ofxTidalCycles.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxTidalCycles.h; path = ../../../addons/ofxTidalCycles/src/ofxTidalCycles.h; sourceTree = SOURCE_ROOT; };
 		79CDBBBAC046662F1A156238 /* HPVPlayer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVPlayer.h; path = ../../../addons/ofxHPVPlayer/src/HPVPlayer.h; sourceTree = SOURCE_ROOT; };
+		7F0E68045434798E8DBE1412 /* LayerTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerTex.cpp; path = src/layer/LayerTex.cpp; sourceTree = SOURCE_ROOT; };
 		7F9AE8283BEDCBB358ACC40A /* ColorScheme.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorScheme.cpp; path = ../../../addons/ofxColorTheory/src/ColorScheme.cpp; sourceTree = SOURCE_ROOT; };
 		81967292BFC87A0144BD32C6 /* ofxOscSender.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscSender.cpp; path = ../../../addons/ofxOsc/src/ofxOscSender.cpp; sourceTree = SOURCE_ROOT; };
 		82CAB34AEEA60C0C60BC248B /* HPVideo.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HPVideo.cpp; path = src/HPVideo.cpp; sourceTree = SOURCE_ROOT; };
 		830C7C3DF5B5E3A6340D0712 /* ThreadSafeQueue.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ThreadSafeQueue.h; path = ../../../addons/ofxHPVPlayer/src/ThreadSafeQueue.h; sourceTree = SOURCE_ROOT; };
-		87E590E3B037E6968906BDB3 /* LayerData.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerData.cpp; path = src/layer/LayerData.cpp; sourceTree = SOURCE_ROOT; };
 		894A32AEB783A4469CFF3C4E /* Sketch.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Sketch.h; path = src/gen/Sketch.h; sourceTree = SOURCE_ROOT; };
 		89CF8997FAD1A371B11F4481 /* SplitComplementary.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SplitComplementary.h; path = ../../../addons/ofxColorTheory/src/Rules/SplitComplementary.h; sourceTree = SOURCE_ROOT; };
 		8B30E93FD3D3475EED522A0E /* ofxOscBundle.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscBundle.h; path = ../../../addons/ofxOsc/src/ofxOscBundle.h; sourceTree = SOURCE_ROOT; };
@@ -331,7 +221,6 @@
 		91F91C3BEAD0B3C2B92BB9A5 /* DofAltPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DofAltPass.cpp; path = ../../../addons/ofxPostProcessing/src/DofAltPass.cpp; sourceTree = SOURCE_ROOT; };
 		9222AE2464AE1CF72876A4ED /* LimbDarkeningPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LimbDarkeningPass.cpp; path = ../../../addons/ofxPostProcessing/src/LimbDarkeningPass.cpp; sourceTree = SOURCE_ROOT; };
 		9425843AEC3118B8FDEF1B0B /* FxaaPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FxaaPass.cpp; path = ../../../addons/ofxPostProcessing/src/FxaaPass.cpp; sourceTree = SOURCE_ROOT; };
-		961049863D8C691271E7D396 /* Layer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Layer.cpp; path = src/layer/Layer.cpp; sourceTree = SOURCE_ROOT; };
 		968D72C0F70A6BE01FC2AACC /* ReflectX.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ReflectX.h; path = ../../../addons/ofxPostProcessing/src/ReflectX.h; sourceTree = SOURCE_ROOT; };
 		97AC5D82D06DAB2345FDB039 /* Config.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Config.h; path = src/Config.h; sourceTree = SOURCE_ROOT; };
 		982F6A4F410C2A639409070D /* Rotate.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Rotate.h; path = ../../../addons/ofxPostProcessing/src/Rotate.h; sourceTree = SOURCE_ROOT; };
@@ -352,6 +241,7 @@
 		B2F3289AB405C5BB496FC247 /* PixelatePass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PixelatePass.h; path = ../../../addons/ofxPostProcessing/src/PixelatePass.h; sourceTree = SOURCE_ROOT; };
 		B31C608870ECEB2490A93736 /* ofxOscParameterSync.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscParameterSync.h; path = ../../../addons/ofxOsc/src/ofxOscParameterSync.h; sourceTree = SOURCE_ROOT; };
 		B5CEF0B83529626C7E8410B7 /* BloomPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BloomPass.h; path = ../../../addons/ofxPostProcessing/src/BloomPass.h; sourceTree = SOURCE_ROOT; };
+		BA986CF673F742569173F979 /* Layer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Layer.cpp; path = src/layer/Layer.cpp; sourceTree = SOURCE_ROOT; };
 		BAA4E229C246D7B615917505 /* ZoomBlurPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ZoomBlurPass.h; path = ../../../addons/ofxPostProcessing/src/ZoomBlurPass.h; sourceTree = SOURCE_ROOT; };
 		BB560E6FDCEADC3494E3D9B3 /* Tetrad.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Tetrad.h; path = ../../../addons/ofxColorTheory/src/Rules/Tetrad.h; sourceTree = SOURCE_ROOT; };
 		BC8881B3C8C0A1C45F042E7A /* OscPrintReceivedElements.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscPrintReceivedElements.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPrintReceivedElements.cpp; sourceTree = SOURCE_ROOT; };
@@ -361,6 +251,7 @@
 		C037A9C7AF50F90807B4BA85 /* Shader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Shader.cpp; path = src/gen/Shader.cpp; sourceTree = SOURCE_ROOT; };
 		C07AAE715D8853EDA76BC909 /* GodRaysPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GodRaysPass.cpp; path = ../../../addons/ofxPostProcessing/src/GodRaysPass.cpp; sourceTree = SOURCE_ROOT; };
 		C127DCF305861E6D5D6332E6 /* SSAOPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = SSAOPass.cpp; path = ../../../addons/ofxPostProcessing/src/SSAOPass.cpp; sourceTree = SOURCE_ROOT; };
+		C23F79F9BFBAD0F41FB354FD /* LayerData.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerData.cpp; path = src/layer/LayerData.cpp; sourceTree = SOURCE_ROOT; };
 		C2FAC65C491D4231379F3298 /* ofxOscReceiver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscReceiver.cpp; path = ../../../addons/ofxOsc/src/ofxOscReceiver.cpp; sourceTree = SOURCE_ROOT; };
 		C4A1A32A8CE01C0C31CA524E /* FlippedCompound.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FlippedCompound.h; path = ../../../addons/ofxColorTheory/src/Rules/FlippedCompound.h; sourceTree = SOURCE_ROOT; };
 		C5313A8CC477A5ECC0A7E4E8 /* BleachBypassPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = BleachBypassPass.cpp; path = ../../../addons/ofxPostProcessing/src/BleachBypassPass.cpp; sourceTree = SOURCE_ROOT; };
@@ -368,7 +259,6 @@
 		C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FakeSSSPass.cpp; path = ../../../addons/ofxPostProcessing/src/FakeSSSPass.cpp; sourceTree = SOURCE_ROOT; };
 		C6937888E126BADC8777423B /* OscTypes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscTypes.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscTypes.h; sourceTree = SOURCE_ROOT; };
 		C69CBE4E4FA9530657A6CD23 /* FakeSSSPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FakeSSSPass.h; path = ../../../addons/ofxPostProcessing/src/FakeSSSPass.h; sourceTree = SOURCE_ROOT; };
-		C7578940BC9DA4CCD86DF56F /* LayerGeom.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerGeom.h; path = src/layer/LayerGeom.h; sourceTree = SOURCE_ROOT; };
 		CC725CAE0A003458E5573DF9 /* GodRaysPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GodRaysPass.h; path = ../../../addons/ofxPostProcessing/src/GodRaysPass.h; sourceTree = SOURCE_ROOT; };
 		CCA10A4CF59EBAE5E0E4916B /* Split.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Split.h; path = ../../../addons/ofxPostProcessing/src/Split.h; sourceTree = SOURCE_ROOT; };
 		D09A011EA9E66CDCAAB4FD25 /* ColorWheelScheme.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorWheelScheme.cpp; path = ../../../addons/ofxColorTheory/src/ColorWheelScheme.cpp; sourceTree = SOURCE_ROOT; };
@@ -573,6 +463,7 @@
 		EF3A04320CF71A9384B887B3 /* ReflectY.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ReflectY.h; path = ../../../addons/ofxPostProcessing/src/ReflectY.h; sourceTree = SOURCE_ROOT; };
 		EF8D27B3DEDC121DE85F5B7B /* ZoomBlurPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ZoomBlurPass.cpp; path = ../../../addons/ofxPostProcessing/src/ZoomBlurPass.cpp; sourceTree = SOURCE_ROOT; };
 		F171898BD12F77CCAD29B7C1 /* LUTPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LUTPass.cpp; path = ../../../addons/ofxPostProcessing/src/LUTPass.cpp; sourceTree = SOURCE_ROOT; };
+		F3CFD94F37ABC9182A320B79 /* ofxAutoReloadedShader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAutoReloadedShader.h; path = ../../../addons/ofxAutoReloadedShader/src/ofxAutoReloadedShader.h; sourceTree = SOURCE_ROOT; };
 		F4F5B6B8BA2BD52C646ED908 /* OscException.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscException.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscException.h; sourceTree = SOURCE_ROOT; };
 		F5DB1AC24B8010FC3C556AAC /* RenderPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RenderPass.h; path = ../../../addons/ofxPostProcessing/src/RenderPass.h; sourceTree = SOURCE_ROOT; };
 		F760FDAF16D2BDDE808B9400 /* Complementary.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Complementary.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Complementary.cpp; sourceTree = SOURCE_ROOT; };
@@ -603,6 +494,21 @@
 			name = ofxEasing;
 			sourceTree = "<group>";
 		};
+		1BF4AF61A21BC0CB4D19CFDE /* layer */ = {
+			isa = PBXGroup;
+			children = (
+				C23F79F9BFBAD0F41FB354FD /* LayerData.cpp */,
+				402AF494E736B54C67F4D3BF /* Layer.h */,
+				BA986CF673F742569173F979 /* Layer.cpp */,
+				1574D98230A5FA3F640B62D0 /* LayerGeom.cpp */,
+				57DBCDF6EAF0B2339FC73E55 /* LayerGeom.h */,
+				7F0E68045434798E8DBE1412 /* LayerTex.cpp */,
+				0261DFB3A4808E21B3543B62 /* LayerTex.h */,
+				144656B571305328D7DB94BB /* LayerData.h */,
+			);
+			name = layer;
+			sourceTree = "<group>";
+		};
 		23B354DE9B2F7CC92FB1652E /* src */ = {
 			isa = PBXGroup;
 			children = (
@@ -628,181 +534,6 @@
 			name = src;
 			sourceTree = "<group>";
 		};
-		2B526554291694630071D8BF /* layer */ = {
-			isa = PBXGroup;
-			children = (
-				961049863D8C691271E7D396 /* Layer.cpp */,
-				4B82061ED0004B83EF63B969 /* Layer.h */,
-				87E590E3B037E6968906BDB3 /* LayerData.cpp */,
-				1C3FC205572A90EBFD149170 /* LayerData.h */,
-				0B06ADC96F9B461820BF4467 /* LayerGeom.cpp */,
-				C7578940BC9DA4CCD86DF56F /* LayerGeom.h */,
-				2B5265552916949F0071D8BF /* LayerTex.cpp */,
-				2B5265562916949F0071D8BF /* LayerTex.h */,
-			);
-			path = layer;
-			sourceTree = "<group>";
-		};
-		2B54436629117BDF00FB44D8 /* data */ = {
-			isa = PBXGroup;
-			children = (
-				2B54436729117BDF00FB44D8 /* 100fragments */,
-				2B5443B129117BDF00FB44D8 /* images */,
-				2B5443B329117BDF00FB44D8 /* .gitkeep */,
-				2B5443B429117BDF00FB44D8 /* videos */,
-				2B5443BA29117BDF00FB44D8 /* shaders */,
-			);
-			name = data;
-			path = bin/data;
-			sourceTree = "<group>";
-		};
-		2B54436729117BDF00FB44D8 /* 100fragments */ = {
-			isa = PBXGroup;
-			children = (
-				2B54436829117BDF00FB44D8 /* 21.frag */,
-				2B54436929117BDF00FB44D8 /* 76.frag */,
-				2B54436A29117BDF00FB44D8 /* 99.frag */,
-				2B54436B29117BDF00FB44D8 /* 60.frag */,
-				2B54436C29117BDF00FB44D8 /* 37.frag */,
-				2B54436D29117BDF00FB44D8 /* 01.frag */,
-				2B54436E29117BDF00FB44D8 /* 56.frag */,
-				2B54436F29117BDF00FB44D8 /* 95.frag */,
-				2B54437029117BDF00FB44D8 /* 83.frag */,
-				2B54437129117BDF00FB44D8 /* 82.frag */,
-				2B54437229117BDF00FB44D8 /* 94.frag */,
-				2B54437329117BDF00FB44D8 /* 57.frag */,
-				2B54437429117BDF00FB44D8 /* 16.frag */,
-				2B54437529117BDF00FB44D8 /* 41.frag */,
-				2B54437629117BDF00FB44D8 /* 36.frag */,
-				2B54437729117BDF00FB44D8 /* 61.frag */,
-				2B54437829117BDF00FB44D8 /* 77.frag */,
-				2B54437929117BDF00FB44D8 /* 98.frag */,
-				2B54437A29117BDF00FB44D8 /* 46.frag */,
-				2B54437B29117BDF00FB44D8 /* 93.frag */,
-				2B54437C29117BDF00FB44D8 /* 85.frag */,
-				2B54437D29117BDF00FB44D8 /* 70.frag */,
-				2B54437E29117BDF00FB44D8 /* 66.frag */,
-				2B54437F29117BDF00FB44D8 /* 89.frag */,
-				2B54438029117BDF00FB44D8 /* 67.frag */,
-				2B54438129117BDF00FB44D8 /* 88.frag */,
-				2B54438229117BDF00FB44D8 /* 71.frag */,
-				2B54438329117BDF00FB44D8 /* 84.frag */,
-				2B54438429117BDF00FB44D8 /* 92.frag */,
-				2B54438529117BDF00FB44D8 /* 51.frag */,
-				2B54438629117BDF00FB44D8 /* 06.frag */,
-				2B54438729117BDF00FB44D8 /* 47.frag */,
-				2B54438829117BDF00FB44D8 /* 87.frag */,
-				2B54438929117BDF00FB44D8 /* 68.frag */,
-				2B54438A29117BDF00FB44D8 /* 91.frag */,
-				2B54438B29117BDF00FB44D8 /* 52.frag */,
-				2B54438C29117BDF00FB44D8 /* 13.frag */,
-				2B54438D29117BDF00FB44D8 /* 44.frag */,
-				2B54438E29117BDF00FB44D8 /* 64.frag */,
-				2B54438F29117BDF00FB44D8 /* 72.frag */,
-				2B54439029117BDF00FB44D8 /* 25.frag */,
-				2B54439129117BDF00FB44D8 /* 09.frag */,
-				2B54439229117BDF00FB44D8 /* 48.frag */,
-				2B54439329117BDF00FB44D8 /* 24.frag */,
-				2B54439429117BDF00FB44D8 /* 73.frag */,
-				2B54439529117BDF00FB44D8 /* 65.frag */,
-				2B54439629117BDF00FB44D8 /* 12.frag */,
-				2B54439729117BDF00FB44D8 /* 53.frag */,
-				2B54439829117BDF00FB44D8 /* 90.frag */,
-				2B54439929117BDF00FB44D8 /* 86.frag */,
-				2B54439A29117BDF00FB44D8 /* 69.frag */,
-				2B54439B29117BDF00FB44D8 /* 35.frag */,
-				2B54439C29117BDF00FB44D8 /* 62.frag */,
-				2B54439D29117BDF00FB44D8 /* 74.frag */,
-				2B54439E29117BDF00FB44D8 /* 23.frag */,
-				2B54439F29117BDF00FB44D8 /* 58.frag */,
-				2B5443A029117BDF00FB44D8 /* 100.frag */,
-				2B5443A129117BDF00FB44D8 /* 81.frag */,
-				2B5443A229117BDF00FB44D8 /* 97.frag */,
-				2B5443A329117BDF00FB44D8 /* 78.frag */,
-				2B5443A429117BDF00FB44D8 /* 54.frag */,
-				2B5443A529117BDF00FB44D8 /* 15.frag */,
-				2B5443A629117BDF00FB44D8 /* 42.frag */,
-				2B5443A729117BDF00FB44D8 /* 14.frag */,
-				2B5443A829117BDF00FB44D8 /* 55.frag */,
-				2B5443A929117BDF00FB44D8 /* 96.frag */,
-				2B5443AA29117BDF00FB44D8 /* 79.frag */,
-				2B5443AB29117BDF00FB44D8 /* 80.frag */,
-				2B5443AC29117BDF00FB44D8 /* 59.frag */,
-				2B5443AD29117BDF00FB44D8 /* 22.frag */,
-				2B5443AE29117BDF00FB44D8 /* 75.frag */,
-				2B5443AF29117BDF00FB44D8 /* 63.frag */,
-				2B5443B029117BDF00FB44D8 /* 34.frag */,
-			);
-			path = 100fragments;
-			sourceTree = "<group>";
-		};
-		2B5443B129117BDF00FB44D8 /* images */ = {
-			isa = PBXGroup;
-			children = (
-				2B5443B229117BDF00FB44D8 /* black_hole.jpeg */,
-			);
-			path = images;
-			sourceTree = "<group>";
-		};
-		2B5443B429117BDF00FB44D8 /* videos */ = {
-			isa = PBXGroup;
-			children = (
-				2B5443B529117BDF00FB44D8 /* bbb_export.hpv */,
-				2B5443B629117BDF00FB44D8 /* DSC_0084.mov */,
-				2B5443B729117BDF00FB44D8 /* DSC_0082.mov */,
-				2B5443B829117BDF00FB44D8 /* DSC_0083.mov */,
-				2B5443B929117BDF00FB44D8 /* DSC_0081.mov */,
-			);
-			path = videos;
-			sourceTree = "<group>";
-		};
-		2B5443BA29117BDF00FB44D8 /* shaders */ = {
-			isa = PBXGroup;
-			children = (
-				2B5443BB29117BDF00FB44D8 /* Empty.frag */,
-				2B5443BC29117BDF00FB44D8 /* Water.frag */,
-				2B5443BD29117BDF00FB44D8 /* of_default_vertex_in_attributes.glsl */,
-				2B5443BE29117BDF00FB44D8 /* Lights1.frag */,
-				2B5443BF29117BDF00FB44D8 /* Ether.frag */,
-				2B5443C029117BDF00FB44D8 /* AtmoScattering.frag */,
-				2B5443C129117BDF00FB44D8 /* of_default_uniforms.glsl */,
-				2B5443C229117BDF00FB44D8 /* 10.frag */,
-				2B5443C329117BDF00FB44D8 /* todo */,
-				2B5443C829117BDF00FB44D8 /* passthru.vert */,
-				2B5443C929117BDF00FB44D8 /* 05.frag */,
-				2B5443CA29117BDF00FB44D8 /* ZebraV.frag */,
-				2B5443CB29117BDF00FB44D8 /* 33.frag */,
-				2B5443CC29117BDF00FB44D8 /* ScanLines.frag */,
-				2B5443CD29117BDF00FB44D8 /* TerrainGrid.frag */,
-				2B5443CE29117BDF00FB44D8 /* RotStringsV.frag */,
-				2B5443CF29117BDF00FB44D8 /* Lights2.frag */,
-				2B5443D029117BDF00FB44D8 /* StarNest.frag */,
-				2B5443D129117BDF00FB44D8 /* 04.frag */,
-				2B5443D229117BDF00FB44D8 /* RotRainbow.frag */,
-				2B5443D329117BDF00FB44D8 /* Milk.frag */,
-				2B5443D429117BDF00FB44D8 /* 03.frag */,
-				2B5443D529117BDF00FB44D8 /* ScanGrid.frag */,
-				2B5443D629117BDF00FB44D8 /* 02.frag */,
-				2B5443D729117BDF00FB44D8 /* OscCircle.frag */,
-				2B5443D829117BDF00FB44D8 /* RotStringsH.frag */,
-				2B5443D929117BDF00FB44D8 /* 18.frag */,
-				2B5443DA29117BDF00FB44D8 /* Fluid.frag */,
-				2B5443DB29117BDF00FB44D8 /* ZebraH.frag */,
-			);
-			path = shaders;
-			sourceTree = "<group>";
-		};
-		2B5443C329117BDF00FB44D8 /* todo */ = {
-			isa = PBXGroup;
-			children = (
-				2B5443C429117BDF00FB44D8 /* Grid.vert */,
-				2B5443C529117BDF00FB44D8 /* Grid.frag */,
-				2B5443C629117BDF00FB44D8 /* AudioEclipse.frag */,
-				2B5443C729117BDF00FB44D8 /* Star.frag */,
-			);
-			path = todo;
-			sourceTree = "<group>";
-		};
 		30CB364908817057B430D528 /* osc */ = {
 			isa = PBXGroup;
 			children = (
@@ -820,6 +551,15 @@
 				C6937888E126BADC8777423B /* OscTypes.h */,
 			);
 			name = osc;
+			sourceTree = "<group>";
+		};
+		348096EAEFAC358FDD5E584A /* src */ = {
+			isa = PBXGroup;
+			children = (
+				65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */,
+				F3CFD94F37ABC9182A320B79 /* ofxAutoReloadedShader.h */,
+			);
+			name = src;
 			sourceTree = "<group>";
 		};
 		34F5855BA9C0CEDA1D3777AF /* src */ = {
@@ -854,17 +594,23 @@
 			name = libs;
 			sourceTree = "<group>";
 		};
+		38A85F4B8B6D987F0B0390B2 /* ofxAutoReloadedShader */ = {
+			isa = PBXGroup;
+			children = (
+				348096EAEFAC358FDD5E584A /* src */,
+			);
+			name = ofxAutoReloadedShader;
+			sourceTree = "<group>";
+		};
 		3A0FAA05CE9137B817C89D95 /* gen */ = {
 			isa = PBXGroup;
 			children = (
-				2BE51A5929154D5C00324F1C /* Color.cpp */,
-				2BE51A5A29154D5C00324F1C /* Color.h */,
+				5BE614E7C4F4FC6E884832B4 /* Color.cpp */,
+				41E6B72EDC9285BBE9191004 /* Color.h */,
 				1AF23F0A21D95F5FB5E37082 /* FBOGen.cpp */,
 				E4CC104694390A8799972684 /* FBOGen.h */,
-				2B5443DC29117E6100FB44D8 /* Gen.cpp */,
+				5AAD7137CBC357F67BA0E698 /* Gen.cpp */,
 				57B986EA2D2AB951677C2AED /* Gen.h */,
-				82CAB34AEEA60C0C60BC248B /* HPVideo.cpp */,
-				A1EFBF216F85BB25600E3E24 /* HPVideo.h */,
 				D58FD3055EBD404755645BEA /* Image.cpp */,
 				02706B3C55F11A1F7823CDB0 /* Image.h */,
 				C037A9C7AF50F90807B4BA85 /* Shader.cpp */,
@@ -1007,6 +753,7 @@
 		BB4B014C10F69532006C3DED /* addons */ = {
 			isa = PBXGroup;
 			children = (
+				38A85F4B8B6D987F0B0390B2 /* ofxAutoReloadedShader */,
 				3562C67D15F76BC0790BF0A7 /* ofxColorTheory */,
 				0D0595A62FF5ED8D37029107 /* ofxEasing */,
 				8A339919FA87B6FC5F1F0447 /* ofxHPVPlayer */,
@@ -1099,9 +846,9 @@
 		D668F2E5BEDA9E0D5669F52C /* sketches */ = {
 			isa = PBXGroup;
 			children = (
+				57B6FEE57FB75BD3A937508D /* Spiral.h */,
 				298C5F9F580CD9596624E489 /* NoisySpirals.h */,
 				01455AAEF0E0EDFB4DEFABB5 /* WaveClock.h */,
-				2B526553291693EF0071D8BF /* Spiral.h */,
 			);
 			name = sketches;
 			sourceTree = "<group>";
@@ -1391,7 +1138,6 @@
 		E4B69B4A0A3A1720003C02F2 = {
 			isa = PBXGroup;
 			children = (
-				2B54436629117BDF00FB44D8 /* data */,
 				E4B6FCAD0C3E899E008CF71C /* openFrameworks-Info.plist */,
 				E4EB6923138AFD0F00A09F29 /* Project.xcconfig */,
 				E4B69E1C0A3A1BDC003C02F2 /* src */,
@@ -1405,15 +1151,17 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				2B526554291694630071D8BF /* layer */,
-				97AC5D82D06DAB2345FDB039 /* Config.h */,
-				3A0FAA05CE9137B817C89D95 /* gen */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
-				D668F2E5BEDA9E0D5669F52C /* sketches */,
-				ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */,
 				3E8911C6B8ABF8D32A950348 /* Sound.h */,
+				97AC5D82D06DAB2345FDB039 /* Config.h */,
+				D668F2E5BEDA9E0D5669F52C /* sketches */,
+				82CAB34AEEA60C0C60BC248B /* HPVideo.cpp */,
+				A1EFBF216F85BB25600E3E24 /* HPVideo.h */,
+				3A0FAA05CE9137B817C89D95 /* gen */,
+				1BF4AF61A21BC0CB4D19CFDE /* layer */,
+				ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1548,21 +1296,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2BE51A5B29154F3F00324F1C /* Color.cpp in Sources */,
-				2B5443DD29117EBB00FB44D8 /* Gen.cpp in Sources */,
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
-				4FB14F2E5A6B0B0ECFEA44A7 /* LayerData.cpp in Sources */,
 				F1E2E1DCD30D314AF182EDE0 /* HPVideo.cpp in Sources */,
-				7455350C809AAAADD1A8E9BF /* Layer.cpp in Sources */,
+				CD003A65432BA73FDA3F1F69 /* Gen.cpp in Sources */,
 				DBCA40F59B84917A76F45942 /* Image.cpp in Sources */,
 				64419FBCCF52F2F13D35A292 /* Sketch.cpp in Sources */,
 				231BF86FC8A2A84536B0CBE0 /* Video.cpp in Sources */,
+				D8677E18BE8001D8515C2521 /* Color.cpp in Sources */,
 				C1104C02B7261C2D5DEF27CD /* Shader.cpp in Sources */,
 				9D5B5A7556CEF2DF185DA036 /* FBOGen.cpp in Sources */,
-				05023EB0D03AC01FFFE28F7A /* LayerGeom.cpp in Sources */,
 				E01DFE7C5776D7A83326D7F9 /* Webcam.cpp in Sources */,
+				3EBCD03048ED03CCB70D6972 /* LayerData.cpp in Sources */,
+				081251DFDA2F64A94FA7FE19 /* Layer.cpp in Sources */,
+				F7B83E7D0CAB59D9E8F8C9CD /* LayerGeom.cpp in Sources */,
+				17474A172614F63589066020 /* LayerTex.cpp in Sources */,
 				6C8551DB2C641E610EA107BE /* Sound.cpp in Sources */,
+				622F2B6B3FFAA37224C22AD2 /* ofxAutoReloadedShader.cpp in Sources */,
 				07F0761DF15EC42437CC8402 /* ColorScheme.cpp in Sources */,
 				1EF68DFFFDB46A876B77338B /* ColorUtil.cpp in Sources */,
 				CC7496C750B49DFCA0D43427 /* ColorWheelScheme.cpp in Sources */,
@@ -1631,7 +1381,6 @@
 				898CB0955CB42FEB5D750A5C /* VerticalTiltShifPass.cpp in Sources */,
 				D752EB8BA905C25F5E7F2B30 /* ZoomBlurPass.cpp in Sources */,
 				D91BBD56E65F1B0195ABD2FB /* ofxTidalCycles.cpp in Sources */,
-				2B5265572916949F0071D8BF /* LayerTex.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1664,7 +1413,9 @@
 					src,
 					src,
 					src/gen,
+					src/layer,
 					src/sketches,
+					../../../addons/ofxAutoReloadedShader/src,
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
@@ -1703,7 +1454,9 @@
 					src,
 					src,
 					src/gen,
+					src/layer,
 					src/sketches,
+					../../../addons/ofxAutoReloadedShader/src,
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
@@ -1759,7 +1512,9 @@
 					src,
 					src,
 					src/gen,
+					src/layer,
 					src/sketches,
+					../../../addons/ofxAutoReloadedShader/src,
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
@@ -1808,7 +1563,9 @@
 					src,
 					src,
 					src/gen,
+					src/layer,
 					src/sketches,
+					../../../addons/ofxAutoReloadedShader/src,
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
@@ -1847,7 +1604,9 @@
 					src,
 					src,
 					src/gen,
+					src/layer,
 					src/sketches,
+					../../../addons/ofxAutoReloadedShader/src,
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
@@ -1892,7 +1651,9 @@
 					src,
 					src,
 					src/gen,
+					src/layer,
 					src/sketches,
+					../../../addons/ofxAutoReloadedShader/src,
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,

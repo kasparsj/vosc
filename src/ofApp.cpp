@@ -262,6 +262,21 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     else if (command == "/geom/instanced") {
         layer->geom.drawInstanced = m.getArgAsInt(1);
     }
+    else if (command == "/geom/mat/diffuse") {
+        handleColor(&layer->geom.matSettings.diffuse, m);
+    }
+    else if (command == "/geom/mat/ambient") {
+        handleColor(&layer->geom.matSettings.ambient, m);
+    }
+    else if (command == "/geom/mat/specular") {
+        handleColor(&layer->geom.matSettings.specular, m);
+    }
+    else if (command == "/geom/mat/emissive") {
+        handleColor(&layer->geom.matSettings.emissive, m);
+    }
+    else if (command == "/geom/mat/shininess") {
+        handleFloat(&layer->geom.matSettings.shininess, m);
+    }
     else if (command == "/bri") {
         handlePercent(&layer->bri, m);
     }
