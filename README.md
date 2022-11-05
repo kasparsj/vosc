@@ -175,33 +175,33 @@ Examples:
 
 #### Reload
 
-`/reload`
+`/tex/reload`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/reload', "*"); // reload all layers
+~visuals.sendMsg('/tex/reload', "*"); // reload all layers
 ```
 
 #### Unload
 
-`/unload`
+`/tex/unload`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/unload', "*"); // unload all layers
+~visuals.sendMsg('/tex/unload', "*"); // unload all layers
 // same as:
-~visuals.sendMsg('/load', "*", ""); // unload all layers
+~visuals.sendMsg('/tex/load', "*", ""); // unload all layers
 ```
 
 #### Choose
 
-`/choose`
+`/tex/choose`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -209,9 +209,9 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/choose', 0, "3d"); // load random 3d mesh
-~visuals.sendMsg('/choose', 0, "video"); // load random video from library
-~visuals.sendMsg('/choose', 0, "image"); // load random image from library
+~visuals.sendMsg('/tex/choose', 0, "3d"); // load random 3d mesh
+~visuals.sendMsg('/tex/choose', 0, "video"); // load random video from library
+~visuals.sendMsg('/tex/choose', 0, "image"); // load random image from library
 ```
 
 ### Transform
