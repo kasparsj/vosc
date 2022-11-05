@@ -236,28 +236,31 @@ ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0) {
 
 void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command == "/tex") {
-        layer->load(m.getArgAsString(1));
+        layer->tex.load(m.getArgAsString(1));
     }
     else if (command == "/tex/choose") {
-        layer->choose(m.getNumArgs() > 1 ? m.getArgAsString(1) : "");
+        layer->tex.choose(m.getNumArgs() > 1 ? m.getArgAsString(1) : "");
     }
     else if (command == "/tex/reload") {
-        layer->reload();
+        layer->tex.reload();
     }
     else if (command == "/tex/unload") {
-        layer->unload();
+        layer->tex.unload();
+    }
+    else if (command == "/tex/clear") {
+        layer->tex.clear();
     }
     else if (command == "/tex/noclear") {
         layer->noClear = m.getArgAsBool(1);
+    }
+    else if (command == "/geom") {
+        layer->loadGeom(m.getArgAsString(1));
     }
     else if (command == "/bri") {
         handlePercent(&layer->bri, m);
     }
     else if (command == "/alpha") {
         handlePercent(&layer->alpha, m);
-    }
-    else if (command == "/clear") {
-        layer->clear();
     }
     else if (command == "/reset") {
         layer->reset();
@@ -365,9 +368,6 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
             layer->useMFCCColor = false;
             layer->useRandomColor = false;
         }
-    }
-    else if (command == "/geom") {
-        layer->setGeometry(m.getArgAsString(1));
     }
     else if (command == "/data") {
         vector<string> ds;
@@ -694,7 +694,7 @@ void ofApp::draw(){
     ofClear(0, 0, 0, 0);
     int totalVisible = 0;
     for (int i=0; i<layers.size(); i++) {
-        if (layers[i]->data != NULL && layers[i]->data->visible) {
+        if (layers[i]->data.visible) {
             totalVisible++;
         }
     }
@@ -707,11 +707,20 @@ void ofApp::draw(){
     if (showDebug) {
         ofPushStyle();
         for (int i=0; i<layers.size(); i++) {
-            ofSetColor(255);
-            layers[i]->frames[0].draw(20+i*120, ofGetHeight()-120, 100, 100);
-            if (layers[i]->data != NULL && layers[i]->data->values.size() > 0) {
+            if (layers[i]->tex.isLoaded()) {
+                ofSetColor(255);
+                layers[i]->tex.frames[0].draw(20+i*120, ofGetHeight()-120, 100, 100);
+                if (layers[i]->data.values.size() > 0) {
+                    ofFill();
+                    ofDrawRectangle(20+i*120, ofGetHeight()-120, layers[i]->data.values[0]*100.f, 10);
+                }
+            }
+            else {
                 ofFill();
-                ofDrawRectangle(20+i*120, ofGetHeight()-120, layers[i]->data->values[0]*100.f, 10);
+                ofSetColor(0);
+                ofDrawRectangle(20+i*120, ofGetHeight()-120, 100, 100);
+                ofSetColor(255);
+                ofDrawBitmapString("not loaded", 20+i*120, ofGetHeight()-120);
             }
         }
         ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);

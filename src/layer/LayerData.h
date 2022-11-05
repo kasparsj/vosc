@@ -8,7 +8,6 @@ class Layer;
 
 class LayerData {
 public:
-    LayerData(Layer *layer) : layer(layer) {}
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
     void reset() {
         onset = false;
@@ -31,7 +30,7 @@ public:
     
     void afterDraw();
     
-    const Layer *layer;
+    Layer *layer;
     float time = 0;
     float prevTime = 0;
     vector<float> values;

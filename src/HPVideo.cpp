@@ -48,7 +48,7 @@ void HPVideo::update(Layer *layer) {
             return;
         }
     }
-    else if (layer->data->onset) {
+    else if (layer->data.onset) {
         seek(layer->timePct);
     }
     aspectRatio = layer->aspectRatio;

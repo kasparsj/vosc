@@ -31,8 +31,8 @@ public:
             
             if(lastx > -999){
                 int strokeAlpha;
-                if (layer->data->values.size()) {
-                    strokeAlpha = layer->data->values[0] * 255;
+                if (layer->data.values.size()) {
+                    strokeAlpha = layer->data.values[0] * 255;
                 }
                 else {
                     strokeAlpha = 127+ofRandom(128);

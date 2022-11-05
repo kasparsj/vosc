@@ -45,8 +45,8 @@ class WaveClock : public SketchImpl {
         float x2 = centerX + (_radius * cos(opprad));
         float y2 = centerY + (_radius * sin(opprad));
         
-        if (layer->data->values.size()) {
-            _strokeAlpha = layer->data->values[0] * 255;
+        if (layer->data.values.size()) {
+            _strokeAlpha = layer->data.values[0] * 255;
         }
         else {
             _strokeAlpha += _strokeChange;

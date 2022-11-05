@@ -58,17 +58,17 @@ void Shader::update(Layer *layer) {
     if (!layer->noClear) {
         ofClear(0, 0, 0, 0);
     }
-    if (layer->data->visible) {
+    if (layer->data.visible) {
         cache[path].begin();
-        cache[path].setUniform1f("time", layer->data->time);
+        cache[path].setUniform1f("time", layer->data.time);
         cache[path].setUniform2f("resolution", ofGetWidth(), ofGetHeight());
         cache[path].setUniform2f("offset", layer->pos.x, layer->pos.y);
         cache[path].setUniform1i("index", layer->index);
         cache[path].setUniform4f("color", layer->getColor());
         cache[path].setUniform1i("random", layer->randomSeed);
-        cache[path].setUniform1i("num_values", layer->data->values.size());
-        cache[path].setUniform1fv("values", layer->data->values.data(), layer->data->values.size());
-        cache[path].setUniform1i("onset", layer->data->onset ? 1 : 0);
+        cache[path].setUniform1i("num_values", layer->data.values.size());
+        cache[path].setUniform1fv("values", layer->data.values.data(), layer->data.values.size());
+        cache[path].setUniform1i("onset", layer->data.onset ? 1 : 0);
         ofDrawRectangle(0, 0, layer->size.x, layer->size.y);
         cache[path].end();
     }
