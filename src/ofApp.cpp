@@ -235,23 +235,19 @@ ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0) {
 }
 
 void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
-    if (command == "/load") {
+    if (command == "/tex") {
         layer->load(m.getArgAsString(1));
     }
-    else if (command == "/seek") {
-        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
-            if (m.getArgAsString(1) == "rand") {
-                layer->timePct = ofRandom(1.f);
-            }
-        }
-        else {
-            handlePercent(&layer->timePct, m);
-        }
+    else if (command == "/tex/choose") {
+        layer->choose(m.getNumArgs() > 1 ? m.getArgAsString(1) : "");
     }
-    else if (command == "/reload") {
+    else if (command == "/tex/reload") {
         layer->reload();
     }
-    else if (command == "/noclear") {
+    else if (command == "/tex/unload") {
+        layer->unload();
+    }
+    else if (command == "/tex/noclear") {
         layer->noClear = m.getArgAsBool(1);
     }
     else if (command == "/bri") {
@@ -259,9 +255,6 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     }
     else if (command == "/alpha") {
         handlePercent(&layer->alpha, m);
-    }
-    else if (command == "/choose") {
-        layer->choose(m.getNumArgs() > 1 ? m.getArgAsString(1) : "");
     }
     else if (command == "/clear") {
         layer->clear();
@@ -390,8 +383,15 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         }
         layer->addDataSources(ds);
     }
-    else if (command == "/unload") {
-        layer->unload();
+    else if (command == "/seek") {
+        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            if (m.getArgAsString(1) == "rand") {
+                layer->timePct = ofRandom(1.f);
+            }
+        }
+        else {
+            handlePercent(&layer->timePct, m);
+        }
     }
     else if (command == "/speed") {
         handleFloat(&layer->speed, m);
