@@ -13,14 +13,16 @@
 
 ## Layers
 
+### Texture
+- `/tex` [Load texture](#load)
+- `/tex/reload` [Reload texture](#reload)
+- `/tex/unload` [Unload texture](#unload)
+- `/tex/choose` [Choose texture at random](#choose)
+
 ### Geometry
 - `/geom` [Set layer geometry](#geom)
-
-### Texture
-- `/load` [Load texture](#load)
-- `/reload` [Reload texture](#reload)
-- `/unload` [Unload texture](#unload)
-- `/choose` [Choose texture at random](#choose)
+- `/geom/shader` [Set layer shader](#shader)
+- `/geom/instanced` [Use instanced draw](#instanced)
 
 ### Data
 - `/data` [Set layer data source](#data)
