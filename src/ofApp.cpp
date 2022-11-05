@@ -256,26 +256,26 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     else if (command == "/geom") {
         layer->geom.load(m.getArgAsString(1));
     }
-    else if (command == "/geom/shader") {
-        layer->geom.setShader(m.getArgAsString(1));
+    else if (command == "/shader") {
+        layer->shader.load(m.getArgAsString(1));
     }
     else if (command == "/geom/instanced") {
         layer->geom.drawInstanced = m.getArgAsInt(1);
     }
-    else if (command == "/geom/mat/diffuse") {
-        handleColor(&layer->geom.matSettings.diffuse, m);
+    else if (command == "/mat/diffuse") {
+        handleColor(&layer->matSettings.diffuse, m);
     }
-    else if (command == "/geom/mat/ambient") {
-        handleColor(&layer->geom.matSettings.ambient, m);
+    else if (command == "/mat/ambient") {
+        handleColor(&layer->matSettings.ambient, m);
     }
-    else if (command == "/geom/mat/specular") {
-        handleColor(&layer->geom.matSettings.specular, m);
+    else if (command == "/mat/specular") {
+        handleColor(&layer->matSettings.specular, m);
     }
-    else if (command == "/geom/mat/emissive") {
-        handleColor(&layer->geom.matSettings.emissive, m);
+    else if (command == "/mat/emissive") {
+        handleColor(&layer->matSettings.emissive, m);
     }
-    else if (command == "/geom/mat/shininess") {
-        handleFloat(&layer->geom.matSettings.shininess, m);
+    else if (command == "/mat/shininess") {
+        handleFloat(&layer->matSettings.shininess, m);
     }
     else if (command == "/bri") {
         handlePercent(&layer->bri, m);

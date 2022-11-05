@@ -4,6 +4,7 @@ void Layer::setup(int index, string dataSource)
 {
     this->index = index;
     tex.layer = this;
+    geom.setup(this);
     data.layer = this;
     dataSources.clear();
     if (dataSource != "") {
@@ -51,17 +52,25 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
         }
         looper->update();
     }
+    material.setup(matSettings);
     geom.update();
 }
 
 void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     tex.draw();
     
+    //ofEnableLighting();
+    ofSetGlobalAmbientColor(ofFloatColor(1.0, 1.0, 1.0, 1.0));
+    
     ofPushMatrix();
     transform();
     ofPushStyle();
     ofSetColor(tex.getTint() * bri, alpha * 255);
+    shader.begin();
+    material.begin();
     geom.draw();
+    material.end();
+    shader.end();
     ofPopStyle();
     ofPopMatrix();
 }

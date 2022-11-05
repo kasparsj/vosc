@@ -23,6 +23,7 @@
 		231BF86FC8A2A84536B0CBE0 /* Video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9C35AB5202DEE1FAE587B8D /* Video.cpp */; };
 		28AFD6FA9B9C885AFD9FF1C7 /* HorizontalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
+		2BF2E5D72916CC440026CE01 /* LayerShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */; };
 		33DB731E964056D7E35604A7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
 		3A499904889C490DCF533C6E /* BloomPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41ED8C8083845703AA1FDFA /* BloomPass.cpp */; };
 		3D6BA46406CE29B32055340C /* Analogous.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24317A596BC892793AEA0706 /* Analogous.cpp */; };
@@ -145,6 +146,8 @@
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
+		2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = LayerShader.cpp; path = layer/LayerShader.cpp; sourceTree = "<group>"; };
+		2BF2E5D62916CC1F0026CE01 /* LayerShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LayerShader.h; path = layer/LayerShader.h; sourceTree = "<group>"; };
 		2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VerticalTiltShifPass.cpp; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.cpp; sourceTree = SOURCE_ROOT; };
 		2E2EF60AF55D0A39EC1BAC78 /* Log.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Log.h; path = ../../../addons/ofxHPVPlayer/src/Log.h; sourceTree = SOURCE_ROOT; };
 		2FD4B0329909D3527F003494 /* UdpSocket.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = UdpSocket.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/UdpSocket.h; sourceTree = SOURCE_ROOT; };
@@ -505,6 +508,8 @@
 				7F0E68045434798E8DBE1412 /* LayerTex.cpp */,
 				0261DFB3A4808E21B3543B62 /* LayerTex.h */,
 				144656B571305328D7DB94BB /* LayerData.h */,
+				2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */,
+				2BF2E5D62916CC1F0026CE01 /* LayerShader.h */,
 			);
 			name = layer;
 			sourceTree = "<group>";
@@ -1296,6 +1301,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2BF2E5D72916CC440026CE01 /* LayerShader.cpp in Sources */,
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
 				F1E2E1DCD30D314AF182EDE0 /* HPVideo.cpp in Sources */,

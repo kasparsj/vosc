@@ -32,7 +32,7 @@ public:
         return gen != NULL;
     }
     ofFloatColor getTint() const {
-        gen->getTint(layer);
+        return gen->getTint(layer);
     }
 
     Layer* layer = NULL;

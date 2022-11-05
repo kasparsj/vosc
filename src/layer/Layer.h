@@ -8,6 +8,7 @@
 #include "ofxLooper.h"
 #include "LayerGeom.h"
 #include "LayerTex.h"
+#include "LayerShader.h"
 
 #define MAX_DELAY 120
 
@@ -34,6 +35,7 @@ public:
         return color;
     }
     
+    void setShader(string path);
     bool randomShader() const {
         return behaviour > 0 && behaviour & (int) Behaviour::RANDOM_SHADER;
     }
@@ -42,6 +44,7 @@ public:
     LayerTex tex;
     LayerGeom geom;
     LayerData data;
+    LayerShader shader;
     ofxLooper* looper = NULL;
     glm::vec3 pos;
     glm::vec3 size;
@@ -69,4 +72,6 @@ public:
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
     bool useRandomColor = false;
     uint8_t delay = 0;
+    ofMaterialSettings matSettings;
+    ofMaterial material;
 };

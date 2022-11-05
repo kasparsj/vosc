@@ -11,17 +11,17 @@ enum class Behaviour {
 };
 
 enum class Layout {
-    COLUMN = 1,
-    ROW = 2,
-    GRID = 3,
-    STACK = 4,
+    STACK = 1,
+    GRID = 2,
+    COLUMN = 3,
+    ROW = 4,
 };
 
 static std::unordered_map<std::string, Layout> const LayoutMap = {
+    {"stack", Layout::STACK},
+    {"grid", Layout::GRID},
     {"col", Layout::COLUMN},
     {"row", Layout::ROW},
-    {"grid", Layout::GRID},
-    {"stack", Layout::STACK},
 };
 
 enum class Source {

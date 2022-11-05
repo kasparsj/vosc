@@ -21,7 +21,6 @@ public:
     }
     void load(string newPath);
     void choose();
-    void setShader(string path);
     void update();
     void draw();
     void _draw();
@@ -29,7 +28,6 @@ public:
     
     bool drawWireframe;
     int drawInstanced = 0;
-    ofMaterialSettings matSettings;
 
 private:
     Layer* layer;
@@ -37,5 +35,4 @@ private:
     string prevPath = "";
     of3dPrimitive *primitive = NULL;
     ofVboMesh mesh;
-    ofMaterial material;
 };

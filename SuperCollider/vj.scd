@@ -81,7 +81,6 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 
 ~visuals.sendMsg('/sounds', 1);
 ~visuals.sendMsg('/layers', 9);
-~visuals.sendMsg('/layout', 4);
 
 ~visuals.sendMsg('/thresh', "*", 0.35);
 ~visuals.sendMsg('/loud/max', "*", 32);
@@ -354,17 +353,6 @@ var secs = 10;
 // 3d / sketches with memory
 // distorting shapes
 // practical jamming
-
-(
-~visuals.sendMsg('/layers', 9, "grid"); // initializes 9 layers with grid layout
-9.do { |i|
-	~visuals.sendMsg('/load', i, "webcam:0");
-	~visuals.sendMsg('/rot', i, 0, 0, 0);
-	~visuals.sendMsg('/rot/speed', i, 0, 0, 0);
-	~visuals.sendMsg('/rot/point', i, "center");
-	~visuals.sendMsg('/delay', i, i*13);
-};
-)
 
 ~visuals.sendMsg('/cam', 1);
 ~visuals.sendMsg('/cam/pos', 0, 0, -3000, 10);

@@ -29,12 +29,7 @@ void LayerGeom::choose() {
     path = random();
 }
 
-void LayerGeom::setShader(string path) {
-    
-}
-
 void LayerGeom::update() {
-    material.setup(matSettings);
     if (primitive == NULL) {
         if (path == "plane") {
             primitive = new ofPlanePrimitive(100, 100, 2, 2);
@@ -87,12 +82,10 @@ void LayerGeom::draw() {
 }
 
 void LayerGeom::_draw() {
-    material.begin();
     if (drawInstanced > 1) {
         mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
     }
     else {
         mesh.draw();
     }
-    material.end();
 }
