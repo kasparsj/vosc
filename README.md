@@ -21,8 +21,17 @@
 
 ### Geometry
 - `/geom` [Set layer geometry](#geom)
-- `/geom/shader` [Set layer shader](#shader)
 - `/geom/instanced` [Use instanced draw](#instanced)
+
+### Shader
+- `/shader` [Set layer shader](#shader)
+
+### Material
+- `/mat/diffuse` [Set material diffuse color](#diffuse)
+- `/mat/ambient` [Set material ambient color](#ambient)
+- `/mat/specular` [Set material specular color](#specular)
+- `/mat/emissive` [Set material emissive color](#emissive)
+- `/mat/shininess` [Set material shininess color](#shininess)
 
 ### Data
 - `/data` [Set layer data source](#data)
@@ -77,7 +86,7 @@ Examples:
 ~visuals.sendMsg('/layers', 8); // initializes 8 layers with stack layout
 ~visuals.sendMsg('/layers', 9, "grid"); // initializes 9 layers with grid layout
 9.do { |i|
-	~visuals.sendMsg('/load', i, "black_hole.jpeg");
+	~visuals.sendMsg('/tex', i, "black_hole.jpeg");
 };
 ```
 
@@ -150,7 +159,7 @@ Examples:
 
 #### Load
 
-`/load`
+`/tex`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -158,45 +167,45 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/load', 0, "0xff0000"); // load red color into first layer
-~visuals.sendMsg('/load', 0, "black_hole.jpeg"); // load image into first layer
-~visuals.sendMsg('/load', 0, "OscCircle.frag"); // load a fragment shader into first layer
-~visuals.sendMsg('/load', 0, "NoisySpirals"); // load a c++ sketch into first layer
-~visuals.sendMsg('/load', 0, "DSC_0081.mov"); // load a movie into first layer
-~visuals.sendMsg('/load', 0, "bbb_export.hpv"); // load high performance video into first layer
-~visuals.sendMsg('/load', 0, "webcam:0"); // load first webcam device into first layer
-~visuals.sendMsg('/load', 0, ""); // unload first layer texture
+~visuals.sendMsg('/tex', 0, "0xff0000"); // load red color into first layer
+~visuals.sendMsg('/tex', 0, "black_hole.jpeg"); // load image into first layer
+~visuals.sendMsg('/tex', 0, "OscCircle.frag"); // load a fragment shader into first layer
+~visuals.sendMsg('/tex', 0, "NoisySpirals"); // load a c++ sketch into first layer
+~visuals.sendMsg('/tex', 0, "DSC_0081.mov"); // load a movie into first layer
+~visuals.sendMsg('/tex', 0, "bbb_export.hpv"); // load high performance video into first layer
+~visuals.sendMsg('/tex', 0, "webcam:0"); // load first webcam device into first layer
+~visuals.sendMsg('/tex', 0, ""); // unload first layer texture
 ```
 
 #### Reload
 
-`/reload`
+`/tex/reload`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/reload', "*"); // reload all layers
+~visuals.sendMsg('/tex/reload', "*"); // reload all layers
 ```
 
 #### Unload
 
-`/unload`
+`/tex/unload`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/unload', "*"); // unload all layers
+~visuals.sendMsg('/tex/unload', "*"); // unload all layers
 // same as:
-~visuals.sendMsg('/load', "*", ""); // unload all layers
+~visuals.sendMsg('/tex/load', "*", ""); // unload all layers
 ```
 
 #### Choose
 
-`/choose`
+`/tex/choose`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -204,9 +213,9 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/choose', 0, "3d"); // load random 3d mesh
-~visuals.sendMsg('/choose', 0, "video"); // load random video from library
-~visuals.sendMsg('/choose', 0, "image"); // load random image from library
+~visuals.sendMsg('/tex/choose', 0, "3d"); // load random 3d mesh
+~visuals.sendMsg('/tex/choose', 0, "video"); // load random video from library
+~visuals.sendMsg('/tex/choose', 0, "image"); // load random image from library
 ```
 
 ### Transform
