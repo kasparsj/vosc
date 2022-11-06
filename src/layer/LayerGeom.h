@@ -33,7 +33,8 @@ public:
     int drawInstanced = 0;
 
 private:
-    void loadPrimitive(const vector<float>& args);
+    bool loadPrimitive(const vector<float>& args);
+    bool loadGrass(const vector<float>& args);
     
     Layer* layer;
     string path = "";

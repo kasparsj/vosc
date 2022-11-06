@@ -6,39 +6,43 @@
 #include "HPVideoTex.h"
 #include "WebcamTex.h"
 #include "ColorTex.h"
+#include "DrawTex.h"
 
-Tex* LayerTex::factory(string type, string path) {
+Tex* LayerTex::factory(string type, string path, const vector<float>& args) {
     Tex *tex = NULL;
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
             case Source::VIDEO:
-                tex = new VideoTex(path);
+                tex = new VideoTex(path, args);
                 break;
             case Source::HPV:
-                tex = new HPVideoTex(path);
+                tex = new HPVideoTex(path, args);
                 break;
             case Source::SHADER:
-                tex = new ShaderTex(path);
+                tex = new ShaderTex(path, args);
                 break;
             case Source::SKETCH:
-                tex = new SketchTex(path);
+                tex = new SketchTex(path, args);
                 break;
             case Source::IMAGE:
-                tex = new ImageTex(path);
+                tex = new ImageTex(path, args);
                 break;
             case Source::WEBCAM:
-                tex = new WebcamTex(path);
+                tex = new WebcamTex(path, args);
                 break;
             case Source::COLOR:
-                tex = new ColorTex(path);
+                tex = new ColorTex(path, args);
+                break;
+            case Source::DRAW:
+                tex = new DrawTex(path, args);
                 break;
         }
     }
     return tex;
 }
 
-Tex* LayerTex::factory(string source) {
+Tex* LayerTex::factory(string source, const vector<float>& args) {
     string type = source;
     string path = "";
     bool explicitType = source.find(":") != string::npos;
@@ -71,17 +75,20 @@ Tex* LayerTex::factory(string source) {
                 case Source::COLOR:
                     path = ColorTex::random();
                     break;
+                case Source::DRAW:
+                    path = DrawTex::random();
+                    break;
             }
         }
     }
-    return factory(type, path);
+    return factory(type, path, args);
 }
 
-void LayerTex::load(string source) {
+void LayerTex::load(string source, const vector<float>& args) {
     unload();
     bool explicitType = source.find(":") != string::npos;
     if (explicitType && source.substr(0, 4) != "http") {
-        tex = factory(source);
+        tex = factory(source, args);
     }
     else {
         string extension = ofFile(source).getExtension();
@@ -89,23 +96,23 @@ void LayerTex::load(string source) {
             extension[i] = tolower(extension[i]);
         }
         if (extension == "frag") {
-            tex = factory("shader", source);
+            tex = factory("shader", source, args);
         }
         else if (extension == "jpg" || extension == "jpeg" || extension == "png") {
-            tex = factory("image", source);
+            tex = factory("image", source, args);
         }
         else if (extension == "mov") {
-            tex = factory("video", source);
+            tex = factory("video", source, args);
         }
         else if (extension == "hpv") {
-            tex = factory("hpv", source);
+            tex = factory("hpv", source, args);
         }
         else {
             if (ColorTex::exists(source)) {
-                tex = factory("color", source);
+                tex = factory("color", source, args);
             }
             else if (SketchTex::exists(source)) {
-                tex = factory("sketch", source);
+                tex = factory("sketch", source, args);
             }
         }
     }
@@ -114,16 +121,34 @@ void LayerTex::load(string source) {
     }
 }
 
-void LayerTex::choose(string type) {
+void LayerTex::load(const ofxOscMessage &m) {
+    string newPath = m.getArgAsString(1);
+    vector<float> args;
+    for (int i=2; i<m.getNumArgs(); i++) {
+        args.push_back(m.getArgAsFloat(i));
+    }
+    load(newPath, args);
+}
+
+void LayerTex::choose(string type, const vector<float>& args) {
     if (type == "") {
         auto it = SourceMap.begin();
         advance(it, int(ofRandom(SourceMap.size())));
         type = it->first;
     }
-    tex = factory(type);
+    tex = factory(type, args);
     if (tex == NULL) {
         ofLog() << "invalid source type " << type;
     }
+}
+
+void LayerTex::choose(const ofxOscMessage& m) {
+    string type = m.getNumArgs() > 1 ? m.getArgAsString(1) : "";
+    vector<float> args;
+    for (int i=2; i<m.getNumArgs(); i++) {
+        args.push_back(m.getArgAsFloat(i));
+    }
+    choose(type, args);
 }
 
 void LayerTex::unload() {

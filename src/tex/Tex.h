@@ -7,7 +7,7 @@ class Layer;
 
 class Tex {
 public:
-    Tex(string path) : path(path) {}
+    Tex(string path, const vector<float>& args) : path(path), args(args) {}
     virtual ~Tex() = default;
     virtual void update(Layer *layer) = 0;
     virtual void draw(const glm::vec3 &pos, const glm::vec3 &size) = 0;
@@ -23,5 +23,6 @@ public:
 
     string path = "";
     string prevPath = "";
+    vector<float> args;
     bool aspectRatio;
 };

@@ -9,7 +9,7 @@ public:
     static string random();
     static bool engineInitialized;
     
-    HPVideoTex(string name) : Tex(name) {
+    HPVideoTex(string name, const vector<float>& args) : Tex(name, args) {
         if (!engineInitialized) {
             HPV::InitHPVEngine();
         }

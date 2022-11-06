@@ -9,7 +9,7 @@ public:
     static bool exists(string path);
     static string random();
     
-    SketchTex(string name) : FBOTex(name) {}
+    SketchTex(string name, const vector<float>& args) : FBOTex(name, args) {}
     ~SketchTex() {
         if (impl != NULL) {
             delete impl;

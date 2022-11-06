@@ -2,21 +2,21 @@
 
 #include "Tex.h"
 
-class VideoTex : public Tex {
+class DrawTex : public Tex {
 public:
-    static vector<string> cache;
+    static vector<string> draws;
     static string random();
     
-    VideoTex(string name, const vector<float>& args) : Tex(name, args) {}
-    ~VideoTex() {}
+    DrawTex(string path, const vector<float>& args) : Tex(path, args) {}
+    ~DrawTex() {}
     void update(Layer *layer) override;
-    void seek(float pct);
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
     void choose() override;
     ofPixels& getPixels() override {
-        return videoPlayer.getPixels();
+        return pixels;
     }
     
 private:
-    ofVideoPlayer videoPlayer;
+    ofPixels pixels;
+
 };

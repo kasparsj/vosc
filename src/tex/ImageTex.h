@@ -7,7 +7,7 @@ public:
     static vector<string> cache;
     static string random();
     
-    ImageTex(string path) : Tex(path) {}
+    ImageTex(string path, const vector<float>& args) : Tex(path, args) {}
     ~ImageTex() {}
     void update(Layer *layer) override;
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;

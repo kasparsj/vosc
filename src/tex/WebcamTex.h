@@ -7,7 +7,7 @@ public:
     static bool exists(int device);
     static int random();
     
-    WebcamTex(string path) : Tex(path) {}
+    WebcamTex(string path, const vector<float>& args) : Tex(path, args) {}
     ~WebcamTex() {
         vidGrabber.close();
     }

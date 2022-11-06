@@ -4,7 +4,7 @@
 
 class FBOTex : public Tex {
 public:
-    FBOTex(string path) : Tex(path) {}
+    FBOTex(string path, const vector<float>& args) : Tex(path, args) {}
     void clear() override;
     ofPixels& getPixels() override {
         fbo.readToPixels(pixels);

@@ -7,7 +7,7 @@ public:
     static bool exists(string path);
     static string random();
     
-    ColorTex(string path) : Tex(path) {}
+    ColorTex(string path, const vector<float>& args) : Tex(path, args) {}
     ~ColorTex() {}
     void update(Layer *layer) override;
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;

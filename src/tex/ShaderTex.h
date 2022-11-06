@@ -6,7 +6,7 @@
 class ShaderTex : public Shader, public FBOTex {
     
 public:
-    ShaderTex(string name) : FBOTex(name) {}
+    ShaderTex(string name, const vector<float>& args) : FBOTex(name, args) {}
     
     void update(Layer *layer) override;
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;

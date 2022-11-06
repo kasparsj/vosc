@@ -22,6 +22,7 @@
 		1F8B3F1A5890DC53B7A56452 /* Log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 697B169C0F7B7A765EB7BECB /* Log.cpp */; };
 		28AFD6FA9B9C885AFD9FF1C7 /* HorizontalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
+		2B015CFF291876390089FC16 /* DrawTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B015CFD291876390089FC16 /* DrawTex.cpp */; };
 		2BF2E5D72916CC440026CE01 /* LayerShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */; };
 		2BF2E5ED291830510026CE01 /* ImageTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5DC291830510026CE01 /* ImageTex.cpp */; };
 		2BF2E5EE291830510026CE01 /* HPVideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5DE291830510026CE01 /* HPVideoTex.cpp */; };
@@ -142,6 +143,11 @@
 		24317A596BC892793AEA0706 /* Analogous.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Analogous.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Analogous.cpp; sourceTree = SOURCE_ROOT; };
 		27F1AFE400331DE8F477F084 /* ColorWheelSchemes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorWheelSchemes.cpp; path = ../../../addons/ofxColorTheory/src/ColorWheelSchemes.cpp; sourceTree = SOURCE_ROOT; };
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
+		2B015CFA29186EC10089FC16 /* Grass.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grass.frag; sourceTree = "<group>"; };
+		2B015CFB29186EC10089FC16 /* Grass.geom */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grass.geom; sourceTree = "<group>"; };
+		2B015CFC29186EC10089FC16 /* Grass.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grass.vert; sourceTree = "<group>"; };
+		2B015CFD291876390089FC16 /* DrawTex.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DrawTex.cpp; sourceTree = "<group>"; };
+		2B015CFE291876390089FC16 /* DrawTex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DrawTex.h; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
 		2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = LayerShader.cpp; path = layer/LayerShader.cpp; sourceTree = "<group>"; };
@@ -666,11 +672,23 @@
 			name = src;
 			sourceTree = "<group>";
 		};
+		2B015CF929186EC10089FC16 /* grass */ = {
+			isa = PBXGroup;
+			children = (
+				2B015CFA29186EC10089FC16 /* Grass.frag */,
+				2B015CFB29186EC10089FC16 /* Grass.geom */,
+				2B015CFC29186EC10089FC16 /* Grass.vert */,
+			);
+			path = grass;
+			sourceTree = "<group>";
+		};
 		2BF2E5DB291830510026CE01 /* tex */ = {
 			isa = PBXGroup;
 			children = (
 				2BF2E5E4291830510026CE01 /* ColorTex.cpp */,
 				2BF2E5E1291830510026CE01 /* ColorTex.h */,
+				2B015CFD291876390089FC16 /* DrawTex.cpp */,
+				2B015CFE291876390089FC16 /* DrawTex.h */,
 				2BF2E5E5291830510026CE01 /* FBOTex.cpp */,
 				2BF2E5E6291830510026CE01 /* FBOTex.h */,
 				2BF2E5DE291830510026CE01 /* HPVideoTex.cpp */,
@@ -807,35 +825,36 @@
 		2BF2E64C2918424D0026CE01 /* shaders */ = {
 			isa = PBXGroup;
 			children = (
-				2BF2E64D2918424D0026CE01 /* Empty.frag */,
-				2BF2E64E2918424D0026CE01 /* Water.frag */,
-				2BF2E6502918424D0026CE01 /* Lights1.frag */,
-				2BF2E6512918424D0026CE01 /* Ether.frag */,
-				2BF2E6522918424E0026CE01 /* AtmoScattering.frag */,
-				2BF2E6542918424E0026CE01 /* particles */,
-				2BF2E6592918424E0026CE01 /* 10.frag */,
-				2BF2E65A2918424E0026CE01 /* todo */,
-				2BF2E65F2918424E0026CE01 /* passthru.vert */,
-				2BF2E6602918424E0026CE01 /* 05.frag */,
-				2BF2E6612918424E0026CE01 /* ZebraV.frag */,
-				2BF2E6622918424E0026CE01 /* common */,
-				2BF2E6682918424E0026CE01 /* 33.frag */,
-				2BF2E6692918424E0026CE01 /* ScanLines.frag */,
-				2BF2E66A2918424E0026CE01 /* TerrainGrid.frag */,
-				2BF2E66B2918424E0026CE01 /* RotStringsV.frag */,
-				2BF2E66C2918424E0026CE01 /* Lights2.frag */,
-				2BF2E66D2918424E0026CE01 /* StarNest.frag */,
-				2BF2E66E2918424E0026CE01 /* 04.frag */,
-				2BF2E66F2918424E0026CE01 /* RotRainbow.frag */,
-				2BF2E6702918424E0026CE01 /* Milk.frag */,
-				2BF2E6712918424E0026CE01 /* 03.frag */,
-				2BF2E6722918424E0026CE01 /* ScanGrid.frag */,
 				2BF2E6732918424E0026CE01 /* 02.frag */,
-				2BF2E6742918424E0026CE01 /* OscCircle.frag */,
-				2BF2E6752918424E0026CE01 /* RotStringsH.frag */,
+				2BF2E6712918424E0026CE01 /* 03.frag */,
+				2BF2E66E2918424E0026CE01 /* 04.frag */,
+				2BF2E6602918424E0026CE01 /* 05.frag */,
+				2BF2E6592918424E0026CE01 /* 10.frag */,
 				2BF2E6762918424E0026CE01 /* 18.frag */,
+				2BF2E6682918424E0026CE01 /* 33.frag */,
+				2BF2E6522918424E0026CE01 /* AtmoScattering.frag */,
+				2BF2E6622918424E0026CE01 /* common */,
+				2BF2E64D2918424D0026CE01 /* Empty.frag */,
+				2BF2E6512918424D0026CE01 /* Ether.frag */,
 				2BF2E6772918424E0026CE01 /* Fluid.frag */,
+				2B015CF929186EC10089FC16 /* grass */,
+				2BF2E6502918424D0026CE01 /* Lights1.frag */,
+				2BF2E66C2918424E0026CE01 /* Lights2.frag */,
+				2BF2E6702918424E0026CE01 /* Milk.frag */,
+				2BF2E6742918424E0026CE01 /* OscCircle.frag */,
+				2BF2E6542918424E0026CE01 /* particles */,
+				2BF2E65F2918424E0026CE01 /* passthru.vert */,
+				2BF2E66F2918424E0026CE01 /* RotRainbow.frag */,
+				2BF2E6752918424E0026CE01 /* RotStringsH.frag */,
+				2BF2E66B2918424E0026CE01 /* RotStringsV.frag */,
+				2BF2E6722918424E0026CE01 /* ScanGrid.frag */,
+				2BF2E6692918424E0026CE01 /* ScanLines.frag */,
+				2BF2E66D2918424E0026CE01 /* StarNest.frag */,
+				2BF2E66A2918424E0026CE01 /* TerrainGrid.frag */,
+				2BF2E65A2918424E0026CE01 /* todo */,
+				2BF2E64E2918424D0026CE01 /* Water.frag */,
 				2BF2E6782918424E0026CE01 /* ZebraH.frag */,
+				2BF2E6612918424E0026CE01 /* ZebraV.frag */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -1658,6 +1677,7 @@
 				ADE367465D2A8EBAD4C7A8D9 /* IpEndpointName.cpp in Sources */,
 				67FE4C7B15C2F0478C8126C2 /* NetworkingUtils.cpp in Sources */,
 				510CAFE035E576A4E1502D52 /* UdpSocket.cpp in Sources */,
+				2B015CFF291876390089FC16 /* DrawTex.cpp in Sources */,
 				62545D179C94265CA1389D4A /* OscOutboundPacketStream.cpp in Sources */,
 				C4782ECC372420ACE0615B74 /* OscPrintReceivedElements.cpp in Sources */,
 				0546D1A38E13BD319CC9755B /* OscReceivedElements.cpp in Sources */,

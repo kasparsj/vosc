@@ -179,6 +179,15 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
         useCam = true;
         handleVec3(&camPos, m, 0);
     }
+    else if (command == "/cam/nearclip") {
+        cam.setNearClip(m.getArgAsFloat(0));
+    }
+    else if (command == "/cam/farclip") {
+        cam.setFarClip(m.getArgAsFloat(0));
+    }
+    else if (command == "/cam/movementmaxspeed") {
+        //cam.setMovementMaxSpeed(m.getArgAsFloat(0));
+    }
     else {
         messageQueue.push_back(m);
     }
@@ -237,10 +246,10 @@ ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0) {
 
 void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command == "/tex") {
-        layer->tex.load(m.getArgAsString(1));
+        layer->tex.load(m);
     }
     else if (command == "/tex/choose") {
-        layer->tex.choose(m.getNumArgs() > 1 ? m.getArgAsString(1) : "");
+        layer->tex.choose(m);
     }
     else if (command == "/tex/reload") {
         layer->tex.reload();
@@ -264,6 +273,15 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     }
     else if (command == "/shader/uniform") {
         layer->shader.setUniform(m.getArgAsString(1), m);
+    }
+    else if (command == "/shader/geom/intype") {
+        layer->shader.getShader()->setGeometryInputType(static_cast<GLenum>(m.getArgAsInt(1)));
+    }
+    else if (command == "/shader/geom/outtype") {
+        layer->shader.getShader()->setGeometryOutputType(static_cast<GLenum>(m.getArgAsInt(1)));
+    }
+    else if (command == "/shader/geom/outcount") {
+        layer->shader.getShader()->setGeometryOutputCount(m.getArgAsInt(1));
     }
     else if (command == "/geom") {
         layer->geom.load(m);
