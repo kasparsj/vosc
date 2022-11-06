@@ -22,19 +22,24 @@
 ### Geometry
 - `/geom` [Set layer geometry](#geom)
 - `/geom/instanced` [Use instanced draw](#instanced)
+- `/geom/mesh/mode` [Set layer geometry mesh mode](#mesh-mode)
 
 ### Shader
 - `/shader` [Set layer shader](#shader)
+- `/shader/uniform` [Set layer shader uniform](#shader-uniform)
 
 ### Material
 - `/mat/diffuse` [Set material diffuse color](#diffuse)
 - `/mat/ambient` [Set material ambient color](#ambient)
 - `/mat/specular` [Set material specular color](#specular)
 - `/mat/emissive` [Set material emissive color](#emissive)
-- `/mat/shininess` [Set material shininess color](#shininess)
+- `/mat/shininess` [Set material shininess](#shininess)
 
 ### Data
 - `/data` [Set layer data source](#data)
+- `/data/shader` [Set layer data shader](#data-shader)
+- `/data/shader/uniform` [Set layer data shader uniform](#data-shader-uniform)
+- `/data/fbo` [Init layer data FBO](#data-fbo)
 
 ### Transform
 - `/pos` [Set layer position](#position)
