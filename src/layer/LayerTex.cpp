@@ -8,34 +8,34 @@
 #include "ColorTex.h"
 
 Tex* LayerTex::factory(string type, string path) {
-    Tex *gen = NULL;
+    Tex *tex = NULL;
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
             case Source::VIDEO:
-                gen = new VideoTex(path);
+                tex = new VideoTex(path);
                 break;
             case Source::HPV:
-                gen = new HPVideoTex(path);
+                tex = new HPVideoTex(path);
                 break;
             case Source::SHADER:
-                gen = new ShaderTex(path);
+                tex = new ShaderTex(path);
                 break;
             case Source::SKETCH:
-                gen = new SketchTex(path);
+                tex = new SketchTex(path);
                 break;
             case Source::IMAGE:
-                gen = new ImageTex(path);
+                tex = new ImageTex(path);
                 break;
             case Source::WEBCAM:
-                gen = new WebcamTex(path);
+                tex = new WebcamTex(path);
                 break;
             case Source::COLOR:
-                gen = new ColorTex(path);
+                tex = new ColorTex(path);
                 break;
         }
     }
-    return gen;
+    return tex;
 }
 
 Tex* LayerTex::factory(string source) {
@@ -81,7 +81,7 @@ void LayerTex::load(string source) {
     unload();
     bool explicitType = source.find(":") != string::npos;
     if (explicitType && source.substr(0, 4) != "http") {
-        gen = factory(source);
+        tex = factory(source);
     }
     else {
         string extension = ofFile(source).getExtension();
@@ -89,27 +89,27 @@ void LayerTex::load(string source) {
             extension[i] = tolower(extension[i]);
         }
         if (extension == "frag") {
-            gen = factory("shader", source);
+            tex = factory("shader", source);
         }
         else if (extension == "jpg" || extension == "jpeg" || extension == "png") {
-            gen = factory("image", source);
+            tex = factory("image", source);
         }
         else if (extension == "mov") {
-            gen = factory("video", source);
+            tex = factory("video", source);
         }
         else if (extension == "hpv") {
-            gen = factory("hpv", source);
+            tex = factory("hpv", source);
         }
         else {
             if (ColorTex::exists(source)) {
-                gen = factory("color", source);
+                tex = factory("color", source);
             }
             else if (SketchTex::exists(source)) {
-                gen = factory("sketch", source);
+                tex = factory("sketch", source);
             }
         }
     }
-    if (gen == NULL) {
+    if (tex == NULL) {
         ofLog() << "invalid source " << source;
     }
 }
@@ -120,8 +120,8 @@ void LayerTex::choose(string type) {
         advance(it, int(ofRandom(SourceMap.size())));
         type = it->first;
     }
-    gen = factory(type);
-    if (gen == NULL) {
+    tex = factory(type);
+    if (tex == NULL) {
         ofLog() << "invalid source type " << type;
     }
 }
@@ -129,15 +129,15 @@ void LayerTex::choose(string type) {
 void LayerTex::unload() {
     frames.clear();
     frames.resize(MAX_DELAY);
-    if (gen != NULL) {
-        delete gen;
-        gen = NULL;
+    if (tex != NULL) {
+        delete tex;
+        tex = NULL;
     }
 }
 
 void LayerTex::reload() {
-    if (gen != NULL) {
-        gen->reload();
+    if (tex != NULL) {
+        tex->reload();
     }
     else {
         ofLog() << "cannot reload layer " << index;
@@ -145,8 +145,8 @@ void LayerTex::reload() {
 }
 
 void LayerTex::clear() {
-    if (gen != NULL) {
-        gen->clear();
+    if (tex != NULL) {
+        tex->clear();
     }
     else {
         ofLog() << "cannot clear layer " << index;
@@ -154,7 +154,7 @@ void LayerTex::clear() {
 }
 
 void LayerTex::update() {
-    gen->update(layer);
+    tex->update(layer);
 }
 
 void LayerTex::drawToFbo() {
@@ -169,7 +169,7 @@ void LayerTex::drawToFbo() {
     layer->align();
     layer->rotate();
     if (layer->looper == NULL) {
-        gen->draw(glm::vec3(0), layer->size);
+        tex->draw(glm::vec3(0), layer->size);
     }
     else {
         ofSetColor(255);
@@ -186,7 +186,7 @@ void LayerTex::draw() {
 }
 
 void LayerTex::reset() {
-    gen->reset();
+    tex->reset();
 }
 
 const ofFbo& LayerTex::getFbo() const {
@@ -196,5 +196,5 @@ const ofFbo& LayerTex::getFbo() const {
 }
 
 ofPixels& LayerTex::getPixels() const {
-    return gen->getPixels();
+    return tex->getPixels();
 }

@@ -1,13 +1,14 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxOsc.h"
 
 class Layer;
 
 class LayerGeom {
 public:
     static vector<string> primitives;
-    static bool exists(string path);
+    static bool isPrimitive(string path);
     static string random();
 
     ~LayerGeom() {
@@ -17,19 +18,23 @@ public:
     }
     void setup(Layer* layer) {
         this->layer = layer;
-        load("plane");
+        vector<float> args;
+        load("plane", args);
     }
-    void load(string newPath);
+    void load(string newPath, const vector<float>& args);
+    void load(const ofxOscMessage &m);
     void choose();
     void update();
     void draw();
     void _draw();
-    const ofVboMesh& getMesh() const { return mesh; }
+    ofVboMesh& getMesh() { return mesh; }
     
     bool drawWireframe;
     int drawInstanced = 0;
 
 private:
+    void loadPrimitive(const vector<float>& args);
+    
     Layer* layer;
     string path = "";
     string prevPath = "";

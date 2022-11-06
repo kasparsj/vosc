@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxAutoReloadedShader.h"
+#include "ofxOsc.h"
 
 class Layer;
 
@@ -17,6 +18,11 @@ public:
     void reload();
     void begin(Layer *layer);
     void end();
+    ofxAutoReloadedShader* getShader() {
+        return shader;
+    };
+    void setUniform(string name, const ofxOscMessage& m);
+    map<string, vector<float>> uniforms;
     
 private:
     ofxAutoReloadedShader* shader = NULL;

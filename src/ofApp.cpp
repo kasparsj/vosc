@@ -1,6 +1,7 @@
 #include "ofApp.h"
 #include "ColorUtil.h"
 #include "ofxHPVPlayer.h"
+#include "ShaderTex.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -253,14 +254,25 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     else if (command == "/tex/noclear") {
         layer->noClear = m.getArgAsBool(1);
     }
-    else if (command == "/geom") {
-        layer->geom.load(m.getArgAsString(1));
+    else if (command == "/tex/uniform") {
+        if (ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(layer->tex.tex)) {
+            shaderTex->setUniform(m.getArgAsString(1), m);
+        }
     }
     else if (command == "/shader") {
         layer->shader.load(m.getArgAsString(1));
     }
+    else if (command == "/shader/uniform") {
+        layer->shader.setUniform(m.getArgAsString(1), m);
+    }
+    else if (command == "/geom") {
+        layer->geom.load(m);
+    }
     else if (command == "/geom/instanced") {
         layer->geom.drawInstanced = m.getArgAsInt(1);
+    }
+    else if (command == "/geom/mesh/mode") {
+        layer->geom.getMesh().setMode(static_cast<ofPrimitiveMode>(m.getArgAsInt(1)));
     }
     else if (command == "/mat/diffuse") {
         handleColor(&layer->matSettings.diffuse, m);
@@ -403,6 +415,15 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
             ds.push_back(m.getArgAsString(i));
         }
         layer->addDataSources(ds);
+    }
+    else if (command == "/data/shader") {
+        layer->data.getShader().load(m.getArgAsString(1));
+    }
+    else if (command == "/data/shader/uniform") {
+        layer->data.getShader().setUniform(m.getArgAsString(1), m);
+    }
+    else if (command == "/data/fbo") {
+        layer->data.initFbo(m);
     }
     else if (command == "/seek") {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {

@@ -61,11 +61,33 @@ void Shader::begin(Layer *layer) {
         shader->setUniform1i("num_values", layer->data.values.size());
         shader->setUniform1fv("values", layer->data.values.data(), layer->data.values.size());
         shader->setUniform1i("onset", layer->data.onset ? 1 : 0);
+        for (map<string, vector<float>>::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
+            if (it->second.size() == 1) {
+                shader->setUniform1f(it->first, it->second[0]);
+            }
+            else if (it->second.size() == 2) {
+                shader->setUniform2f(it->first, it->second[0], it->second[1]);
+            }
+            else if (it->second.size() == 3) {
+                shader->setUniform3f(it->first, it->second[0], it->second[1], it->second[2]);
+            }
+        }
     }
 }
 
 void Shader::end() {
     if (isLoaded()) {
         shader->end();
+    }
+}
+
+void Shader::setUniform(string name, const ofxOscMessage& m) {
+    uniforms.erase(name);
+    if (m.getNumArgs() > 2) {
+        vector<float> value;
+        for (int i=2; i<m.getNumArgs(); i++) {
+            value.push_back(m.getArgAsFloat(i));
+        }
+        uniforms[name] = value;
     }
 }

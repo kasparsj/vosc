@@ -1,7 +1,7 @@
 #version 400
 
-#pragma include <of_default_uniforms.glsl>
-#pragma include <of_default_vertex_in_attributes.glsl>
+#pragma include "shaders/common/of_default_uniforms.glsl"
+#pragma include "shaders/common/of_default_vertex_in_attributes.glsl"
 
 // outputs
 out VertexAttrib {

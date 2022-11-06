@@ -20,7 +20,7 @@ public:
     void draw();
     void reset();
     bool isFrameNew() const {
-        return gen->isFrameNew();
+        return tex->isFrameNew();
     }
     const ofFbo& getFbo() const;
     bool hasTexture() const {
@@ -29,14 +29,14 @@ public:
     }
     ofPixels& getPixels() const;
     bool isLoaded() const {
-        return gen != NULL;
+        return tex != NULL;
     }
     ofFloatColor getTint() const {
-        return gen->getTint(layer);
+        return tex->getTint(layer);
     }
 
     Layer* layer = NULL;
-    Tex* gen = NULL;
+    Tex* tex = NULL;
     vector<ofFbo> frames;
     int curFbo = -1;
 };

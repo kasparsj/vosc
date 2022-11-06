@@ -66,11 +66,20 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     transform();
     ofPushStyle();
     ofSetColor(tex.getTint() * bri, alpha * 255);
+    
     shader.begin(this);
+    if (data.fbo.isAllocated()) {
+        for (int i=0; i<data.fbo.source()->getNumTextures(); i++) {
+            shader.getShader()->setUniformTexture("tex" + ofToString(i), data.fbo.source()->getTextureReference(i), i+1 );
+        }
+    }
+    
     material.begin();
     geom.draw();
     material.end();
+    
     shader.end();
+    
     ofPopStyle();
     ofPopMatrix();
 }
