@@ -1,6 +1,6 @@
-#include "FBOGen.h"
+#include "FBOTex.h"
 
-void FBOGen::clear() {
+void FBOTex::clear() {
     fbo.begin();
     ofClear(0, 0, 0, 0);
     fbo.end();

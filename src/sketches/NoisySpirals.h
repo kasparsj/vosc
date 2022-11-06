@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SketchImpl.h"
+#include "Sketch.h"
 
-class NoisySpirals : public SketchImpl {
+class NoisySpirals : public Sketch {
 public:
     void draw(Layer *layer) override {
         float width = layer->size.x;

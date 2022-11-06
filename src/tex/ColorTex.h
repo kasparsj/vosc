@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Gen.h"
+#include "Tex.h"
 
-class Color : public Gen {
+class ColorTex : public Tex {
 public:
     static bool exists(string path);
     static string random();
     
-    Color(string path) : Gen(path) {}
-    ~Color() {}
+    ColorTex(string path) : Tex(path) {}
+    ~ColorTex() {}
     void update(Layer *layer) override;
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
     void choose() override;

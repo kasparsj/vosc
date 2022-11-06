@@ -66,7 +66,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     transform();
     ofPushStyle();
     ofSetColor(tex.getTint() * bri, alpha * 255);
-    shader.begin();
+    shader.begin(this);
     material.begin();
     geom.draw();
     material.end();

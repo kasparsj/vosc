@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Gen.h"
+#include "Tex.h"
 
 class LayerTex {
 public:
-    static Gen* factory(string type, string name);
-    static Gen* factory(string source);
+    static Tex* factory(string type, string name);
+    static Tex* factory(string source);
     
     ~LayerTex() {
         unload();
@@ -36,7 +36,7 @@ public:
     }
 
     Layer* layer = NULL;
-    Gen* gen = NULL;
+    Tex* gen = NULL;
     vector<ofFbo> frames;
     int curFbo = -1;
 };

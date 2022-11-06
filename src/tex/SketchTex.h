@@ -1,16 +1,16 @@
 #pragma once
 
-#include "FBOGen.h"
-#include "SketchImpl.h"
+#include "FBOTex.h"
+#include "Sketch.h"
 
-class Sketch : public FBOGen {
+class SketchTex : public FBOTex {
 public:
-    static map<string, SketchImpl*> sketches;
+    static map<string, Sketch*> sketches;
     static bool exists(string path);
     static string random();
     
-    Sketch(string name) : FBOGen(name) {}
-    ~Sketch() {
+    SketchTex(string name) : FBOTex(name) {}
+    ~SketchTex() {
         if (impl != NULL) {
             delete impl;
         }
@@ -20,5 +20,5 @@ public:
     void choose() override;
     void reset() override;
     
-    SketchImpl *impl = NULL;
+    Sketch *impl = NULL;
 };

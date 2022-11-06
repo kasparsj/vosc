@@ -1,31 +1,31 @@
-#include "Sketch.h"
+#include "SketchTex.h"
 #include "Layer.h"
 #include "NoisySpirals.h"
 #include "WaveClock.h"
 #include "Spiral.h"
 
-map<string, SketchImpl*> createSketches()
+map<string, Sketch*> createSketches()
 {
-    map<string, SketchImpl*> sketches;
+    map<string, Sketch*> sketches;
     sketches["NoisySpirals"] = new NoisySpirals();
     sketches["WaveClock"] = new WaveClock();
     sketches["Spiral"] = new Spiral();
     return sketches;
 }
 
-map<string, SketchImpl*> Sketch::sketches = createSketches();
+map<string, Sketch*> SketchTex::sketches = createSketches();
 
-bool Sketch::exists(string path) {
+bool SketchTex::exists(string path) {
     return sketches.find(path) != sketches.end();
 }
 
-string Sketch::random() {
+string SketchTex::random() {
     auto it = sketches.begin();
     advance(it, int(ofRandom(sketches.size())));
     return it->first;
 }
 
-void Sketch::update(Layer *layer) {
+void SketchTex::update(Layer *layer) {
     if (!fbo.isAllocated() || (fbo.getWidth() != layer->size.x || fbo.getHeight() != layer->size.y)) {
         fbo.clear();
         fbo.allocate(layer->size.x, layer->size.y);
@@ -56,15 +56,15 @@ void Sketch::update(Layer *layer) {
     }
 }
 
-void Sketch::draw(const glm::vec3 &pos, const glm::vec3 &size) {
+void SketchTex::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     fbo.draw(pos, size.x, size.y);
 }
 
-void Sketch::choose() {
+void SketchTex::choose() {
     path = random();
 }
 
-void Sketch::reset() {
+void SketchTex::reset() {
     if (path != "") {
         sketches[path]->initialized = false;
     }

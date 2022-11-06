@@ -1,13 +1,7 @@
 #pragma once
 
-#include "ofxAutoReloadedShader.h"
+#include "Shader.h"
 
-class LayerShader {
+class LayerShader : public Shader {
     
-public:
-    void load(string path);
-    void begin();
-    void end();
-    
-    ofxAutoReloadedShader shader;
 };

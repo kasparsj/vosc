@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SketchImpl.h"
+#include "Sketch.h"
 
-class Spiral : public SketchImpl {
+class Spiral : public Sketch {
     void init() override {
         initialized = true;
     }

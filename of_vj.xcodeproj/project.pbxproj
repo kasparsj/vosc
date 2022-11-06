@@ -20,10 +20,18 @@
 		1EF68DFFFDB46A876B77338B /* ColorUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55138D8657D9D09949E54626 /* ColorUtil.cpp */; };
 		1EF93FB250C63DB2834491C8 /* Glitch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE0E73D8B9FC77CB69667EE9 /* Glitch.cpp */; };
 		1F8B3F1A5890DC53B7A56452 /* Log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 697B169C0F7B7A765EB7BECB /* Log.cpp */; };
-		231BF86FC8A2A84536B0CBE0 /* Video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E9C35AB5202DEE1FAE587B8D /* Video.cpp */; };
 		28AFD6FA9B9C885AFD9FF1C7 /* HorizontalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
 		2BF2E5D72916CC440026CE01 /* LayerShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */; };
+		2BF2E5ED291830510026CE01 /* ImageTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5DC291830510026CE01 /* ImageTex.cpp */; };
+		2BF2E5EE291830510026CE01 /* HPVideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5DE291830510026CE01 /* HPVideoTex.cpp */; };
+		2BF2E5EF291830510026CE01 /* SketchTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E0291830510026CE01 /* SketchTex.cpp */; };
+		2BF2E5F0291830510026CE01 /* VideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E3291830510026CE01 /* VideoTex.cpp */; };
+		2BF2E5F1291830510026CE01 /* ColorTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E4291830510026CE01 /* ColorTex.cpp */; };
+		2BF2E5F2291830510026CE01 /* FBOTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E5291830510026CE01 /* FBOTex.cpp */; };
+		2BF2E5F3291830510026CE01 /* Tex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E9291830510026CE01 /* Tex.cpp */; };
+		2BF2E5F4291830510026CE01 /* WebcamTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5EC291830510026CE01 /* WebcamTex.cpp */; };
+		2BF2E5F7291830750026CE01 /* ShaderTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5F5291830750026CE01 /* ShaderTex.cpp */; };
 		33DB731E964056D7E35604A7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
 		3A499904889C490DCF533C6E /* BloomPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41ED8C8083845703AA1FDFA /* BloomPass.cpp */; };
 		3D6BA46406CE29B32055340C /* Analogous.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24317A596BC892793AEA0706 /* Analogous.cpp */; };
@@ -38,7 +46,6 @@
 		622F2B6B3FFAA37224C22AD2 /* ofxAutoReloadedShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */; };
 		62545D179C94265CA1389D4A /* OscOutboundPacketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */; };
 		640279EE111671BD026CB013 /* ofxOscReceiver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C2FAC65C491D4231379F3298 /* ofxOscReceiver.cpp */; };
-		64419FBCCF52F2F13D35A292 /* Sketch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BDF81F38A399D38B0C59F700 /* Sketch.cpp */; };
 		67FE4C7B15C2F0478C8126C2 /* NetworkingUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3B361208CD4107E479F04E7B /* NetworkingUtils.cpp */; };
 		6A505EAE8088949A9180FFE7 /* GodRaysPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07AAE715D8853EDA76BC909 /* GodRaysPass.cpp */; };
 		6C8551DB2C641E610EA107BE /* Sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */; };
@@ -55,7 +62,6 @@
 		884CB4D049E35C51E949A565 /* KaleidoscopePass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 108C4DB0C398388D00027091 /* KaleidoscopePass.cpp */; };
 		898CB0955CB42FEB5D750A5C /* VerticalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */; };
 		8F5205AEF8861EF234F0651A /* ofxOscSender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 81967292BFC87A0144BD32C6 /* ofxOscSender.cpp */; };
-		9D5B5A7556CEF2DF185DA036 /* FBOGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1AF23F0A21D95F5FB5E37082 /* FBOGen.cpp */; };
 		A1F13275253C91855DD1A1D0 /* Compound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A9C7EB625886EF6596D28D8E /* Compound.cpp */; };
 		A40A1934868B9C3BEF746DFA /* Rotate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 15644D27B8AD78E007263288 /* Rotate.cpp */; };
 		AD20459C5F8C4A24CE257C0C /* ReflectY.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 340310DF58CADC860B3B50E5 /* ReflectY.cpp */; };
@@ -76,21 +82,16 @@
 		C4782ECC372420ACE0615B74 /* OscPrintReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BC8881B3C8C0A1C45F042E7A /* OscPrintReceivedElements.cpp */; };
 		C6D227F5B8C686EF7F391BA6 /* Tetrad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5BE5C3443286643DF629CB82 /* Tetrad.cpp */; };
 		CC7496C750B49DFCA0D43427 /* ColorWheelScheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D09A011EA9E66CDCAAB4FD25 /* ColorWheelScheme.cpp */; };
-		CD003A65432BA73FDA3F1F69 /* Gen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5AAD7137CBC357F67BA0E698 /* Gen.cpp */; };
 		CEA24AEB74ADBDFB0AE926F3 /* lz4.c in Sources */ = {isa = PBXBuildFile; fileRef = 9144546E5481902E77870A52 /* lz4.c */; };
 		D04ED2A93B5FDDA28935E888 /* Beyoon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4176D2EC3811F1A6586B49A5 /* Beyoon.cpp */; };
 		D736C6549BC0F3AC000D3E46 /* ofxHPVPLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CA80722114B53E79572651A /* ofxHPVPLayer.cpp */; };
 		D752EB8BA905C25F5E7F2B30 /* ZoomBlurPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF8D27B3DEDC121DE85F5B7B /* ZoomBlurPass.cpp */; };
-		D8677E18BE8001D8515C2521 /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5BE614E7C4F4FC6E884832B4 /* Color.cpp */; };
 		D91BBD56E65F1B0195ABD2FB /* ofxTidalCycles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A5288DE681747CD43B30E8C3 /* ofxTidalCycles.cpp */; };
-		DBCA40F59B84917A76F45942 /* Image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D58FD3055EBD404755645BEA /* Image.cpp */; };
 		DFB75F1EBE744A456AC999F4 /* ContrastPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6788311DC7D945282047837A /* ContrastPass.cpp */; };
-		E01DFE7C5776D7A83326D7F9 /* Webcam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04414BC56F941B5BDBD35834 /* Webcam.cpp */; };
 		E4797F1786BE22985F7EE55F /* RGBShiftPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5201F6A7A19258B7F1CA2E43 /* RGBShiftPass.cpp */; };
 		E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1D0A3A1BDC003C02F2 /* main.cpp */; };
 		E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */; };
 		E6EB0253C7456C2442D3560C /* Invert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 20CE1E405861E6EFEDA0A144 /* Invert.cpp */; };
-		F1E2E1DCD30D314AF182EDE0 /* HPVideo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 82CAB34AEEA60C0C60BC248B /* HPVideo.cpp */; };
 		F56110F5281631EA7D770D38 /* SplitComplementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4E2B4BC4A65212574815E669 /* SplitComplementary.cpp */; };
 		F7B83E7D0CAB59D9E8F8C9CD /* LayerGeom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1574D98230A5FA3F640B62D0 /* LayerGeom.cpp */; };
 /* End PBXBuildFile section */
@@ -114,9 +115,7 @@
 		01BD99D6CAAE9353615A1AC5 /* Complementary.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Complementary.h; path = ../../../addons/ofxColorTheory/src/Rules/Complementary.h; sourceTree = SOURCE_ROOT; };
 		0217829E621698E1FD8D9876 /* EdgePass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = EdgePass.h; path = ../../../addons/ofxPostProcessing/src/EdgePass.h; sourceTree = SOURCE_ROOT; };
 		0261DFB3A4808E21B3543B62 /* LayerTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerTex.h; path = src/layer/LayerTex.h; sourceTree = SOURCE_ROOT; };
-		02706B3C55F11A1F7823CDB0 /* Image.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Image.h; path = src/gen/Image.h; sourceTree = SOURCE_ROOT; };
 		029684CF678F70F6D3537A29 /* OscOutboundPacketStream.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscOutboundPacketStream.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscOutboundPacketStream.h; sourceTree = SOURCE_ROOT; };
-		04414BC56F941B5BDBD35834 /* Webcam.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Webcam.cpp; path = src/gen/Webcam.cpp; sourceTree = SOURCE_ROOT; };
 		044D4B2A1A607F88FEF2B610 /* ConvolutionPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ConvolutionPass.h; path = ../../../addons/ofxPostProcessing/src/ConvolutionPass.h; sourceTree = SOURCE_ROOT; };
 		0453A7C309E8AE8F8C1CC6E8 /* DofPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DofPass.h; path = ../../../addons/ofxPostProcessing/src/DofPass.h; sourceTree = SOURCE_ROOT; };
 		05E26B6CD385E33BC24DF1D3 /* ofxLooper.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxLooper.h; path = ../../../addons/ofxLooper/src/ofxLooper.h; sourceTree = SOURCE_ROOT; };
@@ -133,7 +132,6 @@
 		1574D98230A5FA3F640B62D0 /* LayerGeom.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerGeom.cpp; path = src/layer/LayerGeom.cpp; sourceTree = SOURCE_ROOT; };
 		15FB2E86C44B0C97D2B82E65 /* ofxLooper.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxLooper.cpp; path = ../../../addons/ofxLooper/src/ofxLooper.cpp; sourceTree = SOURCE_ROOT; };
 		199A2F0F6EFDD17E50C9FD34 /* Pixelsort.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Pixelsort.cpp; path = ../../../addons/ofxPostProcessing/src/Pixelsort.cpp; sourceTree = SOURCE_ROOT; };
-		1AF23F0A21D95F5FB5E37082 /* FBOGen.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FBOGen.cpp; path = src/gen/FBOGen.cpp; sourceTree = SOURCE_ROOT; };
 		1E952AF032B351FB32CCBD2B /* Split.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Split.cpp; path = ../../../addons/ofxPostProcessing/src/Split.cpp; sourceTree = SOURCE_ROOT; };
 		1F14BB101CDA8E3ECB95EFE9 /* Triad.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Triad.h; path = ../../../addons/ofxColorTheory/src/Rules/Triad.h; sourceTree = SOURCE_ROOT; };
 		20CE1E405861E6EFEDA0A144 /* Invert.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Invert.cpp; path = ../../../addons/ofxPostProcessing/src/Invert.cpp; sourceTree = SOURCE_ROOT; };
@@ -141,13 +139,31 @@
 		20FA7F2967238EE369A6E275 /* Glitch.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Glitch.h; path = ../../../addons/ofxPostProcessing/src/Glitch.h; sourceTree = SOURCE_ROOT; };
 		23640F57DF6C4BB6BFC5DA4C /* PacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PacketListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/PacketListener.h; sourceTree = SOURCE_ROOT; };
 		24317A596BC892793AEA0706 /* Analogous.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Analogous.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Analogous.cpp; sourceTree = SOURCE_ROOT; };
-		27959D03B9B02B84FE8D7790 /* Video.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Video.h; path = src/gen/Video.h; sourceTree = SOURCE_ROOT; };
 		27F1AFE400331DE8F477F084 /* ColorWheelSchemes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorWheelSchemes.cpp; path = ../../../addons/ofxColorTheory/src/ColorWheelSchemes.cpp; sourceTree = SOURCE_ROOT; };
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
 		2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = LayerShader.cpp; path = layer/LayerShader.cpp; sourceTree = "<group>"; };
 		2BF2E5D62916CC1F0026CE01 /* LayerShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LayerShader.h; path = layer/LayerShader.h; sourceTree = "<group>"; };
+		2BF2E5DC291830510026CE01 /* ImageTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImageTex.cpp; sourceTree = "<group>"; };
+		2BF2E5DD291830510026CE01 /* Tex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tex.h; sourceTree = "<group>"; };
+		2BF2E5DE291830510026CE01 /* HPVideoTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPVideoTex.cpp; sourceTree = "<group>"; };
+		2BF2E5DF291830510026CE01 /* WebcamTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebcamTex.h; sourceTree = "<group>"; };
+		2BF2E5E0291830510026CE01 /* SketchTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SketchTex.cpp; sourceTree = "<group>"; };
+		2BF2E5E1291830510026CE01 /* ColorTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorTex.h; sourceTree = "<group>"; };
+		2BF2E5E2291830510026CE01 /* HPVideoTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPVideoTex.h; sourceTree = "<group>"; };
+		2BF2E5E3291830510026CE01 /* VideoTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VideoTex.cpp; sourceTree = "<group>"; };
+		2BF2E5E4291830510026CE01 /* ColorTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ColorTex.cpp; sourceTree = "<group>"; };
+		2BF2E5E5291830510026CE01 /* FBOTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FBOTex.cpp; sourceTree = "<group>"; };
+		2BF2E5E6291830510026CE01 /* FBOTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBOTex.h; sourceTree = "<group>"; };
+		2BF2E5E7291830510026CE01 /* VideoTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoTex.h; sourceTree = "<group>"; };
+		2BF2E5E8291830510026CE01 /* SketchTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SketchTex.h; sourceTree = "<group>"; };
+		2BF2E5E9291830510026CE01 /* Tex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Tex.cpp; sourceTree = "<group>"; };
+		2BF2E5EA291830510026CE01 /* Sketch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sketch.h; sourceTree = "<group>"; };
+		2BF2E5EB291830510026CE01 /* ImageTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageTex.h; sourceTree = "<group>"; };
+		2BF2E5EC291830510026CE01 /* WebcamTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WebcamTex.cpp; sourceTree = "<group>"; };
+		2BF2E5F5291830750026CE01 /* ShaderTex.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ShaderTex.cpp; sourceTree = "<group>"; };
+		2BF2E5F6291830750026CE01 /* ShaderTex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderTex.h; sourceTree = "<group>"; };
 		2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VerticalTiltShifPass.cpp; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.cpp; sourceTree = SOURCE_ROOT; };
 		2E2EF60AF55D0A39EC1BAC78 /* Log.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Log.h; path = ../../../addons/ofxHPVPlayer/src/Log.h; sourceTree = SOURCE_ROOT; };
 		2FD4B0329909D3527F003494 /* UdpSocket.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = UdpSocket.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/UdpSocket.h; sourceTree = SOURCE_ROOT; };
@@ -167,7 +183,6 @@
 		402AF494E736B54C67F4D3BF /* Layer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Layer.h; path = src/layer/Layer.h; sourceTree = SOURCE_ROOT; };
 		40E3B175D68EA99116024843 /* FramesBuffer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FramesBuffer.h; path = ../../../addons/ofxLooper/src/FramesBuffer.h; sourceTree = SOURCE_ROOT; };
 		4176D2EC3811F1A6586B49A5 /* Beyoon.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Beyoon.cpp; path = ../../../addons/ofxPostProcessing/src/Beyoon.cpp; sourceTree = SOURCE_ROOT; };
-		41E6B72EDC9285BBE9191004 /* Color.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Color.h; path = src/gen/Color.h; sourceTree = SOURCE_ROOT; };
 		444657A12E59D0ED86981498 /* TimerListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = TimerListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/TimerListener.h; sourceTree = SOURCE_ROOT; };
 		484F662699DFE8176E1B750F /* PostProcessing.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostProcessing.cpp; path = ../../../addons/ofxPostProcessing/src/PostProcessing.cpp; sourceTree = SOURCE_ROOT; };
 		48974F980F51769171D0B2F5 /* IpEndpointName.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IpEndpointName.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/IpEndpointName.h; sourceTree = SOURCE_ROOT; };
@@ -185,13 +200,9 @@
 		54F36382628E4D0FF07206D7 /* RenderPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = RenderPass.cpp; path = ../../../addons/ofxPostProcessing/src/RenderPass.cpp; sourceTree = SOURCE_ROOT; };
 		55138D8657D9D09949E54626 /* ColorUtil.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorUtil.cpp; path = ../../../addons/ofxColorTheory/src/ColorUtil.cpp; sourceTree = SOURCE_ROOT; };
 		57B6FEE57FB75BD3A937508D /* Spiral.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Spiral.h; path = src/sketches/Spiral.h; sourceTree = SOURCE_ROOT; };
-		57B986EA2D2AB951677C2AED /* Gen.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Gen.h; path = src/gen/Gen.h; sourceTree = SOURCE_ROOT; };
 		57DBCDF6EAF0B2339FC73E55 /* LayerGeom.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerGeom.h; path = src/layer/LayerGeom.h; sourceTree = SOURCE_ROOT; };
-		5A2FEA06065174419FD1BB14 /* SketchImpl.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SketchImpl.h; path = src/gen/SketchImpl.h; sourceTree = SOURCE_ROOT; };
-		5AAD7137CBC357F67BA0E698 /* Gen.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Gen.cpp; path = src/gen/Gen.cpp; sourceTree = SOURCE_ROOT; };
 		5BC56A60E911F7488A58830A /* NoiseWarpPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = NoiseWarpPass.cpp; path = ../../../addons/ofxPostProcessing/src/NoiseWarpPass.cpp; sourceTree = SOURCE_ROOT; };
 		5BE5C3443286643DF629CB82 /* Tetrad.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Tetrad.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Tetrad.cpp; sourceTree = SOURCE_ROOT; };
-		5BE614E7C4F4FC6E884832B4 /* Color.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Color.cpp; path = src/gen/Color.cpp; sourceTree = SOURCE_ROOT; };
 		63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscOutboundPacketStream.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscOutboundPacketStream.cpp; sourceTree = SOURCE_ROOT; };
 		65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxAutoReloadedShader.cpp; path = ../../../addons/ofxAutoReloadedShader/src/ofxAutoReloadedShader.cpp; sourceTree = SOURCE_ROOT; };
 		65EEFA3DA3526E9CDD9C21F9 /* ofxOscBundle.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscBundle.cpp; path = ../../../addons/ofxOsc/src/ofxOscBundle.cpp; sourceTree = SOURCE_ROOT; };
@@ -201,7 +212,7 @@
 		6AF187A99EECFB13E3BCCD33 /* LimbDarkeningPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LimbDarkeningPass.h; path = ../../../addons/ofxPostProcessing/src/LimbDarkeningPass.h; sourceTree = SOURCE_ROOT; };
 		6B65E6930994CC4B2D2B8B33 /* OscPacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscPacketListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPacketListener.h; sourceTree = SOURCE_ROOT; };
 		6BBE5C9251660EA96B398017 /* SSAOPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SSAOPass.h; path = ../../../addons/ofxPostProcessing/src/SSAOPass.h; sourceTree = SOURCE_ROOT; };
-		73842633D41A69736909A790 /* Shader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Shader.h; path = src/gen/Shader.h; sourceTree = SOURCE_ROOT; };
+		73842633D41A69736909A790 /* Shader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Shader.h; path = src/Shader.h; sourceTree = SOURCE_ROOT; };
 		7462D018F6D6E407E598A021 /* PixelatePass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PixelatePass.cpp; path = ../../../addons/ofxPostProcessing/src/PixelatePass.cpp; sourceTree = SOURCE_ROOT; };
 		74BDDD14F49833AD24862E87 /* RimHighlightingPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = RimHighlightingPass.cpp; path = ../../../addons/ofxPostProcessing/src/RimHighlightingPass.cpp; sourceTree = SOURCE_ROOT; };
 		7648D86674A13C326B506A34 /* ReflectX.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ReflectX.cpp; path = ../../../addons/ofxPostProcessing/src/ReflectX.cpp; sourceTree = SOURCE_ROOT; };
@@ -211,9 +222,7 @@
 		7F0E68045434798E8DBE1412 /* LayerTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerTex.cpp; path = src/layer/LayerTex.cpp; sourceTree = SOURCE_ROOT; };
 		7F9AE8283BEDCBB358ACC40A /* ColorScheme.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorScheme.cpp; path = ../../../addons/ofxColorTheory/src/ColorScheme.cpp; sourceTree = SOURCE_ROOT; };
 		81967292BFC87A0144BD32C6 /* ofxOscSender.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscSender.cpp; path = ../../../addons/ofxOsc/src/ofxOscSender.cpp; sourceTree = SOURCE_ROOT; };
-		82CAB34AEEA60C0C60BC248B /* HPVideo.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HPVideo.cpp; path = src/HPVideo.cpp; sourceTree = SOURCE_ROOT; };
 		830C7C3DF5B5E3A6340D0712 /* ThreadSafeQueue.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ThreadSafeQueue.h; path = ../../../addons/ofxHPVPlayer/src/ThreadSafeQueue.h; sourceTree = SOURCE_ROOT; };
-		894A32AEB783A4469CFF3C4E /* Sketch.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Sketch.h; path = src/gen/Sketch.h; sourceTree = SOURCE_ROOT; };
 		89CF8997FAD1A371B11F4481 /* SplitComplementary.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SplitComplementary.h; path = ../../../addons/ofxColorTheory/src/Rules/SplitComplementary.h; sourceTree = SOURCE_ROOT; };
 		8B30E93FD3D3475EED522A0E /* ofxOscBundle.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscBundle.h; path = ../../../addons/ofxOsc/src/ofxOscBundle.h; sourceTree = SOURCE_ROOT; };
 		8C75AFC8774A62495DD53464 /* ofxOscReceiver.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscReceiver.h; path = ../../../addons/ofxOsc/src/ofxOscReceiver.h; sourceTree = SOURCE_ROOT; };
@@ -233,7 +242,6 @@
 		9C5EDF65915908821C72E565 /* Monochrome.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Monochrome.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Monochrome.cpp; sourceTree = SOURCE_ROOT; };
 		9CEAAB55A88E4C0DB6B6C5CC /* Analogous.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Analogous.h; path = ../../../addons/ofxColorTheory/src/Rules/Analogous.h; sourceTree = SOURCE_ROOT; };
 		9F7986DC4EB05E75FCE2C777 /* ofxOscSender.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscSender.h; path = ../../../addons/ofxOsc/src/ofxOscSender.h; sourceTree = SOURCE_ROOT; };
-		A1EFBF216F85BB25600E3E24 /* HPVideo.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVideo.h; path = src/HPVideo.h; sourceTree = SOURCE_ROOT; };
 		A2AAA8CA403479E6FCDF920E /* OscHostEndianness.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscHostEndianness.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscHostEndianness.h; sourceTree = SOURCE_ROOT; };
 		A5288DE681747CD43B30E8C3 /* ofxTidalCycles.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxTidalCycles.cpp; path = ../../../addons/ofxTidalCycles/src/ofxTidalCycles.cpp; sourceTree = SOURCE_ROOT; };
 		A9C7EB625886EF6596D28D8E /* Compound.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Compound.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Compound.cpp; sourceTree = SOURCE_ROOT; };
@@ -248,10 +256,8 @@
 		BAA4E229C246D7B615917505 /* ZoomBlurPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ZoomBlurPass.h; path = ../../../addons/ofxPostProcessing/src/ZoomBlurPass.h; sourceTree = SOURCE_ROOT; };
 		BB560E6FDCEADC3494E3D9B3 /* Tetrad.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Tetrad.h; path = ../../../addons/ofxColorTheory/src/Rules/Tetrad.h; sourceTree = SOURCE_ROOT; };
 		BC8881B3C8C0A1C45F042E7A /* OscPrintReceivedElements.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscPrintReceivedElements.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPrintReceivedElements.cpp; sourceTree = SOURCE_ROOT; };
-		BC8D5C1B9FCA5E4FB4541289 /* Webcam.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Webcam.h; path = src/gen/Webcam.h; sourceTree = SOURCE_ROOT; };
-		BDF81F38A399D38B0C59F700 /* Sketch.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Sketch.cpp; path = src/gen/Sketch.cpp; sourceTree = SOURCE_ROOT; };
 		BE0E73D8B9FC77CB69667EE9 /* Glitch.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Glitch.cpp; path = ../../../addons/ofxPostProcessing/src/Glitch.cpp; sourceTree = SOURCE_ROOT; };
-		C037A9C7AF50F90807B4BA85 /* Shader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Shader.cpp; path = src/gen/Shader.cpp; sourceTree = SOURCE_ROOT; };
+		C037A9C7AF50F90807B4BA85 /* Shader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Shader.cpp; path = src/Shader.cpp; sourceTree = SOURCE_ROOT; };
 		C07AAE715D8853EDA76BC909 /* GodRaysPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GodRaysPass.cpp; path = ../../../addons/ofxPostProcessing/src/GodRaysPass.cpp; sourceTree = SOURCE_ROOT; };
 		C127DCF305861E6D5D6332E6 /* SSAOPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = SSAOPass.cpp; path = ../../../addons/ofxPostProcessing/src/SSAOPass.cpp; sourceTree = SOURCE_ROOT; };
 		C23F79F9BFBAD0F41FB354FD /* LayerData.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerData.cpp; path = src/layer/LayerData.cpp; sourceTree = SOURCE_ROOT; };
@@ -267,7 +273,6 @@
 		D09A011EA9E66CDCAAB4FD25 /* ColorWheelScheme.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorWheelScheme.cpp; path = ../../../addons/ofxColorTheory/src/ColorWheelScheme.cpp; sourceTree = SOURCE_ROOT; };
 		D137AEF3D0655BB96F6362DD /* HPVRenderBridge.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HPVRenderBridge.cpp; path = ../../../addons/ofxHPVPlayer/src/HPVRenderBridge.cpp; sourceTree = SOURCE_ROOT; };
 		D41ED8C8083845703AA1FDFA /* BloomPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = BloomPass.cpp; path = ../../../addons/ofxPostProcessing/src/BloomPass.cpp; sourceTree = SOURCE_ROOT; };
-		D58FD3055EBD404755645BEA /* Image.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Image.cpp; path = src/gen/Image.cpp; sourceTree = SOURCE_ROOT; };
 		D9BFFBBF4CC43DEE890B3C3E /* OscTypes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscTypes.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscTypes.cpp; sourceTree = SOURCE_ROOT; };
 		DACACDF2F37260A0BFF826E2 /* PostProcessing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PostProcessing.h; path = ../../../addons/ofxPostProcessing/src/PostProcessing.h; sourceTree = SOURCE_ROOT; };
 		DEF2C306ED271A94AC33B144 /* HsbShiftPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HsbShiftPass.h; path = ../../../addons/ofxPostProcessing/src/HsbShiftPass.h; sourceTree = SOURCE_ROOT; };
@@ -453,14 +458,12 @@
 		E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofApp.cpp; path = src/ofApp.cpp; sourceTree = SOURCE_ROOT; };
 		E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ofApp.h; path = src/ofApp.h; sourceTree = SOURCE_ROOT; };
 		E4B6FCAD0C3E899E008CF71C /* openFrameworks-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "openFrameworks-Info.plist"; sourceTree = "<group>"; };
-		E4CC104694390A8799972684 /* FBOGen.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FBOGen.h; path = src/gen/FBOGen.h; sourceTree = SOURCE_ROOT; };
 		E4EB6923138AFD0F00A09F29 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
 		E547AB568F5E5027A880C47C /* ToonPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ToonPass.cpp; path = ../../../addons/ofxPostProcessing/src/ToonPass.cpp; sourceTree = SOURCE_ROOT; };
 		E6DEF695B88BA5FAACEAA937 /* UdpSocket.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = UdpSocket.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/posix/UdpSocket.cpp; sourceTree = SOURCE_ROOT; };
 		E73D5C2347DF2FD4913DD347 /* HPVManager.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HPVManager.cpp; path = ../../../addons/ofxHPVPlayer/src/HPVManager.cpp; sourceTree = SOURCE_ROOT; };
 		E837DEBFAEA1CAD833A377DF /* DofPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DofPass.cpp; path = ../../../addons/ofxPostProcessing/src/DofPass.cpp; sourceTree = SOURCE_ROOT; };
 		E84ADD8443D82E35430385B7 /* RimHighlightingPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RimHighlightingPass.h; path = ../../../addons/ofxPostProcessing/src/RimHighlightingPass.h; sourceTree = SOURCE_ROOT; };
-		E9C35AB5202DEE1FAE587B8D /* Video.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Video.cpp; path = src/gen/Video.cpp; sourceTree = SOURCE_ROOT; };
 		EA2A13781712672758AFD432 /* DofAltPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DofAltPass.h; path = ../../../addons/ofxPostProcessing/src/DofAltPass.h; sourceTree = SOURCE_ROOT; };
 		ED748BD5A0D9DE38FB045B6D /* ColorUtil.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ColorUtil.h; path = ../../../addons/ofxColorTheory/src/ColorUtil.h; sourceTree = SOURCE_ROOT; };
 		EF3A04320CF71A9384B887B3 /* ReflectY.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ReflectY.h; path = ../../../addons/ofxPostProcessing/src/ReflectY.h; sourceTree = SOURCE_ROOT; };
@@ -500,16 +503,16 @@
 		1BF4AF61A21BC0CB4D19CFDE /* layer */ = {
 			isa = PBXGroup;
 			children = (
-				C23F79F9BFBAD0F41FB354FD /* LayerData.cpp */,
-				402AF494E736B54C67F4D3BF /* Layer.h */,
 				BA986CF673F742569173F979 /* Layer.cpp */,
+				402AF494E736B54C67F4D3BF /* Layer.h */,
+				C23F79F9BFBAD0F41FB354FD /* LayerData.cpp */,
+				144656B571305328D7DB94BB /* LayerData.h */,
 				1574D98230A5FA3F640B62D0 /* LayerGeom.cpp */,
 				57DBCDF6EAF0B2339FC73E55 /* LayerGeom.h */,
-				7F0E68045434798E8DBE1412 /* LayerTex.cpp */,
-				0261DFB3A4808E21B3543B62 /* LayerTex.h */,
-				144656B571305328D7DB94BB /* LayerData.h */,
 				2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */,
 				2BF2E5D62916CC1F0026CE01 /* LayerShader.h */,
+				7F0E68045434798E8DBE1412 /* LayerTex.cpp */,
+				0261DFB3A4808E21B3543B62 /* LayerTex.h */,
 			);
 			name = layer;
 			sourceTree = "<group>";
@@ -537,6 +540,31 @@
 				532314368EF973BD38C13AED /* ofxHPVPlayer.h */,
 			);
 			name = src;
+			sourceTree = "<group>";
+		};
+		2BF2E5DB291830510026CE01 /* tex */ = {
+			isa = PBXGroup;
+			children = (
+				2BF2E5E4291830510026CE01 /* ColorTex.cpp */,
+				2BF2E5E1291830510026CE01 /* ColorTex.h */,
+				2BF2E5E5291830510026CE01 /* FBOTex.cpp */,
+				2BF2E5E6291830510026CE01 /* FBOTex.h */,
+				2BF2E5DE291830510026CE01 /* HPVideoTex.cpp */,
+				2BF2E5E2291830510026CE01 /* HPVideoTex.h */,
+				2BF2E5DC291830510026CE01 /* ImageTex.cpp */,
+				2BF2E5EB291830510026CE01 /* ImageTex.h */,
+				2BF2E5F5291830750026CE01 /* ShaderTex.cpp */,
+				2BF2E5F6291830750026CE01 /* ShaderTex.h */,
+				2BF2E5E0291830510026CE01 /* SketchTex.cpp */,
+				2BF2E5E8291830510026CE01 /* SketchTex.h */,
+				2BF2E5E9291830510026CE01 /* Tex.cpp */,
+				2BF2E5DD291830510026CE01 /* Tex.h */,
+				2BF2E5E3291830510026CE01 /* VideoTex.cpp */,
+				2BF2E5E7291830510026CE01 /* VideoTex.h */,
+				2BF2E5EC291830510026CE01 /* WebcamTex.cpp */,
+				2BF2E5DF291830510026CE01 /* WebcamTex.h */,
+			);
+			path = tex;
 			sourceTree = "<group>";
 		};
 		30CB364908817057B430D528 /* osc */ = {
@@ -605,30 +633,6 @@
 				348096EAEFAC358FDD5E584A /* src */,
 			);
 			name = ofxAutoReloadedShader;
-			sourceTree = "<group>";
-		};
-		3A0FAA05CE9137B817C89D95 /* gen */ = {
-			isa = PBXGroup;
-			children = (
-				5BE614E7C4F4FC6E884832B4 /* Color.cpp */,
-				41E6B72EDC9285BBE9191004 /* Color.h */,
-				1AF23F0A21D95F5FB5E37082 /* FBOGen.cpp */,
-				E4CC104694390A8799972684 /* FBOGen.h */,
-				5AAD7137CBC357F67BA0E698 /* Gen.cpp */,
-				57B986EA2D2AB951677C2AED /* Gen.h */,
-				D58FD3055EBD404755645BEA /* Image.cpp */,
-				02706B3C55F11A1F7823CDB0 /* Image.h */,
-				C037A9C7AF50F90807B4BA85 /* Shader.cpp */,
-				73842633D41A69736909A790 /* Shader.h */,
-				BDF81F38A399D38B0C59F700 /* Sketch.cpp */,
-				894A32AEB783A4469CFF3C4E /* Sketch.h */,
-				5A2FEA06065174419FD1BB14 /* SketchImpl.h */,
-				E9C35AB5202DEE1FAE587B8D /* Video.cpp */,
-				27959D03B9B02B84FE8D7790 /* Video.h */,
-				04414BC56F941B5BDBD35834 /* Webcam.cpp */,
-				BC8D5C1B9FCA5E4FB4541289 /* Webcam.h */,
-			);
-			name = gen;
 			sourceTree = "<group>";
 		};
 		641362CA659FAFEE4E81001B /* posix */ = {
@@ -1156,17 +1160,18 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				97AC5D82D06DAB2345FDB039 /* Config.h */,
+				1BF4AF61A21BC0CB4D19CFDE /* layer */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
-				3E8911C6B8ABF8D32A950348 /* Sound.h */,
-				97AC5D82D06DAB2345FDB039 /* Config.h */,
+				C037A9C7AF50F90807B4BA85 /* Shader.cpp */,
+				73842633D41A69736909A790 /* Shader.h */,
+				2BF2E5EA291830510026CE01 /* Sketch.h */,
 				D668F2E5BEDA9E0D5669F52C /* sketches */,
-				82CAB34AEEA60C0C60BC248B /* HPVideo.cpp */,
-				A1EFBF216F85BB25600E3E24 /* HPVideo.h */,
-				3A0FAA05CE9137B817C89D95 /* gen */,
-				1BF4AF61A21BC0CB4D19CFDE /* layer */,
 				ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */,
+				3E8911C6B8ABF8D32A950348 /* Sound.h */,
+				2BF2E5DB291830510026CE01 /* tex */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1303,20 +1308,14 @@
 			files = (
 				2BF2E5D72916CC440026CE01 /* LayerShader.cpp in Sources */,
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
+				2BF2E5F3291830510026CE01 /* Tex.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
-				F1E2E1DCD30D314AF182EDE0 /* HPVideo.cpp in Sources */,
-				CD003A65432BA73FDA3F1F69 /* Gen.cpp in Sources */,
-				DBCA40F59B84917A76F45942 /* Image.cpp in Sources */,
-				64419FBCCF52F2F13D35A292 /* Sketch.cpp in Sources */,
-				231BF86FC8A2A84536B0CBE0 /* Video.cpp in Sources */,
-				D8677E18BE8001D8515C2521 /* Color.cpp in Sources */,
 				C1104C02B7261C2D5DEF27CD /* Shader.cpp in Sources */,
-				9D5B5A7556CEF2DF185DA036 /* FBOGen.cpp in Sources */,
-				E01DFE7C5776D7A83326D7F9 /* Webcam.cpp in Sources */,
 				3EBCD03048ED03CCB70D6972 /* LayerData.cpp in Sources */,
 				081251DFDA2F64A94FA7FE19 /* Layer.cpp in Sources */,
 				F7B83E7D0CAB59D9E8F8C9CD /* LayerGeom.cpp in Sources */,
 				17474A172614F63589066020 /* LayerTex.cpp in Sources */,
+				2BF2E5EF291830510026CE01 /* SketchTex.cpp in Sources */,
 				6C8551DB2C641E610EA107BE /* Sound.cpp in Sources */,
 				622F2B6B3FFAA37224C22AD2 /* ofxAutoReloadedShader.cpp in Sources */,
 				07F0761DF15EC42437CC8402 /* ColorScheme.cpp in Sources */,
@@ -1330,6 +1329,8 @@
 				3D839E120AFEABE9CA2B91D4 /* Monochrome.cpp in Sources */,
 				F56110F5281631EA7D770D38 /* SplitComplementary.cpp in Sources */,
 				C6D227F5B8C686EF7F391BA6 /* Tetrad.cpp in Sources */,
+				2BF2E5F1291830510026CE01 /* ColorTex.cpp in Sources */,
+				2BF2E5F7291830750026CE01 /* ShaderTex.cpp in Sources */,
 				8753347E0F4B731B6D71538C /* Triad.cpp in Sources */,
 				08C23182D394C53F6ECE6CCC /* easing_terms_of_use.html in Sources */,
 				BAA2B779786EEE23A27F8E12 /* HPVManager.cpp in Sources */,
@@ -1352,8 +1353,10 @@
 				5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */,
 				4ADB88E2FB52E76A471065DE /* ofxOscParameterSync.cpp in Sources */,
 				640279EE111671BD026CB013 /* ofxOscReceiver.cpp in Sources */,
+				2BF2E5EE291830510026CE01 /* HPVideoTex.cpp in Sources */,
 				8F5205AEF8861EF234F0651A /* ofxOscSender.cpp in Sources */,
 				D04ED2A93B5FDDA28935E888 /* Beyoon.cpp in Sources */,
+				2BF2E5F0291830510026CE01 /* VideoTex.cpp in Sources */,
 				79308B05C4D0A9B9E404FFED /* BleachBypassPass.cpp in Sources */,
 				3A499904889C490DCF533C6E /* BloomPass.cpp in Sources */,
 				DFB75F1EBE744A456AC999F4 /* ContrastPass.cpp in Sources */,
@@ -1376,8 +1379,11 @@
 				8423EC7717BA98420F37A17F /* Pixelsort.cpp in Sources */,
 				BE5ED1FDB18D5092CF3AACA0 /* PostProcessing.cpp in Sources */,
 				E4797F1786BE22985F7EE55F /* RGBShiftPass.cpp in Sources */,
+				2BF2E5F2291830510026CE01 /* FBOTex.cpp in Sources */,
 				5790F39566203E0212580DB0 /* ReflectX.cpp in Sources */,
+				2BF2E5ED291830510026CE01 /* ImageTex.cpp in Sources */,
 				AD20459C5F8C4A24CE257C0C /* ReflectY.cpp in Sources */,
+				2BF2E5F4291830510026CE01 /* WebcamTex.cpp in Sources */,
 				1E615236D6D182DED6C8A8B2 /* RenderPass.cpp in Sources */,
 				4A2B684DF41F7779B2947319 /* RimHighlightingPass.cpp in Sources */,
 				A40A1934868B9C3BEF746DFA /* Rotate.cpp in Sources */,

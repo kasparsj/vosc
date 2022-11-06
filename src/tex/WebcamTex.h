@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Gen.h"
+#include "Tex.h"
 
-class Webcam : public Gen {
+class WebcamTex : public Tex {
 public:
     static bool exists(int device);
     static int random();
     
-    Webcam(string path) : Gen(path) {}
-    ~Webcam() {
+    WebcamTex(string path) : Tex(path) {}
+    ~WebcamTex() {
         vidGrabber.close();
     }
     void update(Layer *layer) override;

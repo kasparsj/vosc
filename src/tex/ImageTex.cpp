@@ -1,4 +1,4 @@
-#include "Image.h"
+#include "ImageTex.h"
 #include "Layer.h"
 
 vector<string> loadLocalImages()
@@ -12,13 +12,13 @@ vector<string> loadLocalImages()
     return images;
 }
 
-vector<string> Image::cache = loadLocalImages();
+vector<string> ImageTex::cache = loadLocalImages();
 
-string Image::random() {
+string ImageTex::random() {
     return cache[int(ofRandom(cache.size()))];
 }
 
-void Image::update(Layer *layer) {
+void ImageTex::update(Layer *layer) {
     if (!image.isAllocated()) {
         string absPath = path;
         if (absPath.substr(0, 7) != "http://" && absPath.substr(0, 8) != "https://" && !ofFilePath::isAbsolute(absPath)) {
@@ -43,7 +43,7 @@ void Image::update(Layer *layer) {
     aspectRatio = layer->aspectRatio;
 }
 
-void Image::draw(const glm::vec3 &pos, const glm::vec3 &size) {
+void ImageTex::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     if (aspectRatio) {
         if (image.getWidth() > image.getHeight()) {
             image.draw(pos, size.x, size.x/image.getWidth() * image.getHeight());
@@ -57,6 +57,6 @@ void Image::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     }
 }
 
-void Image::choose() {
+void ImageTex::choose() {
     path = random();
 }

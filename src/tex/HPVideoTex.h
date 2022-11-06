@@ -1,21 +1,21 @@
 #pragma once
 
-#include "Gen.h"
+#include "Tex.h"
 #include "ofxHPVPlayer.h"
 
-class HPVideo : public Gen {
+class HPVideoTex : public Tex {
 public:
     static vector<string> cache;
     static string random();
     static bool engineInitialized;
     
-    HPVideo(string name) : Gen(name) {
+    HPVideoTex(string name) : Tex(name) {
         if (!engineInitialized) {
             HPV::InitHPVEngine();
         }
         hpvPlayer.init(HPV::NewPlayer());
     }
-    ~HPVideo() {}
+    ~HPVideoTex() {}
     void update(Layer *layer) override;
     void seek(float pct);
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;

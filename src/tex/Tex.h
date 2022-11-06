@@ -5,10 +5,10 @@
 
 class Layer;
 
-class Gen {
+class Tex {
 public:
-    Gen(string path) : path(path) {}
-    virtual ~Gen() = default;
+    Tex(string path) : path(path) {}
+    virtual ~Tex() = default;
     virtual void update(Layer *layer) = 0;
     virtual void draw(const glm::vec3 &pos, const glm::vec3 &size) = 0;
     virtual void choose() = 0;

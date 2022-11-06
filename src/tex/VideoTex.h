@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Gen.h"
+#include "Tex.h"
 
-class Video : public Gen {
+class VideoTex : public Tex {
 public:
     static vector<string> cache;
     static string random();
     
-    Video(string name) : Gen(name) {}
-    ~Video() {}
+    VideoTex(string name) : Tex(name) {}
+    ~VideoTex() {}
     void update(Layer *layer) override;
     void seek(float pct);
     void draw(const glm::vec3 &pos, const glm::vec3 &size) override;

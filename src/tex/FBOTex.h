@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Gen.h"
+#include "Tex.h"
 
-class FBOGen : public Gen {
+class FBOTex : public Tex {
 public:
-    FBOGen(string path) : Gen(path) {}
+    FBOTex(string path) : Tex(path) {}
     void clear() override;
     ofPixels& getPixels() override {
         fbo.readToPixels(pixels);

@@ -1,7 +1,7 @@
-#include "Webcam.h"
+#include "WebcamTex.h"
 #include "Layer.h"
 
-bool Webcam::exists(int device) {
+bool WebcamTex::exists(int device) {
     ofVideoGrabber grabber;
     std::vector<ofVideoDevice> devices = grabber.listDevices();
     for (int i=0; i<devices.size(); i++) {
@@ -12,13 +12,13 @@ bool Webcam::exists(int device) {
     return false;
 }
 
-int Webcam::random() {
+int WebcamTex::random() {
     ofVideoGrabber grabber;
     std::vector<ofVideoDevice> devices = grabber.listDevices();
     return devices[int(ofRandom(devices.size()))].id;
 }
 
-void Webcam::update(Layer *layer) {
+void WebcamTex::update(Layer *layer) {
     if (!vidGrabber.isInitialized()) {
         vidGrabber.setDeviceID(stoi(path));
         vidGrabber.setup(layer->size.x, layer->size.y);
@@ -26,13 +26,13 @@ void Webcam::update(Layer *layer) {
     vidGrabber.update();
 }
 
-void Webcam::draw(const glm::vec3 &pos, const glm::vec3 &size) {
+void WebcamTex::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     ofPushStyle();
     ofSetColor(255);
     vidGrabber.draw(pos.x, pos.y, size.x, size.y);
     ofPopStyle();
 }
 
-void Webcam::choose() {
+void WebcamTex::choose() {
     path = ofToString(random());
 }

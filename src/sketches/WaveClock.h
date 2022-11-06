@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SketchImpl.h"
+#include "Sketch.h"
 
-class WaveClock : public SketchImpl {
+class WaveClock : public Sketch {
     float _angNoise, _radiusNoise;
     float _xNoise, _yNoise;
     float _angle = -PI/2;

@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "Layer.h"
 
-class SketchImpl {
+class Sketch {
 public:
     virtual void init() {
         initialized = true;

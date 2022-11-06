@@ -1,44 +1,44 @@
 #include "LayerTex.h"
-#include "Shader.h"
-#include "Video.h"
-#include "Sketch.h"
-#include "Image.h"
-#include "HPVideo.h"
-#include "Webcam.h"
-#include "Color.h"
+#include "ShaderTex.h"
+#include "VideoTex.h"
+#include "SketchTex.h"
+#include "ImageTex.h"
+#include "HPVideoTex.h"
+#include "WebcamTex.h"
+#include "ColorTex.h"
 
-Gen* LayerTex::factory(string type, string path) {
-    Gen *gen = NULL;
+Tex* LayerTex::factory(string type, string path) {
+    Tex *gen = NULL;
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
             case Source::VIDEO:
-                gen = new Video(path);
+                gen = new VideoTex(path);
                 break;
             case Source::HPV:
-                gen = new HPVideo(path);
+                gen = new HPVideoTex(path);
                 break;
             case Source::SHADER:
-                gen = new Shader(path);
+                gen = new ShaderTex(path);
                 break;
             case Source::SKETCH:
-                gen = new Sketch(path);
+                gen = new SketchTex(path);
                 break;
             case Source::IMAGE:
-                gen = new Image(path);
+                gen = new ImageTex(path);
                 break;
             case Source::WEBCAM:
-                gen = new Webcam(path);
+                gen = new WebcamTex(path);
                 break;
             case Source::COLOR:
-                gen = new Color(path);
+                gen = new ColorTex(path);
                 break;
         }
     }
     return gen;
 }
 
-Gen* LayerTex::factory(string source) {
+Tex* LayerTex::factory(string source) {
     string type = source;
     string path = "";
     bool explicitType = source.find(":") != string::npos;
@@ -51,25 +51,25 @@ Gen* LayerTex::factory(string source) {
         if (it != SourceMap.end()) {
             switch (it->second) {
                 case Source::VIDEO:
-                    path = Video::random();
+                    path = VideoTex::random();
                     break;
                 case Source::HPV:
-                    path = HPVideo::random();
+                    path = HPVideoTex::random();
                     break;
                 case Source::SHADER:
                     path = Shader::random();
                     break;
                 case Source::SKETCH:
-                    path = Sketch::random();
+                    path = SketchTex::random();
                     break;
                 case Source::IMAGE:
-                    path = Image::random();
+                    path = ImageTex::random();
                     break;
                 case Source::WEBCAM:
-                    path = Webcam::random();
+                    path = WebcamTex::random();
                     break;
                 case Source::COLOR:
-                    path = Color::random();
+                    path = ColorTex::random();
                     break;
             }
         }
@@ -101,10 +101,10 @@ void LayerTex::load(string source) {
             gen = factory("hpv", source);
         }
         else {
-            if (Color::exists(source)) {
+            if (ColorTex::exists(source)) {
                 gen = factory("color", source);
             }
-            else if (Sketch::exists(source)) {
+            else if (SketchTex::exists(source)) {
                 gen = factory("sketch", source);
             }
         }
