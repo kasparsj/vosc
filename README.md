@@ -33,7 +33,7 @@
 - `/mat/ambient` [Set material ambient color](#ambient)
 - `/mat/specular` [Set material specular color](#specular)
 - `/mat/emissive` [Set material emissive color](#emissive)
-- `/mat/shininess` [Set material shininess color](#shininess)
+- `/mat/shininess` [Set material shininess](#shininess)
 
 ### Data
 - `/data` [Set layer data source](#data)
