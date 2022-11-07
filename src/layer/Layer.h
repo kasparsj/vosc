@@ -34,6 +34,12 @@ public:
         }
         return color;
     }
+    ofFloatColor getTint() {
+        if (tex.isLoaded()) {
+            return tex.getTint();
+        }
+        return getColor();
+    }
     
     void setShader(string path);
     bool randomShader() const {

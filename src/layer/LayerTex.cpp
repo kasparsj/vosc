@@ -179,7 +179,9 @@ void LayerTex::clear() {
 }
 
 void LayerTex::update() {
-    tex->update(layer);
+    if (isLoaded()) {
+        tex->update(layer);
+    }
 }
 
 void LayerTex::drawToFbo() {

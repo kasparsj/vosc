@@ -31,6 +31,7 @@ public:
     }
     const ofFbo& getFbo() const;
     bool hasTexture() const {
+        if (curFbo < 0) return false;
         const ofFbo& fbo = getFbo();
         return fbo.isAllocated() && fbo.getTexture().isAllocated();
     }

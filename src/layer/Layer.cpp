@@ -37,14 +37,14 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 }
 
 void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
-    if (tex.isLoaded()) {
+    if (tex.isLoaded() || shader.isLoaded()) {
         data.update(sounds, notes);
         rotation += rotationSpeed;
         if (useRandomColor) {
             color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
         }
-        tex.update();
     }
+    tex.update();
     if (looper != NULL) {
         looper->swapBuffers(/*forceSwap*/);
         if (tex.isFrameNew()){
@@ -65,7 +65,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     ofPushMatrix();
     transform();
     ofPushStyle();
-    ofSetColor(tex.getTint() * bri, alpha * 255);
+    ofSetColor(getTint() * bri, alpha * 255);
     
     shader.begin(this);
     if (data.fbo.isAllocated()) {
@@ -85,7 +85,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
 }
 
 void Layer::draw(int totalVisible) {
-    if (tex.isLoaded()) {
+    if (tex.isLoaded() || shader.isLoaded()) {
         if (data.visible) {
             switch (blendMode) {
                 case OF_BLENDMODE_ALPHA:

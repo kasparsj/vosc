@@ -745,6 +745,7 @@ void ofApp::createPostPass(string passName) {
 void ofApp::draw(){
     ofPushMatrix();
     if (useCam) {
+        ofEnableDepthTest();
         post.begin(cam);
         ofTranslate(-ofGetWidth()/2.f, -ofGetHeight()/2);
     }
@@ -762,11 +763,17 @@ void ofApp::draw(){
         layers[i]->draw(totalVisible);
     }
     post.end();
+    ofDisableDepthTest();
     ofPopMatrix();
     
     if (showDebug) {
         ofPushStyle();
         for (int i=0; i<layers.size(); i++) {
+            ofSetColor(255);
+            ofPushMatrix();
+            ofTranslate(20+i*120+60, ofGetHeight()-180);
+            layers[i]->geom.getMesh().draw(OF_MESH_WIREFRAME);
+            ofPopMatrix();
             if (layers[i]->tex.isLoaded()) {
                 ofSetColor(255);
                 layers[i]->tex.frames[0].draw(20+i*120, ofGetHeight()-120, 100, 100);
