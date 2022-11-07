@@ -8,6 +8,7 @@
 #include "Config.h"
 #include "ofxEasing.h"
 #include "ofxPostProcessing.h"
+#include "Texture.h"
 
 template <typename T>
 struct Tween {
@@ -48,6 +49,10 @@ public:
     void layerCommand(Layer *layer, string command, const ofxOscMessage &m);
     void allLayersCommand(string command, const ofxOscMessage &m);
     void soundCommand(Sound &sound, string command, const ofxOscMessage &m);
+    void textureCommand(Texture& tex, string command, const ofxOscMessage &m);
+    void shaderCommand(Shader& shader, string command, const ofxOscMessage& m);
+    void geomCommand(LayerGeom& geom, string command, const ofxOscMessage& m);
+    void materialCommand(ofMaterialSettings& matSettings, string command, const ofxOscMessage& m);
     void handleFloat(float *value, const ofxOscMessage &m);
     void handlePercent(float *value, const ofxOscMessage &m);
     void handleVec3(glm::vec3 *value, const ofxOscMessage &m, int firstArg = 1);
@@ -96,17 +101,16 @@ public:
     
     vector<Sound> sounds;
     vector<Layer*> layers = {0};
+    map<string, Texture> textures;
     int waitOnset = -1;
     bool forceOnset;
     
-    ofFbo fbo;
     bool showDebug = false;
     Layout layout = Layout::STACK;
     map<float*, Tween<float>> floatTweens;
     map<glm::vec3*, Tween<glm::vec3>> vec3Tweens;
     map<ofFloatColor*, Tween<ofFloatColor>> colorTweens;
-    ofCamera cam;
+    ofCamera* cam;
     ofxPostProcessing post;
-    bool useCam = false;
     glm::vec3 camPos = glm::vec3(0, 0, -870);
 };

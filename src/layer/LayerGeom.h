@@ -26,7 +26,6 @@ public:
     void choose();
     void update();
     void draw();
-    void _draw();
     ofVboMesh& getMesh() { return mesh; }
     
     bool drawWireframe;

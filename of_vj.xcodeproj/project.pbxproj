@@ -14,7 +14,6 @@
 		08C23182D394C53F6ECE6CCC /* easing_terms_of_use.html in Sources */ = {isa = PBXBuildFile; fileRef = 528CB0EB22F0A199A5F479D5 /* easing_terms_of_use.html */; };
 		114C00B13F753E59BB0984BB /* DofPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E837DEBFAEA1CAD833A377DF /* DofPass.cpp */; };
 		1516DF100C1636ACDFEAC173 /* FlippedCompound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 05F3D9211F202EAD5E2AA9FA /* FlippedCompound.cpp */; };
-		17474A172614F63589066020 /* LayerTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7F0E68045434798E8DBE1412 /* LayerTex.cpp */; };
 		1DABF50C769AD89161B557AE /* FramesBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 347D0C39A1C7D6331C7B8E07 /* FramesBuffer.cpp */; };
 		1E615236D6D182DED6C8A8B2 /* RenderPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 54F36382628E4D0FF07206D7 /* RenderPass.cpp */; };
 		1EF68DFFFDB46A876B77338B /* ColorUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55138D8657D9D09949E54626 /* ColorUtil.cpp */; };
@@ -23,13 +22,13 @@
 		28AFD6FA9B9C885AFD9FF1C7 /* HorizontalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
 		2B015CFF291876390089FC16 /* DrawTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B015CFD291876390089FC16 /* DrawTex.cpp */; };
+		2B7E6EEA291902BF00D78E40 /* Texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B7E6EE92919004900D78E40 /* Texture.cpp */; };
 		2BF2E5D72916CC440026CE01 /* LayerShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */; };
 		2BF2E5ED291830510026CE01 /* ImageTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5DC291830510026CE01 /* ImageTex.cpp */; };
 		2BF2E5EE291830510026CE01 /* HPVideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5DE291830510026CE01 /* HPVideoTex.cpp */; };
 		2BF2E5EF291830510026CE01 /* SketchTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E0291830510026CE01 /* SketchTex.cpp */; };
 		2BF2E5F0291830510026CE01 /* VideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E3291830510026CE01 /* VideoTex.cpp */; };
-		2BF2E5F1291830510026CE01 /* ColorTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E4291830510026CE01 /* ColorTex.cpp */; };
-		2BF2E5F2291830510026CE01 /* FBOTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E5291830510026CE01 /* FBOTex.cpp */; };
+		2BF2E5F2291830510026CE01 /* FBOTex1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E5291830510026CE01 /* FBOTex1.cpp */; };
 		2BF2E5F3291830510026CE01 /* Tex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5E9291830510026CE01 /* Tex.cpp */; };
 		2BF2E5F4291830510026CE01 /* WebcamTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5EC291830510026CE01 /* WebcamTex.cpp */; };
 		2BF2E5F7291830750026CE01 /* ShaderTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5F5291830750026CE01 /* ShaderTex.cpp */; };
@@ -116,7 +115,7 @@
 		016251DAB9DFE7D35B003202 /* HPVHeader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVHeader.h; path = ../../../addons/ofxHPVPlayer/src/HPVHeader.h; sourceTree = SOURCE_ROOT; };
 		01BD99D6CAAE9353615A1AC5 /* Complementary.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Complementary.h; path = ../../../addons/ofxColorTheory/src/Rules/Complementary.h; sourceTree = SOURCE_ROOT; };
 		0217829E621698E1FD8D9876 /* EdgePass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = EdgePass.h; path = ../../../addons/ofxPostProcessing/src/EdgePass.h; sourceTree = SOURCE_ROOT; };
-		0261DFB3A4808E21B3543B62 /* LayerTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerTex.h; path = src/layer/LayerTex.h; sourceTree = SOURCE_ROOT; };
+		0261DFB3A4808E21B3543B62 /* Texture.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Texture.h; path = src/Texture.h; sourceTree = SOURCE_ROOT; };
 		029684CF678F70F6D3537A29 /* OscOutboundPacketStream.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscOutboundPacketStream.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscOutboundPacketStream.h; sourceTree = SOURCE_ROOT; };
 		044D4B2A1A607F88FEF2B610 /* ConvolutionPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ConvolutionPass.h; path = ../../../addons/ofxPostProcessing/src/ConvolutionPass.h; sourceTree = SOURCE_ROOT; };
 		0453A7C309E8AE8F8C1CC6E8 /* DofPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DofPass.h; path = ../../../addons/ofxPostProcessing/src/DofPass.h; sourceTree = SOURCE_ROOT; };
@@ -148,6 +147,32 @@
 		2B015CFC29186EC10089FC16 /* Grass.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grass.vert; sourceTree = "<group>"; };
 		2B015CFD291876390089FC16 /* DrawTex.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DrawTex.cpp; sourceTree = "<group>"; };
 		2B015CFE291876390089FC16 /* DrawTex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DrawTex.h; sourceTree = "<group>"; };
+		2B7E6EE72918F4DE00D78E40 /* RayMarchingCloudsVolumeofCamera.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RayMarchingCloudsVolumeofCamera.frag; sourceTree = "<group>"; };
+		2B7E6EE82918F4DE00D78E40 /* RayMarchingCloudsVolumeofCamera.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RayMarchingCloudsVolumeofCamera.vert; sourceTree = "<group>"; };
+		2B7E6EE92919004900D78E40 /* Texture.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Texture.cpp; sourceTree = "<group>"; };
+		2B7E6EED29190B7000D78E40 /* Lights1.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Lights1.frag; sourceTree = "<group>"; };
+		2B7E6EF029190B7000D78E40 /* 10.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 10.frag; sourceTree = "<group>"; };
+		2B7E6EF129190B7000D78E40 /* 05.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 05.frag; sourceTree = "<group>"; };
+		2B7E6EF229190B7000D78E40 /* ZebraV.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ZebraV.frag; sourceTree = "<group>"; };
+		2B7E6EF329190B7000D78E40 /* 33.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 33.frag; sourceTree = "<group>"; };
+		2B7E6EF429190B7000D78E40 /* ScanLines.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ScanLines.frag; sourceTree = "<group>"; };
+		2B7E6EF629190B7000D78E40 /* RotStringsV.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RotStringsV.frag; sourceTree = "<group>"; };
+		2B7E6EF729190B7000D78E40 /* Lights2.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Lights2.frag; sourceTree = "<group>"; };
+		2B7E6EF829190B7000D78E40 /* StarNest.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = StarNest.frag; sourceTree = "<group>"; };
+		2B7E6EF929190B7000D78E40 /* 04.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 04.frag; sourceTree = "<group>"; };
+		2B7E6EFA29190B7000D78E40 /* RotRainbow.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RotRainbow.frag; sourceTree = "<group>"; };
+		2B7E6EFB29190B7000D78E40 /* Milk.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Milk.frag; sourceTree = "<group>"; };
+		2B7E6EFC29190B7000D78E40 /* 03.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 03.frag; sourceTree = "<group>"; };
+		2B7E6EFD29190B7000D78E40 /* ScanGrid.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ScanGrid.frag; sourceTree = "<group>"; };
+		2B7E6EFE29190B7000D78E40 /* 02.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 02.frag; sourceTree = "<group>"; };
+		2B7E6EFF29190B7000D78E40 /* OscCircle.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = OscCircle.frag; sourceTree = "<group>"; };
+		2B7E6F0029190B7000D78E40 /* RotStringsH.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RotStringsH.frag; sourceTree = "<group>"; };
+		2B7E6F0129190B7000D78E40 /* 18.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 18.frag; sourceTree = "<group>"; };
+		2B7E6F0229190B7000D78E40 /* Fluid.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Fluid.frag; sourceTree = "<group>"; };
+		2B7E6F0329190B7000D78E40 /* ZebraH.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = ZebraH.frag; sourceTree = "<group>"; };
+		2B7E6F0429193A3900D78E40 /* texture.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = texture.frag; sourceTree = "<group>"; };
+		2B7E6F052919595E00D78E40 /* noise.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = noise.png; sourceTree = "<group>"; };
+		2B7E6F062919595E00D78E40 /* black_hole.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = black_hole.jpg; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
 		2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = LayerShader.cpp; path = layer/LayerShader.cpp; sourceTree = "<group>"; };
@@ -157,12 +182,10 @@
 		2BF2E5DE291830510026CE01 /* HPVideoTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HPVideoTex.cpp; sourceTree = "<group>"; };
 		2BF2E5DF291830510026CE01 /* WebcamTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebcamTex.h; sourceTree = "<group>"; };
 		2BF2E5E0291830510026CE01 /* SketchTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SketchTex.cpp; sourceTree = "<group>"; };
-		2BF2E5E1291830510026CE01 /* ColorTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorTex.h; sourceTree = "<group>"; };
 		2BF2E5E2291830510026CE01 /* HPVideoTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPVideoTex.h; sourceTree = "<group>"; };
 		2BF2E5E3291830510026CE01 /* VideoTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VideoTex.cpp; sourceTree = "<group>"; };
-		2BF2E5E4291830510026CE01 /* ColorTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ColorTex.cpp; sourceTree = "<group>"; };
-		2BF2E5E5291830510026CE01 /* FBOTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FBOTex.cpp; sourceTree = "<group>"; };
-		2BF2E5E6291830510026CE01 /* FBOTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBOTex.h; sourceTree = "<group>"; };
+		2BF2E5E5291830510026CE01 /* FBOTex1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FBOTex1.cpp; sourceTree = "<group>"; };
+		2BF2E5E6291830510026CE01 /* FBOTex1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBOTex1.h; sourceTree = "<group>"; };
 		2BF2E5E7291830510026CE01 /* VideoTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoTex.h; sourceTree = "<group>"; };
 		2BF2E5E8291830510026CE01 /* SketchTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SketchTex.h; sourceTree = "<group>"; };
 		2BF2E5E9291830510026CE01 /* Tex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Tex.cpp; sourceTree = "<group>"; };
@@ -244,54 +267,29 @@
 		2BF2E6402918424D0026CE01 /* 75.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 75.frag; sourceTree = "<group>"; };
 		2BF2E6412918424D0026CE01 /* 63.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 63.frag; sourceTree = "<group>"; };
 		2BF2E6422918424D0026CE01 /* 34.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 34.frag; sourceTree = "<group>"; };
-		2BF2E6442918424D0026CE01 /* black_hole.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = black_hole.jpeg; sourceTree = "<group>"; };
 		2BF2E6452918424D0026CE01 /* .gitkeep */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
 		2BF2E6472918424D0026CE01 /* bbb_export.hpv */ = {isa = PBXFileReference; lastKnownFileType = file; path = bbb_export.hpv; sourceTree = "<group>"; };
 		2BF2E6482918424D0026CE01 /* DSC_0084.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = DSC_0084.mov; sourceTree = "<group>"; };
 		2BF2E6492918424D0026CE01 /* DSC_0082.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = DSC_0082.mov; sourceTree = "<group>"; };
 		2BF2E64A2918424D0026CE01 /* DSC_0083.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = DSC_0083.mov; sourceTree = "<group>"; };
 		2BF2E64B2918424D0026CE01 /* DSC_0081.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = DSC_0081.mov; sourceTree = "<group>"; };
-		2BF2E64D2918424D0026CE01 /* Empty.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Empty.frag; sourceTree = "<group>"; };
-		2BF2E64E2918424D0026CE01 /* Water.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Water.frag; sourceTree = "<group>"; };
+		2BF2E64D2918424D0026CE01 /* color.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = color.frag; sourceTree = "<group>"; };
 		2BF2E64F2918424D0026CE01 /* of_default_vertex_in_attributes.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = of_default_vertex_in_attributes.glsl; sourceTree = "<group>"; };
-		2BF2E6502918424D0026CE01 /* Lights1.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Lights1.frag; sourceTree = "<group>"; };
-		2BF2E6512918424D0026CE01 /* Ether.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Ether.frag; sourceTree = "<group>"; };
-		2BF2E6522918424E0026CE01 /* AtmoScattering.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = AtmoScattering.frag; sourceTree = "<group>"; };
 		2BF2E6532918424E0026CE01 /* of_default_uniforms.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = of_default_uniforms.glsl; sourceTree = "<group>"; };
 		2BF2E6552918424E0026CE01 /* DrawInstancedGeometry.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = DrawInstancedGeometry.frag; sourceTree = "<group>"; };
 		2BF2E6562918424E0026CE01 /* Update.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Update.vert; sourceTree = "<group>"; };
 		2BF2E6572918424E0026CE01 /* DrawInstancedGeometry.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = DrawInstancedGeometry.vert; sourceTree = "<group>"; };
 		2BF2E6582918424E0026CE01 /* Update.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Update.frag; sourceTree = "<group>"; };
-		2BF2E6592918424E0026CE01 /* 10.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 10.frag; sourceTree = "<group>"; };
 		2BF2E65B2918424E0026CE01 /* Grid.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Grid.vert; sourceTree = "<group>"; };
 		2BF2E65C2918424E0026CE01 /* Grid.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Grid.frag; sourceTree = "<group>"; };
 		2BF2E65D2918424E0026CE01 /* AudioEclipse.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = AudioEclipse.frag; sourceTree = "<group>"; };
 		2BF2E65E2918424E0026CE01 /* Star.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Star.frag; sourceTree = "<group>"; };
 		2BF2E65F2918424E0026CE01 /* passthru.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = passthru.vert; sourceTree = "<group>"; };
-		2BF2E6602918424E0026CE01 /* 05.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 05.frag; sourceTree = "<group>"; };
-		2BF2E6612918424E0026CE01 /* ZebraV.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ZebraV.frag; sourceTree = "<group>"; };
 		2BF2E6632918424E0026CE01 /* Noise4D.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Noise4D.glsl; sourceTree = "<group>"; };
 		2BF2E6642918424E0026CE01 /* ShaderHelpers.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ShaderHelpers.glsl; sourceTree = "<group>"; };
 		2BF2E6652918424E0026CE01 /* Noise3D.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Noise3D.glsl; sourceTree = "<group>"; };
 		2BF2E6662918424E0026CE01 /* Noise2D.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Noise2D.glsl; sourceTree = "<group>"; };
 		2BF2E6672918424E0026CE01 /* SimplexNoiseDerivatives4D.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = SimplexNoiseDerivatives4D.glsl; sourceTree = "<group>"; };
-		2BF2E6682918424E0026CE01 /* 33.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 33.frag; sourceTree = "<group>"; };
-		2BF2E6692918424E0026CE01 /* ScanLines.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ScanLines.frag; sourceTree = "<group>"; };
-		2BF2E66A2918424E0026CE01 /* TerrainGrid.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = TerrainGrid.frag; sourceTree = "<group>"; };
-		2BF2E66B2918424E0026CE01 /* RotStringsV.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = RotStringsV.frag; sourceTree = "<group>"; };
-		2BF2E66C2918424E0026CE01 /* Lights2.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Lights2.frag; sourceTree = "<group>"; };
-		2BF2E66D2918424E0026CE01 /* StarNest.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = StarNest.frag; sourceTree = "<group>"; };
-		2BF2E66E2918424E0026CE01 /* 04.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 04.frag; sourceTree = "<group>"; };
-		2BF2E66F2918424E0026CE01 /* RotRainbow.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = RotRainbow.frag; sourceTree = "<group>"; };
-		2BF2E6702918424E0026CE01 /* Milk.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Milk.frag; sourceTree = "<group>"; };
-		2BF2E6712918424E0026CE01 /* 03.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 03.frag; sourceTree = "<group>"; };
-		2BF2E6722918424E0026CE01 /* ScanGrid.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ScanGrid.frag; sourceTree = "<group>"; };
-		2BF2E6732918424E0026CE01 /* 02.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 02.frag; sourceTree = "<group>"; };
-		2BF2E6742918424E0026CE01 /* OscCircle.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = OscCircle.frag; sourceTree = "<group>"; };
-		2BF2E6752918424E0026CE01 /* RotStringsH.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = RotStringsH.frag; sourceTree = "<group>"; };
-		2BF2E6762918424E0026CE01 /* 18.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = 18.frag; sourceTree = "<group>"; };
-		2BF2E6772918424E0026CE01 /* Fluid.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Fluid.frag; sourceTree = "<group>"; };
-		2BF2E6782918424E0026CE01 /* ZebraH.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ZebraH.frag; sourceTree = "<group>"; };
 		2BF2E679291851FA0026CE01 /* FboPingPong.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FboPingPong.h; sourceTree = "<group>"; };
 		2BF2E67A291851FA0026CE01 /* FboPingPong.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FboPingPong.cpp; sourceTree = "<group>"; };
 		2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VerticalTiltShifPass.cpp; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.cpp; sourceTree = SOURCE_ROOT; };
@@ -349,7 +347,6 @@
 		7689F8A0F3D0B7635A8C3104 /* ofxOscArg.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscArg.h; path = ../../../addons/ofxOsc/src/ofxOscArg.h; sourceTree = SOURCE_ROOT; };
 		7809B234B888B369B724B134 /* ofxTidalCycles.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxTidalCycles.h; path = ../../../addons/ofxTidalCycles/src/ofxTidalCycles.h; sourceTree = SOURCE_ROOT; };
 		79CDBBBAC046662F1A156238 /* HPVPlayer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVPlayer.h; path = ../../../addons/ofxHPVPlayer/src/HPVPlayer.h; sourceTree = SOURCE_ROOT; };
-		7F0E68045434798E8DBE1412 /* LayerTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerTex.cpp; path = src/layer/LayerTex.cpp; sourceTree = SOURCE_ROOT; };
 		7F9AE8283BEDCBB358ACC40A /* ColorScheme.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorScheme.cpp; path = ../../../addons/ofxColorTheory/src/ColorScheme.cpp; sourceTree = SOURCE_ROOT; };
 		81967292BFC87A0144BD32C6 /* ofxOscSender.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscSender.cpp; path = ../../../addons/ofxOsc/src/ofxOscSender.cpp; sourceTree = SOURCE_ROOT; };
 		830C7C3DF5B5E3A6340D0712 /* ThreadSafeQueue.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ThreadSafeQueue.h; path = ../../../addons/ofxHPVPlayer/src/ThreadSafeQueue.h; sourceTree = SOURCE_ROOT; };
@@ -641,8 +638,6 @@
 				57DBCDF6EAF0B2339FC73E55 /* LayerGeom.h */,
 				2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */,
 				2BF2E5D62916CC1F0026CE01 /* LayerShader.h */,
-				7F0E68045434798E8DBE1412 /* LayerTex.cpp */,
-				0261DFB3A4808E21B3543B62 /* LayerTex.h */,
 			);
 			name = layer;
 			sourceTree = "<group>";
@@ -682,15 +677,49 @@
 			path = grass;
 			sourceTree = "<group>";
 		};
+		2B7E6EE62918F4DE00D78E40 /* clouds */ = {
+			isa = PBXGroup;
+			children = (
+				2B7E6EE72918F4DE00D78E40 /* RayMarchingCloudsVolumeofCamera.frag */,
+				2B7E6EE82918F4DE00D78E40 /* RayMarchingCloudsVolumeofCamera.vert */,
+			);
+			path = clouds;
+			sourceTree = "<group>";
+		};
+		2B7E6EEB29190B7000D78E40 /* 100fragments */ = {
+			isa = PBXGroup;
+			children = (
+				2B7E6EFE29190B7000D78E40 /* 02.frag */,
+				2B7E6EFC29190B7000D78E40 /* 03.frag */,
+				2B7E6EF929190B7000D78E40 /* 04.frag */,
+				2B7E6EF129190B7000D78E40 /* 05.frag */,
+				2B7E6EF029190B7000D78E40 /* 10.frag */,
+				2B7E6F0129190B7000D78E40 /* 18.frag */,
+				2B7E6EF329190B7000D78E40 /* 33.frag */,
+				2B7E6F0229190B7000D78E40 /* Fluid.frag */,
+				2B7E6EED29190B7000D78E40 /* Lights1.frag */,
+				2B7E6EF729190B7000D78E40 /* Lights2.frag */,
+				2B7E6EFB29190B7000D78E40 /* Milk.frag */,
+				2B7E6EFF29190B7000D78E40 /* OscCircle.frag */,
+				2B7E6EFA29190B7000D78E40 /* RotRainbow.frag */,
+				2B7E6F0029190B7000D78E40 /* RotStringsH.frag */,
+				2B7E6EF629190B7000D78E40 /* RotStringsV.frag */,
+				2B7E6EFD29190B7000D78E40 /* ScanGrid.frag */,
+				2B7E6EF429190B7000D78E40 /* ScanLines.frag */,
+				2B7E6EF829190B7000D78E40 /* StarNest.frag */,
+				2B7E6F0329190B7000D78E40 /* ZebraH.frag */,
+				2B7E6EF229190B7000D78E40 /* ZebraV.frag */,
+			);
+			path = 100fragments;
+			sourceTree = "<group>";
+		};
 		2BF2E5DB291830510026CE01 /* tex */ = {
 			isa = PBXGroup;
 			children = (
-				2BF2E5E4291830510026CE01 /* ColorTex.cpp */,
-				2BF2E5E1291830510026CE01 /* ColorTex.h */,
 				2B015CFD291876390089FC16 /* DrawTex.cpp */,
 				2B015CFE291876390089FC16 /* DrawTex.h */,
-				2BF2E5E5291830510026CE01 /* FBOTex.cpp */,
-				2BF2E5E6291830510026CE01 /* FBOTex.h */,
+				2BF2E5E5291830510026CE01 /* FBOTex1.cpp */,
+				2BF2E5E6291830510026CE01 /* FBOTex1.h */,
 				2BF2E5DE291830510026CE01 /* HPVideoTex.cpp */,
 				2BF2E5E2291830510026CE01 /* HPVideoTex.h */,
 				2BF2E5DC291830510026CE01 /* ImageTex.cpp */,
@@ -805,7 +834,8 @@
 		2BF2E6432918424D0026CE01 /* images */ = {
 			isa = PBXGroup;
 			children = (
-				2BF2E6442918424D0026CE01 /* black_hole.jpeg */,
+				2B7E6F062919595E00D78E40 /* black_hole.jpg */,
+				2B7E6F052919595E00D78E40 /* noise.png */,
 			);
 			path = images;
 			sourceTree = "<group>";
@@ -825,36 +855,15 @@
 		2BF2E64C2918424D0026CE01 /* shaders */ = {
 			isa = PBXGroup;
 			children = (
-				2BF2E6732918424E0026CE01 /* 02.frag */,
-				2BF2E6712918424E0026CE01 /* 03.frag */,
-				2BF2E66E2918424E0026CE01 /* 04.frag */,
-				2BF2E6602918424E0026CE01 /* 05.frag */,
-				2BF2E6592918424E0026CE01 /* 10.frag */,
-				2BF2E6762918424E0026CE01 /* 18.frag */,
-				2BF2E6682918424E0026CE01 /* 33.frag */,
-				2BF2E6522918424E0026CE01 /* AtmoScattering.frag */,
+				2B7E6EEB29190B7000D78E40 /* 100fragments */,
+				2B7E6EE62918F4DE00D78E40 /* clouds */,
+				2BF2E64D2918424D0026CE01 /* color.frag */,
 				2BF2E6622918424E0026CE01 /* common */,
-				2BF2E64D2918424D0026CE01 /* Empty.frag */,
-				2BF2E6512918424D0026CE01 /* Ether.frag */,
-				2BF2E6772918424E0026CE01 /* Fluid.frag */,
 				2B015CF929186EC10089FC16 /* grass */,
-				2BF2E6502918424D0026CE01 /* Lights1.frag */,
-				2BF2E66C2918424E0026CE01 /* Lights2.frag */,
-				2BF2E6702918424E0026CE01 /* Milk.frag */,
-				2BF2E6742918424E0026CE01 /* OscCircle.frag */,
 				2BF2E6542918424E0026CE01 /* particles */,
 				2BF2E65F2918424E0026CE01 /* passthru.vert */,
-				2BF2E66F2918424E0026CE01 /* RotRainbow.frag */,
-				2BF2E6752918424E0026CE01 /* RotStringsH.frag */,
-				2BF2E66B2918424E0026CE01 /* RotStringsV.frag */,
-				2BF2E6722918424E0026CE01 /* ScanGrid.frag */,
-				2BF2E6692918424E0026CE01 /* ScanLines.frag */,
-				2BF2E66D2918424E0026CE01 /* StarNest.frag */,
-				2BF2E66A2918424E0026CE01 /* TerrainGrid.frag */,
+				2B7E6F0429193A3900D78E40 /* texture.frag */,
 				2BF2E65A2918424E0026CE01 /* todo */,
-				2BF2E64E2918424D0026CE01 /* Water.frag */,
-				2BF2E6782918424E0026CE01 /* ZebraH.frag */,
-				2BF2E6612918424E0026CE01 /* ZebraV.frag */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -1489,9 +1498,9 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				97AC5D82D06DAB2345FDB039 /* Config.h */,
 				2BF2E67A291851FA0026CE01 /* FboPingPong.cpp */,
 				2BF2E679291851FA0026CE01 /* FboPingPong.h */,
-				97AC5D82D06DAB2345FDB039 /* Config.h */,
 				1BF4AF61A21BC0CB4D19CFDE /* layer */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
@@ -1503,6 +1512,8 @@
 				ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */,
 				3E8911C6B8ABF8D32A950348 /* Sound.h */,
 				2BF2E5DB291830510026CE01 /* tex */,
+				2B7E6EE92919004900D78E40 /* Texture.cpp */,
+				0261DFB3A4808E21B3543B62 /* Texture.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1637,6 +1648,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B7E6EEA291902BF00D78E40 /* Texture.cpp in Sources */,
 				2BF2E5D72916CC440026CE01 /* LayerShader.cpp in Sources */,
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				2BF2E5F3291830510026CE01 /* Tex.cpp in Sources */,
@@ -1645,7 +1657,6 @@
 				3EBCD03048ED03CCB70D6972 /* LayerData.cpp in Sources */,
 				081251DFDA2F64A94FA7FE19 /* Layer.cpp in Sources */,
 				F7B83E7D0CAB59D9E8F8C9CD /* LayerGeom.cpp in Sources */,
-				17474A172614F63589066020 /* LayerTex.cpp in Sources */,
 				2BF2E5EF291830510026CE01 /* SketchTex.cpp in Sources */,
 				6C8551DB2C641E610EA107BE /* Sound.cpp in Sources */,
 				622F2B6B3FFAA37224C22AD2 /* ofxAutoReloadedShader.cpp in Sources */,
@@ -1660,7 +1671,6 @@
 				3D839E120AFEABE9CA2B91D4 /* Monochrome.cpp in Sources */,
 				F56110F5281631EA7D770D38 /* SplitComplementary.cpp in Sources */,
 				C6D227F5B8C686EF7F391BA6 /* Tetrad.cpp in Sources */,
-				2BF2E5F1291830510026CE01 /* ColorTex.cpp in Sources */,
 				2BF2E5F7291830750026CE01 /* ShaderTex.cpp in Sources */,
 				2BF2E67B291851FA0026CE01 /* FboPingPong.cpp in Sources */,
 				8753347E0F4B731B6D71538C /* Triad.cpp in Sources */,
@@ -1712,7 +1722,7 @@
 				8423EC7717BA98420F37A17F /* Pixelsort.cpp in Sources */,
 				BE5ED1FDB18D5092CF3AACA0 /* PostProcessing.cpp in Sources */,
 				E4797F1786BE22985F7EE55F /* RGBShiftPass.cpp in Sources */,
-				2BF2E5F2291830510026CE01 /* FBOTex.cpp in Sources */,
+				2BF2E5F2291830510026CE01 /* FBOTex1.cpp in Sources */,
 				5790F39566203E0212580DB0 /* ReflectX.cpp in Sources */,
 				2BF2E5ED291830510026CE01 /* ImageTex.cpp in Sources */,
 				AD20459C5F8C4A24CE257C0C /* ReflectY.cpp in Sources */,

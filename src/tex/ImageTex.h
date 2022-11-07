@@ -9,9 +9,21 @@ public:
     
     ImageTex(string path, const vector<float>& args) : Tex(path, args) {}
     ~ImageTex() {}
-    void update(Layer *layer) override;
-    void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
+    void update(Layer *layer, Texture* tex) override;
+    void draw(const glm::vec2 &size) override;
     void choose() override;
+    ofTexture & getTexture() override {
+        return image.getTexture();
+    }
+    const ofTexture & getTexture() const override {
+        return image.getTexture();
+    }
+    void setUseTexture(bool bUseTex) override {
+        image.setUseTexture(bUseTex);
+    }
+    bool isUsingTexture() const override {
+        return image.isUsingTexture();
+    }
     ofPixels& getPixels() override {
         return image.getPixels();
     }

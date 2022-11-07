@@ -125,30 +125,16 @@ void LayerGeom::choose() {
 }
 
 void LayerGeom::update() {
-    // needed for tex.bind() inside draw
-    ofDisableArbTex();
 }
 
 void LayerGeom::draw() {
-    if (layer->tex.hasTexture()) {
-        const ofTexture& tex = layer->tex.getFbo().getTexture();
-        tex.bind();
-        _draw();
-        tex.unbind();
-    }
-    else {
-        _draw();
-    }
-    if (drawWireframe) {
-        mesh.drawWireframe();
-    }
-}
-
-void LayerGeom::_draw() {
     if (drawInstanced > 1) {
         mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
     }
     else {
         mesh.draw();
+    }
+    if (drawWireframe) {
+        mesh.drawWireframe();
     }
 }

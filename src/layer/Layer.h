@@ -5,12 +5,8 @@
 #include "Sound.h"
 #include "Config.h"
 #include "LayerData.h"
-#include "ofxLooper.h"
 #include "LayerGeom.h"
-#include "LayerTex.h"
 #include "LayerShader.h"
-
-#define MAX_DELAY 120
 
 class Layer {
 public:
@@ -35,23 +31,19 @@ public:
         return color;
     }
     ofFloatColor getTint() {
-        if (tex.isLoaded()) {
-            return tex.getTint();
+        const ofFloatColor& tint = getColor();
+        if (tint == ofFloatColor(0, 0)) {
+            return ofFloatColor(1);
         }
-        return getColor();
+        return tint;
     }
     
     void setShader(string path);
-    bool randomShader() const {
-        return behaviour > 0 && behaviour & (int) Behaviour::RANDOM_SHADER;
-    }
     
     int index;
-    LayerTex tex;
     LayerGeom geom;
     LayerData data;
     LayerShader shader;
-    ofxLooper* looper = NULL;
     glm::vec3 pos;
     glm::vec3 size;
     glm::vec3 rotation = glm::vec3(0, 0, 0);
@@ -67,7 +59,6 @@ public:
     float alpha = 1.0;
     bool aspectRatio = true;
     float timePct = 0;
-    bool noClear;
     bool useMFCCColor = false;
     bool isTidal = false;
     int randomSeed = 0;

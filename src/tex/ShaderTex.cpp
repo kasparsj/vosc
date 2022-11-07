@@ -1,11 +1,8 @@
 #include "ShaderTex.h"
 #include "Layer.h"
 
-void ShaderTex::update(Layer *layer) {
-    if (!fbo.isAllocated() || (fbo.getWidth() != layer->size.x || fbo.getHeight() != layer->size.y)) {
-        fbo.clear();
-        fbo.allocate(layer->size.x, layer->size.y);
-    }
+void ShaderTex::update(Layer *layer, Texture* tex) {
+    FBOTex1::update(layer, tex);
     if (!isLoaded()) {
         if (load(path)) {
             prevPath = path;
@@ -17,25 +14,20 @@ void ShaderTex::update(Layer *layer) {
             return;
         }
     }
-    ofEnableAlphaBlending();
+    ofEnableBlendMode(tex->blendMode);
     fbo.begin();
-    if (!layer->noClear) {
+    if (tex->fboSettings.numColorbuffers > 1) {
+        fbo.activateAllDrawBuffers(); // if we have multiple color buffers in our FBO we need this to activate all of them
+    }
+    if (!tex->noClear) {
         ofClear(0, 0, 0, 0);
     }
-    if (layer->data.visible) {
-        begin(layer);
-        ofDrawRectangle(0, 0, layer->size.x, layer->size.y);
-        end();
-    }
+    glm::vec2 size = tex->getSize();
+    begin(layer);
+    ofDrawRectangle(0, 0, size.x, size.y);
+    end();
     fbo.end();
-    ofDisableAlphaBlending();
-    if (layer->randomShader()) {
-        choose();
-    }
-}
-
-void ShaderTex::draw(const glm::vec3 &pos, const glm::vec3 &size) {
-    fbo.draw(pos, size.x, size.y);
+    ofDisableBlendMode();
 }
 
 void ShaderTex::choose() {

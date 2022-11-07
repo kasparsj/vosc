@@ -16,17 +16,24 @@ public:
         hpvPlayer.init(HPV::NewPlayer());
     }
     ~HPVideoTex() {}
-    void update(Layer *layer) override;
+    void update(Layer *layer, Texture* tex) override;
     void seek(float pct);
-    void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
+    void draw(const glm::vec2 &size) override;
     void choose() override;
+    ofTexture & getTexture() override {
+        return *hpvPlayer.getTexturePtr();
+    }
+    const ofTexture & getTexture() const override {
+        // todo: throw error
+    }
+    bool isUsingTexture() const override {
+        return true;
+    }
     ofPixels& getPixels() override {
-        ofTexture* tex = hpvPlayer.getTexturePtr();
-        tex->readToPixels(pixels);
+        getTexture().readToPixels(pixels);
         return pixels;
     }
     
 private:
     ofxHPVPlayer hpvPlayer;
-    ofPixels pixels;
 };

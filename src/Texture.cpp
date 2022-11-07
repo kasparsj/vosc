@@ -1,14 +1,17 @@
-#include "LayerTex.h"
+#include "Texture.h"
 #include "ShaderTex.h"
 #include "VideoTex.h"
 #include "SketchTex.h"
 #include "ImageTex.h"
 #include "HPVideoTex.h"
 #include "WebcamTex.h"
-#include "ColorTex.h"
 #include "DrawTex.h"
 
-Tex* LayerTex::factory(string type, string path, const vector<float>& args) {
+bool isColor(string path) {
+    return (path.substr(0, 1) == "#" && path.size() == 7) || (path.substr(0, 2) == "0x" && path.size() == 8);
+}
+
+Tex* Texture::factory(string type, string path, const vector<float>& args) {
     Tex *tex = NULL;
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
@@ -31,18 +34,19 @@ Tex* LayerTex::factory(string type, string path, const vector<float>& args) {
             case Source::WEBCAM:
                 tex = new WebcamTex(path, args);
                 break;
-            case Source::COLOR:
-                tex = new ColorTex(path, args);
-                break;
             case Source::DRAW:
                 tex = new DrawTex(path, args);
+                break;
+            case Source::COLOR:
+                tex = new ShaderTex("color", args);
+                dynamic_cast<ShaderTex*>(tex)->setUniform("color", args);
                 break;
         }
     }
     return tex;
 }
 
-Tex* LayerTex::factory(string source, const vector<float>& args) {
+Tex* Texture::factory(string source, const vector<float>& args) {
     string type = source;
     string path = "";
     bool explicitType = source.find(":") != string::npos;
@@ -72,19 +76,22 @@ Tex* LayerTex::factory(string source, const vector<float>& args) {
                 case Source::WEBCAM:
                     path = WebcamTex::random();
                     break;
-                case Source::COLOR:
-                    path = ColorTex::random();
-                    break;
                 case Source::DRAW:
                     path = DrawTex::random();
                     break;
+                case Source::COLOR: {
+                    Tex* tex = factory("shader", "color", args);
+                    ofFloatColor color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+                    dynamic_cast<ShaderTex*>(tex)->setUniform("color", color);
+                    return tex;
+                }
             }
         }
     }
     return factory(type, path, args);
 }
 
-void LayerTex::load(string source, const vector<float>& args) {
+void Texture::load(string source, const vector<float>& args) {
     unload();
     bool explicitType = source.find(":") != string::npos;
     if (explicitType && source.substr(0, 4) != "http") {
@@ -108,8 +115,10 @@ void LayerTex::load(string source, const vector<float>& args) {
             tex = factory("hpv", source, args);
         }
         else {
-            if (ColorTex::exists(source)) {
-                tex = factory("color", source, args);
+            if (isColor(source)) {
+                ofFloatColor color = ofFloatColor::fromHex(ofHexToInt(source));
+                vector<float> args1 = {color.r, color.g, color.b};
+                tex = factory("shader", "color", args1);
             }
             else if (SketchTex::exists(source)) {
                 tex = factory("sketch", source, args);
@@ -121,16 +130,16 @@ void LayerTex::load(string source, const vector<float>& args) {
     }
 }
 
-void LayerTex::load(const ofxOscMessage &m) {
-    string newPath = m.getArgAsString(1);
+void Texture::load(const ofxOscMessage &m, int arg) {
+    string newPath = m.getArgAsString(arg);
     vector<float> args;
-    for (int i=2; i<m.getNumArgs(); i++) {
+    for (int i=(arg+1); i<m.getNumArgs(); i++) {
         args.push_back(m.getArgAsFloat(i));
     }
     load(newPath, args);
 }
 
-void LayerTex::choose(string type, const vector<float>& args) {
+void Texture::choose(string type, const vector<float>& args) {
     if (type == "") {
         auto it = SourceMap.begin();
         advance(it, int(ofRandom(SourceMap.size())));
@@ -142,7 +151,7 @@ void LayerTex::choose(string type, const vector<float>& args) {
     }
 }
 
-void LayerTex::choose(const ofxOscMessage& m) {
+void Texture::choose(const ofxOscMessage& m) {
     string type = m.getNumArgs() > 1 ? m.getArgAsString(1) : "";
     vector<float> args;
     for (int i=2; i<m.getNumArgs(); i++) {
@@ -151,16 +160,16 @@ void LayerTex::choose(const ofxOscMessage& m) {
     choose(type, args);
 }
 
-void LayerTex::unload() {
+void Texture::unload() {
     frames.clear();
-    frames.resize(MAX_DELAY);
+    frames.resize(numFrames);
     if (tex != NULL) {
         delete tex;
         tex = NULL;
     }
 }
 
-void LayerTex::reload() {
+void Texture::reload() {
     if (tex != NULL) {
         tex->reload();
     }
@@ -169,7 +178,7 @@ void LayerTex::reload() {
     }
 }
 
-void LayerTex::clear() {
+void Texture::clear() {
     if (tex != NULL) {
         tex->clear();
     }
@@ -178,50 +187,106 @@ void LayerTex::clear() {
     }
 }
 
-void LayerTex::update() {
+void Texture::update(Layer* layer) {
     if (isLoaded()) {
-        tex->update(layer);
+        if (fboSettings.width == 0) {
+            fboSettings.width = layer->size.x;
+        }
+        if (fboSettings.height == 0) {
+            fboSettings.height = layer->size.y;
+        }
+        tex->update(layer, this);
+        
+        if (looper != NULL) {
+            looper->swapBuffers(/*forceSwap*/);
+            if (tex->isFrameNew()){
+                looper->addFrame(tex->getPixels());
+            }
+            looper->update();
+        }
+        
+        if (numFrames > 1) {
+            drawFrame();
+        }
     }
 }
 
-void LayerTex::drawToFbo() {
+void Texture::drawFrame() {
     curFbo = (curFbo + 1) % frames.size();
     ofFbo& fbo = frames[curFbo];
     if (!fbo.isAllocated()) {
-        fbo.allocate(layer->size.x, layer->size.y);
+        // todo: should frame fboSettings be different or same?
+        allocate(fbo);
     }
     fbo.begin();
     ofClear(0, 0, 0, 0);
-    ofPushMatrix();
-    layer->align();
-    layer->rotate();
-    if (layer->looper == NULL) {
-        tex->draw(glm::vec3(0), layer->size);
+    glm::vec2 size = getSize();
+    if (looper == NULL) {
+        tex->draw(size);
     }
     else {
         ofSetColor(255);
-        layer->looper->draw(0, 0, layer->size.x, layer->size.y);
+        looper->draw(0, 0, size.x, size.y);
     }
     fbo.end();
-    ofPopMatrix();
 }
 
-void LayerTex::draw() {
-    if (isLoaded()) {
-        drawToFbo();
-    }
+void Texture::allocate(ofFbo& fbo) {
+    ofDisableTextureEdgeHack();
+    fbo.allocate(fboSettings);
+    ofEnableTextureEdgeHack();
 }
 
-void LayerTex::reset() {
+void Texture::reset() {
     tex->reset();
 }
 
-const ofFbo& LayerTex::getFbo() const {
-    int i = curFbo - layer->delay;
+const ofFbo& Texture::getFrame(int delay) const {
+    int i = curFbo - delay;
     while (i<0) i += frames.size();
     return frames[MIN(frames.size()-1, i)];
 }
 
-ofPixels& LayerTex::getPixels() const {
+bool Texture::hasTexture(int delay) const {
+    if (curFbo < 0) return false;
+    const ofFbo& fbo = getFrame(delay);
+    return fbo.isAllocated() && fbo.getTexture().isAllocated();
+}
+
+const ofTexture& Texture::getTexture(int delay) const {
+    if (numFrames <= 1) {
+        if (looper == NULL) {
+            return tex->getTexture();
+        }
+        else {
+            return looper->getFbo().getTexture();
+        }
+    }
+    return getFrame(delay).getTexture();
+}
+
+ofPixels& Texture::getPixels() const {
     return tex->getPixels();
+}
+
+void Texture::setLooper(const ofxOscMessage& m) {
+    if (m.getArgAsFloat(1) == 0) {
+        delete looper;
+        looper = NULL;
+    }
+    else {
+        float maxDuration = m.getArgAsFloat(1);
+        int fps = m.getNumArgs() > 2 ? m.getArgAsInt(2) : 30;
+        int speed = m.getNumArgs() > 3 ? m.getArgAsInt(3) : 2.0;
+        if (looper == NULL) {
+            looper = new ofxLooper();
+            looper->setup(maxDuration, fps, speed);
+        }
+        else {
+            looper->setMaxDuration(maxDuration);
+            looper->setFps(fps);
+            looper->setPlaySpeed(speed);
+        }
+    }
+
 }

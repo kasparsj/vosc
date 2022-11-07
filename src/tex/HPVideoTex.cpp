@@ -22,7 +22,7 @@ string HPVideoTex::random() {
     return cache[int(ofRandom(cache.size()))];
 }
 
-void HPVideoTex::update(Layer *layer) {
+void HPVideoTex::update(Layer *layer, Texture* tex) {
     if (!hpvPlayer.isLoaded()) {
         string absPath = path;
         if (!ofFilePath::isAbsolute(absPath)) {
@@ -58,17 +58,17 @@ void HPVideoTex::seek(float pct) {
     hpvPlayer.setPosition(pct);
 }
 
-void HPVideoTex::draw(const glm::vec3 &pos, const glm::vec3 &size) {
+void HPVideoTex::draw(const glm::vec2 &size) {
     if (aspectRatio) {
         if (hpvPlayer.getWidth() > hpvPlayer.getHeight()) {
-            hpvPlayer.draw(pos.x, pos.y, size.x, size.x/hpvPlayer.getWidth() * hpvPlayer.getHeight());
+            hpvPlayer.draw(0, 0, size.x, size.x/hpvPlayer.getWidth() * hpvPlayer.getHeight());
         }
         else {
-            hpvPlayer.draw(pos.x, pos.y, size.y/hpvPlayer.getHeight() * hpvPlayer.getWidth(), size.y);
+            hpvPlayer.draw(0, 0, size.y/hpvPlayer.getHeight() * hpvPlayer.getWidth(), size.y);
         }
     }
     else {
-        hpvPlayer.draw(pos.x, pos.y, size.x, size.y);
+        hpvPlayer.draw(0, 0, size.x, size.y);
     }
 }
 

@@ -76,10 +76,7 @@ void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &not
     visible = onset || (values.size() == 0 || values[0] >= layer->thresh);
     
     if (shader.isLoaded()) {
-        ofEnableBlendMode( OF_BLENDMODE_DISABLED ); // Important! We just want to write the data as is to the target fbo
-        
         fbo.dest()->begin();
-        fbo.dest()->activateAllDrawBuffers(); // if we have multiple color buffers in our FBO we need this to activate all of them
         
         shader.begin(layer);
         for (int i=0; i<fbo.source()->getNumTextures(); i++) {
@@ -101,29 +98,4 @@ void LayerData::afterDraw() {
             values[0] = 0;
         }
     }
-}
-
-void LayerData::initFbo(const ofxOscMessage& m) {
-    // Allocate buffers
-    ofFbo::Settings fboSettings;
-    fboSettings.width  = m.getArgAsInt(1);
-    fboSettings.height = m.getArgAsInt(2);
-    
-    // We can create several color buffers for one FBO if we want to store velocity for instance,
-    // then draw to them simultaneously from a shader using gl_FragData[0], gl_FragData[1], etc.
-    fboSettings.numColorbuffers = m.getNumArgs() > 3 ? m.getArgAsInt(3) : 1;
-    
-    fboSettings.useDepth = false;
-    fboSettings.internalformat = GL_RGBA32F;    // Gotta store the data as floats, they won't be clamped to 0..1
-    fboSettings.textureTarget = GL_TEXTURE_2D;
-    fboSettings.wrapModeHorizontal = GL_CLAMP_TO_EDGE;
-    fboSettings.wrapModeVertical = GL_CLAMP_TO_EDGE;
-    fboSettings.minFilter = GL_NEAREST; // No interpolation, that would mess up data reads later!
-    fboSettings.maxFilter = GL_NEAREST;
-    
-    ofDisableTextureEdgeHack();
-    
-        fbo.allocate( fboSettings );
-    
-    ofEnableTextureEdgeHack();
 }

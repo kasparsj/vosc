@@ -18,7 +18,7 @@ string ImageTex::random() {
     return cache[int(ofRandom(cache.size()))];
 }
 
-void ImageTex::update(Layer *layer) {
+void ImageTex::update(Layer *layer, Texture* tex) {
     if (!image.isAllocated()) {
         string absPath = path;
         if (absPath.substr(0, 7) != "http://" && absPath.substr(0, 8) != "https://" && !ofFilePath::isAbsolute(absPath)) {
@@ -43,17 +43,17 @@ void ImageTex::update(Layer *layer) {
     aspectRatio = layer->aspectRatio;
 }
 
-void ImageTex::draw(const glm::vec3 &pos, const glm::vec3 &size) {
+void ImageTex::draw(const glm::vec2 &size) {
     if (aspectRatio) {
         if (image.getWidth() > image.getHeight()) {
-            image.draw(pos, size.x, size.x/image.getWidth() * image.getHeight());
+            image.draw(0, 0, size.x, size.x/image.getWidth() * image.getHeight());
         }
         else {
-            image.draw(pos, size.y/image.getHeight() * image.getWidth(), size.y);
+            image.draw(0, 0, size.y/image.getHeight() * image.getWidth(), size.y);
         }
     }
     else {
-        image.draw(pos, size.x, size.y);
+        image.draw(0, 0, size.x, size.y);
     }
 }
 

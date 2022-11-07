@@ -20,7 +20,7 @@ string VideoTex::random() {
     return cache[int(ofRandom(cache.size()))];
 }
 
-void VideoTex::update(Layer *layer) {
+void VideoTex::update(Layer *layer, Texture* tex) {
     if (!videoPlayer.isLoaded()) {
         videoPlayer.close();
         string absPath = path;
@@ -58,17 +58,17 @@ void VideoTex::seek(float pct) {
     videoPlayer.setPosition(pct);
 }
 
-void VideoTex::draw(const glm::vec3 &pos, const glm::vec3 &size) {
+void VideoTex::draw(const glm::vec2 &size) {
     if (aspectRatio) {
         if (videoPlayer.getWidth() > videoPlayer.getHeight()) {
-            videoPlayer.draw(pos, size.x, size.x/videoPlayer.getWidth() * videoPlayer.getHeight());
+            videoPlayer.draw(0, 0, size.x, size.x/videoPlayer.getWidth() * videoPlayer.getHeight());
         }
         else {
-            videoPlayer.draw(pos, size.y/videoPlayer.getHeight() * videoPlayer.getWidth(), size.y);
+            videoPlayer.draw(0, 0, size.y/videoPlayer.getHeight() * videoPlayer.getWidth(), size.y);
         }
     }
     else {
-        videoPlayer.draw(pos, size.x, size.y);
+        videoPlayer.draw(0, 0, size.x, size.y);
     }
 }
 

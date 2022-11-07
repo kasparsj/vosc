@@ -25,11 +25,8 @@ string SketchTex::random() {
     return it->first;
 }
 
-void SketchTex::update(Layer *layer) {
-    if (!fbo.isAllocated() || (fbo.getWidth() != layer->size.x || fbo.getHeight() != layer->size.y)) {
-        fbo.clear();
-        fbo.allocate(layer->size.x, layer->size.y);
-    }
+void SketchTex::update(Layer *layer, Texture* tex) {
+    FBOTex1::update(layer, tex);
     if (path != prevPath) {
         if (!exists(path)) {
             ofLog() << "sketch " << path << " does not exist";
@@ -46,18 +43,15 @@ void SketchTex::update(Layer *layer) {
         clear();
         sketches[path]->init();
     }
-    ofEnableAlphaBlending();
+    ofEnableBlendMode(tex->blendMode);
     fbo.begin();
     sketches[path]->draw(layer);
     fbo.end();
-    ofDisableAlphaBlending();
-    if (layer->randomShader()) {
-        choose();
-    }
+    ofDisableBlendMode();
 }
 
-void SketchTex::draw(const glm::vec3 &pos, const glm::vec3 &size) {
-    fbo.draw(pos, size.x, size.y);
+void SketchTex::draw(const glm::vec2 &size) {
+    fbo.draw(0, 0, size.x, size.y);
 }
 
 void SketchTex::choose() {

@@ -18,18 +18,19 @@ int WebcamTex::random() {
     return devices[int(ofRandom(devices.size()))].id;
 }
 
-void WebcamTex::update(Layer *layer) {
+void WebcamTex::update(Layer* layer, Texture* tex) {
     if (!vidGrabber.isInitialized()) {
         vidGrabber.setDeviceID(stoi(path));
-        vidGrabber.setup(layer->size.x, layer->size.y);
+        glm::vec2 size = tex->getSize();
+        vidGrabber.setup(size.x, size.y);
     }
     vidGrabber.update();
 }
 
-void WebcamTex::draw(const glm::vec3 &pos, const glm::vec3 &size) {
+void WebcamTex::draw(const glm::vec2 &size) {
     ofPushStyle();
     ofSetColor(255);
-    vidGrabber.draw(pos.x, pos.y, size.x, size.y);
+    vidGrabber.draw(0, 0, size.x, size.y);
     ofPopStyle();
 }
 

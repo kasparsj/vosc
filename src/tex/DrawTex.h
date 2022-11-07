@@ -1,22 +1,15 @@
 #pragma once
 
-#include "Tex.h"
+#include "FBOTex1.h"
 
-class DrawTex : public Tex {
+class DrawTex : public FBOTex1 {
 public:
     static vector<string> draws;
     static string random();
     
-    DrawTex(string path, const vector<float>& args) : Tex(path, args) {}
+    DrawTex(string path, const vector<float>& args) : FBOTex1(path, args) {}
     ~DrawTex() {}
-    void update(Layer *layer) override;
-    void draw(const glm::vec3 &pos, const glm::vec3 &size) override;
+    void update(Layer* layer, Texture* tex) override;
     void choose() override;
-    ofPixels& getPixels() override {
-        return pixels;
-    }
-    
-private:
-    ofPixels pixels;
 
 };

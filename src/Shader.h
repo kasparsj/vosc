@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxAutoReloadedShader.h"
 #include "ofxOsc.h"
+#include "Texture.h"
 
 class Layer;
 
@@ -16,15 +17,32 @@ public:
     }
     bool load(string path);
     void reload();
+    void update(Layer* layer);
     void begin(Layer *layer);
     void end();
+    void reset();
     ofxAutoReloadedShader* getShader() {
         return shader;
     };
-    void setUniform(string name, const ofxOscMessage& m);
-    map<string, vector<float>> uniforms;
+    Texture& getTexture(string name) {
+        return textures[name];
+    }
+    Texture& getDefaultTexture(bool create = false);
+    void setTexture(const ofxOscMessage& m);
+    void setTexture(string name, const ofxOscMessage& m, int arg = 1);
+    void setUniform(const ofxOscMessage& m);
+    vector<float>& getUniform(string name) {
+        return uniforms[name];
+    }
+    void setUniform(string name, const vector<float>& value);
+    void setUniform(string name, ofFloatColor& color) {
+        vector<float> vec = {color.r, color.g, color.b};
+        setUniform(name, vec);
+    }
     
 private:
+    map<string, Texture> textures;
+    map<string, vector<float>> uniforms;
     ofxAutoReloadedShader* shader = NULL;
 };
 

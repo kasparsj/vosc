@@ -3,9 +3,7 @@
 #include "Config.h"
 #include "Sound.h"
 #include "ofxTidalCycles.h"
-#include "Shader.h"
 #include "ofxOsc.h"
-#include "FboPingPong.h"
 
 class Layer;
 
@@ -31,7 +29,6 @@ public:
     }
     void afterDraw();
     Shader& getShader() { return shader; }
-    void initFbo(const ofxOscMessage& m);
     
     Layer *layer;
     float time = 0;
@@ -43,6 +40,4 @@ public:
     bool tidal;
     vector<float> mfcc;
     ofFloatColor mfccColor = ofFloatColor(0);
-    Shader shader;
-    FboPingPong fbo;
 };

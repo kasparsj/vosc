@@ -3,7 +3,6 @@
 void Layer::setup(int index, string dataSource)
 {
     this->index = index;
-    tex.layer = this;
     geom.setup(this);
     data.layer = this;
     dataSources.clear();
@@ -37,47 +36,34 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 }
 
 void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
-    if (tex.isLoaded() || shader.isLoaded()) {
+    if (shader.isLoaded()) {
         data.update(sounds, notes);
         rotation += rotationSpeed;
         if (useRandomColor) {
             color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
         }
-    }
-    tex.update();
-    if (looper != NULL) {
-        looper->swapBuffers(/*forceSwap*/);
-        if (tex.isFrameNew()){
-            looper->addFrame(tex.getPixels());
-        }
-        looper->update();
+        shader.update(this);
     }
     material.setup(matSettings);
     geom.update();
 }
 
 void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
-    tex.draw();
-    
     //ofEnableLighting();
     ofSetGlobalAmbientColor(ofFloatColor(1.0, 1.0, 1.0, 1.0));
     
     ofPushMatrix();
+    align();
+    rotate();
     transform();
     ofPushStyle();
     ofSetColor(getTint() * bri, alpha * 255);
     
     shader.begin(this);
-    if (data.fbo.isAllocated()) {
-        for (int i=0; i<data.fbo.source()->getNumTextures(); i++) {
-            shader.getShader()->setUniformTexture("tex" + ofToString(i), data.fbo.source()->getTextureReference(i), i+1 );
-        }
-    }
-    
-    material.begin();
+    // todo: fix material
+    //material.begin();
     geom.draw();
-    material.end();
-    
+    //material.end();
     shader.end();
     
     ofPopStyle();
@@ -85,7 +71,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
 }
 
 void Layer::draw(int totalVisible) {
-    if (tex.isLoaded() || shader.isLoaded()) {
+    if (shader.isLoaded()) {
         if (data.visible) {
             switch (blendMode) {
                 case OF_BLENDMODE_ALPHA:
@@ -172,9 +158,9 @@ void Layer::addDataSources(vector<string> ds) {
 }
 
 void Layer::reset() {
-    if (tex.isLoaded()) {
+    if (shader.isLoaded()) {
         resetTransform();
-        tex.reset();
+        shader.reset();
     }
     else {
         ofLog() << "cannot reset layer " << index;
