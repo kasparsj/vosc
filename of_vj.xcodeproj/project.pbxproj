@@ -146,7 +146,6 @@
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
 		2B015CFA29186EC10089FC16 /* Grass.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grass.frag; sourceTree = "<group>"; };
 		2B015CFB29186EC10089FC16 /* Grass.geom */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grass.geom; sourceTree = "<group>"; };
-		2B015CFC29186EC10089FC16 /* Grass.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grass.vert; sourceTree = "<group>"; };
 		2B015CFD291876390089FC16 /* DrawTex.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DrawTex.cpp; sourceTree = "<group>"; };
 		2B015CFE291876390089FC16 /* DrawTex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DrawTex.h; sourceTree = "<group>"; };
 		2B7E6EE72918F4DE00D78E40 /* RayMarchingCloudsVolumeofCamera.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RayMarchingCloudsVolumeofCamera.frag; sourceTree = "<group>"; };
@@ -678,7 +677,6 @@
 			children = (
 				2B015CFA29186EC10089FC16 /* Grass.frag */,
 				2B015CFB29186EC10089FC16 /* Grass.geom */,
-				2B015CFC29186EC10089FC16 /* Grass.vert */,
 			);
 			path = grass;
 			sourceTree = "<group>";

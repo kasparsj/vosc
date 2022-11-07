@@ -3,7 +3,6 @@
 #pragma include "shaders/common/of_default_uniforms.glsl"
 #pragma include "shaders/common/of_default_vertex_in_attributes.glsl"
 
-// outputs
 out VertexAttrib {
     vec4 position;
     vec4 color;
