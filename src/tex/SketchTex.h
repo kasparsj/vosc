@@ -1,15 +1,15 @@
 #pragma once
 
-#include "FBOTex1.h"
+#include "FboTex.h"
 #include "Sketch.h"
 
-class SketchTex : public FBOTex1 {
+class SketchTex : public FboTex {
 public:
     static map<string, Sketch*> sketches;
     static bool exists(string path);
     static string random();
     
-    SketchTex(string name, const vector<float>& args) : FBOTex1(name, args) {}
+    SketchTex(string name, const vector<float>& args) : FboTex(name, args) {}
     ~SketchTex() {
         if (impl != NULL) {
             delete impl;

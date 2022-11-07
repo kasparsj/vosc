@@ -28,7 +28,6 @@ public:
         return mfccColor;
     }
     void afterDraw();
-    Shader& getShader() { return shader; }
     
     Layer *layer;
     float time = 0;

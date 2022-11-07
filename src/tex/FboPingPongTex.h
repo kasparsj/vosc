@@ -1,29 +1,30 @@
 #pragma once
 
 #include "Tex.h"
+#include "FboPingPong.h"
 
-class FBOTex1 : public Tex {
+class FboPingPongTex : public Tex {
 public:
-    FBOTex1(string path, const vector<float>& args) : Tex(path, args) {}
+    FboPingPongTex(string path, const vector<float>& args) : Tex(path, args) {}
     virtual void update(Layer* layer, Texture* tex) override;
     void draw(const glm::vec2 &size) override;
     void clear() override;
     virtual ofTexture & getTexture() override {
-        return fbo.getTexture();
+        return fbo.source()->getTexture();
     }
     virtual const ofTexture & getTexture() const override {
-        return fbo.getTexture();
+        // todo: throw error?
     }
     void setUseTexture(bool bUseTex) override {
-        fbo.setUseTexture(bUseTex);
+        /*irrevelant*/
     }
     bool isUsingTexture() const override {
-        return fbo.isUsingTexture();
+        return true;
     }
     ofPixels& getPixels() override {
-        fbo.readToPixels(pixels);
+        fbo.source()->readToPixels(pixels);
         return pixels;
     }
     
-    ofFbo fbo;
+    FboPingPong fbo;
 };

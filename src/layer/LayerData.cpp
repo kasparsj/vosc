@@ -74,21 +74,6 @@ void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &not
         values[0] = 1.f;
     }
     visible = onset || (values.size() == 0 || values[0] >= layer->thresh);
-    
-    if (shader.isLoaded()) {
-        fbo.dest()->begin();
-        
-        shader.begin(layer);
-        for (int i=0; i<fbo.source()->getNumTextures(); i++) {
-            shader.getShader()->setUniformTexture("tex" + ofToString(i), fbo.source()->getTextureReference(i), i );
-        }
-                
-        fbo.source()->draw(0,0);
-        shader.end();
-            
-        fbo.dest()->end();
-        fbo.swap();
-    }
 }
 
 void LayerData::afterDraw() {

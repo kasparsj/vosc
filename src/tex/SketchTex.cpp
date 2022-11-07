@@ -26,7 +26,7 @@ string SketchTex::random() {
 }
 
 void SketchTex::update(Layer *layer, Texture* tex) {
-    FBOTex1::update(layer, tex);
+    FboTex::update(layer, tex);
     if (path != prevPath) {
         if (!exists(path)) {
             ofLog() << "sketch " << path << " does not exist";

@@ -1,8 +1,9 @@
-#include "ShaderTex.h"
+#include "ShaderPingPongTex.h"
 #include "Layer.h"
 
-void ShaderTex::update(Layer *layer, Texture* tex) {
-    FboTex::update(layer, tex);
+void ShaderPingPongTex::update(Layer *layer, Texture* tex) {
+    FboPingPongTex::update(layer, tex);
+    
     if (!isLoaded()) {
         if (load(path)) {
             prevPath = path;
@@ -14,26 +15,32 @@ void ShaderTex::update(Layer *layer, Texture* tex) {
             return;
         }
     }
+    
     ofEnableBlendMode(tex->blendMode);
-    fbo.begin();
+    
+    fbo.dest()->begin();
     if (tex->fboSettings.numColorbuffers > 1) {
-        fbo.activateAllDrawBuffers(); // if we have multiple color buffers in our FBO we need this to activate all of them
+        fbo.dest()->activateAllDrawBuffers(); // if we have multiple color buffers in our FBO we need this to activate all of them
     }
     if (!tex->noClear) {
         ofClear(0, 0, 0, 0);
     }
-    glm::vec2 size = tex->getSize();
+    
     begin(layer);
-    ofDrawRectangle(0, 0, size.x, size.y);
+    //glm::vec2 size = tex->getSize();
+    fbo.source()->draw(0,0);
     end();
-    fbo.end();
+        
+    fbo.dest()->end();
+    fbo.swap();
+    
     ofDisableBlendMode();
 }
 
-void ShaderTex::choose() {
+void ShaderPingPongTex::choose() {
     path = random();
 }
 
-void ShaderTex::reload() {
+void ShaderPingPongTex::reload() {
     cache.erase(path);
 }

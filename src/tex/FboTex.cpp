@@ -1,7 +1,7 @@
-#include "FBOTex1.h"
+#include "FboTex.h"
 #include "Layer.h"
 
-void FBOTex1::update(Layer* layer, Texture* tex) {
+void FboTex::update(Layer* layer, Texture* tex) {
     glm::vec2 size = tex->getSize();
     if (!fbo.isAllocated() || (fbo.getWidth() != size.x || fbo.getHeight() != size.y)) {
         fbo.clear();
@@ -9,11 +9,11 @@ void FBOTex1::update(Layer* layer, Texture* tex) {
     }
 }
 
-void FBOTex::draw(const glm::vec2 &size) {
+void FboTex::draw(const glm::vec2 &size) {
     fbo.draw(0, 0, size.x, size.y);
 }
 
-void FBOTex::clear() {
+void FboTex::clear() {
     fbo.begin();
     ofClear(0, 0, 0, 0);
     fbo.end();

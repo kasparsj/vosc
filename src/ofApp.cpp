@@ -404,12 +404,6 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         }
         layer->addDataSources(ds);
     }
-    else if (command == "/data/shader") {
-        layer->data.getShader().load(m.getArgAsString(1));
-    }
-    else if (command == "/data/shader/uniform") {
-        layer->data.getShader().setUniform(m);
-    }
     else if (command == "/seek") {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
             if (m.getArgAsString(1) == "rand") {
@@ -826,7 +820,7 @@ void ofApp::draw(){
             ofPopMatrix();
             if (layers[i]->shader.isLoaded()) {
                 ofSetColor(255);
-                layers[i]->shader.getDefaultTexture().getFrame().draw(20+i*120, ofGetHeight()-120, 100, 100);
+                layers[i]->shader.getDefaultTexture().getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
                 if (layers[i]->data.values.size() > 0) {
                     ofFill();
                     ofDrawRectangle(20+i*120, ofGetHeight()-120, layers[i]->data.values[0]*100.f, 10);

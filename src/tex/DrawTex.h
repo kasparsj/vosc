@@ -1,13 +1,13 @@
 #pragma once
 
-#include "FBOTex1.h"
+#include "FboTex.h"
 
-class DrawTex : public FBOTex1 {
+class DrawTex : public FboTex {
 public:
     static vector<string> draws;
     static string random();
     
-    DrawTex(string path, const vector<float>& args) : FBOTex1(path, args) {}
+    DrawTex(string path, const vector<float>& args) : FboTex(path, args) {}
     ~DrawTex() {}
     void update(Layer* layer, Texture* tex) override;
     void choose() override;
