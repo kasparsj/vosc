@@ -21,7 +21,9 @@ int WebcamTex::random() {
 void WebcamTex::update(TexData& data) {
     if (!vidGrabber.isInitialized()) {
         vidGrabber.setDeviceID(stoi(path));
-        vidGrabber.setup(data.size.x, data.size.y);
+        vidGrabber.setup(args.size() > 0 ? args[0] : 1920,
+                         args.size() > 1 ? args[1] : 1080);
+        data.setSize(vidGrabber.getWidth(), vidGrabber.getHeight());
     }
     vidGrabber.update();
     aspectRatio = data.aspectRatio;

@@ -25,7 +25,7 @@ void ShaderPingPongTex::update(TexData& data) {
         ofClear(0, 0, 0, 0);
     }
     
-    begin();
+    begin(data);
     //glm::vec2 size = tex->getSize();
     fbo.source()->draw(0,0);
     end();

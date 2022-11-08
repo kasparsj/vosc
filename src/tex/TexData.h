@@ -9,6 +9,8 @@ public:
         randomSeed = ofRandom(1000);
     }
     
+    void update();
+    
     ofFloatColor getColor() {
         if (useMFCCColor && mfcc.size() > 0) {
             return getMFCCColor();
@@ -64,6 +66,8 @@ public:
     }
     
     glm::vec2 size;
+    float time = 0;
+    float prevTime = 0;
     float speed = 1.f;
     bool noClear;
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;

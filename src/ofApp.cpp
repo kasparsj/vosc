@@ -270,7 +270,11 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
         if (command == "/tex") {
             string source = m.getArgAsString(1);
-            layer->shader.setDefaultTexture(&TexturePool::getOrCreate(source, layer->shader.getId()));
+            Texture* tex = &TexturePool::getOrCreate(source, layer->shader.getId());
+            layer->shader.setDefaultTexture(tex);
+            if (tex->data.size.x == 0 && tex->data.size.y == 0) {
+                tex->data.setSize(layer->size.x, layer->size.y);
+            }
         }
         textureCommand(layer->shader.getDefaultTexture(), command, m);
     }

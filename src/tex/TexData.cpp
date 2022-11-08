@@ -1,5 +1,11 @@
 #include "TexData.h"
 
+void TexData::update() {
+    const float timef = ofGetElapsedTimef();
+    time += ((timef - prevTime) * speed);
+    prevTime = timef;
+}
+
 void TexData::setFboSettings(const ofxOscMessage &m) {
     std::unordered_map<string, function<void(int, ofFbo::Settings&)>> mapping;
     mapping["numColorbuffers"] = [](int v, ofFbo::Settings& a) { a.numColorbuffers = v; };

@@ -44,9 +44,9 @@ void VideoTex::update(TexData& data) {
             return;
         }
     }
-//    else if (layer->data.onset) {
-//        seek(layer->timePct);
-//    }
+    else if (data.onset) {
+        seek(data.timePct);
+    }
     aspectRatio = data.aspectRatio;
     videoPlayer.update();
 }

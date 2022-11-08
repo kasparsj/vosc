@@ -63,17 +63,9 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
         ofTranslate(pos + size/2.f);
         ofScale(size / glm::vec3(100, -100, 100));
         
-        shader.begin(delay);
-        shader.getShader()->setUniform1f("time", data.time);
-        shader.getShader()->setUniform2f("resolution", size.x, size.y);
-        shader.getShader()->setUniform2f("offset", pos.x, pos.y);
+        shader.begin(data, delay);
         shader.getShader()->setUniform1i("index", index);
-        // todo: fix, overlaps with Source::COLOR
-        shader.getShader()->setUniform4f("color", data.getColor());
-        shader.getShader()->setUniform1i("random", data.randomSeed);
-        shader.getShader()->setUniform1i("num_values", data.values.size());
-        shader.getShader()->setUniform1fv("values", data.values.data(), data.values.size());
-        shader.getShader()->setUniform1i("onset", data.onset ? 1 : 0);
+        shader.getShader()->setUniform2f("offset", pos.x, pos.y);
         // todo: fix material
         //material.begin();
         geom.draw();

@@ -14,8 +14,6 @@ public:
     void afterDraw();
     
     Layer *layer;
-    float time = 0;
-    float prevTime = 0;
     bool visible;
     bool prevOnset;
     bool tidal;

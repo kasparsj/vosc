@@ -72,9 +72,17 @@ bool Shader::load(string path) {
 void Shader::update() {
 }
 
-void Shader::begin(int delay) {
+void Shader::begin(TexData& data, int delay) {
     if (isLoaded()) {
         shader->begin();
+        shader->setUniform1f("time", data.time);
+        shader->setUniform2f("resolution", data.size.x, data.size.y);
+        // todo: overlaps with Source::COLOR
+        shader->setUniform4f("color", data.getColor());
+        shader->setUniform1i("random", data.randomSeed);
+        shader->setUniform1i("num_values", data.values.size());
+        shader->setUniform1fv("values", data.values.data(), data.values.size());
+        shader->setUniform1i("onset", data.onset ? 1 : 0);
         int texLoc = 0;
         for (map<string, Texture*>::iterator it=textures.begin(); it!=textures.end(); ++it) {
             if (it->second->hasTexture(delay)) {

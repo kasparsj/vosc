@@ -28,7 +28,7 @@ public:
     bool load(string path);
     void reload();
     void update();
-    void begin(int delay = 0);
+    void begin(TexData& data, int delay = 0);
     void end();
     void reset();
     ofxAutoReloadedShader* getShader() {

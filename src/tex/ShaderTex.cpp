@@ -21,7 +21,7 @@ void ShaderTex::update(TexData& data) {
     if (!data.noClear) {
         ofClear(0, 0, 0, 0);
     }
-    begin();
+    begin(data);
     ofDrawRectangle(0, 0, data.size.x, data.size.y);
     end();
     fbo.end();

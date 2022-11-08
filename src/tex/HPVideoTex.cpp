@@ -37,9 +37,7 @@ void HPVideoTex::update(TexData& data) {
             seek(data.timePct);
             hpvPlayer.play();
             prevPath = path;
-//            if (layer->color == ofFloatColor(0, 0)) {
-//                layer->color = ofFloatColor(1);
-//            }
+            data.setSize(hpvPlayer.getWidth(), hpvPlayer.getHeight());
         }
         else {
             ofLog() << "could not load hpv: " << path;
@@ -47,9 +45,9 @@ void HPVideoTex::update(TexData& data) {
             return;
         }
     }
-//    else if (layer->data.onset) {
-//        seek(layer->timePct);
-//    }
+    else if (data.onset) {
+        seek(data.timePct);
+    }
     aspectRatio = data.aspectRatio;
 }
 

@@ -105,13 +105,7 @@ void Texture::clear() {
 
 void Texture::update() {
     if (isLoaded()) {
-        // todo: fix
-//        if (fboSettings.width == 0) {
-//            fboSettings.width = layer->size.x;
-//        }
-//        if (fboSettings.height == 0) {
-//            fboSettings.height = layer->size.y;
-//        }
+        data.update();
         tex->update(data);
         
         if (looper != NULL) {
