@@ -73,6 +73,7 @@ public:
     vector<ofFbo> frames;
     int curFbo = -1;
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
+    bool aspectRatio = true;
     
 private:
     void drawFrame();

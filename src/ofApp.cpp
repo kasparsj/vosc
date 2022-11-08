@@ -426,9 +426,6 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     else if (command == "/behaviour") {
         layer->behaviour = m.getArgAsInt(1);
     }
-    else if (command == "/aspectratio") {
-        layer->aspectRatio = m.getArgAsBool(1);
-    }
     else if (command == "/thresh") {
         handleFloat(&layer->thresh, m);
     }
@@ -483,6 +480,9 @@ void ofApp::textureCommand(Texture& tex, string command, const ofxOscMessage &m)
     }
     else if (command == "/tex/blendmode") {
         tex.blendMode = static_cast<ofBlendMode>(m.getArgAsInt(1));
+    }
+    else if (command == "/tex/aspectratio") {
+        tex.aspectRatio = m.getArgAsBool(1);
     }
     else if (command == "/tex/fbo") {
         tex.setFboSettings(m);

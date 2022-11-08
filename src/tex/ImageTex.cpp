@@ -40,7 +40,7 @@ void ImageTex::update(Layer *layer, Texture* tex) {
             return;
         }
     }
-    aspectRatio = layer->aspectRatio;
+    aspectRatio = tex->aspectRatio;
 }
 
 void ImageTex::draw(const glm::vec2 &size) {

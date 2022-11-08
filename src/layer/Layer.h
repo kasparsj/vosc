@@ -57,7 +57,6 @@ public:
     int behaviour = -1;
     float bri = 1.0;
     float alpha = 1.0;
-    bool aspectRatio = true;
     float timePct = 0;
     bool useMFCCColor = false;
     bool isTidal = false;

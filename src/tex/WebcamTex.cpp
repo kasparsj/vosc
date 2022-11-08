@@ -25,13 +25,21 @@ void WebcamTex::update(Layer* layer, Texture* tex) {
         vidGrabber.setup(size.x, size.y);
     }
     vidGrabber.update();
+    aspectRatio = tex->aspectRatio;
 }
 
 void WebcamTex::draw(const glm::vec2 &size) {
-    ofPushStyle();
-    ofSetColor(255);
-    vidGrabber.draw(0, 0, size.x, size.y);
-    ofPopStyle();
+    if (aspectRatio) {
+        if (vidGrabber.getWidth() > vidGrabber.getHeight()) {
+            vidGrabber.draw(0, 0, size.x, size.x/vidGrabber.getWidth() * vidGrabber.getHeight());
+        }
+        else {
+            vidGrabber.draw(0, 0, size.y/vidGrabber.getHeight() * vidGrabber.getWidth(), size.y);
+        }
+    }
+    else {
+        vidGrabber.draw(0, 0, size.x, size.y);
+    }
 }
 
 void WebcamTex::choose() {

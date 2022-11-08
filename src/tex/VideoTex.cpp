@@ -50,7 +50,7 @@ void VideoTex::update(Layer *layer, Texture* tex) {
     else if (layer->data.onset) {
         seek(layer->timePct);
     }
-    aspectRatio = layer->aspectRatio;
+    aspectRatio = tex->aspectRatio;
     videoPlayer.update();
 }
 
