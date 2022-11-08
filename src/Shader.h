@@ -5,6 +5,8 @@
 #include "ofxOsc.h"
 #include "Texture.h"
 
+#define DEFAULT_TEX "tex"
+
 class Layer;
 
 class Shader {
@@ -24,8 +26,14 @@ public:
     ofxAutoReloadedShader* getShader() {
         return shader;
     };
+    bool hasTexture(string name) {
+        return textures.find(name) != textures.end();
+    }
     Texture& getTexture(string name) {
         return textures[name];
+    }
+    bool hasDefaultTexture() {
+        return hasTexture(DEFAULT_TEX);
     }
     Texture& getDefaultTexture(bool create = false);
     void setTexture(const ofxOscMessage& m);

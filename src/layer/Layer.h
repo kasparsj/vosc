@@ -16,9 +16,9 @@ public:
     void drawToFbo();
     void draw(const glm::vec3 &pos, const glm::vec3 &size);
     void draw(int totalVisible);
-    void transform();
-    void align();
-    void rotate();
+    void doAlign();
+    void doRotate();
+    void doScale();
     void setDataSources(vector<string> ds);
     void addDataSources(vector<string> ds);
     void reset();

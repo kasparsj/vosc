@@ -36,14 +36,14 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 }
 
 void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
-    if (shader.isLoaded()) {
+    if (shader.isLoaded() || shader.hasDefaultTexture()) {
         data.update(sounds, notes);
         rotation += rotationSpeed;
         if (useRandomColor) {
             color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
         }
-        shader.update(this);
     }
+    shader.update(this);
     material.setup(matSettings);
     geom.update();
 }
@@ -53,25 +53,32 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     ofSetGlobalAmbientColor(ofFloatColor(1.0, 1.0, 1.0, 1.0));
     
     ofPushMatrix();
-    align();
-    rotate();
-    transform();
+    doAlign();
+    doRotate();
+    doScale();
     ofPushStyle();
     ofSetColor(getTint() * bri, alpha * 255);
     
-    shader.begin(this);
-    // todo: fix material
-    //material.begin();
-    geom.draw();
-    //material.end();
-    shader.end();
+    if (shader.isLoaded()) {
+        ofTranslate(pos + size/2.f);
+        ofScale(size / glm::vec3(100, -100, 100));
+        shader.begin(this);
+        // todo: fix material
+        //material.begin();
+        geom.draw();
+        //material.end();
+        shader.end();
+    }
+    else if (shader.hasDefaultTexture()) {
+        shader.getDefaultTexture().draw(this);
+    }
     
     ofPopStyle();
     ofPopMatrix();
 }
 
 void Layer::draw(int totalVisible) {
-    if (shader.isLoaded()) {
+    if (shader.isLoaded() || shader.hasDefaultTexture()) {
         if (data.visible) {
             switch (blendMode) {
                 case OF_BLENDMODE_ALPHA:
@@ -89,7 +96,7 @@ void Layer::draw(int totalVisible) {
     }
 }
 
-void Layer::transform() {
+void Layer::doScale() {
     if (scale.x < 0) {
         ofTranslate(-scale.x * size.x, 0);
     }
@@ -100,11 +107,9 @@ void Layer::transform() {
         ofTranslate(0, 0, -scale.z * size.z);
     }
     ofScale(scale);
-    ofTranslate(pos + size/2.f);
-    ofScale(size / glm::vec3(100, -100, 100));
 }
 
-void Layer::align() {
+void Layer::doAlign() {
     switch (alignH) {
         case OF_ALIGN_HORZ_CENTER:
             ofTranslate(ofGetWidth()/2.f - size.x * abs(scale.x) / 2.f, 0);
@@ -123,7 +128,7 @@ void Layer::align() {
     }
 }
 
-void Layer::rotate() {
+void Layer::doRotate() {
     float degrees = glm::length(rotation);
     if (degrees != 0) {
         glm::vec3 axis = glm::normalize(rotation);

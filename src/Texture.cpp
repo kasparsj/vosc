@@ -231,6 +231,16 @@ void Texture::drawFrame() {
     fbo.end();
 }
 
+void Texture::draw(Layer* layer) {
+    if (isLoaded() && layer->delay == 0) {
+        tex->draw(layer->size);
+    }
+    else if (hasTexture(layer->delay)) {
+        // todo: implement aspect ratio
+        getTexture(layer->delay).draw(glm::vec2(0, 0), layer->size.x, layer->size.y);
+    }
+}
+
 void Texture::allocate(ofFbo& fbo) {
     ofDisableTextureEdgeHack();
     fbo.allocate(fboSettings);
@@ -248,6 +258,9 @@ const ofFbo& Texture::getFrame(int delay) const {
 }
 
 bool Texture::hasTexture(int delay) const {
+    if (numFrames <= 1) {
+        return isLoaded() && tex->getTexture().isAllocated();
+    }
     if (curFbo < 0) return false;
     const ofFbo& fbo = getFrame(delay);
     return fbo.isAllocated() && fbo.getTexture().isAllocated();

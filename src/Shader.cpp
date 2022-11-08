@@ -1,19 +1,30 @@
 #include "Shader.h"
 #include "Layer.h"
 
-map<string, ofxAutoReloadedShader> loadLocalShaders()
-{
-    ofDirectory dir("shaders");
-    map<string, ofxAutoReloadedShader> shaders;
+void loadShaders(string path, map<string, ofxAutoReloadedShader>& shaders) {
+    ofDirectory dir(path);
     for (int i = 0; i < dir.getFiles().size(); i++) {
         ofFile file = dir.getFile(i);
-        ofxAutoReloadedShader sh;
-        shaders[file.getFileName()] = sh;
+        string relPath = path + "/" + file.getFileName();
+        if (file.isDirectory() && relPath != "shaders/common") {
+            loadShaders(path + "/" + file.getFileName(), shaders);
+        }
+        else {
+            ofxAutoReloadedShader sh;
+            string path = file.getAbsolutePath();
+            string pathNoExt = path.substr(0, path.find("." + file.getExtension()));
+            shaders[pathNoExt] = sh;
+        }
     }
+}
+
+map<string, ofxAutoReloadedShader> loadShaderCache() {
+    map<string, ofxAutoReloadedShader> shaders;
+    loadShaders("shaders", shaders);
     return shaders;
 }
 
-map<string, ofxAutoReloadedShader> Shader::cache = loadLocalShaders();
+map<string, ofxAutoReloadedShader> Shader::cache = loadShaderCache();
 
 string Shader::random() {
     auto it = cache.begin();
@@ -22,36 +33,50 @@ string Shader::random() {
 }
 
 bool Shader::load(string path) {
-    if (cache.find(path) == cache.end()) {
-        ofxAutoReloadedShader sh;
-        cache[path] = sh;
+    vector<string> fragPaths = {
+        ofToDataPath(path),
+        ofToDataPath(path + ".frag"),
+    };
+    if (!ofFilePath::isAbsolute(path)) {
+        fragPaths.insert(fragPaths.end(), {
+            ofToDataPath("shaders/" + path),
+            ofToDataPath("shaders/" + path + ".frag"),
+        });
     }
-    string vertPath = "shaders/passthru.vert";
-    string fragPath = path + ".frag";
-    string geomPath = path + ".geom";
-    if (!ofFilePath::isAbsolute(fragPath)) {
-        fragPath = ofToDataPath("shaders/" + fragPath);
-        if (!ofFile(fragPath).exists()) {
-            fragPath = ofToDataPath(fragPath);
+    string fragPath = "";
+    for (int i=0; i<fragPaths.size(); i++) {
+        if (ofFile(fragPaths[i]).exists()) {
+            fragPath = fragPaths[i];
+            break;
         }
     }
-    if (!ofFilePath::isAbsolute(geomPath)) {
-        geomPath = ofToDataPath("shaders/" + geomPath);
-        if (!ofFile(geomPath).exists()) {
-            geomPath = ofToDataPath(geomPath);
+    if (fragPath != "") {
+        string vertPath = "shaders/passthru.vert";
+        string pathNoExt = fragPath.substr(0, fragPath.find(".frag"));
+        string tmpVertPath = pathNoExt + ".vert";
+        if (ofFile(tmpVertPath).exists()) {
+            vertPath = tmpVertPath;
         }
+        string geomPath = pathNoExt + ".geom";
+        if (cache.find(path) == cache.end()) {
+            ofxAutoReloadedShader sh;
+            cache[path] = sh;
+        }
+        shader = &cache[pathNoExt];
+        return cache[pathNoExt].load(vertPath, fragPath, geomPath);
     }
-    string tmpVertPath = fragPath.substr(0, fragPath.find(".frag")) + ".vert";
-    if (ofFile(tmpVertPath).exists()) {
-        vertPath = tmpVertPath;
-    }
-    shader = &cache[path];
-    return cache[path].load(vertPath, fragPath, geomPath);
+    ofLog() << "could not find shader " << path;
+    return false;
 }
 
 void Shader::update(Layer* layer) {
-    for (map<string, Texture>::iterator it=textures.begin(); it!=textures.end(); ++it) {
-        it->second.update(layer);
+    if (isLoaded()) {
+        for (map<string, Texture>::iterator it=textures.begin(); it!=textures.end(); ++it) {
+            it->second.update(layer);
+        }
+    }
+    else if (hasDefaultTexture()) {
+        getDefaultTexture().update(layer);
     }
 }
 
@@ -116,15 +141,11 @@ void Shader::setUniform(string name, const vector<float>& value) {
 }
 
 Texture& Shader::getDefaultTexture(bool create) {
-    string name = "tex";
-    if (create && textures.find(name) == textures.end()) {
+    if (create && textures.find(DEFAULT_TEX) == textures.end()) {
         Texture tex;
-        textures[name] = tex;
-        if (!isLoaded()) {
-            load("texture");
-        }
+        textures[DEFAULT_TEX] = tex;
     }
-    return getTexture(name);
+    return getTexture(DEFAULT_TEX);
 }
 
 void Shader::setTexture(const ofxOscMessage& m) {

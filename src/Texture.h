@@ -25,6 +25,7 @@ public:
     void unload();
     void clear();
     void update(Layer* layer);
+    void draw(Layer* layer);
     void reset();
     bool isFrameNew() const {
         return tex->isFrameNew();
