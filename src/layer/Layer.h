@@ -5,11 +5,19 @@
 #include "Sound.h"
 #include "Config.h"
 #include "LayerData.h"
-#include "LayerGeom.h"
+#include "Geom.h"
 #include "LayerShader.h"
+#include "GeomPool.h"
 
 class Layer {
 public:
+    Layer() {
+        static int nextId = 0;
+        _id = nextId++;
+    }
+    ~Layer() {
+        reset();
+    }
     void setup(int index, string dataSource = "");
     void layout(Layout layout, int layoutIndex, int layoutTotal);
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
@@ -24,9 +32,15 @@ public:
     void reset();
     void resetTransform();    
     void setShader(string path);
+    void setGeom(Geom* value) {
+        geom = value;
+    }
+    int getId() {
+        return _id;
+    }
     
     int index;
-    LayerGeom geom;
+    Geom* geom = NULL;
     LayerData data;
     LayerShader shader;
     glm::vec3 pos;
@@ -49,4 +63,7 @@ public:
     uint8_t delay = 0;
     ofMaterialSettings matSettings;
     ofMaterial material;
+    
+private:
+    int _id;
 };

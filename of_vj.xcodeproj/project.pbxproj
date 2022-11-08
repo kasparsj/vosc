@@ -27,6 +27,7 @@
 		2B7E6EEA291902BF00D78E40 /* Texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B7E6EE92919004900D78E40 /* Texture.cpp */; };
 		2B7E6F0929198B6300D78E40 /* FboPingPongTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B7E6F0729198B6300D78E40 /* FboPingPongTex.cpp */; };
 		2B7E6F0C29198CB100D78E40 /* ShaderPingPongTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B7E6F0A29198CB100D78E40 /* ShaderPingPongTex.cpp */; };
+		2BF27791291AACAD00E48476 /* GeomPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF27790291AACAA00E48476 /* GeomPool.cpp */; };
 		2BF2E5D72916CC440026CE01 /* LayerShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */; };
 		2BF2E5ED291830510026CE01 /* ImageTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5DC291830510026CE01 /* ImageTex.cpp */; };
 		2BF2E5EE291830510026CE01 /* HPVideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF2E5DE291830510026CE01 /* HPVideoTex.cpp */; };
@@ -98,7 +99,7 @@
 		E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */; };
 		E6EB0253C7456C2442D3560C /* Invert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 20CE1E405861E6EFEDA0A144 /* Invert.cpp */; };
 		F56110F5281631EA7D770D38 /* SplitComplementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4E2B4BC4A65212574815E669 /* SplitComplementary.cpp */; };
-		F7B83E7D0CAB59D9E8F8C9CD /* LayerGeom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1574D98230A5FA3F640B62D0 /* LayerGeom.cpp */; };
+		F7B83E7D0CAB59D9E8F8C9CD /* Geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1574D98230A5FA3F640B62D0 /* Geom.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -134,7 +135,7 @@
 		144656B571305328D7DB94BB /* LayerData.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerData.h; path = src/layer/LayerData.h; sourceTree = SOURCE_ROOT; };
 		14F8B4286F653202B881D865 /* ToonPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ToonPass.h; path = ../../../addons/ofxPostProcessing/src/ToonPass.h; sourceTree = SOURCE_ROOT; };
 		15644D27B8AD78E007263288 /* Rotate.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Rotate.cpp; path = ../../../addons/ofxPostProcessing/src/Rotate.cpp; sourceTree = SOURCE_ROOT; };
-		1574D98230A5FA3F640B62D0 /* LayerGeom.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerGeom.cpp; path = src/layer/LayerGeom.cpp; sourceTree = SOURCE_ROOT; };
+		1574D98230A5FA3F640B62D0 /* Geom.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Geom.cpp; path = src/Geom.cpp; sourceTree = SOURCE_ROOT; };
 		15FB2E86C44B0C97D2B82E65 /* ofxLooper.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxLooper.cpp; path = ../../../addons/ofxLooper/src/ofxLooper.cpp; sourceTree = SOURCE_ROOT; };
 		199A2F0F6EFDD17E50C9FD34 /* Pixelsort.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Pixelsort.cpp; path = ../../../addons/ofxPostProcessing/src/Pixelsort.cpp; sourceTree = SOURCE_ROOT; };
 		1E952AF032B351FB32CCBD2B /* Split.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Split.cpp; path = ../../../addons/ofxPostProcessing/src/Split.cpp; sourceTree = SOURCE_ROOT; };
@@ -190,6 +191,8 @@
 		2B7E6F11291A355600D78E40 /* TerrainGrid.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = TerrainGrid.frag; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
+		2BF2778F291AACAA00E48476 /* GeomPool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeomPool.h; sourceTree = "<group>"; };
+		2BF27790291AACAA00E48476 /* GeomPool.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GeomPool.cpp; sourceTree = "<group>"; };
 		2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = LayerShader.cpp; path = layer/LayerShader.cpp; sourceTree = "<group>"; };
 		2BF2E5D62916CC1F0026CE01 /* LayerShader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LayerShader.h; path = layer/LayerShader.h; sourceTree = "<group>"; };
 		2BF2E5DC291830510026CE01 /* ImageTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImageTex.cpp; sourceTree = "<group>"; };
@@ -343,7 +346,7 @@
 		54F36382628E4D0FF07206D7 /* RenderPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = RenderPass.cpp; path = ../../../addons/ofxPostProcessing/src/RenderPass.cpp; sourceTree = SOURCE_ROOT; };
 		55138D8657D9D09949E54626 /* ColorUtil.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorUtil.cpp; path = ../../../addons/ofxColorTheory/src/ColorUtil.cpp; sourceTree = SOURCE_ROOT; };
 		57B6FEE57FB75BD3A937508D /* Spiral.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Spiral.h; path = src/sketches/Spiral.h; sourceTree = SOURCE_ROOT; };
-		57DBCDF6EAF0B2339FC73E55 /* LayerGeom.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerGeom.h; path = src/layer/LayerGeom.h; sourceTree = SOURCE_ROOT; };
+		57DBCDF6EAF0B2339FC73E55 /* Geom.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Geom.h; path = src/Geom.h; sourceTree = SOURCE_ROOT; };
 		5BC56A60E911F7488A58830A /* NoiseWarpPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = NoiseWarpPass.cpp; path = ../../../addons/ofxPostProcessing/src/NoiseWarpPass.cpp; sourceTree = SOURCE_ROOT; };
 		5BE5C3443286643DF629CB82 /* Tetrad.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Tetrad.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Tetrad.cpp; sourceTree = SOURCE_ROOT; };
 		63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscOutboundPacketStream.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscOutboundPacketStream.cpp; sourceTree = SOURCE_ROOT; };
@@ -649,8 +652,6 @@
 				402AF494E736B54C67F4D3BF /* Layer.h */,
 				C23F79F9BFBAD0F41FB354FD /* LayerData.cpp */,
 				144656B571305328D7DB94BB /* LayerData.h */,
-				1574D98230A5FA3F640B62D0 /* LayerGeom.cpp */,
-				57DBCDF6EAF0B2339FC73E55 /* LayerGeom.h */,
 				2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */,
 				2BF2E5D62916CC1F0026CE01 /* LayerShader.h */,
 			);
@@ -1533,6 +1534,10 @@
 				97AC5D82D06DAB2345FDB039 /* Config.h */,
 				2BF2E67A291851FA0026CE01 /* FboPingPong.cpp */,
 				2BF2E679291851FA0026CE01 /* FboPingPong.h */,
+				1574D98230A5FA3F640B62D0 /* Geom.cpp */,
+				57DBCDF6EAF0B2339FC73E55 /* Geom.h */,
+				2BF27790291AACAA00E48476 /* GeomPool.cpp */,
+				2BF2778F291AACAA00E48476 /* GeomPool.h */,
 				1BF4AF61A21BC0CB4D19CFDE /* layer */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
@@ -1691,7 +1696,7 @@
 				C1104C02B7261C2D5DEF27CD /* Shader.cpp in Sources */,
 				3EBCD03048ED03CCB70D6972 /* LayerData.cpp in Sources */,
 				081251DFDA2F64A94FA7FE19 /* Layer.cpp in Sources */,
-				F7B83E7D0CAB59D9E8F8C9CD /* LayerGeom.cpp in Sources */,
+				F7B83E7D0CAB59D9E8F8C9CD /* Geom.cpp in Sources */,
 				2BF2E5EF291830510026CE01 /* SketchTex.cpp in Sources */,
 				6C8551DB2C641E610EA107BE /* Sound.cpp in Sources */,
 				622F2B6B3FFAA37224C22AD2 /* ofxAutoReloadedShader.cpp in Sources */,
@@ -1758,6 +1763,7 @@
 				2B7E6F0929198B6300D78E40 /* FboPingPongTex.cpp in Sources */,
 				8423EC7717BA98420F37A17F /* Pixelsort.cpp in Sources */,
 				BE5ED1FDB18D5092CF3AACA0 /* PostProcessing.cpp in Sources */,
+				2BF27791291AACAD00E48476 /* GeomPool.cpp in Sources */,
 				E4797F1786BE22985F7EE55F /* RGBShiftPass.cpp in Sources */,
 				2BF2E5F2291830510026CE01 /* FboTex.cpp in Sources */,
 				5790F39566203E0212580DB0 /* ReflectX.cpp in Sources */,

@@ -3,6 +3,7 @@
 #include "ofxHPVPlayer.h"
 #include "ShaderTex.h"
 #include "TexturePool.h"
+#include "GeomPool.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -270,7 +271,7 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
         if (command == "/tex") {
             string source = m.getArgAsString(1);
-            Texture* tex = &TexturePool::getOrCreate(source, layer->shader.getId());
+            Texture* tex = &TexturePool::getForShader(source, layer->shader.getId());
             layer->shader.setDefaultTexture(tex);
             if (tex->data.size.x == 0 && tex->data.size.y == 0) {
                 tex->data.setSize(layer->size.x, layer->size.y);
@@ -281,11 +282,19 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         }
         textureCommand(layer->shader.getDefaultTexture(), command, m);
     }
+    else if (command.substr(0, 5) == "/geom") {
+        if (command == "/geom") {
+            string source = m.getArgAsString(1);
+            Geom* geom = &GeomPool::getForLayer(source, layer->getId());
+            layer->setGeom(geom);
+            if (geom->isLoaded()) {
+                return;
+            }
+        }
+        geomCommand(layer->geom, command, m);
+    }
     else if (command.substr(0, 7) == "/shader") {
         shaderCommand(layer->shader, command, m);
-    }
-    else if (command.substr(0, 5) == "/geom") {
-        geomCommand(layer->geom, command, m);
     }
     else if (command.substr(0, 4) == "/mat") {
         materialCommand(layer->matSettings, command, m);
@@ -564,15 +573,15 @@ void ofApp::shaderCommand(Shader& shader, string command, const ofxOscMessage& m
     }
 }
 
-void ofApp::geomCommand(LayerGeom& geom, string command, const ofxOscMessage& m) {
+void ofApp::geomCommand(Geom* geom, string command, const ofxOscMessage& m) {
     if (command == "/geom") {
-        geom.load(m);
+        geom->load(m);
     }
     else if (command == "/geom/instanced") {
-        geom.drawInstanced = m.getArgAsInt(1);
+        geom->drawInstanced = m.getArgAsInt(1);
     }
     else if (command == "/geom/mesh/mode") {
-        geom.getMesh().setMode(static_cast<ofPrimitiveMode>(m.getArgAsInt(1)));
+        geom->getMesh().setMode(static_cast<ofPrimitiveMode>(m.getArgAsInt(1)));
     }
 }
 
@@ -722,8 +731,11 @@ void ofApp::processQueue() {
                 if (all) {
                     allLayersCommand(command, m);
                 }
-                else {
-                    textureCommand(&TexturePool::get(which, true), command, m);
+                else if (command.substr(0, 4) == "/tex") {
+                    textureCommand(&TexturePool::getShared(which, true), command, m);
+                }
+                else if (command.substr(0, 5) == "/geom") {
+                    geomCommand(&GeomPool::getShared(which, true), command, m);
                 }
             }
             else {
@@ -861,7 +873,7 @@ void ofApp::draw(){
             ofSetColor(255);
             ofPushMatrix();
             ofTranslate(20+i*120+60, ofGetHeight()-180);
-            layers[i]->geom.getMesh().draw(OF_MESH_WIREFRAME);
+            layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
             ofPopMatrix();
             if (layers[i]->shader.isLoaded()) {
                 ofSetColor(255);
@@ -921,7 +933,7 @@ void ofApp::keyPressed(int key){
         }
         case 'w': {
             for (int i=0; i<layers.size(); i++) {
-                layers[i]->geom.drawWireframe = !layers[i]->geom.drawWireframe;
+                layers[i]->geom->drawWireframe = !layers[i]->geom->drawWireframe;
             }
             break;
         }

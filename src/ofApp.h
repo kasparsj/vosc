@@ -52,7 +52,7 @@ public:
     void textureCommand(Texture* tex, string command, const ofxOscMessage &m);
     void texDataCommand(TexData& data, string command, const ofxOscMessage &m);
     void shaderCommand(Shader& shader, string command, const ofxOscMessage& m);
-    void geomCommand(LayerGeom& geom, string command, const ofxOscMessage& m);
+    void geomCommand(Geom* geom, string command, const ofxOscMessage& m);
     void materialCommand(ofMaterialSettings& matSettings, string command, const ofxOscMessage& m);
     void handleFloat(float *value, const ofxOscMessage &m);
     void handlePercent(float *value, const ofxOscMessage &m);

@@ -1,17 +1,17 @@
-#include "LayerGeom.h"
+#include "Geom.h"
 #include "Layer.h"
 
-vector<string> LayerGeom::primitives = {"box", "sphere", "icosphere", "cylinder", "plane", "cone"};
+vector<string> Geom::primitives = {"box", "sphere", "icosphere", "cylinder", "plane", "cone"};
 
-bool LayerGeom::isPrimitive(string path) {
+bool Geom::isPrimitive(string path) {
     return find(primitives.begin(), primitives.end(), path) != primitives.end();
 }
 
-string LayerGeom::random() {
+string Geom::random() {
     return primitives[int(ofRandom(primitives.size()))];
 }
 
-void LayerGeom::load(string newPath, const vector<float>& args) {
+void Geom::load(string newPath, const vector<float>& args) {
     if (isPrimitive(newPath)) {
         if (primitive != NULL) {
             delete primitive;
@@ -39,7 +39,7 @@ void LayerGeom::load(string newPath, const vector<float>& args) {
     }
 }
 
-void LayerGeom::load(const ofxOscMessage &m) {
+void Geom::load(const ofxOscMessage &m) {
     string newPath = m.getArgAsString(1);
     vector<float> args;
     for (int i=2; i<m.getNumArgs(); i++) {
@@ -48,7 +48,7 @@ void LayerGeom::load(const ofxOscMessage &m) {
     load(newPath, args);
 }
 
-bool LayerGeom::loadPrimitive(const vector<float>& args) {
+bool Geom::loadPrimitive(const vector<float>& args) {
     if (path == "plane") {
         primitive = new ofPlanePrimitive(args.size() > 0 ? args[0] : 100,
                                          args.size() > 1 ? args[1] : 100,
@@ -82,7 +82,7 @@ bool LayerGeom::loadPrimitive(const vector<float>& args) {
     return false;
 }
 
-bool LayerGeom::loadGrass(const vector<float>& args) {
+bool Geom::loadGrass(const vector<float>& args) {
     int resX = args[0];
     int resY = args[0];
     
@@ -120,14 +120,14 @@ bool LayerGeom::loadGrass(const vector<float>& args) {
     return true;
 }
 
-void LayerGeom::choose() {
+void Geom::choose() {
     path = random();
 }
 
-void LayerGeom::update() {
+void Geom::update() {
 }
 
-void LayerGeom::draw() {
+void Geom::draw() {
     if (drawInstanced > 1) {
         mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
     }

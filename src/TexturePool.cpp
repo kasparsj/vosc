@@ -1,30 +1,51 @@
 #include "TexturePool.h"
 
-map<string, Texture> TexturePool::pool = {};
-
-Texture& TexturePool::get(string which, bool create) {
-    if (create && pool.find(which) == pool.end()) {
-        pool[which] = Texture();
-    }
-    return pool[which];
+map<int, map<string, Texture>*> createTexturePool() {
+    map<string, Texture>* shared = new map<string, Texture>;
+    map<int, map<string, Texture>*> pool;
+    pool[-1] = shared;
+    return pool;
 }
 
-Texture& TexturePool::getOrCreate(string source, int shaderId) {
-    if (pool.find(source) == pool.end()) {
-        pool[ofToString(shaderId) + "__" + source] = Texture();
-        return pool[ofToString(shaderId) + "__" + source];
+map<int, map<string, Texture>*> TexturePool::pool = createTexturePool();
+
+bool TexturePool::hasShared(string name) {
+    map<string, Texture>* sharedPool = pool[-1];
+    return sharedPool->find(name) != sharedPool->end();
+}
+
+Texture& TexturePool::getShared(string name, bool create) {
+    map<string, Texture>* sharedPool = pool[-1];
+    if (create && !hasShared(name)) {
+        (*sharedPool)[name] = Texture();
+    }
+    return (*sharedPool)[name];
+}
+
+Texture& TexturePool::getForShader(string source, int shaderId) {
+    if (hasShared(source)) {
+        return getShared(source);
     }
     else {
-        return get(source);
+        map<string, Texture>* shaderPool = pool[shaderId];
+        if (shaderPool == NULL) {
+            shaderPool = new map<string, Texture>();
+            pool[shaderId] = shaderPool;
+        }
+        (*shaderPool)[source] = Texture();
+        return (*shaderPool)[source];
     }
 }
 
 void TexturePool::update() {
-    for (map<string, Texture>::iterator it=pool.begin(); it!=pool.end(); ++it) {
-        it->second.update();
+    for (map<int, map<string, Texture>*>::iterator it=pool.begin(); it!=pool.end(); ++it) {
+        for (map<string, Texture>::iterator it2=it->second->begin(); it2!=it->second->end(); ++it2) {
+            it2->second.update();
+        }
     }
 }
 
 void TexturePool::clean(int shaderId) {
-    
+    delete pool[shaderId];
+    pool.erase(shaderId);
 }

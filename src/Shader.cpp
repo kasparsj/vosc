@@ -115,7 +115,7 @@ void Shader::end() {
 void Shader::reset() {
     textures.empty();
     uniforms.empty();
-    
+    TexturePool::clean(_id);
 }
 
 void Shader::setUniform(const ofxOscMessage& m) {
@@ -154,7 +154,11 @@ void Shader::setTexture(string name, const ofxOscMessage& m, int arg) {
         delete textures[name];
         textures.erase(name);
     }
-    // todo: implement shared textures
-    textures[name] = &TexturePool::get(ofToString(_id) + "_" + name, true);
-    textures[name]->load(m, arg);
+    if (TexturePool::hasShared(name)) {
+        textures[name] = &TexturePool::getShared(name);
+    }
+    else {
+        textures[name] = &TexturePool::getForShader(name, _id);
+        textures[name]->load(m, arg);
+    }
 }

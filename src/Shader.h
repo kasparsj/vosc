@@ -16,11 +16,11 @@ public:
     static string random();
     
     Shader() {
-        static int sid = 0;
-        _id = sid++;
+        static int nextId = 0;
+        _id = nextId++;
     }
     ~Shader() {
-        TexturePool::clean(_id);
+        reset();
     }
     bool isLoaded() const {
         return shader != NULL && shader->isLoaded();
