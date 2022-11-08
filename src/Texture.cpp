@@ -8,6 +8,16 @@
 #include "WebcamTex.h"
 #include "DrawTex.h"
 
+map<string, Texture> Texture::pool = {};
+
+Texture& Texture::getFromPool(string which, bool create) {
+    if (create && pool.find(which) == pool.end()) {
+        Texture tex;
+        pool[which] = tex;
+    }
+    return pool[which];
+}
+
 bool isColor(string path) {
     return (path.substr(0, 1) == "#" && path.size() == 7) || (path.substr(0, 2) == "0x" && path.size() == 8);
 }
@@ -100,6 +110,9 @@ Tex* Texture::factory(string source, const vector<float>& args) {
 
 void Texture::load(string source, const vector<float>& args) {
     unload();
+    if (pool.find(source) != pool.end()) {
+        // todo: implement
+    }
     bool explicitType = source.find(":") != string::npos;
     if (explicitType && source.substr(0, 4) != "http") {
         tex = factory(source, args);
@@ -245,6 +258,28 @@ void Texture::draw(Layer* layer) {
     else if (hasTexture(layer->delay)) {
         // todo: implement aspect ratio
         getTexture(layer->delay).draw(glm::vec2(0, 0), layer->size.x, layer->size.y);
+    }
+}
+
+void Texture::setNumFrames(int value) {
+    numFrames = value;
+    frames.resize(numFrames);
+}
+
+void Texture::setFboSettings(const ofxOscMessage &m) {
+    std::unordered_map<string, function<void(int, ofFbo::Settings&)>> mapping;
+    mapping["numColorbuffers"] = [](int v, ofFbo::Settings& a) { a.numColorbuffers = v; };
+    mapping["useDepth"] = [](int v, ofFbo::Settings& a) { a.useDepth = v; };
+    mapping["internalformat"] = [](int v, ofFbo::Settings& a) { a.internalformat = v; };
+    mapping["textureTarget"] = [](int v, ofFbo::Settings& a) { a.textureTarget = v; };
+    mapping["wrapModeHorizontal"] = [](int v, ofFbo::Settings& a) { a.wrapModeHorizontal = v; };
+    mapping["wrapModeVertical"] = [](int v, ofFbo::Settings& a) { a.wrapModeVertical = v; };
+    mapping["minFilter"] = [](int v, ofFbo::Settings& a) { a.minFilter = v; };
+    mapping["maxFilter"] = [](int v, ofFbo::Settings& a) { a.maxFilter = v; };
+    string key = m.getArgAsString(1);
+    int value = m.getArgAsInt(2);
+    if (mapping.find(key) == mapping.end()) {
+        mapping[key](value, fboSettings);
     }
 }
 

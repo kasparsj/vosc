@@ -101,7 +101,6 @@ public:
     
     vector<Sound> sounds;
     vector<Layer*> layers = {0};
-    map<string, Texture> textures;
     int waitOnset = -1;
     bool forceOnset;
     

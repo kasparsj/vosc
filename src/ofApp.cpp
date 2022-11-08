@@ -674,11 +674,7 @@ void ofApp::processQueue() {
                     allLayersCommand(command, m);
                 }
                 else {
-                    if (textures.find(which) == textures.end()) {
-                        Texture tex;
-                        textures[which] = tex;
-                    }
-                    textureCommand(textures[which], command, m);
+                    textureCommand(Texture::getFromPool(which, true), command, m);
                 }
             }
             else {
