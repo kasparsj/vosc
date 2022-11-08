@@ -1,121 +1,17 @@
 #include "Texture.h"
-#include "ShaderTex.h"
-#include "ShaderPingPongTex.h"
-#include "VideoTex.h"
 #include "SketchTex.h"
-#include "ImageTex.h"
-#include "HPVideoTex.h"
-#include "WebcamTex.h"
-#include "DrawTex.h"
-
-map<string, Texture> Texture::pool = {};
-
-Texture& Texture::getFromPool(string which, bool create) {
-    if (create && pool.find(which) == pool.end()) {
-        Texture tex;
-        pool[which] = tex;
-    }
-    return pool[which];
-}
+#include "Config.h"
+#include "Layer.h"
 
 bool isColor(string path) {
     return (path.substr(0, 1) == "#" && path.size() == 7) || (path.substr(0, 2) == "0x" && path.size() == 8);
 }
 
-Tex* Texture::factory(string type, string path, const vector<float>& args) {
-    Tex *tex = NULL;
-    auto it = SourceMap.find(type);
-    if (it != SourceMap.end()) {
-        switch (it->second) {
-            case Source::VIDEO:
-                tex = new VideoTex(path, args);
-                break;
-            case Source::HPV:
-                tex = new HPVideoTex(path, args);
-                break;
-            case Source::SHADER:
-                tex = new ShaderTex(path, args);
-                break;
-            case Source::SHADER_PP:
-                tex = new ShaderPingPongTex(path, args);
-                break;
-            case Source::SKETCH:
-                tex = new SketchTex(path, args);
-                break;
-            case Source::IMAGE:
-                tex = new ImageTex(path, args);
-                break;
-            case Source::WEBCAM:
-                tex = new WebcamTex(path, args);
-                break;
-            case Source::DRAW:
-                tex = new DrawTex(path, args);
-                break;
-            case Source::COLOR:
-                tex = new ShaderTex(path, args);
-                dynamic_cast<ShaderTex*>(tex)->setUniform("color", args);
-                break;
-        }
-    }
-    return tex;
-}
-
-Tex* Texture::factory(string source, const vector<float>& args) {
-    string type = source;
-    string path = "";
-    bool explicitType = source.find(":") != string::npos;
-    if (explicitType) {
-        type = source.substr(0, source.find(":"));
-        path = source.substr(source.find(":") + 1);
-    }
-    if (path == "") {
-        auto it = SourceMap.find(type);
-        if (it != SourceMap.end()) {
-            switch (it->second) {
-                case Source::VIDEO:
-                    path = VideoTex::random();
-                    break;
-                case Source::HPV:
-                    path = HPVideoTex::random();
-                    break;
-                case Source::SHADER:
-                    path = ShaderTex::random();
-                    break;
-                case Source::SHADER_PP:
-                    path = ShaderPingPongTex::random();
-                    break;
-                case Source::SKETCH:
-                    path = SketchTex::random();
-                    break;
-                case Source::IMAGE:
-                    path = ImageTex::random();
-                    break;
-                case Source::WEBCAM:
-                    path = WebcamTex::random();
-                    break;
-                case Source::DRAW:
-                    path = DrawTex::random();
-                    break;
-                case Source::COLOR: {
-                    Tex* tex = factory("shader", "color", args);
-                    ofFloatColor color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
-                    dynamic_cast<ShaderTex*>(tex)->setUniform("color", color);
-                    return tex;
-                }
-            }
-        }
-    }
-    return factory(type, path, args);
-}
-
 void Texture::load(string source, const vector<float>& args) {
     unload();
-    if (pool.find(source) != pool.end()) {
-        // todo: implement
-    }
     bool explicitType = source.find(":") != string::npos;
     if (explicitType && source.substr(0, 4) != "http") {
-        tex = factory(source, args);
+        tex = Tex::factory(source, args);
     }
     else {
         string extension = ofFile(source).getExtension();
@@ -123,25 +19,25 @@ void Texture::load(string source, const vector<float>& args) {
             extension[i] = tolower(extension[i]);
         }
         if (extension == "frag") {
-            tex = factory("shader", source, args);
+            tex = Tex::factory("shader", source, args);
         }
         else if (extension == "jpg" || extension == "jpeg" || extension == "png") {
-            tex = factory("image", source, args);
+            tex = Tex::factory("image", source, args);
         }
         else if (extension == "mov") {
-            tex = factory("video", source, args);
+            tex = Tex::factory("video", source, args);
         }
         else if (extension == "hpv") {
-            tex = factory("hpv", source, args);
+            tex = Tex::factory("hpv", source, args);
         }
         else {
             if (isColor(source)) {
                 ofFloatColor color = ofFloatColor::fromHex(ofHexToInt(source));
                 vector<float> args1 = {color.r, color.g, color.b, color.a};
-                tex = factory("color", "color", args1);
+                tex = Tex::factory("color", "color", args1);
             }
             else if (SketchTex::exists(source)) {
-                tex = factory("sketch", source, args);
+                tex = Tex::factory("sketch", source, args);
             }
         }
     }
@@ -165,7 +61,7 @@ void Texture::choose(string type, const vector<float>& args) {
         advance(it, int(ofRandom(SourceMap.size())));
         type = it->first;
     }
-    tex = factory(type, args);
+    tex = Tex::factory(type, args);
     if (tex == NULL) {
         ofLog() << "invalid source type " << type;
     }
@@ -207,15 +103,16 @@ void Texture::clear() {
     }
 }
 
-void Texture::update(Layer* layer) {
+void Texture::update() {
     if (isLoaded()) {
-        if (fboSettings.width == 0) {
-            fboSettings.width = layer->size.x;
-        }
-        if (fboSettings.height == 0) {
-            fboSettings.height = layer->size.y;
-        }
-        tex->update(layer, this);
+        // todo: fix
+//        if (fboSettings.width == 0) {
+//            fboSettings.width = layer->size.x;
+//        }
+//        if (fboSettings.height == 0) {
+//            fboSettings.height = layer->size.y;
+//        }
+        tex->update(data);
         
         if (looper != NULL) {
             looper->swapBuffers(/*forceSwap*/);
@@ -236,17 +133,16 @@ void Texture::drawFrame() {
     ofFbo& fbo = frames[curFbo];
     if (!fbo.isAllocated()) {
         // todo: should frame fboSettings be different or same?
-        allocate(fbo);
+        data.allocate(fbo);
     }
     fbo.begin();
     ofClear(0, 0, 0, 0);
-    glm::vec2 size = getSize();
     if (looper == NULL) {
-        tex->draw(size);
+        tex->draw(data.size);
     }
     else {
         ofSetColor(255);
-        looper->draw(0, 0, size.x, size.y);
+        looper->draw(0, 0, data.size.x, data.size.y);
     }
     fbo.end();
 }
@@ -264,29 +160,6 @@ void Texture::draw(Layer* layer) {
 void Texture::setNumFrames(int value) {
     numFrames = value;
     frames.resize(numFrames);
-}
-
-void Texture::setFboSettings(const ofxOscMessage &m) {
-    std::unordered_map<string, function<void(int, ofFbo::Settings&)>> mapping;
-    mapping["numColorbuffers"] = [](int v, ofFbo::Settings& a) { a.numColorbuffers = v; };
-    mapping["useDepth"] = [](int v, ofFbo::Settings& a) { a.useDepth = v; };
-    mapping["internalformat"] = [](int v, ofFbo::Settings& a) { a.internalformat = v; };
-    mapping["textureTarget"] = [](int v, ofFbo::Settings& a) { a.textureTarget = v; };
-    mapping["wrapModeHorizontal"] = [](int v, ofFbo::Settings& a) { a.wrapModeHorizontal = v; };
-    mapping["wrapModeVertical"] = [](int v, ofFbo::Settings& a) { a.wrapModeVertical = v; };
-    mapping["minFilter"] = [](int v, ofFbo::Settings& a) { a.minFilter = v; };
-    mapping["maxFilter"] = [](int v, ofFbo::Settings& a) { a.maxFilter = v; };
-    string key = m.getArgAsString(1);
-    int value = m.getArgAsInt(2);
-    if (mapping.find(key) == mapping.end()) {
-        mapping[key](value, fboSettings);
-    }
-}
-
-void Texture::allocate(ofFbo& fbo) {
-    ofDisableTextureEdgeHack();
-    fbo.allocate(fboSettings);
-    ofEnableTextureEdgeHack();
 }
 
 void Texture::reset() {

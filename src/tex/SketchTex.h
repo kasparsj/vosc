@@ -15,7 +15,7 @@ public:
             delete impl;
         }
     }
-    void update(Layer *layer, Texture* tex) override;
+    void update(TexData& data) override;
     void draw(const glm::vec2 &size) override;
     void choose() override;
     void reset() override;

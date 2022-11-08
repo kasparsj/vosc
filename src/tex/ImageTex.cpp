@@ -18,7 +18,7 @@ string ImageTex::random() {
     return cache[int(ofRandom(cache.size()))];
 }
 
-void ImageTex::update(Layer *layer, Texture* tex) {
+void ImageTex::update(TexData& data) {
     if (!image.isAllocated()) {
         string absPath = path;
         if (absPath.substr(0, 7) != "http://" && absPath.substr(0, 8) != "https://" && !ofFilePath::isAbsolute(absPath)) {
@@ -29,10 +29,7 @@ void ImageTex::update(Layer *layer, Texture* tex) {
         }
         if (image.load(absPath)) {
             prevPath = path;
-            layer->randomSeed = ofRandom(1000);
-            if (layer->color == ofFloatColor(0, 0)) {
-                layer->color = ofFloatColor(1);
-            }
+            data.setSize(image.getWidth(), image.getHeight());
         }
         else {
             ofLog() << "could not load image: " << path;
@@ -40,7 +37,7 @@ void ImageTex::update(Layer *layer, Texture* tex) {
             return;
         }
     }
-    aspectRatio = tex->aspectRatio;
+    aspectRatio = data.aspectRatio;
 }
 
 void ImageTex::draw(const glm::vec2 &size) {

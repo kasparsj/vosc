@@ -25,7 +25,7 @@
 ~visuals.sendMsg('/tex/shader/uniform', "particlesData", "baseSpeed", 0.5, 0, 0);
 
 ~visuals.sendMsg('/shader', 0, "particles/DrawInstancedGeometry");
-~visuals.sendMsg('/shader/texture', 0, "particlesData");
+~visuals.sendMsg('/tex', 0, "particlesData");
 //~visuals.sendMsg('', "u_resolution", particleDataFbo.source()->getWidth(), particleDataFbo.source()->getHeight() );
 ~visuals.sendMsg('/shader/uniform', 0, "particleMaxAge", 10);
 //~visuals.sendMsg('', "numLights", 1 );

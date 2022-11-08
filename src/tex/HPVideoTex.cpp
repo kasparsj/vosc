@@ -22,7 +22,7 @@ string HPVideoTex::random() {
     return cache[int(ofRandom(cache.size()))];
 }
 
-void HPVideoTex::update(Layer *layer, Texture* tex) {
+void HPVideoTex::update(TexData& data) {
     if (!hpvPlayer.isLoaded()) {
         string absPath = path;
         if (!ofFilePath::isAbsolute(absPath)) {
@@ -34,13 +34,12 @@ void HPVideoTex::update(Layer *layer, Texture* tex) {
         if (hpvPlayer.load(absPath)) {
             //hpvPlayer.setVolume(0);
             hpvPlayer.setLoopState(OF_LOOP_NORMAL);
-            seek(layer->timePct);
+            seek(data.timePct);
             hpvPlayer.play();
             prevPath = path;
-            layer->randomSeed = ofRandom(1000);
-            if (layer->color == ofFloatColor(0, 0)) {
-                layer->color = ofFloatColor(1);
-            }
+//            if (layer->color == ofFloatColor(0, 0)) {
+//                layer->color = ofFloatColor(1);
+//            }
         }
         else {
             ofLog() << "could not load hpv: " << path;
@@ -48,10 +47,10 @@ void HPVideoTex::update(Layer *layer, Texture* tex) {
             return;
         }
     }
-    else if (layer->data.onset) {
-        seek(layer->timePct);
-    }
-    aspectRatio = tex->aspectRatio;
+//    else if (layer->data.onset) {
+//        seek(layer->timePct);
+//    }
+    aspectRatio = data.aspectRatio;
 }
 
 void HPVideoTex::seek(float pct) {

@@ -22,6 +22,8 @@
 		28AFD6FA9B9C885AFD9FF1C7 /* HorizontalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
 		2B015CFF291876390089FC16 /* DrawTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B015CFD291876390089FC16 /* DrawTex.cpp */; };
+		2B600631291A64D200982D54 /* TexturePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B60062F291A64D200982D54 /* TexturePool.cpp */; };
+		2B600634291A716500982D54 /* TexData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B600632291A716500982D54 /* TexData.cpp */; };
 		2B7E6EEA291902BF00D78E40 /* Texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B7E6EE92919004900D78E40 /* Texture.cpp */; };
 		2B7E6F0929198B6300D78E40 /* FboPingPongTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B7E6F0729198B6300D78E40 /* FboPingPongTex.cpp */; };
 		2B7E6F0C29198CB100D78E40 /* ShaderPingPongTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B7E6F0A29198CB100D78E40 /* ShaderPingPongTex.cpp */; };
@@ -148,6 +150,10 @@
 		2B015CFB29186EC10089FC16 /* Grass.geom */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grass.geom; sourceTree = "<group>"; };
 		2B015CFD291876390089FC16 /* DrawTex.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DrawTex.cpp; sourceTree = "<group>"; };
 		2B015CFE291876390089FC16 /* DrawTex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DrawTex.h; sourceTree = "<group>"; };
+		2B60062F291A64D200982D54 /* TexturePool.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TexturePool.cpp; sourceTree = "<group>"; };
+		2B600630291A64D200982D54 /* TexturePool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TexturePool.h; sourceTree = "<group>"; };
+		2B600632291A716500982D54 /* TexData.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TexData.cpp; sourceTree = "<group>"; };
+		2B600633291A716500982D54 /* TexData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TexData.h; sourceTree = "<group>"; };
 		2B7E6EE72918F4DE00D78E40 /* RayMarchingCloudsVolumeofCamera.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RayMarchingCloudsVolumeofCamera.frag; sourceTree = "<group>"; };
 		2B7E6EE82918F4DE00D78E40 /* RayMarchingCloudsVolumeofCamera.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = RayMarchingCloudsVolumeofCamera.vert; sourceTree = "<group>"; };
 		2B7E6EE92919004900D78E40 /* Texture.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Texture.cpp; sourceTree = "<group>"; };
@@ -757,6 +763,8 @@
 				2BF2E5E7291830510026CE01 /* VideoTex.h */,
 				2BF2E5EC291830510026CE01 /* WebcamTex.cpp */,
 				2BF2E5DF291830510026CE01 /* WebcamTex.h */,
+				2B600632291A716500982D54 /* TexData.cpp */,
+				2B600633291A716500982D54 /* TexData.h */,
 			);
 			path = tex;
 			sourceTree = "<group>";
@@ -1538,6 +1546,8 @@
 				2BF2E5DB291830510026CE01 /* tex */,
 				2B7E6EE92919004900D78E40 /* Texture.cpp */,
 				0261DFB3A4808E21B3543B62 /* Texture.h */,
+				2B60062F291A64D200982D54 /* TexturePool.cpp */,
+				2B600630291A64D200982D54 /* TexturePool.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1675,6 +1685,7 @@
 				2B7E6EEA291902BF00D78E40 /* Texture.cpp in Sources */,
 				2BF2E5D72916CC440026CE01 /* LayerShader.cpp in Sources */,
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
+				2B600631291A64D200982D54 /* TexturePool.cpp in Sources */,
 				2BF2E5F3291830510026CE01 /* Tex.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
 				C1104C02B7261C2D5DEF27CD /* Shader.cpp in Sources */,
@@ -1754,6 +1765,7 @@
 				AD20459C5F8C4A24CE257C0C /* ReflectY.cpp in Sources */,
 				2BF2E5F4291830510026CE01 /* WebcamTex.cpp in Sources */,
 				1E615236D6D182DED6C8A8B2 /* RenderPass.cpp in Sources */,
+				2B600634291A716500982D54 /* TexData.cpp in Sources */,
 				4A2B684DF41F7779B2947319 /* RimHighlightingPass.cpp in Sources */,
 				A40A1934868B9C3BEF746DFA /* Rotate.cpp in Sources */,
 				4355FD81C3F9DDE40B10CE94 /* SSAOPass.cpp in Sources */,

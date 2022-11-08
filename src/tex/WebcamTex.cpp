@@ -18,14 +18,13 @@ int WebcamTex::random() {
     return devices[int(ofRandom(devices.size()))].id;
 }
 
-void WebcamTex::update(Layer* layer, Texture* tex) {
+void WebcamTex::update(TexData& data) {
     if (!vidGrabber.isInitialized()) {
         vidGrabber.setDeviceID(stoi(path));
-        glm::vec2 size = tex->getSize();
-        vidGrabber.setup(size.x, size.y);
+        vidGrabber.setup(data.size.x, data.size.y);
     }
     vidGrabber.update();
-    aspectRatio = tex->aspectRatio;
+    aspectRatio = data.aspectRatio;
 }
 
 void WebcamTex::draw(const glm::vec2 &size) {

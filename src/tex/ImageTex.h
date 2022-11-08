@@ -9,7 +9,7 @@ public:
     
     ImageTex(string path, const vector<float>& args) : Tex(path, args) {}
     ~ImageTex() {}
-    void update(Layer *layer, Texture* tex) override;
+    void update(TexData& data) override;
     void draw(const glm::vec2 &size) override;
     void choose() override;
     ofTexture & getTexture() override {

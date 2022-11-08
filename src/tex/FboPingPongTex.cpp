@@ -1,11 +1,10 @@
 #include "FboPingPongTex.h"
 #include "Layer.h"
 
-void FboPingPongTex::update(Layer* layer, Texture* tex) {
-    glm::vec2 size = tex->getSize();
-    if (!fbo.isAllocated() || (fbo.source()->getWidth() != size.x || fbo.source()->getHeight() != size.y)) {
+void FboPingPongTex::update(TexData& data) {
+    if (!fbo.isAllocated() || (fbo.source()->getWidth() != data.size.x || fbo.source()->getHeight() != data.size.y)) {
         //fbo.clear();
-        fbo.allocate(tex->fboSettings);
+        fbo.allocate(data.getFboSettings());
     }
 }
 

@@ -39,11 +39,11 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
     if (shader.isLoaded() || shader.hasDefaultTexture()) {
         data.update(sounds, notes);
         rotation += rotationSpeed;
-        if (useRandomColor) {
-            color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+        if (data.useRandomColor) {
+            data.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
         }
     }
-    shader.update(this);
+    shader.update();
     material.setup(matSettings);
     geom.update();
 }
@@ -57,12 +57,23 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
     doRotate();
     doScale();
     ofPushStyle();
-    ofSetColor(getTint() * bri, alpha * 255);
+    ofSetColor(data.getTint() * bri, alpha * 255);
     
     if (shader.isLoaded()) {
         ofTranslate(pos + size/2.f);
         ofScale(size / glm::vec3(100, -100, 100));
-        shader.begin(this);
+        
+        shader.begin(delay);
+        shader.getShader()->setUniform1f("time", data.time);
+        shader.getShader()->setUniform2f("resolution", size.x, size.y);
+        shader.getShader()->setUniform2f("offset", pos.x, pos.y);
+        shader.getShader()->setUniform1i("index", index);
+        // todo: fix, overlaps with Source::COLOR
+        shader.getShader()->setUniform4f("color", data.getColor());
+        shader.getShader()->setUniform1i("random", data.randomSeed);
+        shader.getShader()->setUniform1i("num_values", data.values.size());
+        shader.getShader()->setUniform1fv("values", data.values.data(), data.values.size());
+        shader.getShader()->setUniform1i("onset", data.onset ? 1 : 0);
         // todo: fix material
         //material.begin();
         geom.draw();
@@ -70,7 +81,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
         shader.end();
     }
     else if (shader.hasDefaultTexture()) {
-        shader.getDefaultTexture().draw(this);
+        shader.getDefaultTexture()->draw(this);
     }
     
     ofPopStyle();
@@ -173,10 +184,8 @@ void Layer::reset() {
 }
 
 void Layer::resetTransform() {
-    speed = 1.f;
     alpha = 1.f;
     bri = 1.f;
-    color = ofFloatColor(0, 0);
     rotation = glm::vec3(0, 0, 0);
     rotationPoint = glm::vec3(0, 0, 0);
     rotationSpeed = glm::vec3(0, 0, 0);

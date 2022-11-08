@@ -1,12 +1,11 @@
 #include "ShaderTex.h"
 #include "Layer.h"
 
-void ShaderTex::update(Layer *layer, Texture* tex) {
-    FboTex::update(layer, tex);
+void ShaderTex::update(TexData& data) {
+    FboTex::update(data);
     if (!isLoaded()) {
         if (load(path)) {
             prevPath = path;
-            layer->randomSeed = ofRandom(1000);
         }
         else {
             ofLog() << "could not load shader: " << path;
@@ -14,17 +13,16 @@ void ShaderTex::update(Layer *layer, Texture* tex) {
             return;
         }
     }
-    ofEnableBlendMode(tex->blendMode);
+    ofEnableBlendMode(data.blendMode);
     fbo.begin();
-    if (tex->fboSettings.numColorbuffers > 1) {
+    if (data.getFboSettings().numColorbuffers > 1) {
         fbo.activateAllDrawBuffers(); // if we have multiple color buffers in our FBO we need this to activate all of them
     }
-    if (!tex->noClear) {
+    if (!data.noClear) {
         ofClear(0, 0, 0, 0);
     }
-    glm::vec2 size = tex->getSize();
-    begin(layer);
-    ofDrawRectangle(0, 0, size.x, size.y);
+    begin();
+    ofDrawRectangle(0, 0, data.size.x, data.size.y);
     end();
     fbo.end();
     ofDisableBlendMode();

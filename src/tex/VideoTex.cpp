@@ -20,7 +20,7 @@ string VideoTex::random() {
     return cache[int(ofRandom(cache.size()))];
 }
 
-void VideoTex::update(Layer *layer, Texture* tex) {
+void VideoTex::update(TexData& data) {
     if (!videoPlayer.isLoaded()) {
         videoPlayer.close();
         string absPath = path;
@@ -33,13 +33,10 @@ void VideoTex::update(Layer *layer, Texture* tex) {
         if (videoPlayer.load(absPath)) {
             videoPlayer.setVolume(0);
             videoPlayer.setLoopState(OF_LOOP_NORMAL);
-            seek(layer->timePct);
+            seek(data.timePct);
             videoPlayer.play();
             prevPath = path;
-            layer->randomSeed = ofRandom(1000);
-            if (layer->color == ofFloatColor(0, 0)) {
-                layer->color = ofFloatColor(1);
-            }
+            data.setSize(videoPlayer.getWidth(), videoPlayer.getHeight());
         }
         else {
             ofLog() << "could not load video: " << path;
@@ -47,10 +44,10 @@ void VideoTex::update(Layer *layer, Texture* tex) {
             return;
         }
     }
-    else if (layer->data.onset) {
-        seek(layer->timePct);
-    }
-    aspectRatio = tex->aspectRatio;
+//    else if (layer->data.onset) {
+//        seek(layer->timePct);
+//    }
+    aspectRatio = data.aspectRatio;
     videoPlayer.update();
 }
 

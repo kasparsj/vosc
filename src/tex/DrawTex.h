@@ -9,7 +9,7 @@ public:
     
     DrawTex(string path, const vector<float>& args) : FboTex(path, args) {}
     ~DrawTex() {}
-    void update(Layer* layer, Texture* tex) override;
+    void update(TexData& data) override;
     void choose() override;
 
 };

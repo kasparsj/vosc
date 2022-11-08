@@ -9,7 +9,7 @@ public:
     
     VideoTex(string name, const vector<float>& args) : Tex(name, args) {}
     ~VideoTex() {}
-    void update(Layer* layer, Texture* tex) override;
+    void update(TexData& data) override;
     void seek(float pct);
     void draw(const glm::vec2 &size) override;
     void choose() override;

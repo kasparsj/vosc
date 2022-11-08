@@ -3,7 +3,7 @@
 
 void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     const float timef = ofGetElapsedTimef();
-    time += ((timef - prevTime) * layer->speed);
+    time += ((timef - prevTime) * speed);
     prevTime = timef;
     const vector<string> &ds = layer->dataSources;
     tidal = ds.size() && ds[0].substr(0, 5) == "tidal";

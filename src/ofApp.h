@@ -49,7 +49,8 @@ public:
     void layerCommand(Layer *layer, string command, const ofxOscMessage &m);
     void allLayersCommand(string command, const ofxOscMessage &m);
     void soundCommand(Sound &sound, string command, const ofxOscMessage &m);
-    void textureCommand(Texture& tex, string command, const ofxOscMessage &m);
+    void textureCommand(Texture* tex, string command, const ofxOscMessage &m);
+    void texDataCommand(TexData& data, string command, const ofxOscMessage &m);
     void shaderCommand(Shader& shader, string command, const ofxOscMessage& m);
     void geomCommand(LayerGeom& geom, string command, const ofxOscMessage& m);
     void materialCommand(ofMaterialSettings& matSettings, string command, const ofxOscMessage& m);

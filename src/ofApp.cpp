@@ -2,6 +2,7 @@
 #include "ColorUtil.h"
 #include "ofxHPVPlayer.h"
 #include "ShaderTex.h"
+#include "TexturePool.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -48,6 +49,7 @@ void ofApp::update(){
     updateFloats();
     updateVecs();
     updateColors();
+    TexturePool::update();
 	for (int i = 0; i < layers.size(); i++) {
 		layers[i]->update(sounds, tidal->notes);
 	}
@@ -266,7 +268,11 @@ ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0) {
 
 void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
-        textureCommand(layer->shader.getDefaultTexture(true), command, m);
+        if (command == "/tex") {
+            string source = m.getArgAsString(1);
+            layer->shader.setDefaultTexture(&TexturePool::getOrCreate(source, layer->shader.getId()));
+        }
+        textureCommand(layer->shader.getDefaultTexture(), command, m);
     }
     else if (command.substr(0, 7) == "/shader") {
         shaderCommand(layer->shader, command, m);
@@ -360,36 +366,6 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         layer->alignH = alignH;
         layer->alignV = alignV;
     }
-    else if (command == "/tint") {
-        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
-            string value = m.getArgAsString(1);
-            if (value == "rand") {
-                layer->useRandomColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-                if (layer->useRandomColor) {
-                    layer->useMFCCColor = false;
-                }
-            }
-            else if (value == "mfcc") {
-                layer->useMFCCColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-                if (layer->useMFCCColor) {
-                    layer->useRandomColor = false;
-                }
-            }
-            else if (value == "lerp") {
-                ofFloatColor fromColor = parseColor(m, 3);
-                ofFloatColor toColor = parseColor(m, 6);
-                float perc = m.getArgAsFloat(2);
-                layer->color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
-                layer->useMFCCColor = false;
-                layer->useRandomColor = false;
-            }
-        }
-        else {
-            handleColor(&layer->color, m);
-            layer->useMFCCColor = false;
-            layer->useRandomColor = false;
-        }
-    }
     else if (command == "/data") {
         vector<string> ds;
         for (int i=1; i<m.getNumArgs(); i++) {
@@ -404,21 +380,8 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         }
         layer->addDataSources(ds);
     }
-    else if (command == "/seek") {
-        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
-            if (m.getArgAsString(1) == "rand") {
-                layer->timePct = ofRandom(1.f);
-            }
-        }
-        else {
-            handlePercent(&layer->timePct, m);
-        }
-    }
-    else if (command == "/speed") {
-        handleFloat(&layer->speed, m);
-    }
     else if (command == "/looper") {
-        layer->shader.getTexture("tex").setLooper(m);
+        layer->shader.getDefaultTexture()->setLooper(m);
     }
     else if (command == "/delay") {
         layer->delay = m.getArgAsFloat(1);
@@ -453,44 +416,93 @@ void ofApp::soundCommand(Sound &sound, string command, const ofxOscMessage &m) {
 
 }
 
-void ofApp::textureCommand(Texture& tex, string command, const ofxOscMessage &m) {
+void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m) {
     if (command == "/tex") {
-        tex.load(m);
+        tex->load(m);
     }
     else if (command == "/tex/choose") {
-        tex.choose(m);
+        tex->choose(m);
     }
     else if (command == "/tex/reload") {
-        tex.reload();
+        tex->reload();
     }
     else if (command == "/tex/unload") {
-        tex.unload();
+        tex->unload();
     }
     else if (command == "/tex/clear") {
-        tex.clear();
-    }
-    else if (command == "/tex/size") {
-        tex.setSize(m);
+        tex->clear();
     }
     else if (command == "/tex/frames") {
-        tex.setNumFrames(m.getArgAsInt(1));
-    }
-    else if (command == "/tex/noclear") {
-        tex.noClear = m.getArgAsBool(1);
-    }
-    else if (command == "/tex/blendmode") {
-        tex.blendMode = static_cast<ofBlendMode>(m.getArgAsInt(1));
-    }
-    else if (command == "/tex/aspectratio") {
-        tex.aspectRatio = m.getArgAsBool(1);
-    }
-    else if (command == "/tex/fbo") {
-        tex.setFboSettings(m);
+        tex->setNumFrames(m.getArgAsInt(1));
     }
     else if (command == "/tex/shader/uniform") {
-        if (ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex.tex)) {
+        if (ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex->tex)) {
             shaderTex->setUniform(m);
         }
+    }
+    else {
+        texDataCommand(tex->data, command, m);
+    }
+}
+
+void ofApp::texDataCommand(TexData& data, string command, const ofxOscMessage &m) {
+    if (command == "/tex/size") {
+        data.setSize(m);
+    }
+    else if (command == "/tex/noclear") {
+        data.noClear = m.getArgAsBool(1);
+    }
+    else if (command == "/tex/blendmode") {
+        data.blendMode = static_cast<ofBlendMode>(m.getArgAsInt(1));
+    }
+    else if (command == "/tex/aspectratio") {
+        data.aspectRatio = m.getArgAsBool(1);
+    }
+    else if (command == "/tex/seek") {
+        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            if (m.getArgAsString(1) == "rand") {
+                data.timePct = ofRandom(1.f);
+            }
+        }
+        else {
+            handlePercent(&data.timePct, m);
+        }
+    }
+    else if (command == "/tex/tint") {
+        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            string value = m.getArgAsString(1);
+            if (value == "rand") {
+                data.useRandomColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
+                if (data.useRandomColor) {
+                    data.useMFCCColor = false;
+                }
+            }
+            else if (value == "mfcc") {
+                data.useMFCCColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
+                if (data.useMFCCColor) {
+                    data.useRandomColor = false;
+                }
+            }
+            else if (value == "lerp") {
+                ofFloatColor fromColor = parseColor(m, 3);
+                ofFloatColor toColor = parseColor(m, 6);
+                float perc = m.getArgAsFloat(2);
+                data.color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
+                data.useMFCCColor = false;
+                data.useRandomColor = false;
+            }
+        }
+        else {
+            handleColor(&data.color, m);
+            data.useMFCCColor = false;
+            data.useRandomColor = false;
+        }
+    }
+    else if (command == "/tex/speed") {
+        handleFloat(&data.speed, m);
+    }
+    else if (command == "/tex/fbo") {
+        data.setFboSettings(m);
     }
 }
 
@@ -674,7 +686,7 @@ void ofApp::processQueue() {
                     allLayersCommand(command, m);
                 }
                 else {
-                    textureCommand(Texture::getFromPool(which, true), command, m);
+                    textureCommand(&TexturePool::get(which, true), command, m);
                 }
             }
             else {
@@ -816,7 +828,7 @@ void ofApp::draw(){
             ofPopMatrix();
             if (layers[i]->shader.isLoaded()) {
                 ofSetColor(255);
-                layers[i]->shader.getDefaultTexture().getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
+                layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
                 if (layers[i]->data.values.size() > 0) {
                     ofFill();
                     ofDrawRectangle(20+i*120, ofGetHeight()-120, layers[i]->data.values[0]*100.f, 10);

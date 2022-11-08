@@ -20,22 +20,22 @@ class WaveClock : public Sketch {
         initialized = true;
     }
   
-    void draw(Layer *layer) override{
-        float _w = layer->size.x;
-        float _h = layer->size.y;
+    void draw(TexData& data) override{
+        float _w = data.size.x;
+        float _h = data.size.y;
         float _r = min(_w, _h) - 150;
         _radiusNoise += 0.005;
-        _radius = (ofNoise(_radiusNoise, layer->randomSeed) * _r) +1;
+        _radius = (ofNoise(_radiusNoise, data.randomSeed) * _r) +1;
     
         _angNoise += 0.005;
-        _angle += (ofNoise(_angNoise, layer->randomSeed) * 6) -3;
+        _angle += (ofNoise(_angNoise, data.randomSeed) * 6) -3;
         if (_angle > 360)  { _angle -= 360;}
         if (_angle < 0)    { _angle += 360;}
         
         _xNoise += 0.01;
         _yNoise += 0.01;
-        float centerX = _w/2 + (ofNoise(_xNoise, layer->randomSeed) * 100) - 50;
-        float centerY = _h/2 + (ofNoise(_yNoise, layer->randomSeed) * 100) - 50;
+        float centerX = _w/2 + (ofNoise(_xNoise, data.randomSeed) * 100) - 50;
+        float centerY = _h/2 + (ofNoise(_yNoise, data.randomSeed) * 100) - 50;
         
         float rad = ofDegToRad(_angle);
         float x1 = centerX + (_radius * cos(rad));
@@ -45,8 +45,8 @@ class WaveClock : public Sketch {
         float x2 = centerX + (_radius * cos(opprad));
         float y2 = centerY + (_radius * sin(opprad));
         
-        if (layer->data.values.size()) {
-            _strokeAlpha = layer->data.values[0] * 255;
+        if (data.values.size()) {
+            _strokeAlpha = data.values[0] * 255;
         }
         else {
             _strokeAlpha += _strokeChange;
@@ -55,7 +55,7 @@ class WaveClock : public Sketch {
         }
         
         ofPushStyle();
-        ofSetColor(layer->getColor(), (int) (_strokeAlpha * 0.75));
+        ofSetColor(data.getColor(), (int) (_strokeAlpha * 0.75));
         ofSetLineWidth(1);
 
         ofPushMatrix();

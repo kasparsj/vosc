@@ -25,8 +25,8 @@ string SketchTex::random() {
     return it->first;
 }
 
-void SketchTex::update(Layer *layer, Texture* tex) {
-    FboTex::update(layer, tex);
+void SketchTex::update(TexData& data) {
+    FboTex::update(data);
     if (path != prevPath) {
         if (!exists(path)) {
             ofLog() << "sketch " << path << " does not exist";
@@ -34,18 +34,14 @@ void SketchTex::update(Layer *layer, Texture* tex) {
             return;
         }
         prevPath = path;
-        layer->randomSeed = ofRandom(1000);
-        if (layer->color == ofFloatColor(0, 0)) {
-            layer->color = sketches[path]->defaultColor;
-        }
     }
     if (!sketches[path]->initialized) {
         clear();
         sketches[path]->init();
     }
-    ofEnableBlendMode(tex->blendMode);
+    ofEnableBlendMode(data.blendMode);
     fbo.begin();
-    sketches[path]->draw(layer);
+    sketches[path]->draw(data);
     fbo.end();
     ofDisableBlendMode();
 }

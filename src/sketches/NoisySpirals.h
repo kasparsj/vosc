@@ -4,9 +4,9 @@
 
 class NoisySpirals : public Sketch {
 public:
-    void draw(Layer *layer) override {
-        float width = layer->size.x;
-        float height = layer->size.y;
+    void draw(TexData& data) override {
+        float width = data.size.x;
+        float height = data.size.y;
         if (radius >= endAngle) {
             lastx = -999;
             lasty = -999;
@@ -31,8 +31,8 @@ public:
             
             if(lastx > -999){
                 int strokeAlpha;
-                if (layer->data.values.size()) {
-                    strokeAlpha = layer->data.values[0] * 255;
+                if (data.values.size()) {
+                    strokeAlpha = data.values[0] * 255;
                 }
                 else {
                     strokeAlpha = 127+ofRandom(128);
@@ -40,7 +40,7 @@ public:
                 ofPushStyle();
                 ofNoFill();
                 ofSetLineWidth(strokeWeight);
-                ofSetColor(layer->getColor(), strokeAlpha);
+                ofSetColor(data.getColor(), strokeAlpha);
                 ofPushMatrix();
                 ofDrawLine(x, y, lastx,lasty);
                 ofPopMatrix();
@@ -48,7 +48,7 @@ public:
             }
             lastx=x;
             lasty=y;
-            ang += (angleStep * layer->speed);
+            ang += (angleStep * data.speed);
         }
     }
     
