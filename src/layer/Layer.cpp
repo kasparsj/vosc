@@ -44,9 +44,6 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
     }
     shader.update();
     material.setup(matSettings);
-    if (geom != NULL) {
-        geom->update();
-    }
 }
 
 void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
@@ -64,9 +61,16 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec3 &size) {
         ofTranslate(pos + size/2.f);
         ofScale(size / glm::vec3(100, -100, 100));
         
+        if (geom == NULL) {
+            geom = &GeomPool::getForLayer(getId());
+        }
+        if (!geom->isLoaded()) {
+            geom->load("plane");
+        }
         if (!shader.isLoaded()) {
             shader.load("texture");
         }
+        
         shader.begin(data, delay);
         shader.getShader()->setUniform1i("index", index);
         shader.getShader()->setUniform2f("offset", pos.x, pos.y);

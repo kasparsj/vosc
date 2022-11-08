@@ -1,50 +1,45 @@
 #include "GeomPool.h"
 
-map<int, map<string, Geom>*> createGeomPool() {
-    map<string, Geom>* shared = new map<string, Geom>;
-    map<int, map<string, Geom>*> pool;
-    pool[-1] = shared;
-    return pool;
-}
-
-map<int, map<string, Geom>*> GeomPool::pool = createGeomPool();
+map<string, Geom> GeomPool::sharedPool = {};
+map<int, Geom> GeomPool::layerPool = {};
 
 bool GeomPool::hasShared(string name) {
-    map<string, Geom>* sharedPool = pool[-1];
-    return sharedPool->find(name) != sharedPool->end();
+    return sharedPool.find(name) != sharedPool.end();
 }
 
 Geom& GeomPool::getShared(string name, bool create) {
-    map<string, Geom>* sharedPool = pool[-1];
     if (create && !hasShared(name)) {
-        (*sharedPool)[name] = Geom();
+        sharedPool[name] = Geom();
     }
-    return (*sharedPool)[name];
+    return sharedPool[name];
 }
 
-Geom& GeomPool::getForLayer(string source, int layerId) {
-    if (hasShared(source)) {
-        return getShared(source);
+Geom& GeomPool::getForLayer(string name, int layerId) {
+    if (hasShared(name)) {
+        return getShared(name);
     }
     else {
-        map<string, Geom>* layerPool = pool[layerId];
-        if (layerPool == NULL) {
-            layerPool = new map<string, Geom>();
-        }
-        (*layerPool)[source] = Geom();
-        return (*layerPool)[source];
+        return getForLayer(layerId);
     }
+}
+
+Geom& GeomPool::getForLayer(int layerId) {
+    if (layerPool.find(layerId) == layerPool.end()) {
+        layerPool = map<int, Geom>();
+    }
+    layerPool[layerId] = Geom();
+    return layerPool[layerId];
 }
 
 void GeomPool::update() {
-    for (map<int, map<string, Geom>*>::iterator it=pool.begin(); it!=pool.end(); ++it) {
-        for (map<string, Geom>::iterator it2=it->second->begin(); it2!=it->second->end(); ++it2) {
-            it2->second.update();
-        }
+    for (map<string, Geom>::iterator it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
+        it->second.update();
+    }
+    for (map<int, Geom>::iterator it=layerPool.begin(); it!=layerPool.end(); ++it) {
+        it->second.update();
     }
 }
 
 void GeomPool::clean(int layerId) {
-    delete pool[layerId];
-    pool.erase(layerId);
+    layerPool.erase(layerId);
 }

@@ -18,6 +18,10 @@ public:
     }
     void load(string newPath, const vector<float>& args);
     void load(const ofxOscMessage &m);
+    void load(string newPath) {
+        vector<float> args;
+        load(newPath, args);
+    }
     void choose();
     void update();
     void draw();

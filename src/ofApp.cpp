@@ -51,6 +51,7 @@ void ofApp::update(){
     updateVecs();
     updateColors();
     TexturePool::update();
+    GeomPool::update();
 	for (int i = 0; i < layers.size(); i++) {
 		layers[i]->update(sounds, tidal->notes);
 	}
@@ -870,11 +871,13 @@ void ofApp::draw(){
     if (showDebug) {
         ofPushStyle();
         for (int i=0; i<layers.size(); i++) {
-            ofSetColor(255);
-            ofPushMatrix();
-            ofTranslate(20+i*120+60, ofGetHeight()-180);
-            layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
-            ofPopMatrix();
+            if (layers[i]->geom != NULL && layers[i]->geom->isLoaded()) {
+                ofSetColor(255);
+                ofPushMatrix();
+                ofTranslate(20+i*120+60, ofGetHeight()-180);
+                layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
+                ofPopMatrix();
+            }
             if (layers[i]->shader.isLoaded()) {
                 ofSetColor(255);
                 layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
