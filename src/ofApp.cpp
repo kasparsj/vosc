@@ -472,7 +472,7 @@ void ofApp::texDataCommand(TexData& data, string command, const ofxOscMessage &m
             handlePercent(&data.timePct, m);
         }
     }
-    else if (command == "/tex/tint") {
+    else if (command == "/tex/color") {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
             string value = m.getArgAsString(1);
             if (value == "rand") {
@@ -500,6 +500,36 @@ void ofApp::texDataCommand(TexData& data, string command, const ofxOscMessage &m
             handleColor(&data.color, m);
             data.useMFCCColor = false;
             data.useRandomColor = false;
+        }
+    }
+    else if (command == "/tex/tint") {
+        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            string value = m.getArgAsString(1);
+            if (value == "rand") {
+                data.useRandomTint = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
+                if (data.useRandomTint) {
+                    data.useMFCCTint = false;
+                }
+            }
+            else if (value == "mfcc") {
+                data.useMFCCTint = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
+                if (data.useMFCCTint) {
+                    data.useRandomTint = false;
+                }
+            }
+            else if (value == "lerp") {
+                ofFloatColor fromColor = parseColor(m, 3);
+                ofFloatColor toColor = parseColor(m, 6);
+                float perc = m.getArgAsFloat(2);
+                data.tint = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
+                data.useMFCCTint = false;
+                data.useRandomTint = false;
+            }
+        }
+        else {
+            handleColor(&data.tint, m);
+            data.useMFCCTint = false;
+            data.useRandomTint = false;
         }
     }
     else if (command == "/tex/speed") {

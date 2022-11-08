@@ -19,9 +19,8 @@ public:
     }
     
     ofFloatColor getTint() {
-        const ofFloatColor& tint = getColor();
-        if (tint == ofFloatColor(0, 0)) {
-            return ofFloatColor(1);
+        if (useMFCCTint && mfcc.size() > 0) {
+            return getMFCCColor();
         }
         return tint;
     }
@@ -74,9 +73,12 @@ public:
     bool aspectRatio = true;
     float timePct = 0;
     int randomSeed = 0;
-    ofFloatColor color = ofFloatColor(0, 0);
+    ofFloatColor color = ofFloatColor(1.f, 1.f);
     bool useMFCCColor = false;
     bool useRandomColor = false;
+    ofFloatColor tint = ofFloatColor(1.f, 1.f);
+    bool useMFCCTint = false;
+    bool useRandomTint = false;
     bool onset;
     vector<float> mfcc;
     ofFloatColor mfccColor = ofFloatColor(0);
