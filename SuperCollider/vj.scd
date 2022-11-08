@@ -130,12 +130,10 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/data', 0, "noise");
 ~visuals.sendMsg('/data', 1, "noise");
 ~visuals.sendMsg('/data', "*", "loud:0");
-~visuals.sendMsg('/tex', 0, "AtmoScattering.frag");
+~visuals.sendMsg('/tex', 0, "shadertoy/AtmoScattering.frag");
 ~visuals.sendMsg('/tex', 0, "WaveClock");
 ~visuals.sendMsg('/tex', 1, "NoisySpirals");
 ~visuals.sendMsg('/reset', 0);
-
-~visuals.sendMsg('/tex', 0, "3d:box");
 
 ~visuals.sendMsg('/tex', 0, "webcam:0");
 ~visuals.sendMsg('/looper', 0, 2, 60, 2.0);

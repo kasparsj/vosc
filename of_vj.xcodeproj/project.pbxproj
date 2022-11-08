@@ -178,6 +178,10 @@
 		2B7E6F0829198B6300D78E40 /* FboPingPongTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FboPingPongTex.h; sourceTree = "<group>"; };
 		2B7E6F0A29198CB100D78E40 /* ShaderPingPongTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ShaderPingPongTex.cpp; sourceTree = "<group>"; };
 		2B7E6F0B29198CB100D78E40 /* ShaderPingPongTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShaderPingPongTex.h; sourceTree = "<group>"; };
+		2B7E6F0E291A355600D78E40 /* Water.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Water.frag; sourceTree = "<group>"; };
+		2B7E6F0F291A355600D78E40 /* Ether.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Ether.frag; sourceTree = "<group>"; };
+		2B7E6F10291A355600D78E40 /* AtmoScattering.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = AtmoScattering.frag; sourceTree = "<group>"; };
+		2B7E6F11291A355600D78E40 /* TerrainGrid.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = TerrainGrid.frag; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
 		2BF2E5D52916CC1F0026CE01 /* LayerShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = LayerShader.cpp; path = layer/LayerShader.cpp; sourceTree = "<group>"; };
@@ -717,6 +721,17 @@
 			path = 100fragments;
 			sourceTree = "<group>";
 		};
+		2B7E6F0D291A355600D78E40 /* shadertoy */ = {
+			isa = PBXGroup;
+			children = (
+				2B7E6F0E291A355600D78E40 /* Water.frag */,
+				2B7E6F0F291A355600D78E40 /* Ether.frag */,
+				2B7E6F10291A355600D78E40 /* AtmoScattering.frag */,
+				2B7E6F11291A355600D78E40 /* TerrainGrid.frag */,
+			);
+			path = shadertoy;
+			sourceTree = "<group>";
+		};
 		2BF2E5DB291830510026CE01 /* tex */ = {
 			isa = PBXGroup;
 			children = (
@@ -870,6 +885,7 @@
 				2B015CF929186EC10089FC16 /* grass */,
 				2BF2E6542918424E0026CE01 /* particles */,
 				2BF2E65F2918424E0026CE01 /* passthru.vert */,
+				2B7E6F0D291A355600D78E40 /* shadertoy */,
 				2B7E6F0429193A3900D78E40 /* texture.frag */,
 				2BF2E65A2918424E0026CE01 /* todo */,
 			);
