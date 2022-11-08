@@ -160,3 +160,16 @@ void Shader::setTexture(string name, const ofxOscMessage& m, int arg) {
         textures[name]->load(m, arg);
     }
 }
+
+void Shader::set(const ofxOscMessage& m) {
+    string prop = m.getArgAsString(1);
+    if (prop == "geomInputType") {
+        getShader().setGeometryInputType(static_cast<GLenum>(m.getArgAsInt(2)));
+    }
+    else if (prop == "geomOutputType") {
+        getShader().setGeometryOutputType(static_cast<GLenum>(m.getArgAsInt(2)));
+    }
+    else if (prop == "geomOutputCount") {
+        getShader().setGeometryOutputCount(m.getArgAsInt(2));
+    }
+}

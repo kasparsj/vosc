@@ -412,9 +412,6 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         }
         layer->addDataSources(ds);
     }
-    else if (command == "/looper") {
-        layer->shader.getDefaultTexture()->setLooper(m);
-    }
     else if (command == "/delay") {
         layer->delay = m.getArgAsFloat(1);
     }
@@ -476,10 +473,13 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
             texDataCommand(tex->data, command, m);
         }
     }
-    else if (command == "/tex/shader/uniform") {
+    else if (command == "/tex/uniform") {
         if (ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex->tex)) {
             shaderTex->setUniform(m);
         }
+    }
+    else if (command == "/tex/loop") {
+        tex->setLooper(m);
     }
     else {
         texDataCommand(tex->data, command, m);
@@ -575,20 +575,14 @@ void ofApp::shaderCommand(Shader& shader, string command, const ofxOscMessage& m
     if (command == "/shader") {
         shader.load(m.getArgAsString(1));
     }
+    else if (command == "/shader/set") {
+        shader.set(m);
+    }
     else if (command == "/shader/uniform") {
         shader.setUniform(m);
     }
     else if (command == "/shader/texture") {
         shader.setTexture(m);
-    }
-    else if (command == "/shader/geom/intype") {
-        shader.getShader().setGeometryInputType(static_cast<GLenum>(m.getArgAsInt(1)));
-    }
-    else if (command == "/shader/geom/outtype") {
-        shader.getShader().setGeometryOutputType(static_cast<GLenum>(m.getArgAsInt(1)));
-    }
-    else if (command == "/shader/geom/outcount") {
-        shader.getShader().setGeometryOutputCount(m.getArgAsInt(1));
     }
 }
 
@@ -596,11 +590,8 @@ void ofApp::geomCommand(Geom* geom, string command, const ofxOscMessage& m) {
     if (command == "/geom") {
         geom->load(m);
     }
-    else if (command == "/geom/instanced") {
-        geom->drawInstanced = m.getArgAsInt(1);
-    }
-    else if (command == "/geom/mesh/mode") {
-        geom->getMesh().setMode(static_cast<ofPrimitiveMode>(m.getArgAsInt(1)));
+    else if (command == "/geom/set") {
+        geom->set(m);
     }
 }
 

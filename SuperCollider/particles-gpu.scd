@@ -2,8 +2,8 @@
 ~visuals = NetAddr("127.0.0.1", 33333);
 
 ~visuals.sendMsg('/geom', 0, "box", 0.0015, 0.0015, 0.01);
-~visuals.sendMsg('/geom/mesh/mode', 0, 0);
-~visuals.sendMsg('/geom/instanced', 0, 128 * 128);
+~visuals.sendMsg('/geom/set', 0, "meshMode", 0);
+~visuals.sendMsg('/geom/set', 0, "drawInstanced", 128 * 128);
 
 ~visuals.sendMsg('/tex/size', "particlesData", 128, 128, 2);
 ~visuals.sendMsg('/tex/fbo', "particlesData", "numColorbuffers", 2);
@@ -16,13 +16,13 @@
 ~visuals.sendMsg('/tex/fbo', "particlesData", "maxFilter", 0x2600);
 ~visuals.sendMsg('/tex/blendmode', "particlesData", 0);
 ~visuals.sendMsg('/tex', "particlesData", "shader_pp:particles/Update");
-~visuals.sendMsg('/tex/shader/uniform', "particlesData", "timeStep", 1.0 / 60.0);
-~visuals.sendMsg('/tex/shader/uniform', "particlesData", "particleMaxAge", 10);
-~visuals.sendMsg('/tex/shader/uniform', "particlesData", "noisePositionScale", 1.5);
-~visuals.sendMsg('/tex/shader/uniform', "particlesData", "noiseTimeScale", 1.0 / 4000.0);
-~visuals.sendMsg('/tex/shader/uniform', "particlesData", "noisePersistence", 0.2);
-~visuals.sendMsg('/tex/shader/uniform', "particlesData", "noiseMagnitude", 0.075);
-~visuals.sendMsg('/tex/shader/uniform', "particlesData", "baseSpeed", 0.5, 0, 0);
+~visuals.sendMsg('/tex/uniform', "particlesData", "timeStep", 1.0 / 60.0);
+~visuals.sendMsg('/tex/uniform', "particlesData", "particleMaxAge", 10);
+~visuals.sendMsg('/tex/uniform', "particlesData", "noisePositionScale", 1.5);
+~visuals.sendMsg('/tex/uniform', "particlesData", "noiseTimeScale", 1.0 / 4000.0);
+~visuals.sendMsg('/tex/uniform', "particlesData", "noisePersistence", 0.2);
+~visuals.sendMsg('/tex/uniform', "particlesData", "noiseMagnitude", 0.075);
+~visuals.sendMsg('/tex/uniform', "particlesData", "baseSpeed", 0.5, 0, 0);
 
 ~visuals.sendMsg('/shader', 0, "particles/DrawInstancedGeometry");
 ~visuals.sendMsg('/tex', 0, "particlesData");

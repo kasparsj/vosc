@@ -136,7 +136,7 @@ var synthName = if (~file.isNil, { \soundin }, { \buf });
 ~visuals.sendMsg('/reset', 0);
 
 ~visuals.sendMsg('/tex', 0, "webcam:0");
-~visuals.sendMsg('/looper', 0, 2, 60, 2.0);
+~visuals.sendMsg('/tex/loop', 0, 2, 60, 2.0);
 ~visuals.sendMsg('/size', 0, 100, 150);
 ~visuals.sendMsg('/size', 0, -100, -150);
 ~visuals.sendMsg('/scale', 0, -1);

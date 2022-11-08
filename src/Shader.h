@@ -75,6 +75,7 @@ public:
         vector<float> vec = {color.r, color.g, color.b};
         setUniform(name, vec);
     }
+    void set(const ofxOscMessage& m);
     int getId() {
         return _id;
     }

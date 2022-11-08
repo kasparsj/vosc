@@ -29,6 +29,7 @@ public:
     bool isLoaded() const {
         return path != "";
     }
+    void set(const ofxOscMessage& m);
     
     bool drawWireframe;
     int drawInstanced = 0;

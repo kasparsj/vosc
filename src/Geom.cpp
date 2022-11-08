@@ -138,3 +138,16 @@ void Geom::draw() {
         mesh.drawWireframe();
     }
 }
+
+void Geom::set(const ofxOscMessage& m) {
+    string prop = m.getArgAsString(1);
+    if (prop == "drawInstanced") {
+        drawInstanced = m.getArgAsInt(2);
+    }
+    else if (prop == "meshMode") {
+        getMesh().setMode(static_cast<ofPrimitiveMode>(m.getArgAsInt(2)));
+    }
+    else if (prop == "drawWireframe") {
+        drawWireframe = m.getArgAsBool(2);
+    }
+}

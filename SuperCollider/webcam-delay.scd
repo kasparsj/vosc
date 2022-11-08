@@ -43,3 +43,11 @@
 	~visuals.sendMsg('/delay', i, i*13);
 };
 )
+
+(
+~visuals = NetAddr("127.0.0.1", 33333);
+~visuals.sendMsg('/layers', 1, "stack");
+~visuals.sendMsg('/tex', 0, "webcam:0");
+~visuals.sendMsg('/tex/set', 0, "aspectRatio", false);
+~visuals.sendMsg('/tex/loop', 0, 2, 60, 2.0);
+)
