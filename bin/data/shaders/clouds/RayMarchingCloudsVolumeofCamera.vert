@@ -1,4 +1,4 @@
-#version 400
+#version 330
 
 #pragma include "shaders/common/of_default_uniforms.glsl"
 #pragma include "shaders/common/of_default_vertex_in_attributes.glsl"

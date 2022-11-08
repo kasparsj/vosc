@@ -22,7 +22,7 @@ public:
     void layout(Layout layout, int layoutIndex, int layoutTotal);
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
     void drawToFbo();
-    void draw(const glm::vec3 &pos, const glm::vec3 &size);
+    void draw(const glm::vec3 &pos, const glm::vec2 &size);
     void draw(int totalVisible);
     void doAlign();
     void doRotate();
@@ -32,6 +32,9 @@ public:
     void reset();
     void resetTransform();    
     void setShader(string path);
+    bool hasGeom() {
+        return geom != NULL && geom->isLoaded();
+    }
     void setGeom(Geom* value) {
         geom = value;
     }
@@ -44,7 +47,6 @@ public:
     LayerData data;
     LayerShader shader;
     glm::vec3 pos;
-    glm::vec3 size;
     glm::vec3 rotation = glm::vec3(0, 0, 0);
     glm::vec3 rotationPoint = glm::vec3(0, 0, 0);
     glm::vec3 rotationSpeed = glm::vec3(0, 0, 0);

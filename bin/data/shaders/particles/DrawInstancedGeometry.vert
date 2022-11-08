@@ -1,7 +1,7 @@
-#version 120
-#extension GL_EXT_gpu_shader4 : require
+#version 150
 
 #pragma include "shaders/common/of_default_uniforms.glsl"
+#pragma include "shaders/common/of_default_vertex_in_attributes.glsl"
 #pragma include "shaders/common/ShaderHelpers.glsl"
 
 uniform vec2 resolution;
@@ -18,13 +18,13 @@ uniform vec4 particleEndColor;
 
 uniform int numLights = 0;
 
-varying vec3 v_normal;
-varying vec3 v_eyeVec;
+out vec3 v_normal;
+out vec3 v_eyeVec;
 
 #define MAX_LIGHTS 8
-varying vec3 v_lightDir[MAX_LIGHTS];
+out vec3 v_lightDir[MAX_LIGHTS];
 
-varying vec4 v_particleColor;
+out vec4 v_particleColor;
 
 
 // ----------------------------
@@ -36,11 +36,11 @@ void main ()
 	texCoord.y = floor(gl_InstanceID / resolution.x) / resolution.y;
 	
 	// Grab our data
-	vec4 particleData = texture2D( tex0, texCoord );
-	vec3 particleVel = texture2D( tex1, texCoord ).xyz;
+	vec4 particleData = texture( tex0, texCoord );
+	vec3 particleVel = texture( tex1, texCoord ).xyz;
 
 	float ageFrac = particleData.w / particleMaxAge;
-	vec4 vertexPos = gl_Vertex;
+	vec4 vertexPos = position;
 	vec3 particlePos = particleData.xyz;
 	
 	// Pass the particle color along to the fragment shader
@@ -59,7 +59,7 @@ void main ()
 	gl_Position = modelViewProjectionMatrix * vec4(newVertexPos, 1.0);
 	
 	// Light stuff
-	vec3 vertexNormal = gl_Normal;
+	vec3 vertexNormal = normal;
 	
 	// Rotate the normal just as we did the vertex, then apply the canera transform
 	vertexNormal = (lookAt * vec4(vertexNormal, 0)).xyz;

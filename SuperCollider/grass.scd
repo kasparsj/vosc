@@ -7,10 +7,10 @@
 ~visuals.sendMsg('/cam/pos', 0, 0.5, -100);
 // ~visuals.sendMsg('/cam/movementmaxspeed', 0.1);
 
-~visuals.sendMsg('/tex', 0, "2d:gridplane", 1, 21, 0);
-~visuals.sendMsg('/rot', 0, 0, 0, -90);
+//~visuals.sendMsg('/tex', 0, "2d:gridplane", 1, 21, 0);
+//~visuals.sendMsg('/rot', 0, 0, 0, -90);
 
-~visuals.sendMsg('/shader', 1, "grass/Grass");
+~visuals.sendMsg('/geom', 1, "grass", 60, 2, 1.0, 0);
 ~visuals.sendMsg('/shader/geom/intype', 1, 1);
 ~visuals.sendMsg('/shader/geom/outtype', 1, 5);
 ~visuals.sendMsg('/shader/geom/outcount', 1, 14);
@@ -20,6 +20,5 @@
 ~visuals.sendMsg('/shader/uniform', 1, "stalkSwayingMaxAngle", 20.degrad * 0.5);
 ~visuals.sendMsg('/shader/uniform', 1, "grassSwayingTimeScale", 1.0);
 ~visuals.sendMsg('/shader/uniform', 1, "grassSwayingNoiseFrequency", 0.1);
-~visuals.sendMsg('/geom', 1, "grass", 60, 2, 1.0, 0);
-~visuals.sendMsg('/tint', 1, 255, 0, 0);
+~visuals.sendMsg('/shader', 1, "grass/Grass");
 )

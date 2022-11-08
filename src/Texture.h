@@ -29,6 +29,7 @@ public:
     }
     void setNumFrames(int value);
     const ofTexture& getTexture(int delay = 0) const;
+    ofTexture& getTexture(int delay = 0);
     bool hasTexture(int delay = 0) const;
     ofPixels& getPixels() const;
     bool isLoaded() const {
@@ -45,6 +46,7 @@ public:
 private:
     void drawFrame();
     const ofFbo& getFrame(int delay = 0) const;
+    ofFbo& getFrame(int delay = 0);
     
     ofxLooper* looper = NULL;
 };

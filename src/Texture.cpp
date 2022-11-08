@@ -143,20 +143,20 @@ void Texture::drawFrame() {
 
 void Texture::draw(Layer* layer) {
     if (isLoaded() && layer->delay == 0) {
-        tex->draw(layer->pos, layer->size);
+        tex->draw(layer->pos, layer->data.size);
     }
     else if (hasTexture(layer->delay)) {
         const ofTexture& tex = getTexture(layer->delay);
         if (data.aspectRatio) {
             if (tex.getWidth() > tex.getHeight()) {
-                tex.draw(layer->pos, layer->size.x, layer->size.x/tex.getWidth() * tex.getHeight());
+                tex.draw(layer->pos, layer->data.size.x, layer->data.size.x/tex.getWidth() * tex.getHeight());
             }
             else {
-                tex.draw(layer->pos, layer->size.y/tex.getHeight() * tex.getWidth(), layer->size.y);
+                tex.draw(layer->pos, layer->data.size.y/tex.getHeight() * tex.getWidth(), layer->data.size.y);
             }
         }
         else {
-            tex.draw(layer->pos, layer->size.x, layer->size.y);
+            tex.draw(layer->pos, layer->data.size.x, layer->data.size.y);
         }
     }
 }
@@ -176,6 +176,12 @@ const ofFbo& Texture::getFrame(int delay) const {
     return frames[MIN(frames.size()-1, i)];
 }
 
+ofFbo& Texture::getFrame(int delay) {
+    int i = curFbo - delay;
+    while (i<0) i += frames.size();
+    return frames[MIN(frames.size()-1, i)];
+}
+
 bool Texture::hasTexture(int delay) const {
     if (numFrames <= 1) {
         return isLoaded() && tex->getTexture().isAllocated();
@@ -186,6 +192,18 @@ bool Texture::hasTexture(int delay) const {
 }
 
 const ofTexture& Texture::getTexture(int delay) const {
+    if (numFrames <= 1) {
+        if (looper == NULL) {
+            return tex->getTexture();
+        }
+        else {
+            return looper->getFbo().getTexture();
+        }
+    }
+    return getFrame(delay).getTexture();
+}
+
+ofTexture& Texture::getTexture(int delay) {
     if (numFrames <= 1) {
         if (looper == NULL) {
             return tex->getTexture();

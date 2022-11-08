@@ -1,4 +1,4 @@
-#version 150
+#version 330
 
 // Created by inigo quilez - iq/2013
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
@@ -198,7 +198,7 @@ void main(void)
 {
 	vec2 q = gl_FragCoord.xy / resolution.xy;
     vec2 p = -1.0 + 2.0*q;
-    p.x *= resolution.x / resolution.y;
+    p.x *= (resolution.x / resolution.y);
 	
 	vec3 rayDirection = normalize(dir);
 	Ray eyeRay = Ray( eyePos, rayDirection );

@@ -55,9 +55,9 @@ void ofApp::update(){
 	for (int i = 0; i < layers.size(); i++) {
 		layers[i]->update(sounds, tidal->notes);
 	}
-    if (cam != NULL) {
+    if (cam != NULL && dynamic_cast<ofEasyCam*>(cam) == NULL) {
         cam->setPosition(camPos);
-        cam->lookAt(glm::vec3(0));
+        cam->lookAt(camLook);
     }
     HPV::Update();
 }
@@ -178,39 +178,8 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
             layoutLayers(parseLayout(m, 1), layers);
         }
     }
-    else if (command == "/cam") {
-        string name = m.getArgAsString(0);
-        if (name == "easy") {
-            cam = new ofEasyCam();
-        }
-        else if (name != "") {
-            cam = new ofCamera();
-        }
-        else {
-            delete cam;
-            cam = NULL;
-        }
-    }
-    else if (command == "/cam/pos") {
-        handleVec3(&camPos, m, 0);
-    }
-    else if (command == "/cam/set") {
-        string method = m.getArgAsString(0);
-        if (method == "nearClip") {
-            cam->setNearClip(m.getArgAsFloat(1));
-        }
-        else if (method == "farClip") {
-            cam->setFarClip(m.getArgAsFloat(1));
-        }
-        else if (method == "autoDistance") {
-            dynamic_cast<ofEasyCam*>(cam)->setAutoDistance(m.getArgAsBool(1));
-        }
-        else if (method == "globalPosition") {
-            cam->setGlobalPosition(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsFloat(3));
-        }
-        else if (method == "movementMaxSpeed") {
-            //dynamic_cast<ofxFirstPersonCamera*>(cam)->setMovementMaxSpeed(m.getArgAsFloat(1));
-        }
+    else if (command.substr(0, 4) == "/cam") {
+        cameraCommand(command, m);
     }
     else {
         messageQueue.push_back(m);
@@ -268,6 +237,52 @@ ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0) {
     return color;
 }
 
+void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
+    if (command == "/cam") {
+        string name = m.getArgAsString(0);
+        if (name == "easy") {
+            cam = new ofEasyCam();
+        }
+        else if (name != "") {
+            cam = new ofCamera();
+        }
+        else {
+            delete cam;
+            cam = NULL;
+        }
+    }
+    else if (command == "/cam/pos") {
+        handleVec3(&camPos, m, 0);
+        if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
+            cam->setPosition(camPos);
+        }
+    }
+    else if (command == "/cam/look") {
+        handleVec3(&camLook, m, 0);
+        if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
+            cam->lookAt(camLook);
+        }
+    }
+    else if (command == "/cam/set") {
+        string method = m.getArgAsString(0);
+        if (method == "nearClip") {
+            cam->setNearClip(m.getArgAsFloat(1));
+        }
+        else if (method == "farClip") {
+            cam->setFarClip(m.getArgAsFloat(1));
+        }
+        else if (method == "autoDistance") {
+            dynamic_cast<ofEasyCam*>(cam)->setAutoDistance(m.getArgAsBool(1));
+        }
+        else if (method == "globalPosition") {
+            cam->setGlobalPosition(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsFloat(3));
+        }
+        else if (method == "movementMaxSpeed") {
+            //dynamic_cast<ofxFirstPersonCamera*>(cam)->setMovementMaxSpeed(m.getArgAsFloat(1));
+        }
+    }
+}
+
 void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
         if (command == "/tex") {
@@ -275,7 +290,7 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
             Texture* tex = &TexturePool::getForShader(source, layer->shader.getId());
             layer->shader.setDefaultTexture(tex);
             if (tex->data.size.x == 0 && tex->data.size.y == 0) {
-                tex->data.setSize(layer->size.x, layer->size.y);
+                tex->data.setSize(layer->data.size.x, layer->data.size.y);
             }
             if (tex->isLoaded()) {
                 return;
@@ -313,7 +328,7 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         handleVec3(&layer->pos, m);
     }
     else if (command == "/size") {
-        handleVec3(&layer->size, m);
+        handleVec3(&layer->data.size, m);
     }
     else if (command == "/rot") {
         handleVec3(&layer->rotation, m);
@@ -449,8 +464,17 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
     else if (command == "/tex/clear") {
         tex->clear();
     }
-    else if (command == "/tex/frames") {
-        tex->setNumFrames(m.getArgAsInt(1));
+    else if (command == "/tex/set") {
+        string method = m.getArgAsString(1);
+        if (method == "textureWrap") {
+            tex->getTexture().setTextureWrap(m.getArgAsInt(2), m.getArgAsInt(3));
+        }
+        else if (method == "numFrames") {
+            tex->setNumFrames(m.getArgAsInt(1));
+        }
+        else {
+            texDataCommand(tex->data, command, m);
+        }
     }
     else if (command == "/tex/shader/uniform") {
         if (ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex->tex)) {
@@ -466,14 +490,8 @@ void ofApp::texDataCommand(TexData& data, string command, const ofxOscMessage &m
     if (command == "/tex/size") {
         data.setSize(m);
     }
-    else if (command == "/tex/noclear") {
-        data.noClear = m.getArgAsBool(1);
-    }
-    else if (command == "/tex/blendmode") {
-        data.blendMode = static_cast<ofBlendMode>(m.getArgAsInt(1));
-    }
-    else if (command == "/tex/aspectratio") {
-        data.aspectRatio = m.getArgAsBool(1);
+    else if (command == "/tex/set") {
+        data.set(m);
     }
     else if (command == "/tex/seek") {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
@@ -564,13 +582,13 @@ void ofApp::shaderCommand(Shader& shader, string command, const ofxOscMessage& m
         shader.setTexture(m);
     }
     else if (command == "/shader/geom/intype") {
-        shader.getShader()->setGeometryInputType(static_cast<GLenum>(m.getArgAsInt(1)));
+        shader.getShader().setGeometryInputType(static_cast<GLenum>(m.getArgAsInt(1)));
     }
     else if (command == "/shader/geom/outtype") {
-        shader.getShader()->setGeometryOutputType(static_cast<GLenum>(m.getArgAsInt(1)));
+        shader.getShader().setGeometryOutputType(static_cast<GLenum>(m.getArgAsInt(1)));
     }
     else if (command == "/shader/geom/outcount") {
-        shader.getShader()->setGeometryOutputCount(m.getArgAsInt(1));
+        shader.getShader().setGeometryOutputCount(m.getArgAsInt(1));
     }
 }
 
@@ -875,14 +893,14 @@ void ofApp::drawDebug() {
     if (showDebug) {
         ofPushStyle();
         for (int i=0; i<layers.size(); i++) {
-            if (layers[i]->geom != NULL && layers[i]->geom->isLoaded()) {
+            if (layers[i]->hasGeom()) {
                 ofSetColor(255);
                 ofPushMatrix();
                 ofTranslate(20+i*120+60, ofGetHeight()-180);
                 layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
                 ofPopMatrix();
             }
-            if (layers[i]->shader.isLoaded() && layers[i]->shader.hasDefaultTexture()) {
+            if (layers[i]->shader.hasDefaultTexture()) {
                 ofSetColor(255);
                 layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
                 if (layers[i]->data.values.size() > 0) {
@@ -937,9 +955,16 @@ void ofApp::keyPressed(int key){
             allLayersCommand("/reload", m);
             break;
         }
+        case 'u': {
+            ofxOscMessage m;
+            allLayersCommand("/reset", m);
+            break;
+        }
         case 'w': {
             for (int i=0; i<layers.size(); i++) {
-                layers[i]->geom->drawWireframe = !layers[i]->geom->drawWireframe;
+                if (layers[i]->hasGeom()) {
+                    layers[i]->geom->drawWireframe = !layers[i]->geom->drawWireframe;
+                }
             }
             break;
         }

@@ -23,7 +23,7 @@ public:
         reset();
     }
     bool isLoaded() const {
-        return shader != NULL && shader->isLoaded();
+        return shader.isLoaded();
     }
     bool load(string path);
     void reload();
@@ -31,7 +31,7 @@ public:
     void begin(TexData& data, int delay = 0);
     void end();
     void reset();
-    ofxAutoReloadedShader* getShader() {
+    ofxAutoReloadedShader& getShader() {
         return shader;
     };
     bool hasTexture(string name) {
@@ -83,6 +83,6 @@ private:
     int _id;
     map<string, Texture*> textures;
     map<string, vector<float>> uniforms;
-    ofxAutoReloadedShader* shader = NULL;
+    ofxAutoReloadedShader shader;
 };
 

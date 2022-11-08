@@ -1,5 +1,4 @@
-#version 120
-#extension GL_EXT_gpu_shader4 : require
+#version 150
 
 //uniform sampler2D u_particleImageTexture;
 
@@ -8,13 +7,15 @@ uniform vec4 particleEndColor;
 
 uniform int numLights = 0;
 
-varying vec3 v_normal;
-varying vec3 v_eyeVec;
+in vec3 v_normal;
+in vec3 v_eyeVec;
 
 #define MAX_LIGHTS 8
-varying vec3 v_lightDir[MAX_LIGHTS];
+in vec3 v_lightDir[MAX_LIGHTS];
 
-varying vec4 v_particleColor;
+in vec4 v_particleColor;
+
+out vec4 fragColor;
 
 // --------------------------------------------
 vec4 computeLight()
@@ -54,7 +55,7 @@ vec4 computeLight()
 void main ()
 {
 	vec4 color = computeLight();
-	gl_FragColor = color;
+	fragColor = color;
 	//gl_FragColor = vec4( v_normal.xyz, 1.0 );
 	
 }

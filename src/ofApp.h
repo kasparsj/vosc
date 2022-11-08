@@ -47,6 +47,7 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
     
+    void cameraCommand(string command, const ofxOscMessage& m);
     void layerCommand(Layer *layer, string command, const ofxOscMessage &m);
     void allLayersCommand(string command, const ofxOscMessage &m);
     void soundCommand(Sound &sound, string command, const ofxOscMessage &m);
@@ -55,6 +56,7 @@ public:
     void shaderCommand(Shader& shader, string command, const ofxOscMessage& m);
     void geomCommand(Geom* geom, string command, const ofxOscMessage& m);
     void materialCommand(ofMaterialSettings& matSettings, string command, const ofxOscMessage& m);
+    
     void handleFloat(float *value, const ofxOscMessage &m);
     void handlePercent(float *value, const ofxOscMessage &m);
     void handleVec3(glm::vec3 *value, const ofxOscMessage &m, int firstArg = 1);
@@ -114,4 +116,5 @@ public:
     ofCamera* cam;
     ofxPostProcessing post;
     glm::vec3 camPos = glm::vec3(0, 0, -870);
+    glm::vec3 camLook = glm::vec3(0);
 };

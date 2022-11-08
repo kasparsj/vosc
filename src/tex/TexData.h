@@ -49,6 +49,7 @@ public:
     void setSize(const ofxOscMessage& m) {
         setSize(m.getArgAsFloat(1), m.getArgAsFloat(2));
     }
+    void set(const ofxOscMessage& m);
     ofFbo::Settings& getFboSettings() {
         return fboSettings;
     }
@@ -64,7 +65,7 @@ public:
         color = ofFloatColor(0, 0);
     }
     
-    glm::vec2 size;
+    glm::vec3 size;
     float time = 0;
     float prevTime = 0;
     float speed = 1.f;

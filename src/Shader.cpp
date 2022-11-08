@@ -58,12 +58,7 @@ bool Shader::load(string path) {
             vertPath = tmpVertPath;
         }
         string geomPath = pathNoExt + ".geom";
-        if (cache.find(path) == cache.end()) {
-            ofxAutoReloadedShader sh;
-            cache[path] = sh;
-        }
-        shader = &cache[pathNoExt];
-        return cache[pathNoExt].load(vertPath, fragPath, geomPath);
+        return shader.load(vertPath, fragPath, geomPath);
     }
     ofLog() << "could not find shader " << path;
     return false;
@@ -74,33 +69,33 @@ void Shader::update() {
 
 void Shader::begin(TexData& data, int delay) {
     if (isLoaded()) {
-        shader->begin();
-        shader->setUniform1f("time", data.time);
-        shader->setUniform2f("resolution", data.size.x, data.size.y);
+        shader.begin();
+        shader.setUniform1f("time", data.time);
+        shader.setUniform2f("resolution", data.size.x, data.size.y);
         // todo: overlaps with Source::COLOR
-        shader->setUniform4f("color", data.getColor());
-        shader->setUniform1i("random", data.randomSeed);
-        shader->setUniform1i("num_values", data.values.size());
-        shader->setUniform1fv("values", data.values.data(), data.values.size());
-        shader->setUniform1i("onset", data.onset ? 1 : 0);
+        shader.setUniform4f("color", data.getColor());
+        shader.setUniform1i("random", data.randomSeed);
+        shader.setUniform1i("num_values", data.values.size());
+        shader.setUniform1fv("values", data.values.data(), data.values.size());
+        shader.setUniform1i("onset", data.onset ? 1 : 0);
         int texLoc = 0;
         for (map<string, Texture*>::iterator it=textures.begin(); it!=textures.end(); ++it) {
             if (it->second->hasTexture(delay)) {
-                shader->setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
+                shader.setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
             }
         }
         for (map<string, vector<float>>::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
             if (it->second.size() == 1) {
-                shader->setUniform1f(it->first, it->second[0]);
+                shader.setUniform1f(it->first, it->second[0]);
             }
             else if (it->second.size() == 2) {
-                shader->setUniform2f(it->first, it->second[0], it->second[1]);
+                shader.setUniform2f(it->first, it->second[0], it->second[1]);
             }
             else if (it->second.size() == 3) {
-                shader->setUniform3f(it->first, it->second[0], it->second[1], it->second[2]);
+                shader.setUniform3f(it->first, it->second[0], it->second[1], it->second[2]);
             }
             else if (it->second.size() == 4) {
-                shader->setUniform4f(it->first, it->second[0], it->second[1], it->second[2], it->second[3]);
+                shader.setUniform4f(it->first, it->second[0], it->second[1], it->second[2], it->second[3]);
             }
         }
     }
@@ -108,13 +103,16 @@ void Shader::begin(TexData& data, int delay) {
 
 void Shader::end() {
     if (isLoaded()) {
-        shader->end();
+        shader.end();
     }
 }
 
 void Shader::reset() {
-    textures.empty();
-    uniforms.empty();
+    if (shader.isLoaded()) {
+        shader.unload();
+    }
+    textures.clear();
+    uniforms.clear();
     TexturePool::clean(_id);
 }
 

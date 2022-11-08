@@ -1,6 +1,4 @@
-#version 120
-
-#extension GL_ARB_draw_buffers : enable
+#version 150
 
 // Hmm, do we really need to give the path to the shader if it's in the same folder?
 #pragma include "shaders/common/ShaderHelpers.glslinc"
@@ -27,7 +25,7 @@ void main (void)
 {
 	vec2 texCoord = gl_TexCoord[0].st;
 	
-	vec4 posAndAge = texture2D( tex0, texCoord );
+	vec4 posAndAge = texture( tex0, texCoord );
 	
 	vec3 pos = posAndAge.xyz;
 	float age = posAndAge.w;

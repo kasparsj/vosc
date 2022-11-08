@@ -6,6 +6,19 @@ void TexData::update() {
     prevTime = timef;
 }
 
+void TexData::set(const ofxOscMessage& m) {
+    string prop = m.getArgAsString(1);
+    if (prop == "noClear") {
+        noClear = m.getArgAsBool(2);
+    }
+    else if (prop == "blendMode") {
+        blendMode = static_cast<ofBlendMode>(m.getArgAsInt(2));
+    }
+    else if (prop == "aspectRatio") {
+        aspectRatio = m.getArgAsBool(2);
+    }
+}
+
 void TexData::setFboSettings(const ofxOscMessage &m) {
     std::unordered_map<string, function<void(int, ofFbo::Settings&)>> mapping;
     mapping["numColorbuffers"] = [](int v, ofFbo::Settings& a) { a.numColorbuffers = v; };

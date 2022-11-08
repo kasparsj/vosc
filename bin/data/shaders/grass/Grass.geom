@@ -1,11 +1,22 @@
 #version 150
 
+#pragma include "shaders/common/of_default_uniforms.glsl"
 #pragma include "shaders/common/ShaderHelpers.glsl"
 #pragma include "shaders/common/Noise2D.glsl"
 
+layout (lines) in;
+layout (triangle_strip, max_vertices = 14) out;
+
+in VertexAttrib {
+    vec4 position;
+    vec4 color;
+    vec3 normal;
+    vec2 texcoord;
+} vertex[];
+
 uniform float time;
 
-uniform vec3 cameraWorldPos;
+//uniform vec3 cameraWorldPos;
 
 uniform float stalkHalfWidth;
 uniform float stalkHeight;
@@ -16,21 +27,23 @@ uniform float animationTimeMaxDifference;
 uniform float grassSwayingNoiseFrequency;
 uniform float grassSwayingTimeScale;
 
+out vec4 frontColor;
+
 //-------------------------------------------------------------------------------------------------------------------------------------
 //
 void main()
 {
 	// Let's get the vertices of the line, calculate our stalk up and save how long it was when it came in
-	vec4 p0 = gl_PositionIn[0];
-	vec4 p1 = gl_PositionIn[1];
+	vec4 p0 = gl_in[0].gl_Position;
+	vec4 p1 = gl_in[1].gl_Position;
 	vec4 stalkUp = p1 - p0;
 	float stalkOrigLength = length(stalkUp);
 	stalkUp = stalkUp / stalkOrigLength;
 	
 	// Screen-aligned axes, will come in handy for billboarding
-	vec3 right		= normalize(vec3(gl_ModelViewMatrix[0][0], gl_ModelViewMatrix[1][0], gl_ModelViewMatrix[2][0]));
-	vec3 up			= normalize(vec3(gl_ModelViewMatrix[0][1], gl_ModelViewMatrix[1][1], gl_ModelViewMatrix[2][1]));
-	vec3 forward    = normalize(vec3(gl_ModelViewMatrix[0][2], gl_ModelViewMatrix[1][2], gl_ModelViewMatrix[2][2]));
+	vec3 right		= normalize(vec3(modelViewMatrix[0][0], modelViewMatrix[1][0], modelViewMatrix[2][0]));
+	vec3 up			= normalize(vec3(modelViewMatrix[0][1], modelViewMatrix[1][1], modelViewMatrix[2][1]));
+	vec3 forward    = normalize(vec3(modelViewMatrix[0][2], modelViewMatrix[1][2], modelViewMatrix[2][2]));
 	
 	float stalkLength = stalkHeight * stalkOrigLength;
 	
@@ -70,12 +83,12 @@ void main()
 		vec3 tmpStalkHalfSide = stalkSide * (1.0-tmpFrac);
 		vec3 tmpStalkNormal = cross( normalize(tmpStalkHalfSide), normalize(stalkUp.xyz) );
 		
-		gl_Position = gl_ModelViewProjectionMatrix * vec4((stalkVertexPos.xyz - tmpStalkHalfSide), 1.0);
-		gl_FrontColor = vertex.color * darkenColor;
+		gl_Position = modelViewProjectionMatrix * vec4((stalkVertexPos.xyz - tmpStalkHalfSide), 1.0);
+		frontColor = vertex[0].color * darkenColor;
 		EmitVertex();
 		
-		gl_Position = gl_ModelViewProjectionMatrix * vec4((stalkVertexPos.xyz + tmpStalkHalfSide), 1.0);
-		gl_FrontColor = vertex.color * darkenColor;
+		gl_Position = modelViewProjectionMatrix * vec4((stalkVertexPos.xyz + tmpStalkHalfSide), 1.0);
+		frontColor = vertex[0].color * darkenColor;
 		EmitVertex();
 		
 		stalkUp = stalkUp * swayingMat;

@@ -3,4 +3,132 @@
    uuid = "0CFF3E92-7035-4AC1-82DD-45114145B10E"
    type = "1"
    version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "538A3A59-480D-4C89-89DA-64EA6D5C0FEC"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../libs/openFrameworks/gl/ofShader.cpp"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "169"
+            endingLineNumber = "169"
+            landmarkName = "ofShader::ofShader(mom)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "538A3A59-480D-4C89-89DA-64EA6D5C0FEC - 87a52bb68e4aa2ea"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ofShader::begin() const (.cold.1)"
+                  moduleName = "of_vjDebug"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/kasparsj/Work2/openframeworks/libs/openFrameworks/gl/ofShader.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "176"
+                  endingLineNumber = "176"
+                  offsetFromSymbolStart = "15">
+               </Location>
+               <Location
+                  uuid = "538A3A59-480D-4C89-89DA-64EA6D5C0FEC - da876121d327103e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ofShader::end() const (.cold.1)"
+                  moduleName = "of_vjDebug"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/kasparsj/Work2/openframeworks/libs/openFrameworks/gl/ofShader.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "176"
+                  endingLineNumber = "176"
+                  offsetFromSymbolStart = "15">
+               </Location>
+               <Location
+                  uuid = "538A3A59-480D-4C89-89DA-64EA6D5C0FEC - b33e5245304bcd42"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ofShader::setUniformTexture(std::__1::basic_string&lt;char, std::__1::char_traits&lt;char&gt;, std::__1::allocator&lt;char&gt; &gt; const&amp;, ofTexture const&amp;, int) const (.cold.1)"
+                  moduleName = "of_vjDebug"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/kasparsj/Work2/openframeworks/libs/openFrameworks/gl/ofShader.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "176"
+                  endingLineNumber = "176"
+                  offsetFromSymbolStart = "15">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "24C427C3-419C-4A01-906C-3905BD7F5A98"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../libs/openFrameworks/gl/ofShader.cpp"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "189"
+            endingLineNumber = "189"
+            landmarkName = "ofShader::operator=(mom)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "24C427C3-419C-4A01-906C-3905BD7F5A98 - 87a52bb68e4aa93e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ofShader::begin() const (.cold.1)"
+                  moduleName = "of_vjDebug"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/kasparsj/Work2/openframeworks/libs/openFrameworks/gl/ofShader.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "220"
+                  endingLineNumber = "220"
+                  offsetFromSymbolStart = "29">
+               </Location>
+               <Location
+                  uuid = "24C427C3-419C-4A01-906C-3905BD7F5A98 - da876121d3271bea"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ofShader::end() const (.cold.1)"
+                  moduleName = "of_vjDebug"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/kasparsj/Work2/openframeworks/libs/openFrameworks/gl/ofShader.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "220"
+                  endingLineNumber = "220"
+                  offsetFromSymbolStart = "29">
+               </Location>
+               <Location
+                  uuid = "24C427C3-419C-4A01-906C-3905BD7F5A98 - b33e5245304bc696"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ofShader::setUniformTexture(std::__1::basic_string&lt;char, std::__1::char_traits&lt;char&gt;, std::__1::allocator&lt;char&gt; &gt; const&amp;, ofTexture const&amp;, int) const (.cold.1)"
+                  moduleName = "of_vjDebug"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/kasparsj/Work2/openframeworks/libs/openFrameworks/gl/ofShader.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "220"
+                  endingLineNumber = "220"
+                  offsetFromSymbolStart = "36">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
 </Bucket>
