@@ -868,6 +868,10 @@ void ofApp::draw(){
     ofDisableDepthTest();
     ofPopMatrix();
     
+    drawDebug();
+}
+
+void ofApp::drawDebug() {
     if (showDebug) {
         ofPushStyle();
         for (int i=0; i<layers.size(); i++) {
@@ -878,7 +882,7 @@ void ofApp::draw(){
                 layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
                 ofPopMatrix();
             }
-            if (layers[i]->shader.isLoaded()) {
+            if (layers[i]->shader.isLoaded() && layers[i]->shader.hasDefaultTexture()) {
                 ofSetColor(255);
                 layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
                 if (layers[i]->data.values.size() > 0) {
@@ -897,7 +901,6 @@ void ofApp::draw(){
         ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
         ofPopStyle();
     }
-    ofDisableBlendMode();
 }
 
 void ofApp::exit() {

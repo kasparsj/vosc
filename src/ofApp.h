@@ -32,6 +32,7 @@ public:
     void processQueue();
     bool checkOnset();
 	void draw();
+    void drawDebug();
 	void exit();
 
 	void keyPressed(int key);

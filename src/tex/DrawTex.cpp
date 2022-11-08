@@ -8,6 +8,7 @@ string DrawTex::random() {
 }
 
 void DrawTex::update(TexData& data) {
+    FboTex::update(data);
     ofEnableBlendMode(data.blendMode);
     fbo.begin();
     if (!data.noClear) {
