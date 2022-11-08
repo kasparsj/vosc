@@ -275,6 +275,9 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
             if (tex->data.size.x == 0 && tex->data.size.y == 0) {
                 tex->data.setSize(layer->size.x, layer->size.y);
             }
+            if (tex->isLoaded()) {
+                return;
+            }
         }
         textureCommand(layer->shader.getDefaultTexture(), command, m);
     }

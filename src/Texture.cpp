@@ -132,7 +132,7 @@ void Texture::drawFrame() {
     fbo.begin();
     ofClear(0, 0, 0, 0);
     if (looper == NULL) {
-        tex->draw(data.size);
+        tex->draw(glm::vec2(0, 0), data.size);
     }
     else {
         ofSetColor(255);
@@ -143,11 +143,21 @@ void Texture::drawFrame() {
 
 void Texture::draw(Layer* layer) {
     if (isLoaded() && layer->delay == 0) {
-        tex->draw(layer->size);
+        tex->draw(layer->pos, layer->size);
     }
     else if (hasTexture(layer->delay)) {
-        // todo: implement aspect ratio
-        getTexture(layer->delay).draw(glm::vec2(0, 0), layer->size.x, layer->size.y);
+        const ofTexture& tex = getTexture(layer->delay);
+        if (data.aspectRatio) {
+            if (tex.getWidth() > tex.getHeight()) {
+                tex.draw(layer->pos, layer->size.x, layer->size.x/tex.getWidth() * tex.getHeight());
+            }
+            else {
+                tex.draw(layer->pos, layer->size.y/tex.getHeight() * tex.getWidth(), layer->size.y);
+            }
+        }
+        else {
+            tex.draw(layer->pos, layer->size.x, layer->size.y);
+        }
     }
 }
 

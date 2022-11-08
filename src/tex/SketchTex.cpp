@@ -46,10 +46,6 @@ void SketchTex::update(TexData& data) {
     ofDisableBlendMode();
 }
 
-void SketchTex::draw(const glm::vec2 &size) {
-    fbo.draw(0, 0, size.x, size.y);
-}
-
 void SketchTex::choose() {
     path = random();
 }

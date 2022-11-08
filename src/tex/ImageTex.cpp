@@ -40,17 +40,17 @@ void ImageTex::update(TexData& data) {
     aspectRatio = data.aspectRatio;
 }
 
-void ImageTex::draw(const glm::vec2 &size) {
+void ImageTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
     if (aspectRatio) {
         if (image.getWidth() > image.getHeight()) {
-            image.draw(0, 0, size.x, size.x/image.getWidth() * image.getHeight());
+            image.draw(pos, size.x, size.x/image.getWidth() * image.getHeight());
         }
         else {
-            image.draw(0, 0, size.y/image.getHeight() * image.getWidth(), size.y);
+            image.draw(pos, size.y/image.getHeight() * image.getWidth(), size.y);
         }
     }
     else {
-        image.draw(0, 0, size.x, size.y);
+        image.draw(pos, size.x, size.y);
     }
 }
 

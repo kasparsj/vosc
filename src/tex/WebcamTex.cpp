@@ -29,17 +29,17 @@ void WebcamTex::update(TexData& data) {
     aspectRatio = data.aspectRatio;
 }
 
-void WebcamTex::draw(const glm::vec2 &size) {
+void WebcamTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
     if (aspectRatio) {
         if (vidGrabber.getWidth() > vidGrabber.getHeight()) {
-            vidGrabber.draw(0, 0, size.x, size.x/vidGrabber.getWidth() * vidGrabber.getHeight());
+            vidGrabber.draw(pos, size.x, size.x/vidGrabber.getWidth() * vidGrabber.getHeight());
         }
         else {
-            vidGrabber.draw(0, 0, size.y/vidGrabber.getHeight() * vidGrabber.getWidth(), size.y);
+            vidGrabber.draw(pos, size.y/vidGrabber.getHeight() * vidGrabber.getWidth(), size.y);
         }
     }
     else {
-        vidGrabber.draw(0, 0, size.x, size.y);
+        vidGrabber.draw(pos, size.x, size.y);
     }
 }
 

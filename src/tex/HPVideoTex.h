@@ -18,7 +18,7 @@ public:
     ~HPVideoTex() {}
     void update(TexData& data) override;
     void seek(float pct);
-    void draw(const glm::vec2 &size) override;
+    void draw(const glm::vec2 &pos, const glm::vec2 &size) override;
     void choose() override;
     ofTexture & getTexture() override {
         return *hpvPlayer.getTexturePtr();

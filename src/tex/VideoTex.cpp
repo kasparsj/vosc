@@ -55,17 +55,17 @@ void VideoTex::seek(float pct) {
     videoPlayer.setPosition(pct);
 }
 
-void VideoTex::draw(const glm::vec2 &size) {
+void VideoTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
     if (aspectRatio) {
         if (videoPlayer.getWidth() > videoPlayer.getHeight()) {
-            videoPlayer.draw(0, 0, size.x, size.x/videoPlayer.getWidth() * videoPlayer.getHeight());
+            videoPlayer.draw(pos, size.x, size.x/videoPlayer.getWidth() * videoPlayer.getHeight());
         }
         else {
-            videoPlayer.draw(0, 0, size.y/videoPlayer.getHeight() * videoPlayer.getWidth(), size.y);
+            videoPlayer.draw(pos, size.y/videoPlayer.getHeight() * videoPlayer.getWidth(), size.y);
         }
     }
     else {
-        videoPlayer.draw(0, 0, size.x, size.y);
+        videoPlayer.draw(pos, size.x, size.y);
     }
 }
 

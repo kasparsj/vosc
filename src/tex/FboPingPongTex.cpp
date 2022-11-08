@@ -8,8 +8,8 @@ void FboPingPongTex::update(TexData& data) {
     }
 }
 
-void FboPingPongTex::draw(const glm::vec2 &size) {
-    fbo.draw(glm::vec2(0, 0), size.x);
+void FboPingPongTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
+    fbo.draw(pos, size.x);
 }
 
 void FboPingPongTex::clear() {

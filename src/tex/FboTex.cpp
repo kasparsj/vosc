@@ -8,8 +8,8 @@ void FboTex::update(TexData& data) {
     }
 }
 
-void FboTex::draw(const glm::vec2 &size) {
-    fbo.draw(0, 0, size.x, size.y);
+void FboTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
+    fbo.draw(pos, size.x, size.y);
 }
 
 void FboTex::clear() {

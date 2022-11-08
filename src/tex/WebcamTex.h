@@ -12,7 +12,7 @@ public:
         vidGrabber.close();
     }
     void update(TexData& data) override;
-    void draw(const glm::vec2 &size) override;
+    void draw(const glm::vec2 &pos, const glm::vec2 &size) override;
     void choose() override;
     bool isFrameNew() override {
         return vidGrabber.isFrameNew();

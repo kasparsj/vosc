@@ -7,7 +7,7 @@ class FboPingPongTex : public Tex {
 public:
     FboPingPongTex(string path, const vector<float>& args) : Tex(path, args) {}
     virtual void update(TexData& data) override;
-    void draw(const glm::vec2 &size) override;
+    void draw(const glm::vec2 &pos, const glm::vec2 &size) override;
     void clear() override;
     virtual ofTexture & getTexture() override {
         return fbo.source()->getTexture();
