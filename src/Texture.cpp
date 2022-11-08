@@ -38,7 +38,7 @@ Tex* Texture::factory(string type, string path, const vector<float>& args) {
                 tex = new DrawTex(path, args);
                 break;
             case Source::COLOR:
-                tex = new ShaderTex("color", args);
+                tex = new ShaderTex(path, args);
                 dynamic_cast<ShaderTex*>(tex)->setUniform("color", args);
                 break;
         }
@@ -81,7 +81,7 @@ Tex* Texture::factory(string source, const vector<float>& args) {
                     break;
                 case Source::COLOR: {
                     Tex* tex = factory("shader", "color", args);
-                    ofFloatColor color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+                    ofFloatColor color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
                     dynamic_cast<ShaderTex*>(tex)->setUniform("color", color);
                     return tex;
                 }
@@ -117,8 +117,8 @@ void Texture::load(string source, const vector<float>& args) {
         else {
             if (isColor(source)) {
                 ofFloatColor color = ofFloatColor::fromHex(ofHexToInt(source));
-                vector<float> args1 = {color.r, color.g, color.b};
-                tex = factory("shader", "color", args1);
+                vector<float> args1 = {color.r, color.g, color.b, color.a};
+                tex = factory("color", "color", args1);
             }
             else if (SketchTex::exists(source)) {
                 tex = factory("sketch", source, args);

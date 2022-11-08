@@ -108,6 +108,9 @@ void Shader::begin(Layer *layer) {
             else if (it->second.size() == 3) {
                 shader->setUniform3f(it->first, it->second[0], it->second[1], it->second[2]);
             }
+            else if (it->second.size() == 4) {
+                shader->setUniform4f(it->first, it->second[0], it->second[1], it->second[2], it->second[3]);
+            }
         }
     }
 }
