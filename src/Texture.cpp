@@ -1,5 +1,6 @@
 #include "Texture.h"
 #include "ShaderTex.h"
+#include "ShaderPingPongTex.h"
 #include "VideoTex.h"
 #include "SketchTex.h"
 #include "ImageTex.h"
@@ -24,6 +25,9 @@ Tex* Texture::factory(string type, string path, const vector<float>& args) {
                 break;
             case Source::SHADER:
                 tex = new ShaderTex(path, args);
+                break;
+            case Source::SHADER_PP:
+                tex = new ShaderPingPongTex(path, args);
                 break;
             case Source::SKETCH:
                 tex = new SketchTex(path, args);
@@ -65,7 +69,10 @@ Tex* Texture::factory(string source, const vector<float>& args) {
                     path = HPVideoTex::random();
                     break;
                 case Source::SHADER:
-                    path = Shader::random();
+                    path = ShaderTex::random();
+                    break;
+                case Source::SHADER_PP:
+                    path = ShaderPingPongTex::random();
                     break;
                 case Source::SKETCH:
                     path = SketchTex::random();
