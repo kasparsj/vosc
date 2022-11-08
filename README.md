@@ -37,9 +37,6 @@
 
 ### Data
 - `/data` [Set layer data source](#data)
-- `/data/shader` [Set layer data shader](#data-shader)
-- `/data/shader/uniform` [Set layer data shader uniform](#data-shader-uniform)
-- `/data/fbo` [Init layer data FBO](#data-fbo)
 
 ### Transform
 - `/pos` [Set layer position](#position)
