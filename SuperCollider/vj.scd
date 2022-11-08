@@ -220,13 +220,6 @@ var secs = 10;
 }.fork;
 )
 
-~visuals.sendMsg('/tex', 2, "box");
-~visuals.sendMsg('/tex', 2, "cylinder");
-~visuals.sendMsg('/tex', 2, "cone");
-~visuals.sendMsg('/rot', 2, 360, 1);
-~visuals.sendMsg('/rot/speed', 2, 1);
-~visuals.sendMsg('/scale', 2, 0.2, 0.2, 0.2, 1);
-
 (
 var secs = 30;
 ~visuals.sendMsg('/thresh', "*", 0.8);

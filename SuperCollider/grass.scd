@@ -11,9 +11,9 @@
 //~visuals.sendMsg('/rot', 0, 0, 0, -90);
 
 ~visuals.sendMsg('/geom', 1, "grass", 60, 2, 1.0, 0);
-~visuals.sendMsg('/shader/set', "geomInputType", 1, 1);
-~visuals.sendMsg('/shader/set', "geomOutputType", 1, 5);
-~visuals.sendMsg('/shader/set', "geomOutputCount", 1, 14);
+~visuals.sendMsg('/shader/set', 1, "geomInputType", 1);
+~visuals.sendMsg('/shader/set', 1, "geomOutputType", 5);
+~visuals.sendMsg('/shader/set', 1, "geomOutputCount", 14);
 ~visuals.sendMsg('/shader/uniform', 1, "stalkHalfWidth", 0.1 / 2);
 ~visuals.sendMsg('/shader/uniform', 1, "stalkHeight", 1.0);
 ~visuals.sendMsg('/shader/uniform', 1, "animationTimeMaxDifference", 1.0);

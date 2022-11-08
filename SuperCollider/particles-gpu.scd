@@ -14,7 +14,7 @@
 ~visuals.sendMsg('/tex/fbo', "particlesData", "wrapModeVertical", 0x812F);
 ~visuals.sendMsg('/tex/fbo', "particlesData", "minFilter", 0x2600); // GL_NEAREST
 ~visuals.sendMsg('/tex/fbo', "particlesData", "maxFilter", 0x2600);
-~visuals.sendMsg('/tex/blendmode', "particlesData", 0);
+~visuals.sendMsg('/tex/set', "particlesData", "blendMode", 0);
 ~visuals.sendMsg('/tex', "particlesData", "shader_pp:particles/Update");
 ~visuals.sendMsg('/tex/uniform', "particlesData", "timeStep", 1.0 / 60.0);
 ~visuals.sendMsg('/tex/uniform', "particlesData", "particleMaxAge", 10);
