@@ -298,7 +298,41 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/tex/size', 0, 100, 100); // set texture size to 100x100
+~visuals.sendMsg('/tex/size', 0, 100, 100); // set first layer texture size to 100x100
+```
+
+### Texture Color
+
+`/tex/color`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+- **r, g, b** or **function** (float, float, float or string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/color', 0, 1.0, 0, 0); // set first layer color to red
+~visuals.sendMsg('/tex/color', 0, 255, 0, 0); // set first layer color to red
+~visuals.sendMsg('/tex/color', 0, "rand"); // set first layer to random color
+~visuals.sendMsg('/tex/color', 0, "mfcc"); // map first layer color to mfcc data as color
+~visuals.sendMsg('/tex/color', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // set first layer color to 10% between red and blue
+```
+
+### Texture Tint
+
+`/tex/tint`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+- **r, g, b** or **function** (float, float, float or string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/tint', 0, 1.0, 0, 0); // tint first layer red
+~visuals.sendMsg('/tex/tint', 0, 255, 0, 0); // tint first layer red
+~visuals.sendMsg('/tex/tint', 0, "rand"); // tint first layer to random color
+~visuals.sendMsg('/tex/tint', 0, "mfcc"); // map first layer tint to mfcc data as color
+~visuals.sendMsg('/tex/tint', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // tint first layer to 10% between red and blue
 ```
 
 ### Texture Looper
@@ -491,6 +525,23 @@ Examples:
 // todo: perhaps allow setting loud & amp max values after second ":"
 ```
 
+### Layer Color
+
+`/layer/color`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **r, g, b** or **function** (float, float, float or string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/layer/color', 0, 1.0, 0, 0); // set first layer color to red
+~visuals.sendMsg('/layer/color', 0, 255, 0, 0); // set first layer color to red
+~visuals.sendMsg('/layer/color', 0, "rand"); // set first layer to random color
+~visuals.sendMsg('/layer/color', 0, "mfcc"); // map first layer color to mfcc data as color
+~visuals.sendMsg('/layer/color', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // set first layer color to 10% between red and blue
+```
+
 ### Layer Tint
 
 `/layer/tint`
@@ -505,7 +556,7 @@ Examples:
 ~visuals.sendMsg('/layer/tint', 0, 255, 0, 0); // tint first layer red
 ~visuals.sendMsg('/layer/tint', 0, "rand"); // tint first layer to random color
 ~visuals.sendMsg('/layer/tint', 0, "mfcc"); // map first layer tint to mfcc data as color
-~visuals.sendMsg('/layer/tint', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // ting first layer to 10% between red and blue
+~visuals.sendMsg('/layer/tint', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // tint first layer to 10% between red and blue
 ```
 
 ### Layer Alpha
