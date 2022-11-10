@@ -255,20 +255,84 @@ Examples:
 ~visuals.sendMsg('/tex/choose', 0, "image"); // load random image from library
 ```
 
-### Texture Looper
+### Texture Clear
 
-`/tex/looper`
+`/tex/clear`
 
 Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- **duration** (float) seconds
-- fps (int) fps
-- speed (float) speed
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/tex/looper', 0, 10, 30, 2); // enable looper 10 seconds durations, 30 fps, double speed
-~visuals.sendMsg('/tex/looper', 0, 0); // disable looper
+~visuals.sendMsg('/tex/clear', 0); // clear first layer texture
+```
+
+### Texture Set
+
+`/tex/set`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+- **property** (string)
+- **arg1** (int|float)
+- arg2 (int|float)
+- arg3 (int|float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/set', 0, "numFrames", 180); // set texture history to 180 frames (see [layer delay](#layer-delay))
+~visuals.sendMsg('/tex/set', 0, "noClear", 1); // enable noClear
+~visuals.sendMsg('/tex/set', 0, "blendMode", 4); // set blendMode to multiply
+~visuals.sendMsg('/tex/set', 0, "aspectRatio", 0); // disable aspect ratio lock
+~visuals.sendMsg('/tex/set', 0, "textureWrap", 0x2901, 0x2901); // set texture wrap to GL_REPEAT
+```
+
+### Texture Size
+
+`/tex/size`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+- **x** (float)
+- **y** (float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/size', 0, 100, 100); // set first layer texture size to 100x100
+```
+
+### Texture Color
+
+`/tex/color`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+- **r, g, b** or **function** (float, float, float or string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/color', 0, 1.0, 0, 0); // set first layer color to red
+~visuals.sendMsg('/tex/color', 0, 255, 0, 0); // set first layer color to red
+~visuals.sendMsg('/tex/color', 0, "rand"); // set first layer to random color
+~visuals.sendMsg('/tex/color', 0, "mfcc"); // map first layer color to mfcc data as color
+~visuals.sendMsg('/tex/color', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // set first layer color to 10% between red and blue
+```
+
+### Texture Tint
+
+`/tex/tint`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+- **r, g, b** or **function** (float, float, float or string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/tint', 0, 1.0, 0, 0); // tint first layer red
+~visuals.sendMsg('/tex/tint', 0, 255, 0, 0); // tint first layer red
+~visuals.sendMsg('/tex/tint', 0, "rand"); // tint first layer to random color
+~visuals.sendMsg('/tex/tint', 0, "mfcc"); // map first layer tint to mfcc data as color
+~visuals.sendMsg('/tex/tint', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // tint first layer to 10% between red and blue
 ```
 
 ### Texture Speed
@@ -302,6 +366,22 @@ Examples:
 ~visuals.sendMsg('/tex/seek', 0, 0.5); // seek video to middle position
 ~visuals.sendMsg('/tex/seek', 0, 50); // seek video to middle position
 ~visuals.sendMsg('/tex/seek', 0, 0.25, 3); // animate video position to quarter of length in 3 seconds
+```
+
+### Texture Looper
+
+`/tex/looper`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **duration** (float) seconds
+- fps (int) fps
+- speed (float) speed
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/looper', 0, 10, 30, 2); // enable looper 10 seconds durations, 30 fps, double speed
+~visuals.sendMsg('/tex/looper', 0, 0); // disable looper
 ```
 
 ## Layers
@@ -445,6 +525,23 @@ Examples:
 // todo: perhaps allow setting loud & amp max values after second ":"
 ```
 
+### Layer Color
+
+`/layer/color`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **r, g, b** or **function** (float, float, float or string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/layer/color', 0, 1.0, 0, 0); // set first layer color to red
+~visuals.sendMsg('/layer/color', 0, 255, 0, 0); // set first layer color to red
+~visuals.sendMsg('/layer/color', 0, "rand"); // set first layer to random color
+~visuals.sendMsg('/layer/color', 0, "mfcc"); // map first layer color to mfcc data as color
+~visuals.sendMsg('/layer/color', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // set first layer color to 10% between red and blue
+```
+
 ### Layer Tint
 
 `/layer/tint`
@@ -459,7 +556,7 @@ Examples:
 ~visuals.sendMsg('/layer/tint', 0, 255, 0, 0); // tint first layer red
 ~visuals.sendMsg('/layer/tint', 0, "rand"); // tint first layer to random color
 ~visuals.sendMsg('/layer/tint', 0, "mfcc"); // map first layer tint to mfcc data as color
-~visuals.sendMsg('/layer/tint', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // ting first layer to 10% between red and blue
+~visuals.sendMsg('/layer/tint', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // tint first layer to 10% between red and blue
 ```
 
 ### Layer Alpha
