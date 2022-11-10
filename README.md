@@ -251,7 +251,6 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/tex/choose', 0, "3d"); // load random 3d mesh
 ~visuals.sendMsg('/tex/choose', 0, "video"); // load random video from library
 ~visuals.sendMsg('/tex/choose', 0, "image"); // load random image from library
 ```
