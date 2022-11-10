@@ -23,6 +23,7 @@ public:
     void clear();
     void update();
     void draw(Layer* layer);
+    void texDraw(const glm::vec2& pos, const glm::vec2 size);
     void reset();
     bool isFrameNew() const {
         return tex->isFrameNew();

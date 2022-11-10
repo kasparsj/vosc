@@ -131,19 +131,13 @@ void Texture::drawFrame() {
     }
     fbo.begin();
     ofClear(0, 0, 0, 0);
-    if (looper == NULL) {
-        tex->draw(glm::vec2(0, 0), data.size);
-    }
-    else {
-        ofSetColor(255);
-        looper->draw(0, 0, data.size.x, data.size.y);
-    }
+    texDraw(glm::vec2(0, 0), data.size);
     fbo.end();
 }
 
 void Texture::draw(Layer* layer) {
     if (isLoaded() && layer->delay == 0) {
-        tex->draw(layer->pos, layer->data.size);
+        texDraw(layer->pos, layer->data.size);
     }
     else if (hasTexture(layer->delay)) {
         const ofTexture& tex = getTexture(layer->delay);
@@ -158,6 +152,15 @@ void Texture::draw(Layer* layer) {
         else {
             tex.draw(layer->pos, layer->data.size.x, layer->data.size.y);
         }
+    }
+}
+
+void Texture::texDraw(const glm::vec2& pos, const glm::vec2 size) {
+    if (looper == NULL) {
+        tex->draw(pos, size);
+    }
+    else {
+        looper->draw(pos.x, pos.y, size.x, size.y);
     }
 }
 
