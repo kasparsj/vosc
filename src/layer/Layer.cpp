@@ -98,17 +98,17 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
 void Layer::draw(int totalVisible) {
     if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
         if (data.visible) {
-            switch (blendMode) {
+            switch (data.blendMode) {
                 case OF_BLENDMODE_ALPHA:
-                    //ofSetColor(255, 255, 255, 255 / totalVisible);
+                    ofSetColor(255, 255, 255, 255 / totalVisible);
                     break;
                 default:
-                    //ofSetColor(255);
+                    ofSetColor(255);
                     break;
             }
-            //ofEnableBlendMode(blendMode);
+            ofEnableBlendMode(data.blendMode);
             draw(pos, data.size);
-            //ofDisableBlendMode();
+            ofDisableBlendMode();
         }
         data.afterDraw();
     }

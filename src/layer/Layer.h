@@ -61,7 +61,6 @@ public:
     float thresh = 0.5;
     // todo: maybe should by default fallback to thresh
     float onsetThresh = 0.5;
-    ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
     uint8_t delay = 0;
     ofMaterialSettings matSettings;
     ofMaterial material;

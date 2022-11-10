@@ -8,6 +8,11 @@ void Lights::create(const ofxOscMessage& m) {
     }
 }
 
+void Lights::remove(const ofxOscMessage& m) {
+    string name = m.getArgType(0) == OFXOSC_TYPE_STRING ? m.getArgAsString(0) : ofToString(m.getArgAsInt(0));
+    lights.erase(name);
+}
+
 void Lights::enable() {
     for (map<string, ofLight>::iterator it=lights.begin(); it!=lights.end(); ++it) {
         it->second.enable();

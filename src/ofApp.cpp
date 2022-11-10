@@ -301,62 +301,34 @@ void ofApp::lightCommand(string command, const ofxOscMessage& m) {
     if (command == "/light") {
         lights.create(m);
     }
+    else if (command == "/light/remove") {
+        lights.remove(m);
+    }
 }
 
-void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
-    if (command.substr(0, 4) == "/tex") {
-        if (command == "/tex") {
-            string source = m.getArgAsString(1);
-            Texture* tex = &TexturePool::getForShader(source, layer->shader.getId());
-            layer->shader.setDefaultTexture(tex);
-            if (tex->data.size.x == 0 && tex->data.size.y == 0) {
-                tex->data.setSize(layer->data.size.x, layer->data.size.y);
-            }
-            if (tex->isLoaded()) {
-                return;
-            }
-        }
-        textureCommand(layer->shader.getDefaultTexture(), command, m);
-    }
-    else if (command.substr(0, 5) == "/geom") {
-        if (command == "/geom") {
-            string source = m.getArgAsString(1);
-            Geom* geom = &GeomPool::getForLayer(source, layer->getId());
-            layer->setGeom(geom);
-            if (geom->isLoaded()) {
-                return;
-            }
-        }
-        geomCommand(layer->geom, command, m);
-    }
-    else if (command.substr(0, 7) == "/shader") {
-        shaderCommand(layer->shader, command, m);
-    }
-    else if (command.substr(0, 4) == "/mat") {
-        materialCommand(layer->matSettings, command, m);
-    }
-    else if (command == "/bri") {
+void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
+    if (command == "/layer/bri") {
         handlePercent(&layer->bri, m);
     }
-    else if (command == "/alpha") {
+    else if (command == "/layer/alpha") {
         handlePercent(&layer->alpha, m);
     }
-    else if (command == "/reset") {
+    else if (command == "/layer/reset") {
         layer->reset();
     }
-    else if (command == "/pos") {
+    else if (command == "/layer/pos") {
         handleVec3(&layer->pos, m);
     }
-    else if (command == "/size") {
+    else if (command == "/layer/size") {
         handleVec3(&layer->data.size, m);
     }
-    else if (command == "/rot") {
+    else if (command == "/layer/rot") {
         handleVec3(&layer->rotation, m);
     }
-    else if (command == "/rot/speed") {
+    else if (command == "/layer/rot/speed") {
         handleVec3(&layer->rotationSpeed, m);
     }
-    else if (command == "/rot/point") {
+    else if (command == "/layer/rot/point") {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
             string argH = m.getArgAsString(1);
             string argV = m.getNumArgs() > 2 ? m.getArgAsString(2) : argH;
@@ -383,10 +355,10 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
             handleVec3(&layer->rotationPoint, m);
         }
     }
-    else if (command == "/scale") {
+    else if (command == "/layer/scale") {
         handleVec3(&layer->scale, m);
     }
-    else if (command == "/align") {
+    else if (command == "/layer/align") {
         ofAlignHorz alignH;
         ofAlignVert alignV;
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
@@ -418,40 +390,74 @@ void ofApp::layerCommand(Layer *layer, string command, const ofxOscMessage &m) {
         layer->alignH = alignH;
         layer->alignV = alignV;
     }
-    else if (command == "/data") {
+    else if (command == "/layer/data") {
         vector<string> ds;
         for (int i=1; i<m.getNumArgs(); i++) {
             ds.push_back(m.getArgAsString(i));
         }
         layer->setDataSources(ds);
     }
-    else if (command == "/data/add") {
+    else if (command == "/layer/data/add") {
         vector<string> ds;
         for (int i=1; i<m.getNumArgs(); i++) {
             ds.push_back(m.getArgAsString(i));
         }
         layer->addDataSources(ds);
     }
-    else if (command == "/delay") {
+    else if (command == "/layer/delay") {
         layer->delay = m.getArgAsFloat(1);
     }
-    else if (command == "/behaviour") {
+    else if (command == "/layer/behaviour") {
         layer->behaviour = m.getArgAsInt(1);
     }
-    else if (command == "/thresh") {
+    else if (command == "/layer/thresh") {
         handleFloat(&layer->thresh, m);
     }
-    else if (command == "/thresh/onset" || command == "/onset/thresh") {
+    else if (command == "/layer/thresh/onset" || command == "/layer/onset/thresh") {
         handleFloat(&layer->onsetThresh, m);
     }
-    else if (command == "/blendmode") {
-        layer->blendMode = static_cast<ofBlendMode>(m.getArgAsInt(0));
+}
+
+void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
+    if (command.substr(0, 4) == "/tex") {
+        if (command == "/tex") {
+            string source = m.getArgAsString(1);
+            Texture* tex = &TexturePool::getForShader(source, layer->shader.getId());
+            layer->shader.setDefaultTexture(tex);
+            if (tex->data.size.x == 0 && tex->data.size.y == 0) {
+                tex->data.setSize(layer->data.size.x, layer->data.size.y);
+            }
+            if (tex->isLoaded()) {
+                return;
+            }
+        }
+        textureCommand(layer->shader.getDefaultTexture(), command, m);
+    }
+    else if (command.substr(0, 5) == "/geom") {
+        if (command == "/geom") {
+            string source = m.getArgAsString(1);
+            Geom* geom = &GeomPool::getForLayer(source, layer->getId());
+            layer->setGeom(geom);
+            if (geom->isLoaded()) {
+                return;
+            }
+        }
+        geomCommand(layer->geom, command, m);
+    }
+    else if (command.substr(0, 6) == "/layer") {
+        layerCommand(layer, command, m);
+    }
+    else if (command.substr(0, 7) == "/shader") {
+        shaderCommand(layer->shader, command, m);
+    }
+    else if (command.substr(0, 4) == "/mat") {
+        materialCommand(layer->matSettings, command, m);
     }
 }
 
 void ofApp::allLayersCommand(string command, const ofxOscMessage &m) {
     for (int i=0; i<layers.size(); i++) {
-        layerCommand(layers[i], command, m);
+        indexCommand(layers[i], command, m);
     }
 }
 
@@ -493,12 +499,13 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
             texDataCommand(tex->data, command, m);
         }
     }
-    else if (command == "/tex/uniform") {
+    else if (command == "/tex/uniform" || command == "/tex/var") {
+        // todo: implement /tex/var
         if (ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex->tex)) {
             shaderTex->setUniform(m);
         }
     }
-    else if (command == "/tex/loop") {
+    else if (command == "/tex/looper") {
         tex->setLooper(m);
     }
     else {
@@ -598,7 +605,7 @@ void ofApp::shaderCommand(Shader& shader, string command, const ofxOscMessage& m
     else if (command == "/shader/set") {
         shader.set(m);
     }
-    else if (command == "/shader/uniform") {
+    else if (command == "/shader/uniform" || command == "/shader/var") {
         shader.setUniform(m);
     }
     else if (command == "/shader/texture") {
@@ -771,7 +778,7 @@ void ofApp::processQueue() {
             else {
                 int idx = m.getArgAsInt(0);
                 if (idx > -1) {
-                    layerCommand(layers[idx], command, m);
+                    indexCommand(layers[idx], command, m);
                 }
             }
         }
