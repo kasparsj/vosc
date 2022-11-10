@@ -181,6 +181,9 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     else if (command.substr(0, 4) == "/cam") {
         cameraCommand(command, m);
     }
+    else if (command.substr(0, 6) == "/light") {
+        lightCommand(command, m);
+    }
     else {
         messageQueue.push_back(m);
     }
@@ -271,15 +274,32 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
         else if (method == "farClip") {
             cam->setFarClip(m.getArgAsFloat(1));
         }
-        else if (method == "autoDistance") {
-            dynamic_cast<ofEasyCam*>(cam)->setAutoDistance(m.getArgAsBool(1));
-        }
         else if (method == "globalPosition") {
             cam->setGlobalPosition(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsFloat(3));
         }
-        else if (method == "movementMaxSpeed") {
-            //dynamic_cast<ofxFirstPersonCamera*>(cam)->setMovementMaxSpeed(m.getArgAsFloat(1));
+        else {
+            ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+            if (easyCam != NULL) {
+                if (method == "distance") {
+                    easyCam->setDistance(m.getArgAsFloat(1));
+                }
+                else if (method == "autoDistance") {
+                    dynamic_cast<ofEasyCam*>(cam)->setAutoDistance(m.getArgAsBool(1));
+                }
+            }
+//            ofxFirstPersonCamera* firstPersonCam = dynamic_cast<ofxFirstPersonCamera*>(cam);
+//            if (firstPersonCam != NULL) {
+//                if (method == "movementMaxSpeed") {
+//                    firstPersonCam->setMovementMaxSpeed(m.getArgAsFloat(1));
+//                }
+//            }
         }
+    }
+}
+
+void ofApp::lightCommand(string command, const ofxOscMessage& m) {
+    if (command == "/light") {
+        lights.create(m);
     }
 }
 
@@ -857,6 +877,7 @@ void ofApp::draw(){
     ofPushMatrix();
     if (cam != NULL) {
         ofEnableDepthTest();
+        lights.enable();
         post.begin(*cam);
         ofTranslate(-ofGetWidth()/2.f, -ofGetHeight()/2);
     }
@@ -874,6 +895,7 @@ void ofApp::draw(){
         layers[i]->draw(totalVisible);
     }
     post.end();
+    lights.disable();
     ofDisableDepthTest();
     ofPopMatrix();
     

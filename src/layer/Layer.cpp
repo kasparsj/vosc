@@ -35,7 +35,7 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 }
 
 void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
-    if (shader.isLoaded() || shader.hasDefaultTexture()) {
+    if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
         data.update(sounds, notes);
         rotation += rotationSpeed;
         if (data.useRandomColor) {
@@ -64,21 +64,28 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
         if (geom == NULL) {
             geom = &GeomPool::getForLayer(getId());
         }
+        if (shader.hasDefaultTexture()) {
         if (!geom->isLoaded()) {
             geom->load("plane");
         }
-        if (!shader.isLoaded()) {
+            if (!shader.isLoaded()) {
             shader.load("texture");
         }
+        }
         
-        shader.begin(data, delay);
-        shader.getShader().setUniform1i("index", index);
-        shader.getShader().setUniform2f("offset", pos.x, pos.y);
-        // todo: fix material
-        //material.begin();
-        geom->draw();
-        //material.end();
-        shader.end();
+        if (shader.isLoaded()) {
+            shader.begin(data, delay);
+            shader.getShader().setUniform1i("index", index);
+            shader.getShader().setUniform2f("offset", pos.x, pos.y);
+            // todo: fix material
+            //material.begin();
+            geom->draw();
+            //material.end();
+            shader.end();
+        }
+        else {
+            geom->draw();
+        }
     }
     else if (shader.hasDefaultTexture()) {
         shader.getDefaultTexture()->draw(this);
@@ -89,7 +96,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
 }
 
 void Layer::draw(int totalVisible) {
-    if (shader.isLoaded() || shader.hasDefaultTexture()) {
+    if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
         if (data.visible) {
             switch (blendMode) {
                 case OF_BLENDMODE_ALPHA:

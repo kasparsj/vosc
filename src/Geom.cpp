@@ -12,30 +12,40 @@ string Geom::random() {
 }
 
 void Geom::load(string newPath, const vector<float>& args) {
+    string newPrevPath = path;
+    path = newPath;
     if (isPrimitive(newPath)) {
         if (primitive != NULL) {
             delete primitive;
             primitive = NULL;
         }
-        prevPath = path;
-        path = newPath;
-        if (!loadPrimitive(args)) {
+        if (loadPrimitive(args)) {
+            usingModel = false;
+            prevPath = newPrevPath;
+        }
+        else {
             ofLog() << "could not load primitive: " << path;
-            path = prevPath;
-            return;
+            path = newPrevPath;
         }
     }
     else if (newPath == "grass") {
-        prevPath = path;
-        path = newPath;
-        if (!loadGrass(args)) {
+        if (loadGrass(args)) {
+            usingModel = false;
+            prevPath = newPrevPath;
+        }
+        else {
             ofLog() << "could not load grass: " << path;
-            path = prevPath;
-            return;
+            path = newPrevPath;
         }
     }
     else {
-        ofLog() << "invalid geom " << newPath;
+        if (loadModel(args)) {
+            prevPath = newPrevPath;
+        }
+        else {
+            ofLog() << "could not load model: " << path;
+            path = newPrevPath;
+        }
     }
 }
 
@@ -46,6 +56,37 @@ void Geom::load(const ofxOscMessage &m) {
         args.push_back(m.getArgAsFloat(i));
     }
     load(newPath, args);
+}
+
+bool Geom::loadModel(const vector<float>& args) {
+    vector<string> modelPaths;
+    if (!ofFilePath::isAbsolute(path)) {
+        modelPaths.insert(modelPaths.end(), {
+            ofToDataPath(path),
+            ofToDataPath("models/" + path),
+        });
+    }
+    else {
+        modelPaths.insert(modelPaths.end(), {
+            path,
+        });
+    }
+    string modelPath = "";
+    for (int i=0; i<modelPaths.size(); i++) {
+        if (ofFile(modelPaths[i]).exists()) {
+            modelPath = modelPaths[i];
+            break;
+        }
+    }
+    if (modelPath.find(".ply") != string::npos) {
+        usingModel = false;
+        mesh.load(modelPath);
+        return true;
+    }
+    else {
+        usingModel = true;
+        return model.load(modelPath);
+    }
 }
 
 bool Geom::loadPrimitive(const vector<float>& args) {
@@ -73,9 +114,6 @@ bool Geom::loadPrimitive(const vector<float>& args) {
         primitive = new ofConePrimitive();
     }
     if (primitive != NULL) {
-        //primitive->setPosition(pos);
-        //primitive->setScale(size);
-        //primitive->draw();
         mesh = primitive->getMesh();
         return true;
     }
@@ -128,14 +166,21 @@ void Geom::update() {
 }
 
 void Geom::draw() {
-    if (drawInstanced > 1) {
-        mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
+    if (usingModel) {
+        model.drawFaces();
     }
     else {
-        mesh.draw();
-    }
-    if (drawWireframe) {
-        mesh.drawWireframe();
+        meshNode.transformGL();
+        if (drawInstanced > 1) {
+            mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
+        }
+        else {
+            mesh.draw();
+        }
+        if (drawWireframe) {
+            mesh.drawWireframe();
+        }
+        meshNode.restoreTransformGL();
     }
 }
 

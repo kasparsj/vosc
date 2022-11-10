@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxOsc.h"
+#include "ofxAssimpModelLoader.h"
 
 class Layer;
 
@@ -11,6 +12,9 @@ public:
     static bool isPrimitive(string path);
     static string random();
 
+    Geom() {
+        meshNode.setOrientation(glm::angleAxis(ofDegToRad(-90.f), glm::vec3{1.f, 0.f, 0.f}));
+    }
     ~Geom() {
         if (primitive != NULL) {
             delete primitive;
@@ -35,11 +39,15 @@ public:
     int drawInstanced = 0;
 
 private:
+    bool loadModel(const vector<float> &args);
     bool loadPrimitive(const vector<float>& args);
     bool loadGrass(const vector<float>& args);
     
     string path = "";
     string prevPath = "";
     of3dPrimitive *primitive = NULL;
+    ofxAssimpModelLoader model;
     ofVboMesh mesh;
+    ofNode meshNode;
+    bool usingModel;
 };

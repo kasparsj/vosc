@@ -33,14 +33,19 @@ string Shader::random() {
 }
 
 bool Shader::load(string path) {
-    vector<string> fragPaths = {
-        ofToDataPath(path),
-        ofToDataPath(path + ".frag"),
-    };
+    vector<string> fragPaths;
     if (!ofFilePath::isAbsolute(path)) {
         fragPaths.insert(fragPaths.end(), {
+            ofToDataPath(path),
+            ofToDataPath(path + ".frag"),
             ofToDataPath("shaders/" + path),
             ofToDataPath("shaders/" + path + ".frag"),
+        });
+    }
+    else {
+        fragPaths.insert(fragPaths.end(), {
+            path,
+            path + ".frag",
         });
     }
     string fragPath = "";

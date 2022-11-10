@@ -9,6 +9,7 @@
 #include "ofxEasing.h"
 #include "ofxPostProcessing.h"
 #include "Texture.h"
+#include "Lights.h"
 
 template <typename T>
 struct Tween {
@@ -48,6 +49,7 @@ public:
 	void gotMessage(ofMessage msg);
     
     void cameraCommand(string command, const ofxOscMessage& m);
+    void lightCommand(string command, const ofxOscMessage& m);
     void layerCommand(Layer *layer, string command, const ofxOscMessage &m);
     void allLayersCommand(string command, const ofxOscMessage &m);
     void soundCommand(Sound &sound, string command, const ofxOscMessage &m);
@@ -107,8 +109,6 @@ public:
     vector<Layer*> layers = {0};
     int waitOnset = -1;
     bool forceOnset;
-    
-    bool showDebug = false;
     Layout layout = Layout::STACK;
     map<float*, Tween<float>> floatTweens;
     map<glm::vec3*, Tween<glm::vec3>> vec3Tweens;
@@ -117,4 +117,7 @@ public:
     ofxPostProcessing post;
     glm::vec3 camPos = glm::vec3(0, 0, -870);
     glm::vec3 camLook = glm::vec3(0);
+    Lights lights;
+    
+    bool showDebug = false;
 };
