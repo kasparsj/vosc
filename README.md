@@ -255,6 +255,52 @@ Examples:
 ~visuals.sendMsg('/tex/choose', 0, "image"); // load random image from library
 ```
 
+### Texture Clear
+
+`/tex/clear`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/clear', 0); // clear first layer texture
+```
+
+### Texture Set
+
+`/tex/set`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+- **property** (string)
+- **arg1** (int|float)
+- arg2 (int|float)
+- arg3 (int|float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/set', 0, "numFrames", 180); // set texture history to 180 frames (see [layer delay](#layer-delay))
+~visuals.sendMsg('/tex/set', 0, "noClear", 1); // enable noClear
+~visuals.sendMsg('/tex/set', 0, "blendMode", 4); // set blendMode to multiply
+~visuals.sendMsg('/tex/set', 0, "aspectRatio", 0); // disable aspect ratio lock
+~visuals.sendMsg('/tex/set', 0, "textureWrap", 0x2901, 0x2901); // set texture wrap to GL_REPEAT
+```
+
+### Texture Size
+
+`/tex/size`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+- **x** (float)
+- **y** (float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/size', 0, 100, 100); // set texture size to 100x100
+```
+
 ### Texture Looper
 
 `/tex/looper`
