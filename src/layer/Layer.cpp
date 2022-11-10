@@ -47,31 +47,30 @@ void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) 
 }
 
 void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
-    //ofEnableLighting();
-    ofSetGlobalAmbientColor(ofFloatColor(1.0, 1.0, 1.0, 1.0));
+    //ofSetGlobalAmbientColor(ofFloatColor(1.0, 1.0, 1.0, 1.0));
     
     ofPushMatrix();
     doAlign();
     doRotate();
-    doScale();
     ofPushStyle();
     ofSetColor(data.getTint() * bri, alpha * 255);
     
     if (hasGeom() || shader.isLoaded()) {
-        ofTranslate(pos + data.size/2.f);
-        ofScale(data.size / glm::vec3(100, -100, 100));
-        
         if (geom == NULL) {
             geom = &GeomPool::getForLayer(getId());
         }
         if (shader.hasDefaultTexture()) {
-        if (!geom->isLoaded()) {
-            geom->load("plane");
-        }
+            if (!geom->isLoaded()) {
+                geom->load("plane");
+            }
             if (!shader.isLoaded()) {
-            shader.load("texture");
+                shader.load("texture");
+            }
         }
-        }
+        
+        ofTranslate(pos + data.size/2.f);
+        doScale();
+        ofScale(geom->getScale(data.size));
         
         if (shader.isLoaded()) {
             shader.begin(data, delay);
@@ -88,6 +87,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
         }
     }
     else if (shader.hasDefaultTexture()) {
+        doScale();
         shader.getDefaultTexture()->draw(this);
     }
     
@@ -100,15 +100,15 @@ void Layer::draw(int totalVisible) {
         if (data.visible) {
             switch (blendMode) {
                 case OF_BLENDMODE_ALPHA:
-                    ofSetColor(255, 255, 255, 255 / totalVisible);
+                    //ofSetColor(255, 255, 255, 255 / totalVisible);
                     break;
                 default:
-                    ofSetColor(255);
+                    //ofSetColor(255);
                     break;
             }
-            ofEnableBlendMode(blendMode);
+            //ofEnableBlendMode(blendMode);
             draw(pos, data.size);
-            ofDisableBlendMode();
+            //ofDisableBlendMode();
         }
         data.afterDraw();
     }

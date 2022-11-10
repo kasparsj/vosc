@@ -22,6 +22,7 @@ void Geom::load(string newPath, const vector<float>& args) {
         if (loadPrimitive(args)) {
             usingModel = false;
             prevPath = newPrevPath;
+            updateBoundingBox();
         }
         else {
             ofLog() << "could not load primitive: " << path;
@@ -32,6 +33,7 @@ void Geom::load(string newPath, const vector<float>& args) {
         if (loadGrass(args)) {
             usingModel = false;
             prevPath = newPrevPath;
+            updateBoundingBox();
         }
         else {
             ofLog() << "could not load grass: " << path;
@@ -41,6 +43,7 @@ void Geom::load(string newPath, const vector<float>& args) {
     else {
         if (loadModel(args)) {
             prevPath = newPrevPath;
+            updateBoundingBox();
         }
         else {
             ofLog() << "could not load model: " << path;
@@ -114,6 +117,7 @@ bool Geom::loadPrimitive(const vector<float>& args) {
         primitive = new ofConePrimitive();
     }
     if (primitive != NULL) {
+        primitive->mapTexCoords(1.f, 1.f, 0.f, 0.f);
         mesh = primitive->getMesh();
         return true;
     }
@@ -165,12 +169,29 @@ void Geom::choose() {
 void Geom::update() {
 }
 
+void Geom::updateBoundingBox() {
+    if (usingModel) {
+        boundingBox.max = model.getSceneMax() * model.getNormalizedScale();
+        boundingBox.min = model.getSceneMin() * model.getNormalizedScale();
+    }
+    else {
+        const vector<glm::vec3>& vertices  = mesh.getVertices();
+        for(auto v : vertices){
+            if (v.x < boundingBox.min.x) boundingBox.min.x = v.x;
+            if (v.y < boundingBox.min.y) boundingBox.min.y = v.y;
+            if (v.z < boundingBox.min.z) boundingBox.min.z = v.z;
+            if (v.x > boundingBox.max.x) boundingBox.max.x = v.x;
+            if (v.y > boundingBox.max.y) boundingBox.max.y = v.y;
+            if (v.z > boundingBox.max.z) boundingBox.max.z = v.z;
+        }
+    }
+}
+
 void Geom::draw() {
     if (usingModel) {
         model.drawFaces();
     }
     else {
-        meshNode.transformGL();
         if (drawInstanced > 1) {
             mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
         }
@@ -180,7 +201,6 @@ void Geom::draw() {
         if (drawWireframe) {
             mesh.drawWireframe();
         }
-        meshNode.restoreTransformGL();
     }
 }
 
