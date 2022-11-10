@@ -3,7 +3,8 @@
 
 ~visuals.sendMsg('/layers', 4, "stack");
 ~visuals.sendMsg('/cam', "easy");
-~visuals.sendMsg('/cam/pos', 0, 0.5, -100);
+~visuals.sendMsg('/cam/pos', 0, 50, -100);
+~visuals.sendMsg('/cam/look', 0, 0, 0);
 ~visuals.sendMsg('/cam/set', "nearClip", 0.01);
 // ~visuals.sendMsg('/cam/set', "movementMaxSpeed", 0.1);
 

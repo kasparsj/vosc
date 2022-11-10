@@ -936,6 +936,9 @@ void ofApp::drawDebug() {
                 ofDrawBitmapString("not loaded", 20+i*120, ofGetHeight()-120);
             }
         }
+        if (cam != NULL) {
+            ofDrawBitmapString(ofToString(cam->getPosition()), 20, 20);
+        }
         ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
         ofPopStyle();
     }
