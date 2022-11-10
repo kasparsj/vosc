@@ -335,22 +335,6 @@ Examples:
 ~visuals.sendMsg('/tex/tint', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // tint first layer to 10% between red and blue
 ```
 
-### Texture Looper
-
-`/tex/looper`
-
-Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- **duration** (float) seconds
-- fps (int) fps
-- speed (float) speed
-
-Examples:
-```supercollider
-~visuals.sendMsg('/tex/looper', 0, 10, 30, 2); // enable looper 10 seconds durations, 30 fps, double speed
-~visuals.sendMsg('/tex/looper', 0, 0); // disable looper
-```
-
 ### Texture Speed
 
 `/tex/speed`
@@ -382,6 +366,22 @@ Examples:
 ~visuals.sendMsg('/tex/seek', 0, 0.5); // seek video to middle position
 ~visuals.sendMsg('/tex/seek', 0, 50); // seek video to middle position
 ~visuals.sendMsg('/tex/seek', 0, 0.25, 3); // animate video position to quarter of length in 3 seconds
+```
+
+### Texture Looper
+
+`/tex/looper`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **duration** (float) seconds
+- fps (int) fps
+- speed (float) speed
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/looper', 0, 10, 30, 2); // enable looper 10 seconds durations, 30 fps, double speed
+~visuals.sendMsg('/tex/looper', 0, 0); // disable looper
 ```
 
 ## Layers
