@@ -26,6 +26,7 @@
 - `/tex/speed` [Seek texture playback speed](#texture-speed)
 - `/tex/seek` [Seek texture playback position](#texture-seek)
 - `/tex/var` [Set texture variable](#texture-variable)
+- `/tex/uniform` [Set texture variable](#texture-variable)
 - `/tex/fbo` [Configure texture FBO](#texture-fbo)
 - `/tex/looper` [Enable texture looper](#texture-looper)
 
