@@ -238,7 +238,7 @@ Examples:
 ```supercollider
 ~visuals.sendMsg('/tex/unload', "*"); // unload all layers
 // same as:
-~visuals.sendMsg('/tex/load', "*", ""); // unload all layers
+~visuals.sendMsg('/tex', "*", ""); // unload all layers
 ```
 
 ### Texture Choose
