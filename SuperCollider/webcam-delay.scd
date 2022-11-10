@@ -3,12 +3,12 @@
 ~visuals.sendMsg('/layers', 9, "grid"); // initializes 9 layers with grid layout
 9.do { |i|
 	~visuals.sendMsg('/tex', i, "webcam:0");
-	~visuals.sendMsg('/align', i, "center");
 	~visuals.sendMsg('/tex/set', i, "numFrames", 120);
-	~visuals.sendMsg('/rot', i, 0, 0, 0);
-	~visuals.sendMsg('/rot/speed', i, 0, 0, 0);
-	~visuals.sendMsg('/rot/point', i, "center");
-	~visuals.sendMsg('/delay', i, i*13);
+	~visuals.sendMsg('/layer/align', i, "center");
+	~visuals.sendMsg('/layer/rot', i, 0, 0, 0);
+	~visuals.sendMsg('/layer/rot/speed', i, 0, 0, 0);
+	~visuals.sendMsg('/layer/rot/point', i, "center");
+	~visuals.sendMsg('/layer/delay', i, i*13);
 };
 )
 
@@ -20,10 +20,10 @@
 ~visuals.sendMsg('/tex/set', "t_webcam", "aspectRatio", false);
 9.do { |i|
 	~visuals.sendMsg('/tex', i, "t_webcam");
-	~visuals.sendMsg('/rot', i, 0, 0, 0);
-	~visuals.sendMsg('/rot/speed', i, 0, 0, 0);
-	~visuals.sendMsg('/rot/point', i, "center");
-	~visuals.sendMsg('/delay', i, i*13);
+	~visuals.sendMsg('/layer/rot', i, 0, 0, 0);
+	~visuals.sendMsg('/layer/rot/speed', i, 0, 0, 0);
+	~visuals.sendMsg('/layer/rot/point', i, "center");
+	~visuals.sendMsg('/layer/delay', i, i*13);
 };
 )
 
@@ -37,10 +37,10 @@
 9.do { |i|
 	~visuals.sendMsg('/tex', i, "t_webcam");
 	~visuals.sendMsg('/geom', i, "g_sphere");
-	~visuals.sendMsg('/rot', i, 0, 0, 0);
-	~visuals.sendMsg('/rot/speed', i, 0, 0, 0);
-	~visuals.sendMsg('/rot/point', i, "center");
-	~visuals.sendMsg('/delay', i, i*13);
+	~visuals.sendMsg('/layer/rot', i, 0, 0, 0);
+	~visuals.sendMsg('/layer/rot/speed', i, 0, 0, 0);
+	~visuals.sendMsg('/layer/rot/point', i, "center");
+	~visuals.sendMsg('/layer/delay', i, i*13);
 };
 )
 

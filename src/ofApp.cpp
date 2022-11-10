@@ -493,7 +493,7 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
             tex->getTexture().setTextureWrap(m.getArgAsInt(2), m.getArgAsInt(3));
         }
         else if (method == "numFrames") {
-            tex->setNumFrames(m.getArgAsInt(1));
+            tex->setNumFrames(m.getArgAsInt(2));
         }
         else {
             texDataCommand(tex->data, command, m);
