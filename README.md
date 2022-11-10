@@ -184,7 +184,7 @@ Examples:
 
 Arguments:
 - **target** (int|string) layer index or wildcard or shared geometry name, e.g. "*"
-- **source** (string) model file or [primitive](#geom)
+- **source** (string) model file or [primitive](#primitive)
 
 Examples:
 ```supercollider
@@ -530,13 +530,14 @@ Examples:
 - `"video"`
 - `"webcam"`
 
-### geom
+### primitive
 - `"plane"`
 - `"box"`
 - `"sphere"`
 - `"icosphere"`
 - `"cylinder"`
 - `"cone"`
+- `"grass"`
 
 ## Datasource
 - `"const"`
