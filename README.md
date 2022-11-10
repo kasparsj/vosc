@@ -13,18 +13,17 @@
 - `/cam/look` [Camera look at](#camera-look)
 - `/cam/set` [Set camera property](#camera-set)
 
+## Textures
+- `/tex` [Load texture](#texture-load)
+- `/tex/reload` [Reload texture](#texture-reload)
+- `/tex/unload` [Unload texture](#texture-unload)
+- `/tex/choose` [Choose texture at random](#texture-choose)
+
+## Geometry
+- `/geom` [Load geometry](#geometry)
+- `/geom/set` [Set geometry property](#geometry-set)
+
 ## Layers
-
-### Texture
-- `/tex` [Load texture](#load)
-- `/tex/reload` [Reload texture](#reload)
-- `/tex/unload` [Unload texture](#unload)
-- `/tex/choose` [Choose texture at random](#choose)
-
-### Geometry
-- `/geom` [Set layer geometry](#geom)
-- `/geom/instanced` [Use instanced draw](#instanced)
-- `/geom/mesh/mode` [Set layer geometry mesh mode](#mesh-mode)
 
 ### Shader
 - `/shader` [Set layer shader](#shader)
@@ -174,19 +173,15 @@ Examples:
 ~visuals.sendMsg('/cam/set', "movementMaxSpeed", 1); // only when camera is set to "fp"
 ```
 
-## Layers
+## Geometry
 
-### Geometry
-
-By default layer geometry is set to 2D ("plane" geometry).
-
-#### Geom
+### Geometry load
 
 `/geom`
 
 Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- [**geom**](#geom) (string)
+- **target** (int|string) layer index or wildcard or shared geometry name, e.g. "*"
+- **source** (string) model file or [primitive](#geom)
 
 Examples:
 ```supercollider
@@ -195,15 +190,15 @@ Examples:
 ~visuals.sendMsg('/geom', 0, "sphere"); // set first layer geometry to sphere
 ```
 
-### Texture
+## Texture
 
-#### Load
+### Texture Load
 
 `/tex`
 
 Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- texture (string) relative or absolute path or URL
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+- **source** (string) relative or absolute path or URL
 
 Examples:
 ```supercollider
@@ -217,24 +212,24 @@ Examples:
 ~visuals.sendMsg('/tex', 0, ""); // unload first layer texture
 ```
 
-#### Reload
+### Texture Reload
 
 `/tex/reload`
 
 Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
 
 Examples:
 ```supercollider
 ~visuals.sendMsg('/tex/reload', "*"); // reload all layers
 ```
 
-#### Unload
+### Texture Unload
 
 `/tex/unload`
 
 Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
 
 Examples:
 ```supercollider
@@ -243,12 +238,12 @@ Examples:
 ~visuals.sendMsg('/tex/load', "*", ""); // unload all layers
 ```
 
-#### Choose
+### Texture Choose
 
 `/tex/choose`
 
 Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
 - [source](#source) (string) source type
 
 Examples:
@@ -257,6 +252,8 @@ Examples:
 ~visuals.sendMsg('/tex/choose', 0, "video"); // load random video from library
 ~visuals.sendMsg('/tex/choose', 0, "image"); // load random image from library
 ```
+
+## Layers
 
 ### Transform
 
