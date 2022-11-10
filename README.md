@@ -18,46 +18,49 @@
 - `/tex/reload` [Reload texture](#texture-reload)
 - `/tex/unload` [Unload texture](#texture-unload)
 - `/tex/choose` [Choose texture at random](#texture-choose)
+- `/tex/clear` [Clear texture](#texture-clear)
+- `/tex/set` [Set texture property](#texture-set)
+- `/tex/size` [Set texture size](#texture-size)
+- `/tex/color` [Seek texture color](#texture-color)
+- `/tex/tint` [Seek texture tint](#texture-tint)
+- `/tex/speed` [Seek texture playback speed](#texture-speed)
+- `/tex/seek` [Seek texture playback position](#texture-seek)
+- `/tex/var` [Set texture variable](#texture-variable)
+- `/tex/fbo` [Configure texture FBO](#texture-fbo)
+- `/tex/looper` [Enable texture looper](#texture-looper)
 
 ## Geometry
 - `/geom` [Load geometry](#geometry)
 - `/geom/set` [Set geometry property](#geometry-set)
 
-## Layers
-
-### Shader
-- `/shader` [Set layer shader](#shader)
+## Shaders
+- `/shader` [Load layer shader](#shader)
 - `/shader/uniform` [Set layer shader uniform](#shader-uniform)
+- `/shader/var` [Set layer shader uniform](#shader-uniform)
+- `/shader/texture` [Set layer shader texture](#shader-texture)
+- `/shader/set` [Set layer shader property](#shader-set)
 
-### Material
+## Layers
+- `/layer/pos` [Set layer position](#layer-position)
+- `/layer/size` [Set layer size](#layer-size)
+- `/layer/scale` [Set layer scale](#layer-scale)
+- `/layer/rot` [Set layer rotation](#layer-rotation)
+- `/layer/rot/point` [Set layer rotation point](#layer-rotation-point)
+- `/layer/rot/speed` [Set layer rotation speed](#layer-rotation-speed)
+- `/layer/reset` [Reset layer](#layer-reset)
+- `/layer/data` [Set layer data source](#layer-data)
+- `/layer/color` [Set layer color](#layer-color)
+- `/layer/tint` [Set layer tint](#layer-tint)
+- `/layer/alpha` [Set layer alpha](#layer-alpha)
+- `/layer/bri` [Set layer brightness](#layer-brightness)
+- `/layer/delay` [Set layer delay](#layer-delay)
+
+## Materials
 - `/mat/diffuse` [Set material diffuse color](#diffuse)
 - `/mat/ambient` [Set material ambient color](#ambient)
 - `/mat/specular` [Set material specular color](#specular)
 - `/mat/emissive` [Set material emissive color](#emissive)
 - `/mat/shininess` [Set material shininess](#shininess)
-
-### Data
-- `/data` [Set layer data source](#data)
-
-### Transform
-- `/pos` [Set layer position](#position)
-- `/scale` [Set layer scale](#scale)
-- `/size` [Set layer size](#size)
-- `/rot` [Set layer rotation](#rotation)
-- `/rot/point` [Set layer rotation point](#rotation-point)
-- `/rot/speed` [Set layer rotation speed](#rotation-speed)
-- `/reset` [Reset layer](#reset)
-
-### Color
-- `/tint` [Set layer tint](#tint)
-- `/alpha` [Set layer alpha](#alpha)
-- `/bri` [Set layer brightness](#brightness)
-
-### Time
-- `/delay` [Set layer delay](#delay)
-- `/looper` [Activate layer looper](#looper)
-- `/speed` [Set layer speed](#speed)
-- `/seek` [Seek video layer](#seek)
 
 # Command reference
 
@@ -253,13 +256,60 @@ Examples:
 ~visuals.sendMsg('/tex/choose', 0, "image"); // load random image from library
 ```
 
+### Texture Looper
+
+`/tex/looper`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **duration** (float) seconds
+- fps (int) fps
+- speed (float) speed
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/looper', 0, 10, 30, 2); // enable looper 10 seconds durations, 30 fps, double speed
+~visuals.sendMsg('/tex/looper', 0, 0); // disable looper
+```
+
+### Texture Speed
+
+`/tex/speed`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **speed** (float)
+ 
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/speed', 0, 2); // speed up 2x first layer
+~visuals.sendMsg('/tex/speed', 0, 0.5); // slow down 2x first layer
+~visuals.sendMsg('/tex/speed', 0, 100); // speed up 100x first layer
+~visuals.sendMsg('/tex/speed', "*", 10); // speed up 10x all layers
+```
+
+### Texture Seek
+
+`/tex/seek`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **time** (float|string) time position as percentage
+- duration (float)
+- easing (int)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/seek', 0, 0.5); // seek video to middle position
+~visuals.sendMsg('/tex/seek', 0, 50); // seek video to middle position
+~visuals.sendMsg('/tex/seek', 0, 0.25, 3); // animate video position to quarter of length in 3 seconds
+```
+
 ## Layers
 
-### Transform
+### Layer Position
 
-#### Position
-
-`/pos`
+`/layer/pos`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -270,33 +320,14 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/pos', 0, 100, 150); // offset first layer by x:100, y:150
-~visuals.sendMsg('/pos', 0, 100, 150, 200); // offset first layer by x:100, y:150, z:200
-~visuals.sendMsg('/pos', 0, 100, 150, 0, 1); // animate first layer position to x:100, y:150, over 1 second
+~visuals.sendMsg('/layer/pos', 0, 100, 150); // offset first layer by x:100, y:150
+~visuals.sendMsg('/layer/pos', 0, 100, 150, 200); // offset first layer by x:100, y:150, z:200
+~visuals.sendMsg('/layer/pos', 0, 100, 150, 0, 1); // animate first layer position to x:100, y:150, over 1 second
 ```
 
-#### Scale
+### Layer Size
 
-`/scale`
-
-Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- **x** (float) width scale as percentage
-- **y** (float) height scale as percentage
-- **z** (float) depth scale as percentage
-- duration (float)
-
-Examples:
-```supercollider
-~visuals.sendMsg('/scale', 0, 2); // scale first layer 2x
-~visuals.sendMsg('/scale', 0, 2, 1); // scale width of first layer 2x
-~visuals.sendMsg('/scale', 0, 2, 3, 1, 3); // scale width (2x) and height (3x) of first layer in 3 seconds tween
-~visuals.sendMsg('/scale', 0, -1, -1, 1); // flip first layer both on x and y axis
-```
-
-#### Size
-
-`/size`
+`/layer/size`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -307,14 +338,33 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/size', 0, 100, 150); // resize first layer to w:100, h:150
-~visuals.sendMsg('/size', 0, 100, 150, 200); // offset first layer by w:100, h:150, d:200
-~visuals.sendMsg('/size', 0, 100, 150, 0, 1); // animate first layer position to w:100, h:150, over 1 second
+~visuals.sendMsg('/layer/size', 0, 100, 150); // resize first layer to w:100, h:150
+~visuals.sendMsg('/layer/size', 0, 100, 150, 200); // offset first layer by w:100, h:150, d:200
+~visuals.sendMsg('/layer/size', 0, 100, 150, 0, 1); // animate first layer position to w:100, h:150, over 1 second
 ```
 
-#### Rotation
+### Layer Scale
 
-`/rot`
+`/layer/scale`
+
+Arguments:
+- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **x** (float) width scale as percentage
+- **y** (float) height scale as percentage
+- **z** (float) depth scale as percentage
+- duration (float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/layer/scale', 0, 2); // scale first layer 2x
+~visuals.sendMsg('/layer/scale', 0, 2, 1); // scale width of first layer 2x
+~visuals.sendMsg('/layer/scale', 0, 2, 3, 1, 3); // scale width (2x) and height (3x) of first layer in 3 seconds tween
+~visuals.sendMsg('/layer/scale', 0, -1, -1, 1); // flip first layer both on x and y axis
+```
+
+### Layer Rotation
+
+`/layer/rot`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -325,13 +375,13 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/rot', 0, 0, 0, 90); // set first layer rotation to 90 on the z axis
-~visuals.sendMsg('/rot', 0, 0, 0, 360, 10); // animate first layer rotation to 360 on the x axis
+~visuals.sendMsg('/layer/rot', 0, 0, 0, 90); // set first layer rotation to 90 on the z axis
+~visuals.sendMsg('/layer/rot', 0, 0, 0, 360, 10); // animate first layer rotation to 360 on the x axis
 ```
 
-#### Rotation point
+### Layer Rotation point
 
-`/rot/point`
+`/layer/rot/point`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -340,13 +390,13 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/rot/point', 0, 0.5, 0.5); // set first layer rotation point to center
-~visuals.sendMsg('/rot/point', 0, "center"); // set first layer rotation point to center
+~visuals.sendMsg('/layer/rot/point', 0, 0.5, 0.5); // set first layer rotation point to center
+~visuals.sendMsg('/layer/rot/point', 0, "center"); // set first layer rotation point to center
 ```
 
-#### Rotation speed
+### Layer Rotation speed
 
-`/rot/speed`
+`/layer/rot/speed`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -357,13 +407,13 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/rot/speed', 0, 100, 0, 0); // set first layer rotation speed to 1 degree
-~visuals.sendMsg('/rot/speed', 0, 360, 0, 0, 2); // increase first layer rotation speed to 360 degrees over 2 seconds
+~visuals.sendMsg('/layer/rot/speed', 0, 100, 0, 0); // set first layer rotation speed to 1 degree
+~visuals.sendMsg('/layer/rot/speed', 0, 360, 0, 0, 2); // increase first layer rotation speed to 360 degrees over 2 seconds
 ```
 
-#### Reset
+### Layer Reset
 
-`/reset`
+`/layer/reset`
 
 Reset layer properties (position, size, speed)
 
@@ -372,14 +422,12 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/reset', 0); // reset first layers
+~visuals.sendMsg('/layer/reset', 0); // reset first layers
 ```
 
-### Data
+### Layer Variable
 
-#### Data
-
-`/data`
+`/layer/var`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -387,22 +435,20 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/data', 0, "const"); // set first layer data source to constant 1
-~visuals.sendMsg('/data', 0, "const:23"); // set first layer data source to constant 23
-~visuals.sendMsg('/data', 0, "rand"); // set first layer data source to random
-~visuals.sendMsg('/data', 0, "rand:100"); // set first layer data source to random of 100
-~visuals.sendMsg('/data', 0, "noise"); // set first layer data source to perlin noise
-~visuals.sendMsg('/data', 0, "noise:50"); // set first layer data source to perlin noise of 50
-~visuals.sendMsg('/data', 0, "loud:0"); // set first layer data source to channel 1 loudness
-~visuals.sendMsg('/data', 0, "amp:1"); // set first layer data source to channel 2 loudness
+~visuals.sendMsg('/layer/var', 0, "const"); // set first layer data source to constant 1
+~visuals.sendMsg('/layer/var', 0, "const:23"); // set first layer data source to constant 23
+~visuals.sendMsg('/layer/var', 0, "rand"); // set first layer data source to random
+~visuals.sendMsg('/layer/var', 0, "rand:100"); // set first layer data source to random of 100
+~visuals.sendMsg('/layer/var', 0, "noise"); // set first layer data source to perlin noise
+~visuals.sendMsg('/layer/var', 0, "noise:50"); // set first layer data source to perlin noise of 50
+~visuals.sendMsg('/layer/var', 0, "loud:0"); // set first layer data source to channel 1 loudness
+~visuals.sendMsg('/layer/var', 0, "amp:1"); // set first layer data source to channel 2 loudness
 // todo: perhaps allow setting loud & amp max values after second ":"
 ```
 
-### Color
+### Layer Tint
 
-#### Tint
-
-`/tint`
+`/layer/tint`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -410,16 +456,16 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/tint', 0, 1.0, 0, 0); // tint first layer red
-~visuals.sendMsg('/tint', 0, 255, 0, 0); // tint first layer red
-~visuals.sendMsg('/tint', 0, "rand"); // tint first layer to random color
-~visuals.sendMsg('/tint', 0, "mfcc"); // map first layer tint to mfcc data as color
-~visuals.sendMsg('/tint', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // ting first layer to 10% between red and blue
+~visuals.sendMsg('/layer/tint', 0, 1.0, 0, 0); // tint first layer red
+~visuals.sendMsg('/layer/tint', 0, 255, 0, 0); // tint first layer red
+~visuals.sendMsg('/layer/tint', 0, "rand"); // tint first layer to random color
+~visuals.sendMsg('/layer/tint', 0, "mfcc"); // map first layer tint to mfcc data as color
+~visuals.sendMsg('/layer/tint', 0, "lerp", 0.1, 255, 0, 0, 0, 0, 255); // ting first layer to 10% between red and blue
 ```
 
-#### Alpha
+### Layer Alpha
 
-`/alpha`
+`/layer/alpha`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -429,16 +475,16 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/alpha', 0, 1.0); // set first layer opacity to 100%
-~visuals.sendMsg('/alpha', 0, 100); // set first layer opacity to 100%
-~visuals.sendMsg('/alpha', 0, 0.5, 2); // animate first layer opacity to 50% over 2 seconds
-~visuals.sendMsg('/alpha', 0, 50, 2); // animate first layer opacity to 50% over 2 seconds
-~visuals.sendMsg('/alpha', 0, 10, 2, "expo"); // animate first layer opacity to 10% over 2 seconds with exponential easing
+~visuals.sendMsg('/layer/alpha', 0, 1.0); // set first layer opacity to 100%
+~visuals.sendMsg('/layer/alpha', 0, 100); // set first layer opacity to 100%
+~visuals.sendMsg('/layer/alpha', 0, 0.5, 2); // animate first layer opacity to 50% over 2 seconds
+~visuals.sendMsg('/layer/alpha', 0, 50, 2); // animate first layer opacity to 50% over 2 seconds
+~visuals.sendMsg('/layer/alpha', 0, 10, 2, "expo"); // animate first layer opacity to 10% over 2 seconds with exponential easing
 ```
 
-#### Brightness
+### Layer Brightness
 
-`/bri`
+`/layer/bri`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -448,18 +494,16 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/bri', 0, 1.0); // set first layer brightness to 100%
-~visuals.sendMsg('/bri', 0, 100); // set first layer brightness to 100%
-~visuals.sendMsg('/bri', 0, 0.5, 2); // animate first layer brightness to 50% over 2 seconds
-~visuals.sendMsg('/bri', 0, 50, 2); // animate first layer brightness to 50% over 2 seconds
-~visuals.sendMsg('/bri', 0, 10, 2, "expo"); // animate first layer brightness to 10% over 2 seconds with exponential easing
+~visuals.sendMsg('/layer/bri', 0, 1.0); // set first layer brightness to 100%
+~visuals.sendMsg('/layer/bri', 0, 100); // set first layer brightness to 100%
+~visuals.sendMsg('/layer/bri', 0, 0.5, 2); // animate first layer brightness to 50% over 2 seconds
+~visuals.sendMsg('/layer/bri', 0, 50, 2); // animate first layer brightness to 50% over 2 seconds
+~visuals.sendMsg('/layer/bri', 0, 10, 2, "expo"); // animate first layer brightness to 10% over 2 seconds with exponential easing
 ```
 
-### Time
+### Layer Delay
 
-#### Delay
-
-`/delay`
+`/layer/delay`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
@@ -467,56 +511,7 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/delay', 0, 60); // set layer 0 delay to 60 frames (1 second)
-```
-
-#### Looper
-
-`/looper`
-
-Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- **duration** (float) seconds
-- fps (int) fps
-- speed (float) speed
-
-Examples:
-```supercollider
-~visuals.sendMsg('/looper', 0, 10, 30, 2); // enable looper 10 seconds durations, 30 fps, double speed
-~visuals.sendMsg('/looper', 0, 0); // disable looper
-```
-
-#### Speed
-
-`/speed`
-
-Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- **speed** (float)
- 
-Examples:
-```supercollider
-~visuals.sendMsg('/speed', 0, 2); // speed up 2x first layer
-~visuals.sendMsg('/speed', 0, 0.5); // slow down 2x first layer
-~visuals.sendMsg('/speed', 0, 100); // speed up 100x first layer
-~visuals.sendMsg('/speed', "*", 10); // speed up 10x all layers
-```
-
-#### Seek
-
-`/seek`
-
-Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- **time** (float|string) time position as percentage
-- duration (float)
-- easing (int)
-
-Examples:
-```supercollider
-~visuals.sendMsg('/seek', 0, 0.5); // seek video to middle position
-~visuals.sendMsg('/seek', 0, 50); // seek video to middle position
-~visuals.sendMsg('/seek', 0, 0.25, 3); // animate video position to quarter of length in 3 seconds
+~visuals.sendMsg('/layer/delay', 0, 60); // set layer 0 delay to 60 frames (1 second)
 ```
 
 ## Enumerations
