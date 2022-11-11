@@ -5,7 +5,7 @@
 #include "ofFbo.h"
 #include "ofxLooper.h"
 
-class Texture : public TexDataParent {
+class Texture : public VarsConfig {
 public:
     Texture() {
         data.setup(this);
@@ -40,7 +40,6 @@ public:
         return tex != NULL;
     }
     void setLooper(const ofxOscMessage& m);
-    void setVar(const ofxOscMessage& m) override;
 
     Tex* tex = NULL;
     TexData data;

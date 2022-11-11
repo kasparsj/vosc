@@ -1,7 +1,7 @@
 #include "LayerData.h"
 #include "Layer.h"
 
-void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const map<string, LayerVar>& maps) {
+void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const map<string, VarConfig>& maps) {
     TexData::update(sounds, notes, maps);
     Layer* layer = dynamic_cast<Layer*>(parent);
     if (layer->onsetThresh.scale != 0) {
@@ -19,7 +19,7 @@ void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &not
 }
 
 void LayerData::afterDraw() {
-    for (map<string, LayerVar>::iterator it=parent->vars.begin(); it!=parent->vars.end(); ++it) {
+    for (map<string, VarConfig>::iterator it=parent->varsConfig.begin(); it!=parent->varsConfig.end(); ++it) {
         if (it->second.type == "tidal") {
             vars[it->first] -= 1.f/8.f;
             if (vars[it->first] < 0) {

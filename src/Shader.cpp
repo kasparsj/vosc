@@ -69,7 +69,7 @@ bool Shader::load(string path) {
     return false;
 }
 
-void Shader::update() {
+void Shader::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
 }
 
 void Shader::begin(TexData& data, int delay) {
@@ -86,6 +86,9 @@ void Shader::begin(TexData& data, int delay) {
             if (it->second->hasTexture(delay)) {
                 shader.setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
             }
+        }
+        for (map<string, float>::iterator it=data.vars.begin(); it!=data.vars.end(); ++it) {
+            shader.setUniform1f(it->first, it->second);
         }
         for (map<string, vector<float>>::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
             if (it->second.size() == 1) {

@@ -9,7 +9,7 @@
 #include "LayerShader.h"
 #include "GeomPool.h"
 
-class Layer : public TexDataParent {
+class Layer : public VarsConfig {
 public:
     Layer() {
         static int nextId = 0;
@@ -54,8 +54,8 @@ public:
     int behaviour = -1;
     float bri = 1.0;
     float alpha = 1.0;
-    LayerVar visibleThresh = {"const", 1.f, 0};
-    LayerVar onsetThresh = {"const", 1.f, 0};
+    VarConfig visibleThresh = {"const", 1.f, 0};
+    VarConfig onsetThresh = {"const", 1.f, 0};
     uint8_t delay = 0;
     ofMaterialSettings matSettings;
     ofMaterial material;

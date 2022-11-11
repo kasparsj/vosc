@@ -4,7 +4,7 @@ void Layer::setup(int index)
 {
     this->index = index;
     data.setup(this);
-    vars.clear();
+    varsConfig.clear();
 }
 
 void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
@@ -33,13 +33,13 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 
 void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
-        data.update(sounds, notes, vars);
+        data.update(sounds, notes, varsConfig);
         rotation += rotationSpeed;
         if (data.useRandomColor) {
             data.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
         }
     }
-    shader.update();
+    shader.update(sounds, notes);
     material.setup(matSettings);
 }
 
@@ -158,7 +158,7 @@ void Layer::reset() {
     geom = NULL;
     GeomPool::clean(_id);
     shader.reset();
-    vars.clear();
+    varsConfig.clear();
 }
 
 void Layer::resetTransform() {

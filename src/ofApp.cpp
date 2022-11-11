@@ -3,6 +3,7 @@
 #include "ofxHPVPlayer.h"
 #include "TexturePool.h"
 #include "GeomPool.h"
+#include "ShaderTex.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -551,7 +552,15 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
             texDataCommand(tex->data, command, m);
         }
     }
-    else if (command == "/tex/uniform" || command == "/tex/var") {
+    else if (command == "/tex/uniform") {
+        if (ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex)) {
+            shaderTex->setUniform(m);
+        }
+        else {
+            ofLog() << "cannot set uniform for non-shader texture";
+        }
+    }
+    else if (command == "/tex/var") {
         tex->setVar(m);
     }
     else if (command == "/tex/looper") {
@@ -654,7 +663,7 @@ void ofApp::shaderCommand(Shader& shader, string command, const ofxOscMessage& m
     else if (command == "/shader/set") {
         shader.set(m);
     }
-    else if (command == "/shader/uniform" || command == "/shader/var") {
+    else if (command == "/shader/uniform") {
         shader.setUniform(m);
     }
     else if (command == "/shader/texture") {

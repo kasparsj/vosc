@@ -2,7 +2,6 @@
 #include "SketchTex.h"
 #include "Config.h"
 #include "Layer.h"
-#include "ShaderTex.h"
 
 bool isColor(string path) {
     return (path.substr(0, 1) == "#" && path.size() == 7) || (path.substr(0, 2) == "0x" && path.size() == 8);
@@ -106,7 +105,7 @@ void Texture::clear() {
 
 void Texture::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     if (isLoaded()) {
-        data.update(sounds, notes, vars);
+        data.update(sounds, notes, varsConfig);
         tex->update(data);
         
         if (looper != NULL) {
@@ -243,13 +242,4 @@ void Texture::setLooper(const ofxOscMessage& m) {
         }
     }
 
-}
-
-void Texture::setVar(const ofxOscMessage& m) {
-    if (ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex)) {
-        shaderTex->setUniform(m);
-    }
-    else {
-        TexDataParent::setVar(m);
-    }
 }

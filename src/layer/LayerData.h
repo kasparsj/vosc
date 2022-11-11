@@ -7,7 +7,7 @@ class Layer;
 
 class LayerData : public TexData {
 public:
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const map<string, LayerVar>& maps);
+    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const map<string, VarConfig>& maps);
     void afterDraw();
     
     bool visible;
