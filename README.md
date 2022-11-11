@@ -3,9 +3,10 @@
 # Command overview
 
 ## Setup
-- `/sounds` [Setup sounds](#setup-sounds)
+- `/sound/stream` [Setup sound stream](#setup-sound-stream)
+- `/sound/data` [Update sound data from SC](#setup-sound-stream)
 - `/layers` [Setup layers](#setup-layers)
-- `/layout` [Change layout](#change-layout)
+- `/layers/layout` [Change layout](#change-layout)
 
 ## Camera
 - `/cam` [Use camera](#use-camera)
@@ -99,16 +100,16 @@ Examples:
 
 ### Change layout
 
-`/layout`
+`/layers/layout`
 
 Arguments:
 - [**layout**](#layout) (int|string)
-- numLayers (int)
+- args (int)
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/layout', 3); // change layout to grid
-~visuals.sendMsg('/layout', "grid"); // change layout to grid
+~visuals.sendMsg('/layers/layout', 3); // change layout to grid
+~visuals.sendMsg('/layers/layout', "grid"); // change layout to grid
 ```
 
 ## Camera
