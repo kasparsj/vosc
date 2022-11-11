@@ -1,7 +1,7 @@
 #include "Sound.h"
 
-void Sound::parse(const ofxOscMessage &m) {
-    instNum = m.getArgAsInt(0);
+void Sound::parse(const ofxOscMessage& m) {
+    //instNum = m.getArgAsInt(0);
     amplitude = m.getArgAsFloat(1);
     loudness = m.getArgAsFloat(2);
     onset = m.getArgAsInt(3);
@@ -12,4 +12,45 @@ void Sound::parse(const ofxOscMessage &m) {
             mfcc[i] = m.getArgAsFloat(4+i);
         }
     }
+}
+
+void Sound::stream(const ofxOscMessage& m) {
+    string name = m.getArgAsString(1);
+    int numInputChannels = m.getNumArgs() > 2 ? m.getArgAsInt(2) : 1;
+    if (numInputChannels > 0) {
+        //instNum = m.getArgAsInt(0);
+        auto devices = soundStream.getMatchingDevices(name);
+        ofSoundStreamSettings settings;
+        if (!devices.empty()) {
+            settings.setInDevice(devices[0]);
+        }
+
+        settings.setInListener(this);
+        settings.sampleRate = 44100;
+        settings.numOutputChannels = 0;
+        settings.numInputChannels = numInputChannels;
+        settings.bufferSize = m.getNumArgs() > 3 ? m.getArgAsInt(3) : 256;
+        soundStream.setup(settings);
+        soundStream.start();
+    }
+    else {
+        soundStream.close();
+    }
+}
+
+void Sound::audioIn(ofSoundBuffer& input){
+    float curVol = 0.0;
+    int numCounted = 0;
+    for (size_t i = 0; i < input.getNumFrames(); i++){
+        for (size_t j=0; j<soundStream.getNumInputChannels(); j++) {
+            float sample = input[i*2+j] / soundStream.getNumInputChannels();
+            curVol += sample * sample;
+            numCounted++;
+        }
+    }
+    curVol /= (float) numCounted;
+    volume = sqrt( curVol );
+    
+    volumeSmooth *= 0.93;
+    volumeSmooth += 0.07 * volume;
 }

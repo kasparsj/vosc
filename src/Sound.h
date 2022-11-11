@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ofMain.h"
 #include "ofxOsc.h"
 
 #define MAX_LOUD 64
@@ -9,8 +10,13 @@ public:
     Sound() {
     }
     void parse(const ofxOscMessage &m);
+    void stream(const ofxOscMessage &m);
+    void audioIn(ofSoundBuffer& input);
     
+    ofSoundStream soundStream;
     int instNum;
+    float volume;
+    float volumeSmooth;
     float amplitude;
     float loudness;
     int onset;

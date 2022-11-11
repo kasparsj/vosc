@@ -148,15 +148,8 @@ Layout parseLayout(const ofxOscMessage &m, int idx)
 
 void ofApp::parseMessage(const ofxOscMessage &m) {
     string command = m.getAddress();
-    if (command == "/sound/data") {
-        int instNum = m.getArgAsInt(0);
-        if ((instNum+1) > sounds.size()) {
-            setupSounds(instNum+1);
-        }
-        sounds[instNum].parse(m);
-        if (waitOnset == -1) {
-            waitOnset = 1;
-        }
+    if (command.substr(0, 6) == "/sound") {
+        soundsCommand(command, m);
     }
     else if (command == "/dirt/play") {
         tidal->parse(m);
@@ -246,6 +239,16 @@ void ofApp::layersCommand(string command, const ofxOscMessage& m) {
         }
     }
     else if (command == "/layers/layout") {
+        vector<Layer*> layers;
+        if (m.getNumArgs() > 1) {
+            layers.resize(m.getNumArgs()-1);
+            for (int i=0; i<m.getNumArgs()-1; i++) {
+                layers[i] = this->layers[m.getArgAsInt(1+i)];
+            }
+        }
+        else {
+            layers = this->layers;
+        }
         layoutLayers(parseLayout(m, 0), layers);
     }
 }
@@ -476,14 +479,44 @@ void ofApp::allLayersCommand(string command, const ofxOscMessage &m) {
     }
 }
 
-void ofApp::soundCommand(Sound &sound, string command, const ofxOscMessage &m) {
-    if (command == "/amp/max") {
-        handleFloat(&sound.maxAmp, m);
+void ofApp::soundsCommand(string command, const ofxOscMessage &m) {
+    auto [all, idx] = parseIndex(m);
+    if (all) {
+        for (int i=0; i<sounds.size(); i++) {
+            soundCommand(sounds[i], command, m);
+        }
     }
-    else if (command == "/loud/max") {
-        handleFloat(&sound.maxLoud, m);
+    else if (idx >= 0) {
+        if (!all && (idx+1) > sounds.size()) {
+            setupSounds(idx+1);
+        }
+        Sound& sound = sounds[idx];
+        soundCommand(sound, command, m);
     }
+    else {
+        ofLog() << "invalid sound index";
+    }
+}
 
+void ofApp::soundCommand(Sound& sound, string command, const ofxOscMessage &m) {
+    if (command == "/sound/data") {
+        sound.parse(m);
+        if (waitOnset == -1) {
+            waitOnset = 1;
+        }
+    }
+    else if (command == "/sound/stream") {
+        sound.stream(m);
+    }
+    else if (command == "/sound/set") {
+        string prop = m.getArgAsString(1);
+        if (prop == "maxAmp") {
+            handleFloat(&sound.maxAmp, m);
+        }
+        else if (prop == "maxLoud") {
+            handleFloat(&sound.maxLoud, m);
+        }
+    }
 }
 
 void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m) {
@@ -743,33 +776,7 @@ void ofApp::processQueue() {
     while (messageQueue.size()) {
         ofxOscMessage &m = messageQueue[0];
         string command = m.getAddress();
-        if (command == "/layout") {
-            vector<Layer*> layers;
-            if (m.getNumArgs() > 1) {
-                layers.resize(m.getNumArgs()-1);
-                for (int i=0; i<m.getNumArgs()-1; i++) {
-                    layers[i] = this->layers[m.getArgAsInt(1+i)];
-                }
-            }
-            else {
-                layers = this->layers;
-            }
-            layoutLayers(parseLayout(m, 0), layers);
-        }
-        else if (command.substr(0, 4) == "/amp" || command.substr(0, 5) == "/loud") {
-            auto [all, idx] = parseIndex(m);
-            if (all) {
-                for (int i=0; i<sounds.size(); i++) {
-                    soundCommand(sounds[i], command, m);
-                }
-            }
-            else {
-                if (idx > -1) {
-                    soundCommand(sounds[idx], command, m);
-                }
-            }
-        }
-        else if (command.substr(0, 5) == "/post") {
+        if (command.substr(0, 5) == "/post") {
             post.getPasses().clear();
             for (int i=0; i<m.getNumArgs(); i++) {
                 string passName = m.getArgAsString(i);

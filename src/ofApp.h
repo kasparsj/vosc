@@ -54,7 +54,8 @@ public:
     void layerCommand(Layer* layer, string command, const ofxOscMessage& m);
     void indexCommand(Layer *layer, string command, const ofxOscMessage& m);
     void allLayersCommand(string command, const ofxOscMessage& m);
-    void soundCommand(Sound &sound, string command, const ofxOscMessage& m);
+    void soundsCommand(string command, const ofxOscMessage& m);
+    void soundCommand(Sound& sound, string command, const ofxOscMessage& m);
     void textureCommand(Texture* tex, string command, const ofxOscMessage& m);
     void texDataCommand(TexData& data, string command, const ofxOscMessage& m);
     void shaderCommand(Shader& shader, string command, const ofxOscMessage& m);
