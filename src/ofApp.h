@@ -48,6 +48,7 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
     
+    void layersCommand(string command, const ofxOscMessage& m);
     void cameraCommand(string command, const ofxOscMessage& m);
     void lightCommand(string command, const ofxOscMessage& m);
     void layerCommand(Layer* layer, string command, const ofxOscMessage& m);

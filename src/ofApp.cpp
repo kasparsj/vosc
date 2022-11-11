@@ -37,6 +37,7 @@ void ofApp::setupLayers(int numVisuals) {
 void ofApp::layoutLayers(Layout layout, const vector<Layer*> &layers) {
     this->layout = layout;
     for (int i=0; i<layers.size(); i++) {
+        // todo: add support for animation
         layers[i]->layout(layout, i, layers.size());
     }
 }
@@ -172,11 +173,8 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     else if (command == "/sounds") {
         setupSounds(m.getArgAsInt(0));
     }
-    else if (command == "/layers") {
-        setupLayers(m.getArgAsInt(0));
-        if (m.getNumArgs() > 1) {
-            layoutLayers(parseLayout(m, 1), layers);
-        }
+    else if (command.substr(0, 7) == "/layers") {
+        layersCommand(command, m);
     }
     else if (command.substr(0, 4) == "/cam") {
         cameraCommand(command, m);
@@ -238,6 +236,18 @@ ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0) {
         }
     }
     return color;
+}
+
+void ofApp::layersCommand(string command, const ofxOscMessage& m) {
+    if (command == "/layers") {
+        setupLayers(m.getArgAsInt(0));
+        if (m.getNumArgs() > 1) {
+            layoutLayers(parseLayout(m, 1), layers);
+        }
+    }
+    else if (command == "/layers/layout") {
+        layoutLayers(parseLayout(m, 0), layers);
+    }
 }
 
 void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
