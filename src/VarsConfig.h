@@ -23,6 +23,7 @@ public:
 
 class VarsHolder {
 public:
+    virtual ~VarsHolder() {}
     void updateVars(const vector<Sound> &sounds, const vector<TidalNote> &notes, const map<string, VarConfig>& maps);
     bool hasVar(string name) {
         return vars.find(name) != vars.end();

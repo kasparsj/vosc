@@ -1,5 +1,6 @@
 #include "VarsConfig.h"
 #include "Config.h"
+#include "TexData.h"
 
 void VarsConfig::setVar(string name, string value, float scale) {
     float maxValue = 1.f;
@@ -93,7 +94,14 @@ float VarsHolder::getValue(const vector<Sound> &sounds, string name, const VarCo
             value = var.value * var.scale;
         }
         else if (var.type == "noise") {
-            value = ofNoise(std::stoi(name), time) * var.value;
+            int sum = 0;
+            for (int i=0; i<name.size(); i++) {
+                sum += name[i];
+            }
+            if (dynamic_cast<TexData*>(this) != NULL) {
+                sum += dynamic_cast<TexData*>(this)->randomSeed;
+            }
+            value = ofNoise(sum, time) * var.value;
         }
         else if (var.type == "rand") {
             value = ofRandom(var.value);

@@ -20,3 +20,12 @@
 ~visuals.sendMsg('/tex', 0, "WaveClock");
 ~visuals.sendMsg('/tex/var', 0, "strokeAlpha", "sin");
 )
+
+(
+9.do { |i|
+	~visuals.sendMsg('/thresh', i, 0);
+	~visuals.sendMsg('/tex', i, "WaveClock");
+	~visuals.sendMsg('/tex/var', i, "strokeAlpha", "noise");
+};
+~visuals.sendMsg('/layers/layout', "grid");
+)
