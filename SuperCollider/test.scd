@@ -64,14 +64,6 @@
 ~visuals.sendMsg('/rot', 0, 0, 0, 90);
 ~visuals.sendMsg('/rot/point', 0, 0.5, 0.5);
 
-(
-~visuals.sendMsg('/data', 0, "sin");
-~visuals.sendMsg('/thresh', 0, 0);
-~visuals.sendMsg('/thresh/onset', 0, 0.9);
-// ~visuals.sendMsg('/tex', 0, "DSC_0081.mov");
-~visuals.sendMsg('/tex', 0, "bbb_export.hpv");
-)
-
 ~visuals.sendMsg('/cam', 1);
 ~visuals.sendMsg('/cam/pos', 0, 0, -3000, 10);
 ~visuals.sendMsg('/tex', 0, "0xff0000"); // load red color into first layer
