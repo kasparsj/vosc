@@ -50,7 +50,6 @@
 - `/layer/rot/point` [Set layer rotation point](#layer-rotation-point)
 - `/layer/rot/speed` [Set layer rotation speed](#layer-rotation-speed)
 - `/layer/reset` [Reset layer](#layer-reset)
-- `/layer/var` [Set layer variable](#layer-variable)
 - `/layer/color` [Set layer color](#layer-color)
 - `/layer/tint` [Set layer tint](#layer-tint)
 - `/layer/alpha` [Set layer alpha](#layer-alpha)
@@ -369,7 +368,7 @@ Examples:
 `/tex/speed`
 
 Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
 - **speed** (float)
  
 Examples:
@@ -385,7 +384,7 @@ Examples:
 `/tex/seek`
 
 Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
 - **time** (float|string) time position as percentage
 - duration (float)
 - easing (int)
@@ -395,6 +394,27 @@ Examples:
 ~visuals.sendMsg('/tex/seek', 0, 0.5); // seek video to middle position
 ~visuals.sendMsg('/tex/seek', 0, 50); // seek video to middle position
 ~visuals.sendMsg('/tex/seek', 0, 0.25, 3); // animate video position to quarter of length in 3 seconds
+```
+
+### Texture Variable
+
+`/tex/var`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared texture name, e.g. "*"
+- **name** (string) variable name
+- [**datasource**](#datasource) (string)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/tex/var', 0, "myVar", "const"); // set first layer data source to constant 1
+~visuals.sendMsg('/tex/var', 0, "myVar", "const:23"); // set first layer data source to constant 23
+~visuals.sendMsg('/tex/var', 0, "myVar", "rand"); // set first layer data source to random
+~visuals.sendMsg('/tex/var', 0, "myVar", "rand:100"); // set first layer data source to random of 100
+~visuals.sendMsg('/tex/var', 0, "myVar", "noise"); // set first layer data source to perlin noise
+~visuals.sendMsg('/tex/var', 0, "myVar", "noise:50"); // set first layer data source to perlin noise of 50
+~visuals.sendMsg('/tex/var', 0, "myVar", "loud:0"); // set first layer data source to channel 1 loudness
+~visuals.sendMsg('/tex/var', 0, "myVar", "amp:1"); // set first layer data source to channel 2 amplitude
 ```
 
 ### Texture Looper
@@ -531,27 +551,6 @@ Arguments:
 Examples:
 ```supercollider
 ~visuals.sendMsg('/layer/reset', 0); // reset first layers
-```
-
-### Layer Variable
-
-`/layer/var`
-
-Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- [**datasource**](#datasource) (string)
-
-Examples:
-```supercollider
-~visuals.sendMsg('/layer/var', 0, "const"); // set first layer data source to constant 1
-~visuals.sendMsg('/layer/var', 0, "const:23"); // set first layer data source to constant 23
-~visuals.sendMsg('/layer/var', 0, "rand"); // set first layer data source to random
-~visuals.sendMsg('/layer/var', 0, "rand:100"); // set first layer data source to random of 100
-~visuals.sendMsg('/layer/var', 0, "noise"); // set first layer data source to perlin noise
-~visuals.sendMsg('/layer/var', 0, "noise:50"); // set first layer data source to perlin noise of 50
-~visuals.sendMsg('/layer/var', 0, "loud:0"); // set first layer data source to channel 1 loudness
-~visuals.sendMsg('/layer/var', 0, "amp:1"); // set first layer data source to channel 2 amplitude
-// todo: perhaps allow setting loud & amp max values after second ":"
 ```
 
 ### Layer Color
