@@ -38,7 +38,6 @@
 ## Shaders
 - `/shader` [Load layer shader](#shader)
 - `/shader/uniform` [Set layer shader uniform](#shader-uniform)
-- `/shader/var` [Set layer shader uniform](#shader-uniform)
 - `/shader/texture` [Set layer shader texture](#shader-texture)
 - `/shader/set` [Set layer shader property](#shader-set)
 
