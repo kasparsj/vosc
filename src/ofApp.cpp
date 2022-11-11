@@ -1,7 +1,6 @@
 #include "ofApp.h"
 #include "ColorUtil.h"
 #include "ofxHPVPlayer.h"
-#include "ShaderTex.h"
 #include "TexturePool.h"
 #include "GeomPool.h"
 
@@ -30,7 +29,7 @@ void ofApp::setupLayers(int numVisuals) {
         if (layers[i] == NULL) {
             layers[i] = new Layer();
         }
-        layers[i]->setup(i, sounds.size() > i ? "loud" + ofToString(i) : "");
+        layers[i]->setup(i);
     }
 }
 
@@ -54,7 +53,7 @@ void ofApp::update(){
     updateFloats();
     updateVecs();
     updateColors();
-    TexturePool::update();
+    TexturePool::update(sounds, tidal->notes);
     GeomPool::update();
 	for (int i = 0; i < layers.size(); i++) {
 		layers[i]->update(sounds, tidal->notes);
@@ -411,19 +410,8 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
         layer->alignH = alignH;
         layer->alignV = alignV;
     }
-    else if (command == "/layer/data") {
-        vector<string> ds;
-        for (int i=1; i<m.getNumArgs(); i++) {
-            ds.push_back(m.getArgAsString(i));
-        }
-        layer->setDataSources(ds);
-    }
-    else if (command == "/layer/data/add") {
-        vector<string> ds;
-        for (int i=1; i<m.getNumArgs(); i++) {
-            ds.push_back(m.getArgAsString(i));
-        }
-        layer->addDataSources(ds);
+    else if (command == "/layer/var") {
+        layer->setVar(m);
     }
     else if (command == "/layer/delay") {
         layer->delay = m.getArgAsFloat(1);
@@ -431,11 +419,21 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
     else if (command == "/layer/behaviour") {
         layer->behaviour = m.getArgAsInt(1);
     }
-    else if (command == "/layer/thresh") {
-        handleFloat(&layer->thresh, m);
+    else if (command == "/layer/visible") {
+        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            layer->visibleThresh = {m.getArgAsString(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 1.f};
+        }
+        else {
+            layer->visibleThresh = {"const", m.getArgAsFloat(1), m.getNumArgs() > 2 ? m.getArgAsFloat(2) : 1.f};
+        }
     }
-    else if (command == "/layer/thresh/onset" || command == "/layer/onset/thresh") {
-        handleFloat(&layer->onsetThresh, m);
+    else if (command == "/layer/onset") {
+        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            layer->onsetThresh = {m.getArgAsString(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 1.f};
+        }
+        else {
+            layer->onsetThresh = {"const", m.getArgAsFloat(1), m.getNumArgs() > 2 ? m.getArgAsFloat(2) : 1.f};
+        }
     }
 }
 
@@ -554,10 +552,7 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
         }
     }
     else if (command == "/tex/uniform" || command == "/tex/var") {
-        // todo: implement /tex/var
-        if (ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex->tex)) {
-            shaderTex->setUniform(m);
-        }
+        tex->setVar(m);
     }
     else if (command == "/tex/looper") {
         tex->setLooper(m);
@@ -961,10 +956,6 @@ void ofApp::drawDebug() {
             if (layers[i]->shader.hasDefaultTexture()) {
                 ofSetColor(255);
                 layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
-                if (layers[i]->data.values.size() > 0) {
-                    ofFill();
-                    ofDrawRectangle(20+i*120, ofGetHeight()-120, layers[i]->data.values[0]*100.f, 10);
-                }
             }
             else {
                 ofFill();

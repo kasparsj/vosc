@@ -1,7 +1,6 @@
 #version 150
 
 const vec3 DEFAULT_COLOR = vec3(0.1,0.3,.4);
-const int MAX_VALUES = 8;
 
 // Ether by nimitz 2014 (twitter: @stormoid)
 // https://www.shadertoy.com/view/MsjSW3
@@ -14,7 +13,6 @@ uniform vec2 offset;
 uniform int index;
 uniform vec4 color;
 uniform int random;
-uniform float values[MAX_VALUES];
 
 out vec4 fragColor;
 

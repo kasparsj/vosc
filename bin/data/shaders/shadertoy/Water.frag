@@ -1,7 +1,6 @@
 #version 150
 
 const vec3 DEFAULT_COLOR = vec3(0.0, 0.35, 0.5);
-const int MAX_VALUES = 8;
 
 // Found this on GLSL sandbox. I really liked it, changed a few things and made it tileable.
 // :)
@@ -21,7 +20,6 @@ uniform vec2 offset;
 uniform int index;
 uniform vec4 color;
 uniform int random;
-uniform float values[MAX_VALUES];
 
 out vec4 fragColor;
 

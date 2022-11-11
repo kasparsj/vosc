@@ -2,6 +2,18 @@
 
 #include "ofMain.h"
 #include "ofxOsc.h"
+#include "Config.h"
+#include "Sound.h"
+#include "ofxTidalCycles.h"
+
+class TexDataParent {
+public:
+    void setVar(string name, string value, float scale = 1.f);
+    void setVar(string name, float value, float scale = 1.f);
+    virtual void setVar(const ofxOscMessage& m);
+
+    map<string, LayerVar> vars;
+};
 
 class TexData {
 public:
@@ -9,7 +21,10 @@ public:
         randomSeed = ofRandom(1000);
     }
     
-    void update();
+    void setup(TexDataParent* parent) {
+        this->parent = parent;
+    }
+    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const map<string, LayerVar>& maps);
     
     ofFloatColor getColor() {
         if (useMFCCColor && mfcc.size() > 0) {
@@ -50,6 +65,12 @@ public:
         setSize(m.getArgAsFloat(1), m.getArgAsFloat(2));
     }
     void set(const ofxOscMessage& m);
+    bool hasVar(string name) {
+        return vars.find(name) != vars.end();
+    }
+    float getVar(string name) {
+        return vars[name];
+    }
     ofFbo::Settings& getFboSettings() {
         return fboSettings;
     }
@@ -58,7 +79,7 @@ public:
     
     void reset() {
         onset = false;
-        values.clear();
+        vars.clear();
         mfcc.clear();
         mfccColor = ofFloatColor(0);
         speed = 1.f;
@@ -83,9 +104,12 @@ public:
     bool onset;
     vector<float> mfcc;
     ofFloatColor mfccColor = ofFloatColor(0);
-    vector<float> values;
+    map<string, float> vars;
     
-private:
+protected:
+    float getValue(const vector<Sound> &sounds, string name, const LayerVar& var);
+    
+    TexDataParent* parent;
     ofFbo::Settings fboSettings;
 
 };

@@ -45,8 +45,8 @@ class WaveClock : public Sketch {
         float x2 = centerX + (_radius * cos(opprad));
         float y2 = centerY + (_radius * sin(opprad));
         
-        if (data.values.size()) {
-            _strokeAlpha = data.values[0] * 255;
+        if (data.hasVar("strokeAlpha")) {
+            _strokeAlpha = data.getVar("strokeAlpha") * 255;
         }
         else {
             _strokeAlpha += _strokeChange;

@@ -10,7 +10,7 @@ map<int, map<string, Texture>*> createTexturePool() {
 map<int, map<string, Texture>*> TexturePool::pool = createTexturePool();
 
 bool TexturePool::hasShared(string name) {
-    map<string, Texture>* sharedPool = pool[-1];
+    const map<string, Texture>* sharedPool = pool[-1];
     return sharedPool->find(name) != sharedPool->end();
 }
 
@@ -37,10 +37,10 @@ Texture& TexturePool::getForShader(string source, int shaderId) {
     }
 }
 
-void TexturePool::update() {
+void TexturePool::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     for (map<int, map<string, Texture>*>::iterator it=pool.begin(); it!=pool.end(); ++it) {
         for (map<string, Texture>::iterator it2=it->second->begin(); it2!=it->second->end(); ++it2) {
-            it2->second.update();
+            it2->second.update(sounds, notes);
         }
     }
 }

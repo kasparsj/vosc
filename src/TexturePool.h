@@ -9,6 +9,6 @@ public:
     static bool hasShared(string name);
     static Texture& getShared(string name, bool create = false);
     static Texture& getForShader(string name, int shaderId);
-    static void update();
+    static void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
     static void clean(int shaderId);
 };

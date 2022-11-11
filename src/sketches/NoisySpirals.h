@@ -31,8 +31,8 @@ public:
             
             if(lastx > -999){
                 int strokeAlpha;
-                if (data.values.size()) {
-                    strokeAlpha = data.values[0] * 255;
+                if (data.hasVar("strokeAlpha")) {
+                    strokeAlpha = data.getVar("strokeAlpha") * 255;
                 }
                 else {
                     strokeAlpha = 127+ofRandom(128);

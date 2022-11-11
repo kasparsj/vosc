@@ -5,8 +5,11 @@
 #include "ofFbo.h"
 #include "ofxLooper.h"
 
-class Texture {
+class Texture : public TexDataParent {
 public:
+    Texture() {
+        data.setup(this);
+    }
     ~Texture() {
         unload();
     }
@@ -21,7 +24,7 @@ public:
     void reload();
     void unload();
     void clear();
-    void update();
+    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
     void draw(Layer* layer);
     void texDraw(const glm::vec2& pos, const glm::vec2 size);
     void reset();
@@ -37,6 +40,7 @@ public:
         return tex != NULL;
     }
     void setLooper(const ofxOscMessage& m);
+    void setVar(const ofxOscMessage& m) override;
 
     Tex* tex = NULL;
     TexData data;

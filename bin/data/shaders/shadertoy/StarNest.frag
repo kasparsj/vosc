@@ -1,7 +1,6 @@
 #version 150
 
 const vec3 DEFAULT_COLOR = vec3(1, 1, 1);
-const int MAX_VALUES = 8;
 
 #define iterations 17
 #define formuparam 0.53
@@ -24,7 +23,6 @@ uniform vec2 offset;
 uniform int index;
 uniform vec4 color;
 uniform int random;
-uniform float values[MAX_VALUES];
 
 out vec4 fragColor;
 

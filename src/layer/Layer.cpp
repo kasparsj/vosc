@@ -1,13 +1,10 @@
 #include "Layer.h"
 
-void Layer::setup(int index, string dataSource)
+void Layer::setup(int index)
 {
     this->index = index;
-    data.layer = this;
-    dataSources.clear();
-    if (dataSource != "") {
-        dataSources.push_back(dataSource);
-    }
+    data.setup(this);
+    vars.clear();
 }
 
 void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
@@ -36,7 +33,7 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 
 void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
-        data.update(sounds, notes);
+        data.update(sounds, notes, vars);
         rotation += rotationSpeed;
         if (data.useRandomColor) {
             data.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
@@ -156,35 +153,12 @@ void Layer::doRotate() {
     }
 }
 
-void Layer::setDataSources(vector<string> ds) {
-    dataSources.clear();
-    addDataSources(ds);
-}
-
-void Layer::addDataSources(vector<string> ds) {
-    for (int i=0; i<ds.size(); i++) {
-        string dsName = ds[i];
-        string dsMax = "";
-        if (dsName.find(":") != string::npos) {
-            dsMax = dsName.substr(dsName.find(":") + 1);
-            dsName = dsName.substr(0, dsName.find(":"));
-        }
-        auto it = DataSourceMap.find(dsName);
-        if (it != DataSourceMap.end()) {
-            // todo: should hold struct instead of string
-            dataSources.push_back(it->first + dsMax);
-        }
-        else {
-            ofLog() << "invalid data source " << ds[i];
-        }
-    }
-}
-
 void Layer::reset() {
     resetTransform();
     geom = NULL;
     GeomPool::clean(_id);
     shader.reset();
+    vars.clear();
 }
 
 void Layer::resetTransform() {

@@ -1,7 +1,6 @@
 #version 150
 
 #define DEFAULT_COLOR vec3(0.4615, 0.615, 1.0)
-#define MAX_VALUES 8
 
 uniform float time;
 uniform vec2 resolution;
@@ -9,7 +8,6 @@ uniform vec2 offset;
 uniform int index;
 uniform vec4 color;
 uniform int random;
-uniform float values[MAX_VALUES];
 
 out vec4 fragColor;
 

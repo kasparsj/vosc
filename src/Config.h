@@ -71,3 +71,10 @@ static std::unordered_map<std::string, DataSource> const DataSourceMap = {
     {"onset", DataSource::ONSET},
     {"tidal", DataSource::TIDAL},
 };
+
+struct LayerVar {
+    string type;
+    float value;
+    float scale = 1.f;
+};
+typedef struct LayerVar LayerVar;

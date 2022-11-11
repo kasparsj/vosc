@@ -12,8 +12,8 @@ class Spiral : public Sketch {
         float lasty = -999;
         
         int strokeAlpha = 255;
-        if (data.values.size()) {
-            strokeAlpha = data.values[0] * 255;
+        if (data.hasVar("strokeAlpha")) {
+            strokeAlpha = data.getVar("strokeAlpha") * 255;
         }
         
         ofClear(0, 0, 0, 0);

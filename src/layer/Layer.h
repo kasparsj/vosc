@@ -9,7 +9,7 @@
 #include "LayerShader.h"
 #include "GeomPool.h"
 
-class Layer {
+class Layer : public TexDataParent {
 public:
     Layer() {
         static int nextId = 0;
@@ -18,7 +18,7 @@ public:
     ~Layer() {
         reset();
     }
-    void setup(int index, string dataSource = "");
+    void setup(int index);
     void layout(Layout layout, int layoutIndex, int layoutTotal);
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
     void drawToFbo();
@@ -27,8 +27,6 @@ public:
     void doAlign();
     void doRotate();
     void doScale();
-    void setDataSources(vector<string> ds);
-    void addDataSources(vector<string> ds);
     void reset();
     void resetTransform();    
     void setShader(string path);
@@ -56,11 +54,8 @@ public:
     int behaviour = -1;
     float bri = 1.0;
     float alpha = 1.0;
-    bool isTidal = false;
-    vector<string> dataSources;
-    float thresh = 0.5;
-    // todo: maybe should by default fallback to thresh
-    float onsetThresh = 0.5;
+    LayerVar visibleThresh = {"const", 1.f, 0};
+    LayerVar onsetThresh = {"const", 1.f, 0};
     uint8_t delay = 0;
     ofMaterialSettings matSettings;
     ofMaterial material;
