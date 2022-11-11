@@ -25,8 +25,12 @@
 
 ~visuals.sendMsg('/layers', 1, "stack");
 ~visuals.sendMsg('/geom', 0, "penguin/penguin.dae");
-~visuals.sendMsg('/scale', 0, 0.7);
+~visuals.sendMsg('/layer/scale', 0, 0.7);
 ~visuals.sendMsg('/light', 0, 0, 0, 500);
 ~visuals.sendMsg('/cam', "easy");
 ~visuals.sendMsg('/cam/set', "distance", 870);
+~visuals.sendMsg('/cam/orbit', 20);
 )
+
+~visuals.sendMsg('/sound/set', 0, "maxVol", 0.17);
+~visuals.sendMsg('/sound/stream', 0, "default in");

@@ -59,9 +59,16 @@ void ofApp::update(){
 	for (int i = 0; i < layers.size(); i++) {
 		layers[i]->update(sounds, tidal->notes);
 	}
-    if (cam != NULL && dynamic_cast<ofEasyCam*>(cam) == NULL) {
-        cam->setPosition(camPos);
-        cam->lookAt(camLook);
+    if (cam != NULL) {
+        ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+        if (easyCam == NULL || !easyCam->getMouseInputEnabled()) {
+            cam->setPosition(camPos);
+            cam->lookAt(camLook);
+        }
+        if (camOrbitPerSecond != 0 && easyCam != NULL) {
+            camOrbit += ofGetLastFrameTime() * camOrbitPerSecond;
+            easyCam->orbitDeg(camOrbit, 0., easyCam->getDistance(), {0., 0., 0.});
+        }
     }
     HPV::Update();
 }
@@ -286,6 +293,14 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
                 cam->lookAt(camLook);
             }
         }
+        else if (command == "/cam/orbit") {
+            if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
+                handleFloat(&camOrbitPerSecond, m, 0);
+            }
+            else {
+                ofLog() << "/cam/orbit supported only for 'easy' cam";
+            }
+        }
         else if (command == "/cam/set") {
             string method = m.getArgAsString(0);
             if (method == "nearClip") {
@@ -305,6 +320,14 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
                     }
                     else if (method == "autoDistance") {
                         dynamic_cast<ofEasyCam*>(cam)->setAutoDistance(m.getArgAsBool(1));
+                    }
+                    else if (method == "mouseInput") {
+                        if (m.getArgAsBool(1)) {
+                            dynamic_cast<ofEasyCam*>(cam)->enableMouseInput();
+                        }
+                        else {
+                            dynamic_cast<ofEasyCam*>(cam)->disableMouseInput();
+                        }
                     }
                 }
     //            ofxFirstPersonCamera* firstPersonCam = dynamic_cast<ofxFirstPersonCamera*>(cam);

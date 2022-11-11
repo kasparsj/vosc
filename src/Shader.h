@@ -5,7 +5,6 @@
 #include "ofxOsc.h"
 #include "Texture.h"
 #include "TexturePool.h"
-#include "VarsConfig.h"
 
 #define DEFAULT_TEX "tex"
 
