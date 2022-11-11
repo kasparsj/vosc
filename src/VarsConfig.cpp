@@ -60,10 +60,12 @@ void VarsHolder::updateVars(const vector<Sound> &sounds, const vector<TidalNote>
         int i=0;
         for (map<string, VarConfig>::const_iterator it=maps.begin(); it!=maps.end(); ++it) {
             vars[it->first] = getValue(sounds, it->first, it->second);
-            if (it->second.type == "amp" || it->second.type == "lound") {
+            if (it->second.type == "amp" || it->second.type == "loud") {
                 int j = it->second.value;
-                onset = onset || (sounds[j].onset == 1);
-                mfcc = sounds[j].mfcc;
+                if (sounds.size() > j) {
+                    onset = onset || (sounds[j].onset == 1);
+                    mfcc = sounds[j].mfcc;
+                }
             }
             i++;
         }
@@ -71,16 +73,19 @@ void VarsHolder::updateVars(const vector<Sound> &sounds, const vector<TidalNote>
 }
 
 float VarsHolder::getValue(const vector<Sound> &sounds, string name, const VarConfig& var) {
-    float value;
+    float value = 0;
     if (var.type == "amp" || var.type == "loud") {
-        int j;
-        if (var.type == "amp") {
-            j = var.value;
-            value = (sounds[j].amplitude / sounds[j].maxAmp);
+        int j = var.value;
+        if (sounds.size() > j) {
+            if (var.type == "amp") {
+                value = (sounds[j].amplitude / sounds[j].maxAmp);
+            }
+            else {
+                value = (sounds[j].loudness / sounds[j].maxLoud);
+            }
         }
         else {
-            j = var.value;
-            value = (sounds[j].loudness / sounds[j].maxLoud);
+            ofLog() << "sound data not available " + var.type + ":" + ofToString(var.value);
         }
     }
     else {
