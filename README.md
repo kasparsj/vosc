@@ -50,7 +50,7 @@
 - `/layer/rot/point` [Set layer rotation point](#layer-rotation-point)
 - `/layer/rot/speed` [Set layer rotation speed](#layer-rotation-speed)
 - `/layer/reset` [Reset layer](#layer-reset)
-- `/layer/data` [Set layer data source](#layer-data)
+- `/layer/var` [Set layer variable](#layer-variable)
 - `/layer/color` [Set layer color](#layer-color)
 - `/layer/tint` [Set layer tint](#layer-tint)
 - `/layer/alpha` [Set layer alpha](#layer-alpha)
@@ -550,7 +550,7 @@ Examples:
 ~visuals.sendMsg('/layer/var', 0, "noise"); // set first layer data source to perlin noise
 ~visuals.sendMsg('/layer/var', 0, "noise:50"); // set first layer data source to perlin noise of 50
 ~visuals.sendMsg('/layer/var', 0, "loud:0"); // set first layer data source to channel 1 loudness
-~visuals.sendMsg('/layer/var', 0, "amp:1"); // set first layer data source to channel 2 loudness
+~visuals.sendMsg('/layer/var', 0, "amp:1"); // set first layer data source to channel 2 amplitude
 // todo: perhaps allow setting loud & amp max values after second ":"
 ```
 
