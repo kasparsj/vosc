@@ -34,6 +34,7 @@ public:
     bool checkOnset();
 	void draw();
     void drawDebug();
+    void drawVolume(Sound& sound);
 	void exit();
 
 	void keyPressed(int key);
@@ -62,8 +63,8 @@ public:
     void geomCommand(Geom* geom, string command, const ofxOscMessage& m);
     void materialCommand(ofMaterialSettings& matSettings, string command, const ofxOscMessage& m);
     
-    void handleFloat(float *value, const ofxOscMessage &m);
-    void handlePercent(float *value, const ofxOscMessage &m);
+    void handleFloat(float *value, const ofxOscMessage &m, int firstArg = 1);
+    void handlePercent(float *value, const ofxOscMessage &m, int firstArg = 1);
     void handleVec3(glm::vec3 *value, const ofxOscMessage &m, int firstArg = 1);
     void handleColor(ofFloatColor *value, const ofxOscMessage &m);
     void createTween(float *value, float target, float dur, ofxeasing::function ease);

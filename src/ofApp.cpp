@@ -45,6 +45,9 @@ void ofApp::layoutLayers(Layout layout, const vector<Layer*> &layers) {
 //--------------------------------------------------------------
 void ofApp::update(){
     parseMessages();
+    for (int i=0; i<sounds.size(); i++) {
+        sounds[i].update();
+    }
     while (tidal->notes.size() > MAX_NOTES) {
         tidal->notes.erase(tidal->notes.begin());
     }
@@ -510,11 +513,14 @@ void ofApp::soundCommand(Sound& sound, string command, const ofxOscMessage &m) {
     }
     else if (command == "/sound/set") {
         string prop = m.getArgAsString(1);
-        if (prop == "maxAmp") {
-            handleFloat(&sound.maxAmp, m);
+        if (prop == "maxVol") {
+            handleFloat(&sound.maxVol, m, 2);
+        }
+        else if (prop == "maxAmp") {
+            handleFloat(&sound.maxAmp, m, 2);
         }
         else if (prop == "maxLoud") {
-            handleFloat(&sound.maxLoud, m);
+            handleFloat(&sound.maxLoud, m, 2);
         }
     }
 }
@@ -688,21 +694,21 @@ void ofApp::materialCommand(ofMaterialSettings& matSettings, string command, con
     }
 }
 
-void ofApp::handleFloat(float *value, const ofxOscMessage &m) {
-    if (m.getNumArgs() > 2) {
-        if (m.getNumArgs() > 3) {
-            createTween(value, m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsString(3));
+void ofApp::handleFloat(float *value, const ofxOscMessage &m, int i) {
+    if (m.getNumArgs() > (i+1)) {
+        if (m.getNumArgs() > (i+2)) {
+            createTween(value, m.getArgAsFloat(i), m.getArgAsFloat(i+1), m.getArgAsString(i+2));
         }
         else {
-            createTween(value, m.getArgAsFloat(1), m.getArgAsFloat(2));
+            createTween(value, m.getArgAsFloat(i), m.getArgAsFloat(i+1));
         }
     }
     else {
-        *value = m.getArgAsFloat(1);
+        *value = m.getArgAsFloat(i);
     }
 }
 
-void ofApp::handlePercent(float *value, const ofxOscMessage &m) {
+void ofApp::handlePercent(float *value, const ofxOscMessage &m, int i) {
     if (m.getNumArgs() > 2) {
         if (m.getNumArgs() > 3) {
             createTween(value,
@@ -934,6 +940,16 @@ void ofApp::draw(){
 void ofApp::drawDebug() {
     if (showDebug) {
         ofPushStyle();
+        if (sounds.size() > 0) {
+            for (int i=0; i<sounds.size(); i++) {
+                ofPushMatrix();
+                ofTranslate((i+1)*20 + i*200, 20);
+                drawVolume(sounds[i]);
+                ofPopMatrix();
+            }
+        }
+        // draw amplitude
+        // draw mfcc
         for (int i=0; i<layers.size(); i++) {
             if (layers[i]->hasGeom()) {
                 ofSetColor(255);
@@ -964,6 +980,24 @@ void ofApp::drawDebug() {
         ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
         ofPopStyle();
     }
+}
+
+void ofApp::drawVolume(Sound& sound) {
+    ofNoFill();
+    //ofSetColor(225);
+    ofDrawBitmapString("avg vol (0-100): " + ofToString(sound.volumeScaled * 100.0, 0), 4, 18);
+    ofDrawRectangle(0, 0, 200, 200);
+    ofFill();
+    ofDrawCircle(100, 100, sound.volumeScaled * 140.0f);
+    ofBeginShape();
+    ofSetColor(245, 58, 135);
+    for (unsigned int i = 0; i < sound.volumeHist.size(); i++){
+        float x = (float)i/2.f;
+        if( i == 0 ) ofVertex(x, 200);
+        ofVertex(x, 200 - sound.volumeHist[i] * 70.f);
+        if( i == sound.volumeHist.size() -1 ) ofVertex(x, 200);
+    }
+    ofEndShape(false);
 }
 
 void ofApp::exit() {

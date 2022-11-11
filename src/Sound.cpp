@@ -1,5 +1,13 @@
 #include "Sound.h"
 
+void Sound::update() {
+    volumeScaled = ofMap(volumeSmooth, 0.0, maxVol, 0.0, 1.0, true);
+    volumeHist.push_back( volumeScaled );
+    if( volumeHist.size() >= 400 ){
+        volumeHist.erase(volumeHist.begin(), volumeHist.begin()+1);
+    }
+}
+
 void Sound::parse(const ofxOscMessage& m) {
     //instNum = m.getArgAsInt(0);
     amplitude = m.getArgAsFloat(1);
@@ -41,9 +49,10 @@ void Sound::stream(const ofxOscMessage& m) {
 void Sound::audioIn(ofSoundBuffer& input){
     float curVol = 0.0;
     int numCounted = 0;
+    int numChan = soundStream.getNumInputChannels();
     for (size_t i = 0; i < input.getNumFrames(); i++){
         for (size_t j=0; j<soundStream.getNumInputChannels(); j++) {
-            float sample = input[i*2+j] / soundStream.getNumInputChannels();
+            float sample = input[i * numChan + j] / numChan;
             curVol += sample * sample;
             numCounted++;
         }

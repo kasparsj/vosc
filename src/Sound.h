@@ -7,8 +7,8 @@
 
 class Sound {
 public:
-    Sound() {
-    }
+    Sound() {}
+    void update();
     void parse(const ofxOscMessage &m);
     void stream(const ofxOscMessage &m);
     void audioIn(ofSoundBuffer& input);
@@ -17,10 +17,13 @@ public:
     int instNum;
     float volume;
     float volumeSmooth;
+    float volumeScaled;
+    vector<float> volumeHist;
     float amplitude;
     float loudness;
     int onset;
     std::vector<float> mfcc;
+    float maxVol = 0.17;
     float maxAmp = 0.7;
     float maxLoud = MAX_LOUD;
     
