@@ -43,3 +43,14 @@ void TexData::allocate(ofFbo& fbo) {
     fbo.allocate(fboSettings);
     ofEnableTextureEdgeHack();
 }
+
+void TexData::afterDraw(const map<string, VarConfig>& maps) {
+    for (map<string, VarConfig>::const_iterator it=maps.begin(); it!=maps.end(); ++it) {
+        if (it->second.type == "tidal") {
+            vars[it->first] -= 1.f/8.f;
+            if (vars[it->first] < 0) {
+                vars[it->first] = 0;
+            }
+        }
+    }
+}

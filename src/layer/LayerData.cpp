@@ -17,14 +17,3 @@ void LayerData::update(const vector<Sound> &sounds, const vector<TidalNote> &not
     }
     visible = onset || (layer->visibleThresh.scale == 0 || getValue(sounds, "__visibleThresh", layer->visibleThresh) >= 1.f);
 }
-
-void LayerData::afterDraw() {
-    for (map<string, VarConfig>::iterator it=parent->varsConfig.begin(); it!=parent->varsConfig.end(); ++it) {
-        if (it->second.type == "tidal") {
-            vars[it->first] -= 1.f/8.f;
-            if (vars[it->first] < 0) {
-                vars[it->first] = 0;
-            }
-        }
-    }
-}

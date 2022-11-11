@@ -107,7 +107,7 @@ void Layer::draw(int totalVisible) {
             draw(pos, data.size);
             ofDisableBlendMode();
         }
-        data.afterDraw();
+        data.afterDraw(varsConfig);
     }
 }
 

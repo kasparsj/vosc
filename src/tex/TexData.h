@@ -57,7 +57,6 @@ public:
     }
     void setFboSettings(const ofxOscMessage& m);
     void allocate(ofFbo& fbo);
-    
     void reset() {
         onset = false;
         vars.clear();
@@ -66,6 +65,7 @@ public:
         speed = 1.f;
         color = ofFloatColor(0, 0);
     }
+    void afterDraw(const map<string, VarConfig>& maps);
     
     glm::vec3 size;
     float prevTime = 0;

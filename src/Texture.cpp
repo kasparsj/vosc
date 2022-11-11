@@ -138,6 +138,7 @@ void Texture::drawFrame() {
 void Texture::draw(Layer* layer) {
     if (isLoaded() && layer->delay == 0) {
         texDraw(layer->pos, layer->data.size);
+        data.afterDraw(varsConfig);
     }
     else if (hasTexture(layer->delay)) {
         const ofTexture& tex = getTexture(layer->delay);
