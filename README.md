@@ -3,9 +3,10 @@
 # Command overview
 
 ## Setup
-- `/sounds` [Setup sounds](#setup-sounds)
+- `/sound/stream` [Setup sound stream](#sound-stream)
+- `/sound/data` [Update sound data from SC](#sound-data)
 - `/layers` [Setup layers](#setup-layers)
-- `/layout` [Change layout](#change-layout)
+- `/layers/layout` [Change layout](#change-layout)
 
 ## Camera
 - `/cam` [Use camera](#use-camera)
@@ -67,17 +68,44 @@
 
 ## Setup
 
-### Setup sounds
+### Sound Stream
 
-`/sounds`
+`/sound/stream`
 
 Arguments:
-- **numChannels** (int)
+- **sound** (int) sound index
+- numChannels (int)
+- bufferSize (int)
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/sounds', 1); // initializes 1 channel audio data listener
-~visuals.sendMsg('/sounds', 0); // deletes all audio data listeners
+~visuals.sendMsg('/sound/stream', 0); // setup OF sound listener
+~visuals.sendMsg('/sound/stream', 0, 2); // setup OF sound listener with 2 channels
+~visuals.sendMsg('/sound/stream', 0, 0); // close OF sound listener
+```
+
+### Sound Data
+
+`/sound/data`
+
+Arguments:
+- **sound** (int) sound index
+- amplitude (float)
+- loudness (float)
+- onset (int)
+- mfcc (float)
+
+Examples:
+```supercollider
+OSCdef(\visuals_sender, {|msg|
+  var data = msg[3..];
+  var in = data[0];
+  var onset = data[1];
+  var amp = data[2];
+  var loudness = data[3];
+  var mfcc = data[4..];
+  ~visuals.sendMsg('/sound/data', in, amp, loudness, onset.asInteger, *mfcc);
+}, '/visuals');
 ```
 
 ### Setup layers
@@ -99,16 +127,16 @@ Examples:
 
 ### Change layout
 
-`/layout`
+`/layers/layout`
 
 Arguments:
 - [**layout**](#layout) (int|string)
-- numLayers (int)
+- args (int)
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/layout', 3); // change layout to grid
-~visuals.sendMsg('/layout', "grid"); // change layout to grid
+~visuals.sendMsg('/layers/layout', 3); // change layout to grid
+~visuals.sendMsg('/layers/layout', "grid"); // change layout to grid
 ```
 
 ## Camera
