@@ -550,7 +550,7 @@ Examples:
 ~visuals.sendMsg('/layer/var', 0, "noise"); // set first layer data source to perlin noise
 ~visuals.sendMsg('/layer/var', 0, "noise:50"); // set first layer data source to perlin noise of 50
 ~visuals.sendMsg('/layer/var', 0, "loud:0"); // set first layer data source to channel 1 loudness
-~visuals.sendMsg('/layer/var', 0, "amp:1"); // set first layer data source to channel 2 loudness
+~visuals.sendMsg('/layer/var', 0, "amp:1"); // set first layer data source to channel 2 amplitude
 // todo: perhaps allow setting loud & amp max values after second ":"
 ```
 
