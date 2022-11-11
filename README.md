@@ -12,6 +12,7 @@
 - `/cam` [Use camera](#use-camera)
 - `/cam/pos` [Camera position](#camera-position)
 - `/cam/look` [Camera look at](#camera-look)
+- `/cam/orbit` [Orbit camera](#camera-orbit)
 - `/cam/set` [Set camera property](#camera-set)
 
 ## Textures
@@ -181,6 +182,19 @@ Arguments:
 Examples:
 ```supercollider
 ~visuals.sendMsg('/cam/look', 0, 0, 0); // set camera to look at center of the scene
+```
+
+### Camera orbit
+
+`/cam/orbit`
+
+Arguments:
+- **degrees** (float) degrees per second
+- duration (float)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/cam/orbit', 20); // orbit camera 20 degrees per second
 ```
 
 ### Camera set
