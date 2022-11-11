@@ -264,45 +264,50 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
             cam = NULL;
         }
     }
-    else if (command == "/cam/pos") {
-        handleVec3(&camPos, m, 0);
-        if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
-            cam->setPosition(camPos);
+    else {
+        if (cam == NULL) {
+            ofLog() << command + " failed: camera not enabled (run /cam)";
         }
-    }
-    else if (command == "/cam/look") {
-        handleVec3(&camLook, m, 0);
-        if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
-            cam->lookAt(camLook);
-        }
-    }
-    else if (command == "/cam/set") {
-        string method = m.getArgAsString(0);
-        if (method == "nearClip") {
-            cam->setNearClip(m.getArgAsFloat(1));
-        }
-        else if (method == "farClip") {
-            cam->setFarClip(m.getArgAsFloat(1));
-        }
-        else if (method == "globalPosition") {
-            cam->setGlobalPosition(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsFloat(3));
-        }
-        else {
-            ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
-            if (easyCam != NULL) {
-                if (method == "distance") {
-                    easyCam->setDistance(m.getArgAsFloat(1));
-                }
-                else if (method == "autoDistance") {
-                    dynamic_cast<ofEasyCam*>(cam)->setAutoDistance(m.getArgAsBool(1));
-                }
+        else if (command == "/cam/pos") {
+            handleVec3(&camPos, m, 0);
+            if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
+                cam->setPosition(camPos);
             }
-//            ofxFirstPersonCamera* firstPersonCam = dynamic_cast<ofxFirstPersonCamera*>(cam);
-//            if (firstPersonCam != NULL) {
-//                if (method == "movementMaxSpeed") {
-//                    firstPersonCam->setMovementMaxSpeed(m.getArgAsFloat(1));
-//                }
-//            }
+        }
+        else if (command == "/cam/look") {
+            handleVec3(&camLook, m, 0);
+            if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
+                cam->lookAt(camLook);
+            }
+        }
+        else if (command == "/cam/set") {
+            string method = m.getArgAsString(0);
+            if (method == "nearClip") {
+                cam->setNearClip(m.getArgAsFloat(1));
+            }
+            else if (method == "farClip") {
+                cam->setFarClip(m.getArgAsFloat(1));
+            }
+            else if (method == "globalPosition") {
+                cam->setGlobalPosition(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsFloat(3));
+            }
+            else {
+                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+                if (easyCam != NULL) {
+                    if (method == "distance") {
+                        easyCam->setDistance(m.getArgAsFloat(1));
+                    }
+                    else if (method == "autoDistance") {
+                        dynamic_cast<ofEasyCam*>(cam)->setAutoDistance(m.getArgAsBool(1));
+                    }
+                }
+    //            ofxFirstPersonCamera* firstPersonCam = dynamic_cast<ofxFirstPersonCamera*>(cam);
+    //            if (firstPersonCam != NULL) {
+    //                if (method == "movementMaxSpeed") {
+    //                    firstPersonCam->setMovementMaxSpeed(m.getArgAsFloat(1));
+    //                }
+    //            }
+            }
         }
     }
 }
