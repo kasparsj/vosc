@@ -50,7 +50,7 @@
 - `/layer/rot/point` [Set layer rotation point](#layer-rotation-point)
 - `/layer/rot/speed` [Set layer rotation speed](#layer-rotation-speed)
 - `/layer/reset` [Reset layer](#layer-reset)
-- `/layer/data` [Set layer data source](#layer-data)
+- `/layer/var` [Set layer variable](#layer-variable)
 - `/layer/color` [Set layer color](#layer-color)
 - `/layer/tint` [Set layer tint](#layer-tint)
 - `/layer/alpha` [Set layer alpha](#layer-alpha)
