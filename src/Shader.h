@@ -44,7 +44,7 @@ public:
         return textures[name];
     }
     bool hasDefaultTexture() {
-        return hasTexture(DEFAULT_TEX);
+        return hasTexture(DEFAULT_TEX) && getDefaultTexture()->isLoaded();
     }
     Texture* getDefaultTexture();
     void setDefaultTexture(Texture* tex);
