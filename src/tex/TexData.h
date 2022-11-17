@@ -82,7 +82,6 @@ public:
     bool useRandomColor = false;
     ofFloatColor tint = ofFloatColor(1.f, 1.f);
     bool useMFCCTint = false;
-    bool useRandomTint = false;
     ofFloatColor mfccColor = ofFloatColor(0);
     
 protected:

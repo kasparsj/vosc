@@ -45,16 +45,11 @@ void TexData::setTint(const ofxOscMessage &m) {
     if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
         string value = m.getArgAsString(1);
         if (value == "rand") {
-            useRandomTint = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-            if (useRandomTint) {
-                useMFCCTint = false;
-            }
+            tint = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
+            useMFCCTint = false;
         }
         else if (value == "mfcc") {
             useMFCCTint = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-            if (useMFCCTint) {
-                useRandomTint = false;
-            }
         }
         else if (value == "lerp") {
             ofFloatColor fromColor = Args::getInstance().parseColor(m, 3);
@@ -62,13 +57,11 @@ void TexData::setTint(const ofxOscMessage &m) {
             float perc = m.getArgAsFloat(2);
             tint = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
             useMFCCTint = false;
-            useRandomTint = false;
         }
     }
     else {
         Args::getInstance().handleColor(&tint, m);
         useMFCCTint = false;
-        useRandomTint = false;
     }
 }
 
