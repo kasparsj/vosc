@@ -999,26 +999,26 @@ void ofApp::drawDebug() {
         }
         // draw amplitude
         // draw mfcc
-//        for (int i=0; i<layers.size(); i++) {
-//            if (layers[i]->hasGeom()) {
-//                ofSetColor(255);
-//                ofPushMatrix();
-//                ofTranslate(20+i*120+60, ofGetHeight()-180);
-//                layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
-//                ofPopMatrix();
-//            }
-//            if (layers[i]->shader.hasDefaultTexture()) {
-//                ofSetColor(255);
-//                layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
-//            }
-//            else {
-//                ofFill();
-//                ofSetColor(0);
-//                ofDrawRectangle(20+i*120, ofGetHeight()-120, 100, 100);
-//                ofSetColor(255);
-//                ofDrawBitmapString("not loaded", 20+i*120, ofGetHeight()-120);
-//            }
-//        }
+        for (int i=0; i<layers.size(); i++) {
+            if (layers[i]->hasGeom()) {
+                ofSetColor(255);
+                ofPushMatrix();
+                ofTranslate(20+i*120+60, ofGetHeight()-180);
+                layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
+                ofPopMatrix();
+            }
+            if (layers[i]->shader.hasDefaultTexture()) {
+                ofSetColor(255);
+                layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
+            }
+            else {
+                ofFill();
+                ofSetColor(0);
+                ofDrawRectangle(20+i*120, ofGetHeight()-120, 100, 100);
+                ofSetColor(255);
+                ofDrawBitmapString("not loaded", 20+i*120, ofGetHeight()-120);
+            }
+        }
         if (cam != NULL) {
             ofDrawBitmapString(ofToString(cam->getPosition()), 20, 20);
         }
