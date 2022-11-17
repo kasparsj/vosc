@@ -162,8 +162,13 @@ bool Geom::loadGrass(const vector<float>& args) {
     return true;
 }
 
-void Geom::choose() {
-    path = random();
+void Geom::choose(const ofxOscMessage& m) {
+    string newPath = random();
+    vector<float> args;
+    for (int i=1; i<m.getNumArgs(); i++) {
+        args.push_back(m.getArgAsFloat(i));
+    }
+    load(newPath, args);
 }
 
 void Geom::update() {

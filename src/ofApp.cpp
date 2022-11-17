@@ -485,9 +485,16 @@ void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
         textureCommand(layer->shader.getDefaultTexture(), command, m);
     }
     else if (command.substr(0, 5) == "/geom") {
-        if (command == "/geom") {
-            string source = m.getArgAsString(1);
-            Geom* geom = &GeomPool::getForLayer(source, layer->getId());
+        if (command == "/geom" || command == "/geom/choose") {
+            Geom* geom;
+            if (command == "/geom") {
+                string source = m.getArgAsString(1);
+                geom = GeomPool::getForLayer(source, layer->getId());
+            }
+            else {
+                geom = GeomPool::getForLayer(layer->getId());
+                geom->choose(m);
+            }
             layer->setGeom(geom);
             if (geom->isLoaded()) {
                 return;
@@ -706,6 +713,9 @@ void ofApp::geomCommand(Geom* geom, string command, const ofxOscMessage& m) {
     if (command == "/geom") {
         geom->load(m);
     }
+    else if (command == "/geom/choose") {
+        geom->choose(m);
+    }
     else if (command == "/geom/set") {
         geom->set(m);
     }
@@ -839,7 +849,7 @@ void ofApp::processQueue() {
                     }
                 }
                 else if (command.substr(0, 5) == "/geom") {
-                    geomCommand(&GeomPool::getShared(which, true), command, m);
+                    geomCommand(GeomPool::getShared(which, true), command, m);
                 }
             }
             else {
@@ -1066,12 +1076,12 @@ void ofApp::keyPressed(int key){
             break;
         case 'r': {
             ofxOscMessage m;
-            allLayersCommand("/reload", m);
+            allLayersCommand("/tex/reload", m);
             break;
         }
         case 'u': {
             ofxOscMessage m;
-            allLayersCommand("/reset", m);
+            allLayersCommand("/layer/reset", m);
             break;
         }
         case 'w': {

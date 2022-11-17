@@ -1,20 +1,20 @@
 #include "GeomPool.h"
 
-map<string, Geom> GeomPool::sharedPool = {};
-map<int, Geom> GeomPool::layerPool = {};
+map<string, Geom*> GeomPool::sharedPool = {};
+map<int, Geom*> GeomPool::layerPool = {};
 
 bool GeomPool::hasShared(string name) {
     return sharedPool.find(name) != sharedPool.end();
 }
 
-Geom& GeomPool::getShared(string name, bool create) {
+Geom* GeomPool::getShared(string name, bool create) {
     if (create && !hasShared(name)) {
-        sharedPool[name] = Geom();
+        sharedPool[name] = new Geom();
     }
     return sharedPool[name];
 }
 
-Geom& GeomPool::getForLayer(string name, int layerId) {
+Geom* GeomPool::getForLayer(string name, int layerId) {
     if (hasShared(name)) {
         return getShared(name);
     }
@@ -23,20 +23,20 @@ Geom& GeomPool::getForLayer(string name, int layerId) {
     }
 }
 
-Geom& GeomPool::getForLayer(int layerId) {
+Geom* GeomPool::getForLayer(int layerId) {
     if (layerPool.find(layerId) == layerPool.end()) {
-        layerPool = map<int, Geom>();
+        layerPool = map<int, Geom*>();
     }
-    layerPool[layerId] = Geom();
+    layerPool[layerId] = new Geom();
     return layerPool[layerId];
 }
 
 void GeomPool::update() {
-    for (map<string, Geom>::iterator it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
-        it->second.update();
+    for (map<string, Geom*>::iterator it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
+        it->second->update();
     }
-    for (map<int, Geom>::iterator it=layerPool.begin(); it!=layerPool.end(); ++it) {
-        it->second.update();
+    for (map<int, Geom*>::iterator it=layerPool.begin(); it!=layerPool.end(); ++it) {
+        it->second->update();
     }
 }
 

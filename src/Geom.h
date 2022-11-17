@@ -28,7 +28,7 @@ public:
         vector<float> args;
         load(newPath, args);
     }
-    void choose();
+    void choose(const ofxOscMessage& m);
     void update();
     void draw();
     ofVboMesh& getMesh() { return mesh; }

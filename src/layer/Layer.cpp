@@ -54,7 +54,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
     
     if (hasGeom() || shader.isLoaded()) {
         if (geom == NULL) {
-            geom = &GeomPool::getForLayer(getId());
+            geom = GeomPool::getForLayer(getId());
         }
         if (shader.hasDefaultTexture()) {
             if (!geom->isLoaded()) {
