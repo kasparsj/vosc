@@ -6,7 +6,7 @@
 ~visuals.sendMsg('/amp/max', "*", 0.1);
 
 ~visuals.sendMsg('/speed', "*", 0.1);
-~visuals.sendMsg('/choose', "*", "shader");
+~visuals.sendMsg('/tex/choose', "*", "shader");
 ~visuals.sendMsg('/reload', "*");
 ~visuals.sendMsg('/unload', "*");
 ~visuals.sendMsg('/noclear', "*", true);

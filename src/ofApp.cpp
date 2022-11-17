@@ -463,13 +463,21 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
 
 void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
-        if (command == "/tex") {
-            string source = m.getArgAsString(1);
-            Texture* tex = &TexturePool::getForShader(source, layer->shader.getId());
+        if (command == "/tex" || command == "/tex/choose") {
+            Texture* tex;
+            if (command == "/tex") {
+                string source = m.getArgAsString(1);
+                tex = &TexturePool::getForShader(source, layer->shader.getId());
+            }
+            else {
+                tex = Texture::choose(m, TexturePool::getShaderPool(layer->shader.getId()));
+            }
             layer->shader.setDefaultTexture(tex);
             if (tex->data.size.x == 0 && tex->data.size.y == 0) {
                 tex->data.setSize(layer->data.size.x, layer->data.size.y);
             }
+            TexturePool::getShaderPool(layer->shader.getId());
+            // no need to re-load shared texture
             if (tex->isLoaded()) {
                 return;
             }
@@ -552,7 +560,7 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
         tex->load(m);
     }
     else if (command == "/tex/choose") {
-        tex->choose(m);
+        tex->tex = Texture::chooseTex(m);
     }
     else if (command == "/tex/reload") {
         tex->reload();
@@ -832,7 +840,7 @@ void ofApp::processQueue() {
             }
             else {
                 int idx = m.getArgAsInt(0);
-                if (idx > -1) {
+                if (idx > -1 && layers.size() > idx) {
                     indexCommand(layers[idx], command, m);
                 }
             }
@@ -977,26 +985,26 @@ void ofApp::drawDebug() {
         }
         // draw amplitude
         // draw mfcc
-        for (int i=0; i<layers.size(); i++) {
-            if (layers[i]->hasGeom()) {
-                ofSetColor(255);
-                ofPushMatrix();
-                ofTranslate(20+i*120+60, ofGetHeight()-180);
-                layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
-                ofPopMatrix();
-            }
-            if (layers[i]->shader.hasDefaultTexture()) {
-                ofSetColor(255);
-                layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
-            }
-            else {
-                ofFill();
-                ofSetColor(0);
-                ofDrawRectangle(20+i*120, ofGetHeight()-120, 100, 100);
-                ofSetColor(255);
-                ofDrawBitmapString("not loaded", 20+i*120, ofGetHeight()-120);
-            }
-        }
+//        for (int i=0; i<layers.size(); i++) {
+//            if (layers[i]->hasGeom()) {
+//                ofSetColor(255);
+//                ofPushMatrix();
+//                ofTranslate(20+i*120+60, ofGetHeight()-180);
+//                layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
+//                ofPopMatrix();
+//            }
+//            if (layers[i]->shader.hasDefaultTexture()) {
+//                ofSetColor(255);
+//                layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
+//            }
+//            else {
+//                ofFill();
+//                ofSetColor(0);
+//                ofDrawRectangle(20+i*120, ofGetHeight()-120, 100, 100);
+//                ofSetColor(255);
+//                ofDrawBitmapString("not loaded", 20+i*120, ofGetHeight()-120);
+//            }
+//        }
         if (cam != NULL) {
             ofDrawBitmapString(ofToString(cam->getPosition()), 20, 20);
         }

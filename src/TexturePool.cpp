@@ -23,18 +23,23 @@ Texture& TexturePool::getShared(string name, bool create) {
 }
 
 Texture& TexturePool::getForShader(string source, int shaderId) {
-    if (hasShared(source)) {
+    if (source != "" && hasShared(source)) {
         return getShared(source);
     }
     else {
-        map<string, Texture>* shaderPool = pool[shaderId];
-        if (shaderPool == NULL) {
-            shaderPool = new map<string, Texture>();
-            pool[shaderId] = shaderPool;
-        }
+        map<string, Texture>* shaderPool = getShaderPool(shaderId);
         (*shaderPool)[source] = Texture();
         return (*shaderPool)[source];
     }
+}
+
+map<string, Texture>* TexturePool::getShaderPool(int shaderId) {
+    map<string, Texture>* shaderPool = pool[shaderId];
+    if (shaderPool == NULL) {
+        shaderPool = new map<string, Texture>();
+        pool[shaderId] = shaderPool;
+    }
+    return pool[shaderId];
 }
 
 void TexturePool::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {

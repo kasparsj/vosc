@@ -7,20 +7,18 @@
 
 class Texture : public VarsConfig {
 public:
-    Texture() {
+    static Texture* choose(const ofxOscMessage& m, map<string, Texture>* pool);
+    static Tex* chooseTex(const ofxOscMessage& m);
+    
+    Texture(Tex* tex) : tex(tex) {
         data.setup(this);
     }
+    Texture() : Texture(NULL) {}
     ~Texture() {
         unload();
     }
     void load(string source, const vector<float>& args);
     void load(const ofxOscMessage& m, int arg = 1);
-    void choose(string type, const vector<float>& args);
-    void choose() {
-        vector<float> args;
-        choose("", args);
-    }
-    void choose(const ofxOscMessage& m);
     void reload();
     void unload();
     void clear();
@@ -41,13 +39,19 @@ public:
     }
     void setLooper(const ofxOscMessage& m);
 
-    Tex* tex = NULL;
+    Tex* tex;
     TexData data;
     int numFrames = 1;
     vector<ofFbo> frames;
     int curFbo = -1;
     
 private:
+    static Tex* chooseTex(string type, const vector<float>& args);
+    static Tex* chooseTex() {
+        vector<float> args;
+        return chooseTex("", args);
+    }
+
     void drawFrame();
     const ofFbo& getFrame(int delay = 0) const;
     ofFbo& getFrame(int delay = 0);

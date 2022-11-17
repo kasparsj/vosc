@@ -55,25 +55,36 @@ void Texture::load(const ofxOscMessage &m, int arg) {
     load(newPath, args);
 }
 
-void Texture::choose(string type, const vector<float>& args) {
-    if (type == "") {
-        auto it = SourceMap.begin();
-        advance(it, int(ofRandom(SourceMap.size())));
-        type = it->first;
+Texture* Texture::choose(const ofxOscMessage& m, map<string, Texture>* pool) {
+    Tex* tex = chooseTex(m);
+    if (tex != NULL) {
+        const string path = tex->path;
+        (*pool)[path] = Texture(tex);
+        return &(*pool)[path];
     }
-    tex = Tex::factory(type, args);
-    if (tex == NULL) {
-        ofLog() << "invalid source type " << type;
-    }
+    return NULL;
 }
 
-void Texture::choose(const ofxOscMessage& m) {
+Tex* Texture::chooseTex(const ofxOscMessage& m) {
     string type = m.getNumArgs() > 1 ? m.getArgAsString(1) : "";
     vector<float> args;
     for (int i=2; i<m.getNumArgs(); i++) {
         args.push_back(m.getArgAsFloat(i));
     }
-    choose(type, args);
+    Tex* tex = chooseTex(type, args);
+    if (tex == NULL) {
+        ofLog() << "chooseTex: invalid source type " << type;
+    }
+    return tex;
+}
+
+Tex* Texture::chooseTex(string type, const vector<float>& args) {
+    if (type == "") {
+        auto it = SourceMap.begin();
+        advance(it, int(ofRandom(SourceMap.size())));
+        type = it->first;
+    }
+    return Tex::factory(type, args);
 }
 
 void Texture::unload() {
