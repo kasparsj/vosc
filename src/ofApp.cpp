@@ -832,7 +832,11 @@ void ofApp::processQueue() {
                     allLayersCommand(command, m);
                 }
                 else if (command.substr(0, 4) == "/tex") {
-                    textureCommand(TexturePool::getShared(which, true), command, m);
+                    Texture* tex = TexturePool::getShared(which, true);
+                    textureCommand(tex, command, m);
+                    if (tex->data.size.x == 0 && tex->data.size.y == 0) {
+                        tex->data.setSize(ofGetScreenWidth(), ofGetScreenHeight());
+                    }
                 }
                 else if (command.substr(0, 5) == "/geom") {
                     geomCommand(&GeomPool::getShared(which, true), command, m);
