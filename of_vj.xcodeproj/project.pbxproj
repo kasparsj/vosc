@@ -26,6 +26,7 @@
 		2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
 		2B5D787A291E4C1400C0F692 /* VarsConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B5D7878291E4C1400C0F692 /* VarsConfig.cpp */; };
 		2BA637F6291D43CA000D08B9 /* Lights.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BA637F4291D43CA000D08B9 /* Lights.cpp */; };
+		2BB4CDDD29264F8900E0F8B0 /* Args.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BB4CDDB29264F8900E0F8B0 /* Args.cpp */; };
 		2D7732D4AC34CDDBDCFE9699 /* Tex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 23AB9B54C418735665B1EBA6 /* Tex.cpp */; };
 		33DB731E964056D7E35604A7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
 		3565AE7CE5956216CB234B8C /* SketchTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C2899CABC78CFBEDD426E85 /* SketchTex.cpp */; };
@@ -306,6 +307,8 @@
 		2B629E4DB07A45391A420283 /* importerdesc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = importerdesc.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/importerdesc.h; sourceTree = SOURCE_ROOT; };
 		2BA637F4291D43CA000D08B9 /* Lights.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Lights.cpp; sourceTree = "<group>"; };
 		2BA637F5291D43CA000D08B9 /* Lights.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Lights.h; sourceTree = "<group>"; };
+		2BB4CDDB29264F8900E0F8B0 /* Args.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Args.cpp; sourceTree = "<group>"; };
+		2BB4CDDC29264F8900E0F8B0 /* Args.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Args.h; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
 		2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VerticalTiltShifPass.cpp; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.cpp; sourceTree = SOURCE_ROOT; };
@@ -1761,6 +1764,8 @@
 				2BA637F5291D43CA000D08B9 /* Lights.h */,
 				2B5D7878291E4C1400C0F692 /* VarsConfig.cpp */,
 				2B5D7879291E4C1400C0F692 /* VarsConfig.h */,
+				2BB4CDDB29264F8900E0F8B0 /* Args.cpp */,
+				2BB4CDDC29264F8900E0F8B0 /* Args.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1957,6 +1962,7 @@
 				B5A6983EFC656071DB3EFFBF /* ofxLooper.cpp in Sources */,
 				ADE367465D2A8EBAD4C7A8D9 /* IpEndpointName.cpp in Sources */,
 				67FE4C7B15C2F0478C8126C2 /* NetworkingUtils.cpp in Sources */,
+				2BB4CDDD29264F8900E0F8B0 /* Args.cpp in Sources */,
 				510CAFE035E576A4E1502D52 /* UdpSocket.cpp in Sources */,
 				62545D179C94265CA1389D4A /* OscOutboundPacketStream.cpp in Sources */,
 				C4782ECC372420ACE0615B74 /* OscPrintReceivedElements.cpp in Sources */,

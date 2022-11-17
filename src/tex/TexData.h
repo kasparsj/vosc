@@ -19,6 +19,7 @@ public:
         }
         return color;
     }
+    void setColor(const ofxOscMessage& m);
     
     ofFloatColor getTint() {
         if (useMFCCTint && mfcc.size() > 0) {
@@ -26,6 +27,7 @@ public:
         }
         return tint;
     }
+    void setTint(const ofxOscMessage& m);
     
     ofFloatColor getMFCCColor() {
         if (mfccColor == ofFloatColor(0)) {

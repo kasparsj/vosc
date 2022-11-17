@@ -1,9 +1,9 @@
 #include "ofApp.h"
-#include "ColorUtil.h"
 #include "ofxHPVPlayer.h"
 #include "TexturePool.h"
 #include "GeomPool.h"
 #include "ShaderTex.h"
+#include "Args.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -51,9 +51,7 @@ void ofApp::update(){
     while (tidal->notes.size() > MAX_NOTES) {
         tidal->notes.erase(tidal->notes.begin());
     }
-    updateFloats();
-    updateVecs();
-    updateColors();
+    Args::update();
     TexturePool::update(sounds, tidal->notes);
     GeomPool::update();
 	for (int i = 0; i < layers.size(); i++) {
@@ -71,62 +69,6 @@ void ofApp::update(){
         }
     }
     HPV::Update();
-}
-
-void ofApp::updateFloats() {
-    vector<float*> toDelete;
-    for (auto const& [key, tween] : floatTweens) {
-        float endTime = tween.start + tween.dur;
-        if (*key == tween.to || ofGetElapsedTimef() >= endTime) {
-            *key = tween.to;
-            toDelete.push_back(key);
-        }
-        else {
-            *key = ofxeasing::map(ofGetElapsedTimef(), tween.start, endTime, tween.from, tween.to, tween.ease);
-        }
-    }
-    for (int i=0; i<toDelete.size(); i++) {
-        floatTweens.erase(toDelete[i]);
-    }
-}
-
-void ofApp::updateVecs() {
-    vector<glm::vec3*> toDelete;
-    for (auto const& [key, tween] : vec3Tweens) {
-        float endTime = tween.start + tween.dur;
-        if (*key == tween.to || ofGetElapsedTimef() >= endTime) {
-            *key = tween.to;
-            toDelete.push_back(key);
-        }
-        else {
-            glm::vec3 value;
-            value.x = ofxeasing::map(ofGetElapsedTimef(), tween.start, endTime, tween.from.x, tween.to.x, tween.ease);
-            value.y = ofxeasing::map(ofGetElapsedTimef(), tween.start, endTime, tween.from.y, tween.to.y, tween.ease);
-            value.z = ofxeasing::map(ofGetElapsedTimef(), tween.start, endTime, tween.from.z, tween.to.z, tween.ease);
-            *key = value;
-        }
-    }
-    for (int i=0; i<toDelete.size(); i++) {
-        vec3Tweens.erase(toDelete[i]);
-    }
-}
-
-void ofApp::updateColors() {
-    vector<ofFloatColor*> toDelete;
-    for (auto const& [key, tween] : colorTweens) {
-        float endTime = tween.start + tween.dur;
-        if (*key == tween.to || ofGetElapsedTimef() >= endTime) {
-            *key = tween.to;
-            toDelete.push_back(key);
-        }
-        else {
-            float perc = (ofGetElapsedTimef() - tween.start) / tween.dur;
-            *key = ofxColorTheory::ColorUtil::lerpLch(tween.from, tween.to, perc);
-        }
-    }
-    for (int i=0; i<toDelete.size(); i++) {
-        colorTweens.erase(toDelete[i]);
-    }
 }
 
 void ofApp::parseMessages(){
@@ -228,19 +170,6 @@ auto parseIndex(const ofxOscMessage &m) {
     return retVals { all, idx };
 }
 
-ofFloatColor parseColor(const ofxOscMessage &m, int idx = 0) {
-    ofFloatColor color;
-    for (int i=idx; i<min(idx+3, (int) m.getNumArgs()); i++) {
-        if (m.getArgType(i) == OFXOSC_TYPE_FLOAT) {
-            color[i-idx] = m.getArgAsFloat(i);
-        }
-        else {
-            color[i-idx] = m.getArgAsInt(i) / 255.f;
-        }
-    }
-    return color;
-}
-
 void ofApp::layersCommand(string command, const ofxOscMessage& m) {
     if (command == "/layers") {
         setupLayers(m.getArgAsInt(0));
@@ -282,20 +211,20 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
             ofLog() << command + " failed: camera not enabled (run /cam)";
         }
         else if (command == "/cam/pos") {
-            handleVec3(&camPos, m, 0);
+            Args::getInstance().handleVec3(&camPos, m, 0);
             if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
                 cam->setPosition(camPos);
             }
         }
         else if (command == "/cam/look") {
-            handleVec3(&camLook, m, 0);
+            Args::getInstance().handleVec3(&camLook, m, 0);
             if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
                 cam->lookAt(camLook);
             }
         }
         else if (command == "/cam/orbit") {
             if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
-                handleFloat(&camOrbitPerSecond, m, 0);
+                Args::getInstance().handleFloat(&camOrbitPerSecond, m, 0);
             }
             else {
                 ofLog() << "/cam/orbit supported only for 'easy' cam";
@@ -352,25 +281,31 @@ void ofApp::lightCommand(string command, const ofxOscMessage& m) {
 
 void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
     if (command == "/layer/bri") {
-        handlePercent(&layer->bri, m);
+        Args::getInstance().handlePercent(&layer->bri, m);
     }
     else if (command == "/layer/alpha") {
-        handlePercent(&layer->alpha, m);
+        Args::getInstance().handlePercent(&layer->alpha, m);
+    }
+    else if (command == "/layer/color") {
+        layer->data.setColor(m);
+    }
+    else if (command == "/layer/tint") {
+        layer->data.setTint(m);
     }
     else if (command == "/layer/reset") {
         layer->reset();
     }
     else if (command == "/layer/pos") {
-        handleVec3(&layer->pos, m);
+        Args::getInstance().handleVec3(&layer->pos, m);
     }
     else if (command == "/layer/size") {
-        handleVec3(&layer->data.size, m);
+        Args::getInstance().handleVec3(&layer->data.size, m);
     }
     else if (command == "/layer/rot") {
-        handleVec3(&layer->rotation, m);
+        Args::getInstance().handleVec3(&layer->rotation, m);
     }
     else if (command == "/layer/rot/speed") {
-        handleVec3(&layer->rotationSpeed, m);
+        Args::getInstance().handleVec3(&layer->rotationSpeed, m);
     }
     else if (command == "/layer/rot/point") {
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
@@ -396,11 +331,11 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
             }
         }
         else {
-            handleVec3(&layer->rotationPoint, m);
+            Args::getInstance().handleVec3(&layer->rotationPoint, m);
         }
     }
     else if (command == "/layer/scale") {
-        handleVec3(&layer->scale, m);
+        Args::getInstance().handleVec3(&layer->scale, m);
     }
     else if (command == "/layer/align") {
         ofAlignHorz alignH;
@@ -551,13 +486,13 @@ void ofApp::soundCommand(Sound& sound, string command, const ofxOscMessage &m) {
     else if (command == "/sound/set") {
         string prop = m.getArgAsString(1);
         if (prop == "maxVol") {
-            handleFloat(&sound.maxVol, m, 2);
+            Args::getInstance().handleFloat(&sound.maxVol, m, 2);
         }
         else if (prop == "maxAmp") {
-            handleFloat(&sound.maxAmp, m, 2);
+            Args::getInstance().handleFloat(&sound.maxAmp, m, 2);
         }
         else if (prop == "maxLoud") {
-            handleFloat(&sound.maxLoud, m, 2);
+            Args::getInstance().handleFloat(&sound.maxLoud, m, 2);
         }
     }
 }
@@ -623,71 +558,17 @@ void ofApp::texDataCommand(TexData& data, string command, const ofxOscMessage &m
             }
         }
         else {
-            handlePercent(&data.timePct, m);
+            Args::getInstance().handlePercent(&data.timePct, m);
         }
     }
     else if (command == "/tex/color") {
-        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
-            string value = m.getArgAsString(1);
-            if (value == "rand") {
-                data.useRandomColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-                if (data.useRandomColor) {
-                    data.useMFCCColor = false;
-                }
-            }
-            else if (value == "mfcc") {
-                data.useMFCCColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-                if (data.useMFCCColor) {
-                    data.useRandomColor = false;
-                }
-            }
-            else if (value == "lerp") {
-                ofFloatColor fromColor = parseColor(m, 3);
-                ofFloatColor toColor = parseColor(m, 6);
-                float perc = m.getArgAsFloat(2);
-                data.color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
-                data.useMFCCColor = false;
-                data.useRandomColor = false;
-            }
-        }
-        else {
-            handleColor(&data.color, m);
-            data.useMFCCColor = false;
-            data.useRandomColor = false;
-        }
+        data.setColor(m);
     }
     else if (command == "/tex/tint") {
-        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
-            string value = m.getArgAsString(1);
-            if (value == "rand") {
-                data.useRandomTint = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-                if (data.useRandomTint) {
-                    data.useMFCCTint = false;
-                }
-            }
-            else if (value == "mfcc") {
-                data.useMFCCTint = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-                if (data.useMFCCTint) {
-                    data.useRandomTint = false;
-                }
-            }
-            else if (value == "lerp") {
-                ofFloatColor fromColor = parseColor(m, 3);
-                ofFloatColor toColor = parseColor(m, 6);
-                float perc = m.getArgAsFloat(2);
-                data.tint = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
-                data.useMFCCTint = false;
-                data.useRandomTint = false;
-            }
-        }
-        else {
-            handleColor(&data.tint, m);
-            data.useMFCCTint = false;
-            data.useRandomTint = false;
-        }
+        data.setTint(m);
     }
     else if (command == "/tex/speed") {
-        handleFloat(&data.speed, m);
+        Args::getInstance().handleFloat(&data.speed, m);
     }
     else if (command == "/tex/fbo") {
         data.setFboSettings(m);
@@ -723,104 +604,20 @@ void ofApp::geomCommand(Geom* geom, string command, const ofxOscMessage& m) {
 
 void ofApp::materialCommand(ofMaterialSettings& matSettings, string command, const ofxOscMessage& m) {
     if (command == "/mat/diffuse") {
-        handleColor(&matSettings.diffuse, m);
+        Args::getInstance().handleColor(&matSettings.diffuse, m);
     }
     else if (command == "/mat/ambient") {
-        handleColor(&matSettings.ambient, m);
+        Args::getInstance().handleColor(&matSettings.ambient, m);
     }
     else if (command == "/mat/specular") {
-        handleColor(&matSettings.specular, m);
+        Args::getInstance().handleColor(&matSettings.specular, m);
     }
     else if (command == "/mat/emissive") {
-        handleColor(&matSettings.emissive, m);
+        Args::getInstance().handleColor(&matSettings.emissive, m);
     }
     else if (command == "/mat/shininess") {
-        handleFloat(&matSettings.shininess, m);
+        Args::getInstance().handleFloat(&matSettings.shininess, m);
     }
-}
-
-void ofApp::handleFloat(float *value, const ofxOscMessage &m, int i) {
-    if (m.getNumArgs() > (i+1)) {
-        if (m.getNumArgs() > (i+2)) {
-            createTween(value, m.getArgAsFloat(i), m.getArgAsFloat(i+1), m.getArgAsString(i+2));
-        }
-        else {
-            createTween(value, m.getArgAsFloat(i), m.getArgAsFloat(i+1));
-        }
-    }
-    else {
-        *value = m.getArgAsFloat(i);
-    }
-}
-
-void ofApp::handlePercent(float *value, const ofxOscMessage &m, int i) {
-    if (m.getNumArgs() > 2) {
-        if (m.getNumArgs() > 3) {
-            createTween(value,
-                        m.getArgType(1) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1),
-                        m.getArgType(2) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(2) > 1.f ? m.getArgAsFloat(2) / 100.f : m.getArgAsFloat(2),
-                        m.getArgAsString(3));
-        }
-        else {
-            createTween(value,
-                        m.getArgType(1) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1),
-                        m.getArgType(2) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(2) > 1.f ? m.getArgAsFloat(2) / 100.f : m.getArgAsFloat(2));
-        }
-    }
-    else {
-        *value = m.getArgType(1) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1);
-    }
-}
-
-void ofApp::handleVec3(glm::vec3 *value, const ofxOscMessage &m, int firstArg) {
-    if (m.getNumArgs() > firstArg + 3) {
-        createTween(value, glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg+1), m.getArgAsFloat(firstArg+2)), m.getArgAsFloat(firstArg+3));
-    }
-    else if (m.getNumArgs() > firstArg+1) {
-        *value = glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg+1), m.getNumArgs() > firstArg+2 ? m.getArgAsFloat(firstArg+2) : 0);
-    }
-    else {
-        *value = glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg));
-    }
-}
-
-void ofApp::handleColor(ofFloatColor *value, const ofxOscMessage &m) {
-    if (m.getNumArgs() > 4) {
-        createTween(value, parseColor(m, 1), m.getArgAsFloat(4));
-    }
-    else {
-        *value = parseColor(m, 1);
-    }
-}
-
-void ofApp::createTween(float *value, float target, float dur, ofxeasing::function ease) {
-    Tween<float> tween;
-    tween.from = *value;
-    tween.to = target;
-    tween.dur = dur;
-    tween.start = ofGetElapsedTimef();
-    tween.ease = ease;
-    floatTweens[value] = tween;
-}
-
-void ofApp::createTween(glm::vec3 *value, const glm::vec3 &target, float dur, ofxeasing::function ease) {
-    Tween<glm::vec3> tween;
-    tween.from = *value;
-    tween.to = target;
-    tween.dur = dur;
-    tween.start = ofGetElapsedTimef();
-    tween.ease = ease;
-    vec3Tweens[value] = tween;
-}
-
-void ofApp::createTween(ofFloatColor *value, const ofFloatColor &target, float dur, ofxeasing::function ease) {
-    Tween<ofFloatColor> tween;
-    tween.from = *value;
-    tween.to = target;
-    tween.dur = dur;
-    tween.start = ofGetElapsedTimef();
-    tween.ease = ease;
-    colorTweens[value] = tween;
 }
 
 void ofApp::processQueue() {

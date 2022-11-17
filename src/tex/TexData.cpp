@@ -1,4 +1,6 @@
 #include "TexData.h"
+#include "Args.h"
+#include "ColorUtil.h"
 
 void TexData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const map<string, VarConfig>& maps) {
     const float timef = ofGetElapsedTimef();
@@ -6,6 +8,68 @@ void TexData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes
     prevTime = timef;
     onset = false;
     updateVars(sounds, notes, maps);
+}
+
+void TexData::setColor(const ofxOscMessage &m) {
+    if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+        string value = m.getArgAsString(1);
+        if (value == "rand") {
+            useRandomColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
+            if (useRandomColor) {
+                useMFCCColor = false;
+            }
+        }
+        else if (value == "mfcc") {
+            useMFCCColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
+            if (useMFCCColor) {
+                useRandomColor = false;
+            }
+        }
+        else if (value == "lerp") {
+            ofFloatColor fromColor = Args::getInstance().parseColor(m, 3);
+            ofFloatColor toColor = Args::getInstance().parseColor(m, 6);
+            float perc = m.getArgAsFloat(2);
+            color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
+            useMFCCColor = false;
+            useRandomColor = false;
+        }
+    }
+    else {
+        Args::getInstance().handleColor(&color, m);
+        useMFCCColor = false;
+        useRandomColor = false;
+    }
+}
+
+void TexData::setTint(const ofxOscMessage &m) {
+    if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
+        string value = m.getArgAsString(1);
+        if (value == "rand") {
+            useRandomTint = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
+            if (useRandomTint) {
+                useMFCCTint = false;
+            }
+        }
+        else if (value == "mfcc") {
+            useMFCCTint = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
+            if (useMFCCTint) {
+                useRandomTint = false;
+            }
+        }
+        else if (value == "lerp") {
+            ofFloatColor fromColor = Args::getInstance().parseColor(m, 3);
+            ofFloatColor toColor = Args::getInstance().parseColor(m, 6);
+            float perc = m.getArgAsFloat(2);
+            tint = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
+            useMFCCTint = false;
+            useRandomTint = false;
+        }
+    }
+    else {
+        Args::getInstance().handleColor(&tint, m);
+        useMFCCTint = false;
+        useRandomTint = false;
+    }
 }
 
 void TexData::set(const ofxOscMessage& m) {
