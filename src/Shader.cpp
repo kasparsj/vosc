@@ -159,10 +159,10 @@ void Shader::setTexture(string name, const ofxOscMessage& m, int arg) {
         textures.erase(name);
     }
     if (TexturePool::hasShared(name)) {
-        textures[name] = &TexturePool::getShared(name);
+        textures[name] = TexturePool::getShared(name);
     }
     else {
-        textures[name] = &TexturePool::getForShader(name, _id);
+        textures[name] = TexturePool::getForShader(name, _id);
         textures[name]->load(m, arg);
     }
 }

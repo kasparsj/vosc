@@ -7,7 +7,7 @@
 
 class Texture : public VarsConfig {
 public:
-    static Texture* choose(const ofxOscMessage& m, map<string, Texture>* pool);
+    static Texture* choose(const ofxOscMessage& m, map<string, Texture*>& pool);
     static Tex* chooseTex(const ofxOscMessage& m);
     
     Texture(Tex* tex) : tex(tex) {

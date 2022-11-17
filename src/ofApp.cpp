@@ -467,7 +467,7 @@ void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
             Texture* tex;
             if (command == "/tex") {
                 string source = m.getArgAsString(1);
-                tex = &TexturePool::getForShader(source, layer->shader.getId());
+                tex = TexturePool::getForShader(source, layer->shader.getId());
             }
             else {
                 tex = Texture::choose(m, TexturePool::getShaderPool(layer->shader.getId()));
@@ -832,7 +832,7 @@ void ofApp::processQueue() {
                     allLayersCommand(command, m);
                 }
                 else if (command.substr(0, 4) == "/tex") {
-                    textureCommand(&TexturePool::getShared(which, true), command, m);
+                    textureCommand(TexturePool::getShared(which, true), command, m);
                 }
                 else if (command.substr(0, 5) == "/geom") {
                     geomCommand(&GeomPool::getShared(which, true), command, m);

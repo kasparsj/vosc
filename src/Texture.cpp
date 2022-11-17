@@ -55,12 +55,12 @@ void Texture::load(const ofxOscMessage &m, int arg) {
     load(newPath, args);
 }
 
-Texture* Texture::choose(const ofxOscMessage& m, map<string, Texture>* pool) {
+Texture* Texture::choose(const ofxOscMessage& m, map<string, Texture*>& pool) {
     Tex* tex = chooseTex(m);
     if (tex != NULL) {
         const string path = tex->path;
-        (*pool)[path] = Texture(tex);
-        return &(*pool)[path];
+        pool[path] = new Texture(tex);
+        return pool[path];
     }
     return NULL;
 }
