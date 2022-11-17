@@ -398,26 +398,30 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
 
 void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
-        if (command == "/tex" || command == "/tex/choose") {
-            Texture* tex;
+        Texture* tex = layer->shader.getDefaultTexture();
+        if (command == "/tex" || command == "/tex/choose" || tex == NULL) {
             if (command == "/tex") {
                 string source = m.getArgAsString(1);
-                tex = TexturePool::getForShader(source, layer->shader.getId());
+                if (TexturePool::hasShared(source)) {
+                    tex = TexturePool::getShared(source);
+                }
+                else {
+                    tex = TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId());
+                }
             }
             else {
-                tex = Texture::choose(m, TexturePool::getShaderPool(layer->shader.getId()));
+                tex = TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId());
             }
             layer->shader.setDefaultTexture(tex);
             if (tex->data.size.x == 0 && tex->data.size.y == 0) {
                 tex->data.setSize(layer->data.size.x, layer->data.size.y);
             }
-            TexturePool::getShaderPool(layer->shader.getId());
             // no need to re-load shared texture
-            if (tex->isLoaded()) {
+            if (command == "/tex" && tex->isLoaded()) {
                 return;
             }
         }
-        textureCommand(layer->shader.getDefaultTexture(), command, m);
+        textureCommand(tex, command, m);
     }
     else if (command.substr(0, 5) == "/geom") {
         if (command == "/geom" || command == "/geom/choose") {
@@ -502,7 +506,7 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
         tex->load(m);
     }
     else if (command == "/tex/choose") {
-        tex->tex = Texture::chooseTex(m);
+        tex->choose(m);
     }
     else if (command == "/tex/reload") {
         tex->reload();

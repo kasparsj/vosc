@@ -55,27 +55,16 @@ void Texture::load(const ofxOscMessage &m, int arg) {
     load(newPath, args);
 }
 
-Texture* Texture::choose(const ofxOscMessage& m, map<string, Texture*>& pool) {
-    Tex* tex = chooseTex(m);
-    if (tex != NULL) {
-        const string path = tex->path;
-        pool[path] = new Texture(tex);
-        return pool[path];
-    }
-    return NULL;
-}
-
-Tex* Texture::chooseTex(const ofxOscMessage& m) {
+void Texture::choose(const ofxOscMessage& m) {
     string type = m.getNumArgs() > 1 ? m.getArgAsString(1) : "";
     vector<float> args;
     for (int i=2; i<m.getNumArgs(); i++) {
         args.push_back(m.getArgAsFloat(i));
     }
-    Tex* tex = chooseTex(type, args);
+    tex = chooseTex(type, args);
     if (tex == NULL) {
         ofLog() << "chooseTex: invalid source type " << type;
     }
-    return tex;
 }
 
 Tex* Texture::chooseTex(string type, const vector<float>& args) {

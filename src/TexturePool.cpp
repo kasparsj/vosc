@@ -15,15 +15,10 @@ Texture* TexturePool::getShared(string name, bool create) {
     return sharedPool[name];
 }
 
-Texture* TexturePool::getForShader(string source, int shaderId) {
-    if (source != "" && hasShared(source)) {
-        return getShared(source);
-    }
-    else {
-        map<string, Texture*>& shaderPool = getShaderPool(shaderId);
-        shaderPool[source] = new Texture();
-        return shaderPool[source];
-    }
+Texture* TexturePool::getForShader(string name, int shaderId) {
+    map<string, Texture*>& shaderPool = getShaderPool(shaderId);
+    shaderPool[name] = new Texture();
+    return shaderPool[name];
 }
 
 map<string, Texture*>& TexturePool::getShaderPool(int shaderId) {
