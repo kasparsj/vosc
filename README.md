@@ -427,13 +427,13 @@ Arguments:
 Examples:
 ```supercollider
 ~visuals.sendMsg('/tex/var', 0, "myVar", "const"); // set first layer data source to constant 1
-~visuals.sendMsg('/tex/var', 0, "myVar", "const:23"); // set first layer data source to constant 23
+~visuals.sendMsg('/tex/var', 0, "myVar", "const", 23); // set first layer data source to constant 23
 ~visuals.sendMsg('/tex/var', 0, "myVar", "rand"); // set first layer data source to random
-~visuals.sendMsg('/tex/var', 0, "myVar", "rand:100"); // set first layer data source to random of 100
+~visuals.sendMsg('/tex/var', 0, "myVar", "rand", 100); // set first layer data source to random of 100
 ~visuals.sendMsg('/tex/var', 0, "myVar", "noise"); // set first layer data source to perlin noise
-~visuals.sendMsg('/tex/var', 0, "myVar", "noise:50"); // set first layer data source to perlin noise of 50
-~visuals.sendMsg('/tex/var', 0, "myVar", "loud:0"); // set first layer data source to channel 1 loudness
-~visuals.sendMsg('/tex/var', 0, "myVar", "amp:1"); // set first layer data source to channel 2 amplitude
+~visuals.sendMsg('/tex/var', 0, "myVar", "noise", 50); // set first layer data source to perlin noise of 50
+~visuals.sendMsg('/tex/var', 0, "myVar", "loud", 0); // set first layer data source to channel 1 loudness
+~visuals.sendMsg('/tex/var', 0, "myVar", "amp", 1); // set first layer data source to channel 2 amplitude
 ```
 
 ### Texture Looper
