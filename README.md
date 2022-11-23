@@ -426,7 +426,7 @@ Arguments:
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/tex/var', 0, "myVar", "const"); // set first layer data source to constant 1
+~visuals.sendMsg('/tex/var', 0, "myVar", 20); // set first layer data source to constant 20
 ~visuals.sendMsg('/tex/var', 0, "myVar", "const", 23); // set first layer data source to constant 23
 ~visuals.sendMsg('/tex/var', 0, "myVar", "rand"); // set first layer data source to random
 ~visuals.sendMsg('/tex/var', 0, "myVar", "rand", 100); // set first layer data source to random of 100
