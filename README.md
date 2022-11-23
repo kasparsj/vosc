@@ -254,6 +254,13 @@ Examples:
 ~visuals.sendMsg('/tex', 0, "bbb_export.hpv"); // load high performance video into first layer
 ~visuals.sendMsg('/tex', 0, "webcam:0"); // load first webcam device into first layer
 ~visuals.sendMsg('/tex', 0, ""); // unload first layer texture
+
+~visuals.sendMsg('/layers/layout', "grid"); // change to grid layout
+~visuals.sendMsg('/tex', "t_webcam", "webcam:0"); // load first webcam device into a shared texture called "t_webcam"
+9.do { |i|
+	~visuals.sendMsg('/tex', i, "t_webcam"); // load shared "t_webcam" into a layer
+	~visuals.sendMsg('/layer/delay', i, i*13);
+};
 ```
 
 ### Texture Reload
