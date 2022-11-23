@@ -433,8 +433,8 @@ Examples:
 ~visuals.sendMsg('/tex/var', 0, "myVar", "noise"); // set first layer data source to perlin noise
 ~visuals.sendMsg('/tex/var', 0, "myVar", "noise", 50); // set first layer data source to perlin noise of 50
 ~visuals.sendMsg('/tex/var', 0, "myVar", "amp"); // set first layer data source to channel 1 amplitude
-~visuals.sendMsg('/tex/var', 0, "myVar", "loud0"); // set first layer data source to channel 1 loudness
-~visuals.sendMsg('/tex/var', 0, "myVar", "amp1"); // set first layer data source to channel 2 amplitude
+~visuals.sendMsg('/tex/var', 0, "myVar", "loud", 0); // set first layer data source to channel 1 loudness
+~visuals.sendMsg('/tex/var', 0, "myVar", "amp", 1); // set first layer data source to channel 2 amplitude
 ```
 
 ### Texture Looper
