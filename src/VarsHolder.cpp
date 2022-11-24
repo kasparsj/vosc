@@ -3,7 +3,10 @@
 #include "VariablePool.h"
 
 Variable* VarsHolder::getVariable(string name) {
-    return vars[name];
+    if (vars.find(name) != vars.end()) {
+        return vars[name];
+    }
+    return NULL;
 }
 
 Variable* VarsHolder::getVariableOfType(string type) {
@@ -13,6 +16,10 @@ Variable* VarsHolder::getVariableOfType(string type) {
         }
     }
     return NULL;
+}
+
+bool VarsHolder::hasVar(string name) {
+    return getVariable(name) != NULL;
 }
 
 float VarsHolder::getVar(string name, int idx) {

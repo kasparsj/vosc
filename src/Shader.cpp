@@ -78,8 +78,6 @@ void Shader::begin(TexData& data, int delay) {
         shader.begin();
         shader.setUniform1f("time", data.time);
         shader.setUniform2f("resolution", data.size.x, data.size.y);
-        // todo: overlaps with Source::COLOR
-        shader.setUniform4f("color", data.getVarColor("color"));
         shader.setUniform1i("random", data.randomSeed);
         int texLoc = 0;
         for (map<string, Texture*>::iterator it=textures.begin(); it!=textures.end(); ++it) {

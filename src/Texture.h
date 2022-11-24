@@ -52,6 +52,7 @@ private:
         return chooseTex("", args);
     }
 
+    void _unload();
     void drawFrame();
     const ofFbo& getFrame(int delay = 0) const;
     ofFbo& getFrame(int delay = 0);

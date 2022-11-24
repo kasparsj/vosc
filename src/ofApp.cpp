@@ -378,10 +378,6 @@ void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
             if (tex->data.size.x == 0 && tex->data.size.y == 0) {
                 tex->data.setSize(layer->data.size.x, layer->data.size.y);
             }
-            // no need to re-load shared texture
-            if (command == "/tex" && tex->isLoaded()) {
-                return;
-            }
         }
         textureCommand(tex, command, m);
     }

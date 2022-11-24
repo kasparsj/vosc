@@ -12,6 +12,7 @@ public:
     virtual ~VarsHolder() {}
     Variable* getVariable(string name);
     Variable* getVariableOfType(string type);
+    bool hasVar(string name);
     float getVar(string name, int idx = 0);
     glm::vec3 getVarVec3(string name, glm::vec3 defVal);
     glm::vec3 getVarVec3(string name) {

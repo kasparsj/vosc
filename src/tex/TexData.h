@@ -49,7 +49,7 @@ public:
         return parent->vars;
     }
     bool hasVar(string name) {
-        return parent->getVar(name) != NULL;
+        return parent->hasVar(name);
     }
     float getVar(string name, int idx = 0) {
         return parent->getVar(name, idx);
@@ -87,12 +87,6 @@ public:
     bool aspectRatio = true;
     float timePct = 0;
     int randomSeed = 0;
-    //ofFloatColor color = ofFloatColor(1.f, 1.f);
-    //bool useMFCCColor = false;
-    //bool useRandomColor = false;
-    //ofFloatColor tint = ofFloatColor(1.f, 1.f);
-    //bool useMFCCTint = false;
-    //ofFloatColor mfccColor = ofFloatColor(0);
     
 protected:
     VarsHolder* parent;

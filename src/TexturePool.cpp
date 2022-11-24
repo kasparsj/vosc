@@ -16,7 +16,9 @@ Texture* TexturePool::getShared(string name, bool create) {
 
 Texture* TexturePool::getForShader(string name, int shaderId) {
     map<string, Texture*>& pool = getShaderPool(shaderId);
-    pool[name] = new Texture();
+    if (pool.find(name) == pool.end()) {
+        pool[name] = new Texture();
+    }
     return pool[name];
 }
 

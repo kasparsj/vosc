@@ -9,7 +9,7 @@ bool isColor(string path) {
 }
 
 void Texture::load(string source, const vector<float>& args) {
-    unload();
+    _unload();
     bool explicitType = source.find(":") != string::npos;
     if (explicitType && source.substr(0, 4) != "http") {
         tex = Tex::factory(source, args);
@@ -57,6 +57,7 @@ void Texture::load(const ofxOscMessage &m, int arg) {
 }
 
 void Texture::choose(const ofxOscMessage& m) {
+    _unload();
     string type = m.getNumArgs() > 1 ? m.getArgAsString(1) : "";
     vector<float> args;
     for (int i=2; i<m.getNumArgs(); i++) {
@@ -77,13 +78,17 @@ Tex* Texture::chooseTex(string type, const vector<float>& args) {
     return Tex::factory(type, args);
 }
 
-void Texture::unload() {
+void Texture::_unload() {
     frames.clear();
     frames.resize(numFrames);
     if (tex != NULL) {
         delete tex;
         tex = NULL;
     }
+}
+
+void Texture::unload() {
+    _unload();
     vars.clear();
     VariablePool::cleanup(this);
 }
@@ -144,6 +149,7 @@ void Texture::draw(Layer* layer) {
         data.afterDraw(vars);
     }
     else if (hasTexture(layer->delay)) {
+        ofSetColor(getVarColor("tint"));
         const ofTexture& tex = getTexture(layer->delay);
         if (data.aspectRatio) {
             if (tex.getWidth() > tex.getHeight()) {
@@ -160,6 +166,7 @@ void Texture::draw(Layer* layer) {
 }
 
 void Texture::texDraw(const glm::vec2& pos, const glm::vec2 size) {
+    ofSetColor(getVarColor("tint"));
     if (looper == NULL) {
         tex->draw(pos, size);
     }

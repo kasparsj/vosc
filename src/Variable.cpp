@@ -43,7 +43,7 @@ void Variable::init(ofFloatColor value) {
 
 void Variable::init(const ofxOscMessage& m) {
     string command = m.getAddress();
-    if (command.substr(command.length()-4) == "/var") {
+    if (command.length() >= 4 && command.substr(command.length()-4) == "/var") {
         if (m.getArgType(2) == OFXOSC_TYPE_STRING) {
             vector<float> values;
             for (int i=3; i<m.getNumArgs(); i++) {
@@ -55,10 +55,10 @@ void Variable::init(const ofxOscMessage& m) {
             init(m.getArgAsString(1), m.getArgAsFloat(2));
         }
     }
-    else if (command.substr(command.length()-10) == "/var/scale") {
+    else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/scale") {
         Args::getInstance().handleFloat(&scale, m);
     }
-    else if (command.substr(command.length()-10) == "/var/range") {
+    else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/range") {
         Args::getInstance().handleFloat(&rangeFrom, m);
         Args::getInstance().handleFloat(&rangeTo, m);
     }
