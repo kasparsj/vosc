@@ -45,11 +45,6 @@ void TexData::allocate(ofFbo& fbo) {
 
 void TexData::afterDraw(const map<string, Variable*>& vars) {
     for (map<string, Variable*>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
-        if (it->second->type.substr(0, 5) == "tidal") {
-            it->second->values[0] -= 1.f/8.f;
-            if (it->second->values[0] < 0) {
-                it->second->values[0] = 0;
-            }
-        }
+        it->second->afterDraw();
     }
 }

@@ -13,19 +13,6 @@ public:
     }
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
     
-//    ofFloatColor getMFCCColor() {
-//        if (mfccColor == ofFloatColor(0)) {
-//            vector<float> mfcc = getVarOfTypeVec("mfcc");
-//            int k = (mfcc.size() / 3);
-//            for (int i=0; i<mfcc.size(); i++) {
-//                int j = MIN(2, i / k);
-//                int k2 = j < 2 ? k : mfcc.size() - k*2;
-//                mfccColor[j] += (mfcc[i] * 1.f/k2);
-//            }
-//        }
-//        return mfccColor;
-//    }
-    
     glm::vec2 getSize() const {
         return size;
     }
@@ -57,26 +44,12 @@ public:
     vector<float> getVarVec(string name) {
         Variable* var = parent->getVariable(name);
         if (var != NULL) {
-            return var->values;
+            return var->getVec();
         }
         return vector<float>();
     }
     ofFloatColor getVarColor(string name) {
         return parent->getVarColor(name);
-    }
-    float getVarOfType(string type, int idx = 0) {
-        Variable* var = parent->getVariableOfType(type);
-        if (var != NULL) {
-            return var->values[idx];
-        }
-        return 0;
-    }
-    vector<float> getVarOfTypeVec(string type) {
-        Variable* var = parent->getVariableOfType(type);
-        if (var != NULL) {
-            return var->values;
-        }
-        return vector<float>();
     }
     
     glm::vec3 size;

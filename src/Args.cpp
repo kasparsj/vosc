@@ -16,6 +16,38 @@ ofFloatColor Args::parseColor(const ofxOscMessage &m, int idx) {
     return color;
 }
 
+ofFloatColor Args::parseLerpColor(const ofxOscMessage &m, int firstArg) {
+    ofFloatColor fromColor = Args::getInstance().parseColor(m, firstArg+2);
+    ofFloatColor toColor = Args::getInstance().parseColor(m, firstArg+5);
+    float perc = m.getArgAsFloat(firstArg+1);
+    return ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
+}
+
+vector<float> Args::parseAlign(const ofxOscMessage &m, int firstArg) {
+    string argH = m.getArgAsString(firstArg);
+    string argV = m.getNumArgs() > 2 ? m.getArgAsString(firstArg+1) : argH;
+    vector<float> align = {0, 0, 0};
+    if (argH == "center") {
+        align[0] = 0.5f;
+    }
+    else if (argH == "left") {
+        align[0] = 0.f;
+    }
+    else if (argH == "right") {
+        align[0] = 1.f;
+    }
+    if (argV == "center") {
+        align[1] = 0.5f;
+    }
+    else if (argV == "top") {
+        align[1] = 0.f;
+    }
+    else if (argV == "bottom") {
+        align[1] = 1.f;
+    }
+    return align;
+}
+
 void Args::updateFloats() {
     vector<float*> toDelete;
     for (auto const& [key, tween] : floatTweens) {
@@ -72,7 +104,7 @@ void Args::updateColors() {
     }
 }
 
-void Args::handleFloat(float *value, const ofxOscMessage &m, int i) {
+void Args::handleFloat(float* value, const ofxOscMessage &m, int i) {
     if (m.getNumArgs() > (i+1)) {
         if (m.getNumArgs() > (i+2)) {
             createTween(value, m.getArgAsFloat(i), m.getArgAsFloat(i+1), m.getArgAsString(i+2));
@@ -105,8 +137,15 @@ void Args::handlePercent(float *value, const ofxOscMessage &m, int i) {
     }
 }
 
-void Args::handleVec3(glm::vec3 *value, const ofxOscMessage &m, int firstArg) {
-    if (m.getNumArgs() > firstArg + 3) {
+void Args::handleVec3(glm::vec3* value, const ofxOscMessage &m, int firstArg) {
+    if (m.getArgType(firstArg) == OFXOSC_TYPE_STRING) {
+        string type = m.getArgAsString(firstArg);
+        if (type == "center" || type == "left" || type == "right" || type == "top" || type == "bottom") {
+            vector<float> align = parseAlign(m, firstArg);
+            *value = glm::vec3(align[0], align[1], align[2]);
+        }
+    }
+    else if (m.getNumArgs() > firstArg + 3) {
         createTween(value, glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg+1), m.getArgAsFloat(firstArg+2)), m.getArgAsFloat(firstArg+3));
     }
     else if (m.getNumArgs() > firstArg+1) {
@@ -118,7 +157,16 @@ void Args::handleVec3(glm::vec3 *value, const ofxOscMessage &m, int firstArg) {
 }
 
 void Args::handleVec3(vector<float>* value, const ofxOscMessage &m, int firstArg) {
-    if (m.getNumArgs() > firstArg + 3) {
+    if (m.getArgType(firstArg) == OFXOSC_TYPE_STRING) {
+        string type = m.getArgAsString(firstArg);
+        if (type == "center" || type == "left" || type == "right" || type == "top" || type == "bottom") {
+            vector<float> align = parseAlign(m, firstArg);
+            for (int i=0; i<align.size(); i++) {
+                (*value)[i] = align[i];
+            }
+        }
+    }
+    else if (m.getNumArgs() > firstArg + 3) {
         vector<float> target = {m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg+1), m.getArgAsFloat(firstArg+2)};
         createTween(value, target, m.getArgAsFloat(firstArg+3));
     }
@@ -134,30 +182,46 @@ void Args::handleVec3(vector<float>* value, const ofxOscMessage &m, int firstArg
     }
 }
 
-void Args::handleColor(ofFloatColor* value, const ofxOscMessage &m) {
-    if (m.getNumArgs() > 4) {
-        createTween(value, parseColor(m, 1), m.getArgAsFloat(4));
+void Args::handleColor(ofFloatColor* value, const ofxOscMessage& m, int firstArg) {
+    if (m.getArgType(firstArg) == OFXOSC_TYPE_STRING) {
+        if (m.getArgAsString(firstArg) == "lerp") {
+            *value = parseLerpColor(m, firstArg);
+        }
+    }
+    else if (m.getNumArgs() > firstArg+1) {
+        createTween(value, parseColor(m, firstArg), m.getArgAsFloat(firstArg+3));
     }
     else {
-        *value = parseColor(m, 1);
+        *value = parseColor(m, firstArg);
     }
 }
 
-void Args::handleColor(vector<float>* value, const ofxOscMessage &m) {
-    if (m.getNumArgs() > 4) {
-        ofFloatColor targetColor = parseColor(m, 1);
+void Args::handleColor(vector<float>* value, const ofxOscMessage& m, int firstArg) {
+    if (m.getArgType(firstArg) == OFXOSC_TYPE_STRING) {
+        if (m.getArgAsString(firstArg) == "lerp") {
+            ofFloatColor color = parseLerpColor(m, firstArg);
+            (*value)[0] = color.r;
+            (*value)[1] = color.g;
+            (*value)[2] = color.b;
+        }
+        else {
+            // todo: error
+        }
+    }
+    else if (m.getNumArgs() > firstArg+3) {
+        ofFloatColor targetColor = parseColor(m, firstArg);
         vector<float> target = {targetColor.r, targetColor.g, targetColor.b};
         createTween(value, target, m.getArgAsFloat(4));
     }
     else {
-        ofFloatColor color = parseColor(m, 1);
+        ofFloatColor color = parseColor(m, firstArg);
         (*value)[0] = color.r;
         (*value)[1] = color.g;
         (*value)[2] = color.b;
     }
 }
 
-void Args::createTween(float *value, float target, float dur, ofxeasing::function ease) {
+void Args::createTween(float* value, float target, float dur, ofxeasing::function ease) {
     Tween<float> tween;
     tween.from = *value;
     tween.to = target;
@@ -167,7 +231,7 @@ void Args::createTween(float *value, float target, float dur, ofxeasing::functio
     floatTweens[value] = tween;
 }
 
-void Args::createTween(glm::vec3 *value, const glm::vec3& target, float dur, ofxeasing::function ease) {
+void Args::createTween(glm::vec3* value, const glm::vec3& target, float dur, ofxeasing::function ease) {
     Tween<glm::vec3> tween;
     tween.from = *value;
     tween.to = target;
@@ -177,7 +241,7 @@ void Args::createTween(glm::vec3 *value, const glm::vec3& target, float dur, ofx
     vec3Tweens[value] = tween;
 }
 
-void Args::createTween(ofFloatColor *value, const ofFloatColor& target, float dur, ofxeasing::function ease) {
+void Args::createTween(ofFloatColor* value, const ofFloatColor& target, float dur, ofxeasing::function ease) {
     Tween<ofFloatColor> tween;
     tween.from = *value;
     tween.to = target;

@@ -42,7 +42,6 @@ public:
     Geom* geom = NULL;
     LayerData data;
     LayerShader shader;
-    glm::vec3 pos;
     ofAlignHorz alignH;
     ofAlignVert alignV;
     int behaviour = -1;

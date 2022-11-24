@@ -135,6 +135,6 @@ void main( )
   dir.xz+=sin(time)*.3;
   vec3 col=march(from,dir);
   col=mix(vec3(.5)*length(col),col,.8);
-  fragColor =vec4(col,0.5);
+  fragColor =vec4(col,1.);
 }
 

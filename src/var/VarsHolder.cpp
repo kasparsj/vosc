@@ -1,19 +1,9 @@
 #include "VarsHolder.h"
-#include "Config.h"
 #include "VariablePool.h"
 
 Variable* VarsHolder::getVariable(string name) {
     if (vars.find(name) != vars.end()) {
         return vars[name];
-    }
-    return NULL;
-}
-
-Variable* VarsHolder::getVariableOfType(string type) {
-    for (map<string, Variable*>::iterator it=vars.begin(); it!=vars.end(); ++it) {
-        if (it->second->type == type) {
-            return it->second;
-        }
     }
     return NULL;
 }
@@ -25,7 +15,7 @@ bool VarsHolder::hasVar(string name) {
 float VarsHolder::getVar(string name, int idx) {
     Variable* var = getVariable(name);
     if (var != NULL) {
-        return var->values[idx];
+        return var->get(idx);
     }
     return 0;
 }
@@ -33,7 +23,7 @@ float VarsHolder::getVar(string name, int idx) {
 vector<float> VarsHolder::getVarVec(string name) {
     Variable* var = getVariable(name);
     if (var != NULL) {
-        return var->values;
+        return var->getVec();
     }
     return vector<float>();
 }
@@ -41,7 +31,7 @@ vector<float> VarsHolder::getVarVec(string name) {
 glm::vec3 VarsHolder::getVarVec3(string name, glm::vec3 defVal) {
     Variable* var = getVariable(name);
     if (var != NULL) {
-        return glm::vec3(var->values[0], var->values[1], var->values[2]);
+        return glm::vec3(var->get(0), var->get(1), var->get(2));
     }
     return defVal;
 }
@@ -49,49 +39,43 @@ glm::vec3 VarsHolder::getVarVec3(string name, glm::vec3 defVal) {
 ofFloatColor VarsHolder::getVarColor(string name) {
     Variable* var = getVariable(name);
     if (var != NULL) {
-        return ofFloatColor(var->values[0], var->values[1], var->values[2]);
+        return var->getColor();
     }
     return ofFloatColor();
 }
 
 void VarsHolder::setVar(string name, Variable* var) {
-    auto it = DataSourceMap.find(var->type);
-    if (it != DataSourceMap.end() || var->type.substr(0, 5) == "tidal" || var->type.substr(0, 3) == "amp") {
-        vars[name] = var;
-    }
-    else {
-        ofLog() << "invalid var " + name + " type: " + var->type;
-    }
+    vars[name] = var;
 }
 
 void VarsHolder::setVar(string name, float value) {
     Variable* var = VariablePool::getOrCreate(this, name);
-    var->init(value);
+    var->set(value);
     setVar(name, var);
 }
 
 void VarsHolder::setVar(string name, vector<float> value) {
     Variable* var = VariablePool::getOrCreate(this, name);
-    var->init(value);
+    var->set(value);
     setVar(name, var);
 }
 
 void VarsHolder::setVar(string name, glm::vec3 value) {
     Variable* var = VariablePool::getOrCreate(this, name);
     var->isVec3 = true;
-    var->init(value);
+    var->set(value);
     setVar(name, var);
 }
 
 void VarsHolder::setVar(string name, ofFloatColor value) {
     Variable* var = VariablePool::getOrCreate(this, name);
     var->isColor = true;
-    var->init(value);
+    var->set(value);
     setVar(name, var);
 }
 
 void VarsHolder::setVar(string name, const ofxOscMessage& value) {
     Variable* var = VariablePool::getOrCreate(this, name);
-    var->init(value);
+    var->set(value);
     setVar(name, var);
 }

@@ -4,6 +4,7 @@
 void Layer::setup(int index)
 {
     this->index = index;
+    setVar("pos", glm::vec3());
     reset();
 }
 
@@ -11,21 +12,21 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 {
     switch (layout) {
         case Layout::COLUMN:
-            pos = glm::vec3(0, ofGetHeight() / layoutTotal * layoutIndex, 0);
+            setVar("pos", glm::vec3(0, ofGetHeight() / layoutTotal * layoutIndex, 0));
             data.size = glm::vec3(ofGetWidth(), ofGetHeight() / layoutTotal, 0);
             break;
         case Layout::ROW:
-            pos = glm::vec3(ofGetWidth() / layoutTotal * layoutIndex, 0, 0);
+            setVar("pos", glm::vec3(ofGetWidth() / layoutTotal * layoutIndex, 0, 0));
             data.size = glm::vec3(ofGetWidth() / layoutTotal, ofGetHeight(), 0);
             break;
         case Layout::GRID: {
             int root = (int) sqrt(layoutTotal);
-            pos = glm::vec3(ofGetWidth() / root * (layoutIndex % root), ofGetHeight() / root * floor(layoutIndex / root), 0);
+            setVar("pos", glm::vec3(ofGetWidth() / root * (layoutIndex % root), ofGetHeight() / root * floor(layoutIndex / root), 0));
             data.size = glm::vec3(ofGetWidth() / root, ofGetHeight() / root, 0);
             break;
         }
         case Layout::STACK:
-            pos = glm::vec3(0, 0, 0);
+            setVar("pos", glm::vec3(0, 0, 0));
             data.size = glm::vec3(ofGetWidth(), ofGetHeight(), 0);
             break;
     }
@@ -46,7 +47,6 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
     doAlign();
     doRotate();
     ofPushStyle();
-    ofLog() << getVar("alpha");
     ofSetColor(getVarColor("tint") * getVar("bri"), getVar("alpha") * 255);
     
     if (hasGeom() || shader.isLoaded()) {
@@ -102,7 +102,7 @@ void Layer::draw(int totalVisible) {
                     break;
             }
             ofEnableBlendMode(data.blendMode);
-            draw(pos, data.size);
+            draw(getVarVec3("pos"), data.size);
             ofDisableBlendMode();
         }
         data.afterDraw(vars);

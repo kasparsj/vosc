@@ -86,17 +86,18 @@ void Shader::begin(TexData& data, int delay) {
             }
         }
         for (map<string, Variable*>::const_iterator it=data.getVars().begin(); it!=data.getVars().end(); ++it) {
-            if (it->second->values.size() == 1) {
-                shader.setUniform1f(it->first, it->second->values[0]);
+            vector<float> values = it->second->getVec();
+            if (values.size() == 1) {
+                shader.setUniform1f(it->first, values[0]);
             }
-            else if (it->second->values.size() == 2) {
-                shader.setUniform2f(it->first, it->second->values[0], it->second->values[1]);
+            else if (values.size() == 2) {
+                shader.setUniform2f(it->first, values[0], values[1]);
             }
-            else if (it->second->values.size() == 3) {
-                shader.setUniform3f(it->first, it->second->values[0], it->second->values[1], it->second->values[2]);
+            else if (values.size() == 3) {
+                shader.setUniform3f(it->first, values[0], values[1], values[2]);
             }
-            else if (it->second->values.size() == 4) {
-                shader.setUniform4f(it->first, it->second->values[0], it->second->values[1], it->second->values[2], it->second->values[3]);
+            else if (values.size() == 4) {
+                shader.setUniform4f(it->first, values[0], values[1], values[2], values[3]);
             }
         }
     }

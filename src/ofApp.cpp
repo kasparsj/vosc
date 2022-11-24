@@ -298,7 +298,7 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
         layer->reset();
     }
     else if (command == "/layer/pos") {
-        Args::getInstance().handleVec3(&layer->pos, m);
+        layer->setVar("pos",  m);
     }
     else if (command == "/layer/size") {
         Args::getInstance().handleVec3(&layer->data.size, m);
@@ -607,7 +607,7 @@ void ofApp::processQueue() {
                 }
                 else if (command.substr(0, 4) == "/var") {
                     Variable* var = VariablePool::getShared(which, true);
-                    var->init(m);
+                    var->set(m);
                 }
                 else if (command.substr(0, 5) == "/geom") {
                     geomCommand(GeomPool::getShared(which, true), command, m);

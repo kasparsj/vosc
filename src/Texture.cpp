@@ -145,7 +145,7 @@ void Texture::drawFrame() {
 
 void Texture::draw(Layer* layer) {
     if (isLoaded() && layer->delay == 0) {
-        texDraw(layer->pos, layer->data.size);
+        texDraw(layer->getVarVec3("pos"), layer->data.size);
         data.afterDraw(vars);
     }
     else if (hasTexture(layer->delay)) {
@@ -155,14 +155,14 @@ void Texture::draw(Layer* layer) {
         const ofTexture& tex = getTexture(layer->delay);
         if (data.aspectRatio) {
             if (tex.getWidth() > tex.getHeight()) {
-                tex.draw(layer->pos, layer->data.size.x, layer->data.size.x/tex.getWidth() * tex.getHeight());
+                tex.draw(layer->getVarVec3("pos"), layer->data.size.x, layer->data.size.x/tex.getWidth() * tex.getHeight());
             }
             else {
-                tex.draw(layer->pos, layer->data.size.y/tex.getHeight() * tex.getWidth(), layer->data.size.y);
+                tex.draw(layer->getVarVec3("pos"), layer->data.size.y/tex.getHeight() * tex.getWidth(), layer->data.size.y);
             }
         }
         else {
-            tex.draw(layer->pos, layer->data.size.x, layer->data.size.y);
+            tex.draw(layer->getVarVec3("pos"), layer->data.size.x, layer->data.size.y);
         }
         //ofPopStyle();
     }

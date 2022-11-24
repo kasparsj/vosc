@@ -21,7 +21,7 @@ public:
     vector<float> ampHist;
     float loudness;
     int onset;
-    std::vector<float> mfcc;
+    vector<float> mfcc;
     float maxVol = 0.17;
     float maxAmp = 0.7;
     float maxLoud = MAX_LOUD;

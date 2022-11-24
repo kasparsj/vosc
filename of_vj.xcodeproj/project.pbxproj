@@ -26,6 +26,7 @@
 		2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
 		2B205C46292DE0670030CB22 /* VariablePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B205C44292DE0670030CB22 /* VariablePool.cpp */; };
 		2B205C49292DE2690030CB22 /* Variable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B205C47292DE2690030CB22 /* Variable.cpp */; };
+		2B381A36292FE982002E27B9 /* Value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B381A34292FE982002E27B9 /* Value.cpp */; };
 		2B5D787A291E4C1400C0F692 /* VarsHolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B5D7878291E4C1400C0F692 /* VarsHolder.cpp */; };
 		2BA637F6291D43CA000D08B9 /* Lights.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BA637F4291D43CA000D08B9 /* Lights.cpp */; };
 		2BB4CDDD29264F8900E0F8B0 /* Args.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BB4CDDB29264F8900E0F8B0 /* Args.cpp */; };
@@ -174,6 +175,9 @@
 		2B205C45292DE0670030CB22 /* VariablePool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VariablePool.h; sourceTree = "<group>"; };
 		2B205C47292DE2690030CB22 /* Variable.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Variable.cpp; sourceTree = "<group>"; };
 		2B205C48292DE2690030CB22 /* Variable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Variable.h; sourceTree = "<group>"; };
+		2B381A31292F8460002E27B9 /* Energetic.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Energetic.frag; sourceTree = "<group>"; };
+		2B381A34292FE982002E27B9 /* Value.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Value.cpp; sourceTree = "<group>"; };
+		2B381A35292FE982002E27B9 /* Value.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Value.h; sourceTree = "<group>"; };
 		2B5D77E6291E1CB000C0F692 /* 21.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 21.frag; sourceTree = "<group>"; };
 		2B5D77E7291E1CB000C0F692 /* 76.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 76.frag; sourceTree = "<group>"; };
 		2B5D77E8291E1CB000C0F692 /* 99.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 99.frag; sourceTree = "<group>"; };
@@ -759,6 +763,21 @@
 			name = src;
 			sourceTree = "<group>";
 		};
+		2B381A33292FE925002E27B9 /* var */ = {
+			isa = PBXGroup;
+			children = (
+				2B381A34292FE982002E27B9 /* Value.cpp */,
+				2B381A35292FE982002E27B9 /* Value.h */,
+				2B205C47292DE2690030CB22 /* Variable.cpp */,
+				2B205C48292DE2690030CB22 /* Variable.h */,
+				2B205C44292DE0670030CB22 /* VariablePool.cpp */,
+				2B205C45292DE0670030CB22 /* VariablePool.h */,
+				2B5D7878291E4C1400C0F692 /* VarsHolder.cpp */,
+				2B5D7879291E4C1400C0F692 /* VarsHolder.h */,
+			);
+			path = var;
+			sourceTree = "<group>";
+		};
 		2B5D77E4291E1CB000C0F692 /* data */ = {
 			isa = PBXGroup;
 			children = (
@@ -956,6 +975,7 @@
 				2B5D785E291E1CB000C0F692 /* Ether.frag */,
 				2B5D785F291E1CB000C0F692 /* AtmoScattering.frag */,
 				2B5D7860291E1CB000C0F692 /* TerrainGrid.frag */,
+				2B381A31292F8460002E27B9 /* Energetic.frag */,
 			);
 			path = shadertoy;
 			sourceTree = "<group>";
@@ -1744,6 +1764,8 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				2BB4CDDB29264F8900E0F8B0 /* Args.cpp */,
+				2BB4CDDC29264F8900E0F8B0 /* Args.h */,
 				97AC5D82D06DAB2345FDB039 /* Config.h */,
 				5C5845FA3D294EBD94FC41FA /* FboPingPong.cpp */,
 				856884322B435774CF38E3D8 /* FboPingPong.h */,
@@ -1752,6 +1774,8 @@
 				553241ABDCDFB7E8685963FC /* GeomPool.cpp */,
 				476684E60F0DDA0792F989BB /* GeomPool.h */,
 				1BF4AF61A21BC0CB4D19CFDE /* layer */,
+				2BA637F4291D43CA000D08B9 /* Lights.cpp */,
+				2BA637F5291D43CA000D08B9 /* Lights.h */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
@@ -1766,16 +1790,7 @@
 				F86419EE954CE687A9D7B2CD /* Texture.h */,
 				189C978C54FE51E73B0EADFD /* TexturePool.cpp */,
 				AC9F55AC591B53654883DFEC /* TexturePool.h */,
-				2BA637F4291D43CA000D08B9 /* Lights.cpp */,
-				2BA637F5291D43CA000D08B9 /* Lights.h */,
-				2B5D7878291E4C1400C0F692 /* VarsHolder.cpp */,
-				2B5D7879291E4C1400C0F692 /* VarsHolder.h */,
-				2BB4CDDB29264F8900E0F8B0 /* Args.cpp */,
-				2BB4CDDC29264F8900E0F8B0 /* Args.h */,
-				2B205C44292DE0670030CB22 /* VariablePool.cpp */,
-				2B205C45292DE0670030CB22 /* VariablePool.h */,
-				2B205C47292DE2690030CB22 /* Variable.cpp */,
-				2B205C48292DE2690030CB22 /* Variable.h */,
+				2B381A33292FE925002E27B9 /* var */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1999,6 +2014,7 @@
 				6A505EAE8088949A9180FFE7 /* GodRaysPass.cpp in Sources */,
 				28AFD6FA9B9C885AFD9FF1C7 /* HorizontalTiltShifPass.cpp in Sources */,
 				B59194C82B8D802DA33EC465 /* HsbShiftPass.cpp in Sources */,
+				2B381A36292FE982002E27B9 /* Value.cpp in Sources */,
 				E6EB0253C7456C2442D3560C /* Invert.cpp in Sources */,
 				884CB4D049E35C51E949A565 /* KaleidoscopePass.cpp in Sources */,
 				B1747F12881D899DCA2647FC /* LUTPass.cpp in Sources */,
@@ -2138,6 +2154,7 @@
 				INFOPLIST_FILE = "openFrameworks-Info.plist";
 				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
 					"$(OF_CORE_FRAMEWORKS)",
@@ -2323,6 +2340,7 @@
 				INFOPLIST_FILE = "openFrameworks-Info.plist";
 				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
 					"$(OF_CORE_FRAMEWORKS)",
@@ -2383,6 +2401,7 @@
 				INFOPLIST_FILE = "openFrameworks-Info.plist";
 				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
 					"$(OF_CORE_FRAMEWORKS)",
