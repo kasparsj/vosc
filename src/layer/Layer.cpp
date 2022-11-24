@@ -1,10 +1,10 @@
 #include "Layer.h"
+#include "VariablePool.h"
 
 void Layer::setup(int index)
 {
     this->index = index;
-    data.setup(this);
-    varsConfig.clear();
+    reset();
 }
 
 void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
@@ -33,11 +33,7 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 
 void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
-        data.update(sounds, notes, varsConfig);
-        rotation += rotationSpeed;
-        if (data.useRandomColor) {
-            data.color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
-        }
+        data.update(sounds, notes);
     }
     shader.update(sounds, notes);
     material.setup(matSettings);
@@ -50,7 +46,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
     doAlign();
     doRotate();
     ofPushStyle();
-    ofSetColor(data.getTint() * bri, alpha * 255);
+    ofSetColor(getVarColor("tint") * getVar("bri"), getVar("alpha") * 255);
     
     if (hasGeom() || shader.isLoaded()) {
         if (geom == NULL) {
@@ -107,11 +103,12 @@ void Layer::draw(int totalVisible) {
             draw(pos, data.size);
             ofDisableBlendMode();
         }
-        data.afterDraw(varsConfig);
+        data.afterDraw(vars);
     }
 }
 
 void Layer::doScale() {
+    glm::vec3 scale = getVarVec3("scale");
     if (scale.x < 0) {
         ofTranslate(-scale.x * data.size.x, 0);
     }
@@ -125,6 +122,7 @@ void Layer::doScale() {
 }
 
 void Layer::doAlign() {
+    glm::vec3 scale = getVarVec3("scale");
     switch (alignH) {
         case OF_ALIGN_HORZ_CENTER:
             ofTranslate(ofGetWidth()/2.f - data.size.x * abs(scale.x) / 2.f, 0);
@@ -144,28 +142,40 @@ void Layer::doAlign() {
 }
 
 void Layer::doRotate() {
+    glm::vec3 rotation = getVarVec3("rotation");
+    glm::vec3 scale = getVarVec3("scale");
     float degrees = glm::length(rotation);
     if (degrees != 0) {
         glm::vec3 axis = glm::normalize(rotation);
-        ofTranslate(rotationPoint.x * data.size.x * abs(scale.x), rotationPoint.y * data.size.y * abs(scale.y));
+        glm::vec3 pivot = getVarVec3("pivot");
+        ofTranslate(pivot.x * data.size.x * abs(scale.x), pivot.y * data.size.y * abs(scale.y));
         ofRotateDeg(degrees, axis.x, axis.y, axis.z);
-        ofTranslate(-rotationPoint.x * data.size.x * abs(scale.x), -rotationPoint.y * data.size.y * abs(scale.y));
+        ofTranslate(-pivot.x * data.size.x * abs(scale.x), -pivot.y * data.size.y * abs(scale.y));
     }
 }
 
-void Layer::reset() {
-    resetTransform();
+void Layer::unload() {
     geom = NULL;
     GeomPool::clean(_id);
+    vars.clear();
+    VariablePool::cleanup(this);
+}
+
+void Layer::reset() {
+    unload();
     shader.reset();
-    varsConfig.clear();
+    resetTransform();
+    setVar("tint", ofFloatColor(1.f, 1.f));
+    setVar("rotation", glm::vec3(0, 0, 0));
+    setVar("pivot", glm::vec3(0, 0, 0));
+    setVar("visibleThresh", 1.f);
+    setVar("onsetThresh", 1.f);
 }
 
 void Layer::resetTransform() {
-    alpha = 1.f;
-    bri = 1.f;
-    rotation = glm::vec3(0, 0, 0);
-    rotationPoint = glm::vec3(0, 0, 0);
-    rotationSpeed = glm::vec3(0, 0, 0);
-    scale = glm::vec3(1);
+    setVar("alpha", 1.f);
+    setVar("bri", 1.f);
+    setVar("rotation", glm::vec3(0, 0, 0));
+    setVar("pivot", glm::vec3(0, 0, 0));
+    setVar("scale", glm::vec3(1));
 }

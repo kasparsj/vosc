@@ -1,5 +1,6 @@
 #include "Shader.h"
 #include "Layer.h"
+#include "VariablePool.h"
 
 void loadShaders(string path, map<string, ofxAutoReloadedShader>& shaders) {
     ofDirectory dir(path);
@@ -75,33 +76,29 @@ void Shader::update(const vector<Sound> &sounds, const vector<TidalNote> &notes)
 void Shader::begin(TexData& data, int delay) {
     if (isLoaded()) {
         shader.begin();
-        shader.setUniform1f("time", data.time);
+        shader.setUniform1f("time", ofGetElapsedTimef());
         shader.setUniform2f("resolution", data.size.x, data.size.y);
         // todo: overlaps with Source::COLOR
-        shader.setUniform4f("color", data.getColor());
+        shader.setUniform4f("color", data.getVarColor("color"));
         shader.setUniform1i("random", data.randomSeed);
-        shader.setUniform1i("onset", data.onset ? 1 : 0);
         int texLoc = 0;
         for (map<string, Texture*>::iterator it=textures.begin(); it!=textures.end(); ++it) {
             if (it->second->hasTexture(delay)) {
                 shader.setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
             }
         }
-        for (map<string, float>::iterator it=data.vars.begin(); it!=data.vars.end(); ++it) {
-            shader.setUniform1f(it->first, it->second);
-        }
-        for (map<string, vector<float>>::iterator it=uniforms.begin(); it!=uniforms.end(); ++it) {
-            if (it->second.size() == 1) {
-                shader.setUniform1f(it->first, it->second[0]);
+        for (map<string, Variable*>::const_iterator it=data.getVars().begin(); it!=data.getVars().end(); ++it) {
+            if (it->second->values.size() == 1) {
+                shader.setUniform1f(it->first, it->second->values[0]);
             }
-            else if (it->second.size() == 2) {
-                shader.setUniform2f(it->first, it->second[0], it->second[1]);
+            else if (it->second->values.size() == 2) {
+                shader.setUniform2f(it->first, it->second->values[0], it->second->values[1]);
             }
-            else if (it->second.size() == 3) {
-                shader.setUniform3f(it->first, it->second[0], it->second[1], it->second[2]);
+            else if (it->second->values.size() == 3) {
+                shader.setUniform3f(it->first, it->second->values[0], it->second->values[1], it->second->values[2]);
             }
-            else if (it->second.size() == 4) {
-                shader.setUniform4f(it->first, it->second[0], it->second[1], it->second[2], it->second[3]);
+            else if (it->second->values.size() == 4) {
+                shader.setUniform4f(it->first, it->second->values[0], it->second->values[1], it->second->values[2], it->second->values[3]);
             }
         }
     }
@@ -118,26 +115,9 @@ void Shader::reset() {
         shader.unload();
     }
     textures.clear();
-    uniforms.clear();
+    vars.clear();
     TexturePool::clean(_id);
-}
-
-void Shader::setUniform(const ofxOscMessage& m) {
-    string name = m.getArgAsString(1);
-    vector<float> value;
-    for (int i=2; i<m.getNumArgs(); i++) {
-        value.push_back(m.getArgAsFloat(i));
-    }
-    setUniform(name, value);
-}
-
-void Shader::setUniform(string name, const vector<float>& value) {
-    if (value.size()) {
-        uniforms[name] = value;
-    }
-    else {
-        uniforms.erase(name);
-    }
+    VariablePool::cleanup(this);
 }
 
 Texture* Shader::getDefaultTexture() {

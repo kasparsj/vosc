@@ -8,6 +8,7 @@
 #include "WebcamTex.h"
 #include "DrawTex.h"
 #include "Config.h"
+#include "VariablePool.h"
 
 Tex* Tex::factory(string type, string path, const vector<float>& args) {
     Tex *tex = NULL;
@@ -40,7 +41,8 @@ Tex* Tex::factory(string type, string path, const vector<float>& args) {
                 break;
             case Source::COLOR:
                 tex = new ShaderTex(path, args);
-                dynamic_cast<ShaderTex*>(tex)->setUniform("color", args);
+                ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex);
+                shaderTex->setVar("color", ofFloatColor(args[0], args[1], args[2], args[3]));
                 break;
         }
     }
@@ -85,8 +87,8 @@ Tex* Tex::factory(string source, const vector<float>& args) {
                     break;
                 case Source::COLOR: {
                     Tex* tex = factory("shader", "color", args);
-                    ofFloatColor color = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
-                    dynamic_cast<ShaderTex*>(tex)->setUniform("color", color);
+                    ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex);
+                    shaderTex->setVar("color", ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f), ofRandom(1.f)));
                     return tex;
                 }
             }

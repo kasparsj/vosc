@@ -12,5 +12,6 @@ public:
     static void clean(int shaderId);
     
 private:
-    static map<int, map<string, Texture*>> pool;
+    static map<string, Texture*> sharedPool;
+    static map<int, map<string, Texture*>> shaderPool;
 };

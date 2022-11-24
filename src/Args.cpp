@@ -117,12 +117,43 @@ void Args::handleVec3(glm::vec3 *value, const ofxOscMessage &m, int firstArg) {
     }
 }
 
-void Args::handleColor(ofFloatColor *value, const ofxOscMessage &m) {
+void Args::handleVec3(vector<float>* value, const ofxOscMessage &m, int firstArg) {
+    if (m.getNumArgs() > firstArg + 3) {
+        vector<float> target = {m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg+1), m.getArgAsFloat(firstArg+2)};
+        createTween(value, target, m.getArgAsFloat(firstArg+3));
+    }
+    else if (m.getNumArgs() > firstArg+1) {
+        (*value)[0] = m.getArgAsFloat(firstArg);
+        (*value)[1] = m.getArgAsFloat(firstArg+1);
+        (*value)[2] = m.getNumArgs() > firstArg+2 ? m.getArgAsFloat(firstArg+2) : 0;
+    }
+    else {
+        (*value)[0] = m.getArgAsFloat(firstArg);
+        (*value)[1] = m.getArgAsFloat(firstArg);
+        (*value)[2] = m.getArgAsFloat(firstArg);
+    }
+}
+
+void Args::handleColor(ofFloatColor* value, const ofxOscMessage &m) {
     if (m.getNumArgs() > 4) {
         createTween(value, parseColor(m, 1), m.getArgAsFloat(4));
     }
     else {
         *value = parseColor(m, 1);
+    }
+}
+
+void Args::handleColor(vector<float>* value, const ofxOscMessage &m) {
+    if (m.getNumArgs() > 4) {
+        ofFloatColor targetColor = parseColor(m, 1);
+        vector<float> target = {targetColor.r, targetColor.g, targetColor.b};
+        createTween(value, target, m.getArgAsFloat(4));
+    }
+    else {
+        ofFloatColor color = parseColor(m, 1);
+        (*value)[0] = color.r;
+        (*value)[1] = color.g;
+        (*value)[2] = color.b;
     }
 }
 
@@ -136,7 +167,7 @@ void Args::createTween(float *value, float target, float dur, ofxeasing::functio
     floatTweens[value] = tween;
 }
 
-void Args::createTween(glm::vec3 *value, const glm::vec3 &target, float dur, ofxeasing::function ease) {
+void Args::createTween(glm::vec3 *value, const glm::vec3& target, float dur, ofxeasing::function ease) {
     Tween<glm::vec3> tween;
     tween.from = *value;
     tween.to = target;
@@ -146,7 +177,7 @@ void Args::createTween(glm::vec3 *value, const glm::vec3 &target, float dur, ofx
     vec3Tweens[value] = tween;
 }
 
-void Args::createTween(ofFloatColor *value, const ofFloatColor &target, float dur, ofxeasing::function ease) {
+void Args::createTween(ofFloatColor *value, const ofFloatColor& target, float dur, ofxeasing::function ease) {
     Tween<ofFloatColor> tween;
     tween.from = *value;
     tween.to = target;
@@ -154,5 +185,11 @@ void Args::createTween(ofFloatColor *value, const ofFloatColor &target, float du
     tween.start = ofGetElapsedTimef();
     tween.ease = ease;
     colorTweens[value] = tween;
+}
+
+void Args::createTween(vector<float>* value, const vector<float>& target, float dur, ofxeasing::function ease) {
+    for (int i=0; i<value->size(); i++) {
+        createTween(&(*value)[i], target[i], dur, ease);
+    }
 }
 

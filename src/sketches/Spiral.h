@@ -20,7 +20,7 @@ class Spiral : public Sketch {
 
         ofPushStyle();
         ofSetLineWidth(20);
-        ofSetColor(data.getColor(), (int) (strokeAlpha * 0.6));
+        ofSetColor(data.getVarColor("color"), (int) (strokeAlpha * 0.6));
         for(float ang = 0; radius <=data.size.x/2.5; ang +=step){
             radius +=radiusIncrement;
             float rad = ofDegToRad(ang);

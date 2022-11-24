@@ -5,10 +5,11 @@
 #include "ofFbo.h"
 #include "ofxLooper.h"
 
-class Texture : public VarsConfig {
+class Texture : public VarsHolder {
 public:
-    Texture(Tex* tex) : tex(tex) {
+    Texture(Tex* tex) : VarsHolder(), tex(tex) {
         data.setup(this);
+        reset();
     }
     Texture() : Texture(NULL) {}
     ~Texture() {

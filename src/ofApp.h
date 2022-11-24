@@ -8,6 +8,7 @@
 #include "Config.h"
 #include "ofxPostProcessing.h"
 #include "Texture.h"
+#include "Variable.h"
 #include "Lights.h"
 
 class ofApp : public ofBaseApp {

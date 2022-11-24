@@ -55,7 +55,7 @@ class WaveClock : public Sketch {
         }
         
         ofPushStyle();
-        ofSetColor(data.getColor(), (int) (_strokeAlpha * 0.75));
+        ofSetColor(data.getVarColor("color"), (int) (_strokeAlpha * 0.75));
         ofSetLineWidth(1);
 
         ofPushMatrix();

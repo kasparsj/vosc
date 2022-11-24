@@ -2,6 +2,7 @@
 #include "SketchTex.h"
 #include "Config.h"
 #include "Layer.h"
+#include "VariablePool.h"
 
 bool isColor(string path) {
     return (path.substr(0, 1) == "#" && path.size() == 7) || (path.substr(0, 2) == "0x" && path.size() == 8);
@@ -83,6 +84,8 @@ void Texture::unload() {
         delete tex;
         tex = NULL;
     }
+    vars.clear();
+    VariablePool::cleanup(this);
 }
 
 void Texture::reload() {
@@ -105,7 +108,7 @@ void Texture::clear() {
 
 void Texture::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     if (isLoaded()) {
-        data.update(sounds, notes, varsConfig);
+        data.update(sounds, notes);
         tex->update(data);
         
         if (looper != NULL) {
@@ -138,7 +141,7 @@ void Texture::drawFrame() {
 void Texture::draw(Layer* layer) {
     if (isLoaded() && layer->delay == 0) {
         texDraw(layer->pos, layer->data.size);
-        data.afterDraw(varsConfig);
+        data.afterDraw(vars);
     }
     else if (hasTexture(layer->delay)) {
         const ofTexture& tex = getTexture(layer->delay);
@@ -171,7 +174,13 @@ void Texture::setNumFrames(int value) {
 }
 
 void Texture::reset() {
-    tex->reset();
+    if (tex != NULL) {
+        tex->reset();
+    }
+    vars.clear();
+    VariablePool::cleanup(this);
+    setVar("color", ofFloatColor(1.f, 1.f));
+    setVar("tint", ofFloatColor(1.f, 1.f));
 }
 
 const ofFbo& Texture::getFrame(int delay) const {

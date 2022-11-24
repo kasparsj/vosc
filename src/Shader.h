@@ -10,14 +10,12 @@
 
 class Layer;
 
-class Shader {
+class Shader : public VarsHolder {
 public:
     static map<string, ofxAutoReloadedShader> cache;
     static string random();
     
-    Shader() {
-        static int nextId = 0;
-        _id = nextId++;
+    Shader() : VarsHolder() {
     }
     ~Shader() {
         reset();
@@ -50,40 +48,10 @@ public:
     void setDefaultTexture(Texture* tex);
     void setTexture(const ofxOscMessage& m);
     void setTexture(string name, const ofxOscMessage& m, int arg = 1);
-    void setUniform(const ofxOscMessage& m);
-    vector<float>& getUniform(string name) {
-        return uniforms[name];
-    }
-    void setUniform(string name, const vector<float>& value);
-    void setUniform(string name, float v1) {
-        vector<float> vec = {v1};
-        setUniform(name, vec);
-    }
-    void setUniform(string name, float v1, float v2) {
-        vector<float> vec = {v1, v2};
-        setUniform(name, vec);
-    }
-    void setUniform(string name, float v1, float v2, float v3) {
-        vector<float> vec = {v1, v2, v3};
-        setUniform(name, vec);
-    }
-    void setUniform(string name, float v1, float v2, float v3, float v4) {
-        vector<float> vec = {v1, v2, v3, v4};
-        setUniform(name, vec);
-    }
-    void setUniform(string name, ofFloatColor& color) {
-        vector<float> vec = {color.r, color.g, color.b};
-        setUniform(name, vec);
-    }
     void set(const ofxOscMessage& m);
-    int getId() {
-        return _id;
-    }
     
 private:
-    int _id;
     map<string, Texture*> textures;
-    map<string, vector<float>> uniforms;
     ofxAutoReloadedShader shader;
 };
 

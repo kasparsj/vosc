@@ -2,6 +2,7 @@
 #include "ofxHPVPlayer.h"
 #include "TexturePool.h"
 #include "GeomPool.h"
+#include "VariablePool.h"
 #include "ShaderTex.h"
 #include "Args.h"
 
@@ -52,6 +53,7 @@ void ofApp::update(){
         tidal->notes.erase(tidal->notes.begin());
     }
     Args::update();
+    VariablePool::update(sounds, tidal->notes);
     TexturePool::update(sounds, tidal->notes);
     GeomPool::update();
 	for (int i = 0; i < layers.size(); i++) {
@@ -281,16 +283,16 @@ void ofApp::lightCommand(string command, const ofxOscMessage& m) {
 
 void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
     if (command == "/layer/bri") {
-        Args::getInstance().handlePercent(&layer->bri, m);
+        layer->setVar("bri", m);
     }
     else if (command == "/layer/alpha") {
-        Args::getInstance().handlePercent(&layer->alpha, m);
+        layer->setVar("alpha", m);
     }
     else if (command == "/layer/color") {
-        layer->data.setColor(m);
+        layer->setVar("color", m);
     }
     else if (command == "/layer/tint") {
-        layer->data.setTint(m);
+        layer->setVar("tint", m);
     }
     else if (command == "/layer/reset") {
         layer->reset();
@@ -302,40 +304,13 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
         Args::getInstance().handleVec3(&layer->data.size, m);
     }
     else if (command == "/layer/rot") {
-        Args::getInstance().handleVec3(&layer->rotation, m);
+        layer->setVar("rotation", m);
     }
-    else if (command == "/layer/rot/speed") {
-        Args::getInstance().handleVec3(&layer->rotationSpeed, m);
-    }
-    else if (command == "/layer/rot/point") {
-        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
-            string argH = m.getArgAsString(1);
-            string argV = m.getNumArgs() > 2 ? m.getArgAsString(2) : argH;
-            if (argH == "center") {
-                layer->rotationPoint.x = 0.5f;
-            }
-            else if (argH == "left") {
-                layer->rotationPoint.x = 0.f;
-            }
-            else if (argH == "right") {
-                layer->rotationPoint.x = 1.f;
-            }
-            if (argV == "center") {
-                layer->rotationPoint.y = 0.5f;
-            }
-            else if (argV == "top") {
-                layer->rotationPoint.y = 0.f;
-            }
-            else if (argV == "bottom") {
-                layer->rotationPoint.y = 1.f;
-            }
-        }
-        else {
-            Args::getInstance().handleVec3(&layer->rotationPoint, m);
-        }
+    else if (command == "/layer/pivot") {
+        layer->setVar("pivot", m);
     }
     else if (command == "/layer/scale") {
-        Args::getInstance().handleVec3(&layer->scale, m);
+        layer->setVar("scale", m);
     }
     else if (command == "/layer/align") {
         ofAlignHorz alignH;
@@ -369,9 +344,6 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
         layer->alignH = alignH;
         layer->alignV = alignV;
     }
-    else if (command == "/layer/var") {
-        layer->setVar(m);
-    }
     else if (command == "/layer/delay") {
         layer->delay = m.getArgAsFloat(1);
     }
@@ -379,20 +351,10 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
         layer->behaviour = m.getArgAsInt(1);
     }
     else if (command == "/layer/visible") {
-        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
-            layer->visibleThresh = {m.getArgAsString(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 1.f};
-        }
-        else {
-            layer->visibleThresh = {"const", m.getArgAsFloat(1), m.getNumArgs() > 2 ? m.getArgAsFloat(2) : 1.f};
-        }
+        layer->setVar("visibleThresh", m);
     }
     else if (command == "/layer/onset") {
-        if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
-            layer->onsetThresh = {m.getArgAsString(1), m.getArgAsFloat(2), m.getNumArgs() > 3 ? m.getArgAsFloat(3) : 1.f};
-        }
-        else {
-            layer->onsetThresh = {"const", m.getArgAsFloat(1), m.getNumArgs() > 2 ? m.getArgAsFloat(2) : 1.f};
-        }
+        layer->setVar("onsetThresh", m);
     }
 }
 
@@ -422,6 +384,10 @@ void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
             }
         }
         textureCommand(tex, command, m);
+    }
+    else if (command.substr(0, 4) == "/var") {
+        string name = m.getArgAsString(1);
+        layer->setVar(name, m);
     }
     else if (command.substr(0, 5) == "/geom") {
         if (command == "/geom" || command == "/geom/choose") {
@@ -529,19 +495,18 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
             texDataCommand(tex->data, command, m);
         }
     }
-    else if (command == "/tex/uniform") {
-        if (ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex)) {
-            shaderTex->setUniform(m);
-        }
-        else {
-            ofLog() << "cannot set uniform for non-shader texture";
-        }
-    }
-    else if (command == "/tex/var") {
-        tex->setVar(m);
-    }
     else if (command == "/tex/looper") {
         tex->setLooper(m);
+    }
+    else if (command == "/tex/color") {
+        tex->setVar("color", m);
+    }
+    else if (command == "/tex/tint") {
+        tex->setVar("tint", m);
+    }
+    else if (command.substr(0, 8) == "/tex/var") {
+        string name = m.getArgAsString(1);
+        tex->setVar(name, m);
     }
     else {
         texDataCommand(tex->data, command, m);
@@ -565,12 +530,6 @@ void ofApp::texDataCommand(TexData& data, string command, const ofxOscMessage &m
             Args::getInstance().handlePercent(&data.timePct, m);
         }
     }
-    else if (command == "/tex/color") {
-        data.setColor(m);
-    }
-    else if (command == "/tex/tint") {
-        data.setTint(m);
-    }
     else if (command == "/tex/speed") {
         Args::getInstance().handleFloat(&data.speed, m);
     }
@@ -586,8 +545,9 @@ void ofApp::shaderCommand(Shader& shader, string command, const ofxOscMessage& m
     else if (command == "/shader/set") {
         shader.set(m);
     }
-    else if (command == "/shader/uniform") {
-        shader.setUniform(m);
+    else if (command == "/shader/var") {
+        string name = m.getArgAsString(1);
+        shader.setVar(name, m);
     }
     else if (command == "/shader/texture") {
         shader.setTexture(m);
@@ -648,6 +608,10 @@ void ofApp::processQueue() {
                     if (tex->data.size.x == 0 && tex->data.size.y == 0) {
                         tex->data.setSize(ofGetScreenWidth(), ofGetScreenHeight());
                     }
+                }
+                else if (command.substr(0, 4) == "/var") {
+                    Variable* var = VariablePool::getShared(which, true);
+                    var->init(m);
                 }
                 else if (command.substr(0, 5) == "/geom") {
                     geomCommand(GeomPool::getShared(which, true), command, m);

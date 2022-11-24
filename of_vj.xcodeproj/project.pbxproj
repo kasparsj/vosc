@@ -24,7 +24,9 @@
 		28AFD6FA9B9C885AFD9FF1C7 /* HorizontalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
 		2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
-		2B5D787A291E4C1400C0F692 /* VarsConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B5D7878291E4C1400C0F692 /* VarsConfig.cpp */; };
+		2B205C46292DE0670030CB22 /* VariablePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B205C44292DE0670030CB22 /* VariablePool.cpp */; };
+		2B205C49292DE2690030CB22 /* Variable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B205C47292DE2690030CB22 /* Variable.cpp */; };
+		2B5D787A291E4C1400C0F692 /* VarsHolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B5D7878291E4C1400C0F692 /* VarsHolder.cpp */; };
 		2BA637F6291D43CA000D08B9 /* Lights.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BA637F4291D43CA000D08B9 /* Lights.cpp */; };
 		2BB4CDDD29264F8900E0F8B0 /* Args.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BB4CDDB29264F8900E0F8B0 /* Args.cpp */; };
 		2D7732D4AC34CDDBDCFE9699 /* Tex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 23AB9B54C418735665B1EBA6 /* Tex.cpp */; };
@@ -168,6 +170,10 @@
 		27F1AFE400331DE8F477F084 /* ColorWheelSchemes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorWheelSchemes.cpp; path = ../../../addons/ofxColorTheory/src/ColorWheelSchemes.cpp; sourceTree = SOURCE_ROOT; };
 		28A42A2103C59E7D30E9D245 /* Exporter.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Exporter.hpp; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Exporter.hpp; sourceTree = SOURCE_ROOT; };
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
+		2B205C44292DE0670030CB22 /* VariablePool.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = VariablePool.cpp; sourceTree = "<group>"; };
+		2B205C45292DE0670030CB22 /* VariablePool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VariablePool.h; sourceTree = "<group>"; };
+		2B205C47292DE2690030CB22 /* Variable.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Variable.cpp; sourceTree = "<group>"; };
+		2B205C48292DE2690030CB22 /* Variable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Variable.h; sourceTree = "<group>"; };
 		2B5D77E6291E1CB000C0F692 /* 21.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 21.frag; sourceTree = "<group>"; };
 		2B5D77E7291E1CB000C0F692 /* 76.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 76.frag; sourceTree = "<group>"; };
 		2B5D77E8291E1CB000C0F692 /* 99.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 99.frag; sourceTree = "<group>"; };
@@ -302,8 +308,8 @@
 		2B5D7875291E1CB000C0F692 /* of_default_uniforms.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = of_default_uniforms.glsl; sourceTree = "<group>"; };
 		2B5D7876291E1CB000C0F692 /* SimplexNoiseDerivatives4D.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = SimplexNoiseDerivatives4D.glsl; sourceTree = "<group>"; };
 		2B5D7877291E1CB000C0F692 /* texture.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = texture.frag; sourceTree = "<group>"; };
-		2B5D7878291E4C1400C0F692 /* VarsConfig.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = VarsConfig.cpp; sourceTree = "<group>"; };
-		2B5D7879291E4C1400C0F692 /* VarsConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VarsConfig.h; sourceTree = "<group>"; };
+		2B5D7878291E4C1400C0F692 /* VarsHolder.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = VarsHolder.cpp; sourceTree = "<group>"; };
+		2B5D7879291E4C1400C0F692 /* VarsHolder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VarsHolder.h; sourceTree = "<group>"; };
 		2B629E4DB07A45391A420283 /* importerdesc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = importerdesc.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/importerdesc.h; sourceTree = SOURCE_ROOT; };
 		2BA637F4291D43CA000D08B9 /* Lights.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Lights.cpp; sourceTree = "<group>"; };
 		2BA637F5291D43CA000D08B9 /* Lights.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Lights.h; sourceTree = "<group>"; };
@@ -1762,10 +1768,14 @@
 				AC9F55AC591B53654883DFEC /* TexturePool.h */,
 				2BA637F4291D43CA000D08B9 /* Lights.cpp */,
 				2BA637F5291D43CA000D08B9 /* Lights.h */,
-				2B5D7878291E4C1400C0F692 /* VarsConfig.cpp */,
-				2B5D7879291E4C1400C0F692 /* VarsConfig.h */,
+				2B5D7878291E4C1400C0F692 /* VarsHolder.cpp */,
+				2B5D7879291E4C1400C0F692 /* VarsHolder.h */,
 				2BB4CDDB29264F8900E0F8B0 /* Args.cpp */,
 				2BB4CDDC29264F8900E0F8B0 /* Args.h */,
+				2B205C44292DE0670030CB22 /* VariablePool.cpp */,
+				2B205C45292DE0670030CB22 /* VariablePool.h */,
+				2B205C47292DE2690030CB22 /* Variable.cpp */,
+				2B205C48292DE2690030CB22 /* Variable.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1944,6 +1954,7 @@
 				3D6BA46406CE29B32055340C /* Analogous.cpp in Sources */,
 				2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */,
 				A1F13275253C91855DD1A1D0 /* Compound.cpp in Sources */,
+				2B205C46292DE0670030CB22 /* VariablePool.cpp in Sources */,
 				1516DF100C1636ACDFEAC173 /* FlippedCompound.cpp in Sources */,
 				3D839E120AFEABE9CA2B91D4 /* Monochrome.cpp in Sources */,
 				F56110F5281631EA7D770D38 /* SplitComplementary.cpp in Sources */,
@@ -1952,6 +1963,7 @@
 				08C23182D394C53F6ECE6CCC /* easing_terms_of_use.html in Sources */,
 				BAA2B779786EEE23A27F8E12 /* HPVManager.cpp in Sources */,
 				AF62A2E601FF59EB71F6D587 /* HPVPlayer.cpp in Sources */,
+				2B205C49292DE2690030CB22 /* Variable.cpp in Sources */,
 				B4217C980B30B54D3489F8BE /* HPVRenderBridge.cpp in Sources */,
 				1F8B3F1A5890DC53B7A56452 /* Log.cpp in Sources */,
 				CEA24AEB74ADBDFB0AE926F3 /* lz4.c in Sources */,
@@ -2005,7 +2017,7 @@
 				C30B835F91F6E8B3B1BD5F83 /* Split.cpp in Sources */,
 				813E52BD790CE4AAF527DCD4 /* ToonPass.cpp in Sources */,
 				898CB0955CB42FEB5D750A5C /* VerticalTiltShifPass.cpp in Sources */,
-				2B5D787A291E4C1400C0F692 /* VarsConfig.cpp in Sources */,
+				2B5D787A291E4C1400C0F692 /* VarsHolder.cpp in Sources */,
 				D752EB8BA905C25F5E7F2B30 /* ZoomBlurPass.cpp in Sources */,
 				D91BBD56E65F1B0195ABD2FB /* ofxTidalCycles.cpp in Sources */,
 			);

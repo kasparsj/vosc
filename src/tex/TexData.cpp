@@ -1,68 +1,10 @@
 #include "TexData.h"
 #include "Args.h"
-#include "ColorUtil.h"
 
-void TexData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, const map<string, VarConfig>& maps) {
+void TexData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     const float timef = ofGetElapsedTimef();
     time += ((timef - prevTime) * speed);
     prevTime = timef;
-    onset = false;
-    updateVars(sounds, notes, maps);
-}
-
-void TexData::setColor(const ofxOscMessage &m) {
-    if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
-        string value = m.getArgAsString(1);
-        if (value == "rand") {
-            useRandomColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-            if (useRandomColor) {
-                useMFCCColor = false;
-            }
-        }
-        else if (value == "mfcc") {
-            useMFCCColor = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-            if (useMFCCColor) {
-                useRandomColor = false;
-            }
-        }
-        else if (value == "lerp") {
-            ofFloatColor fromColor = Args::getInstance().parseColor(m, 3);
-            ofFloatColor toColor = Args::getInstance().parseColor(m, 6);
-            float perc = m.getArgAsFloat(2);
-            color = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
-            useMFCCColor = false;
-            useRandomColor = false;
-        }
-    }
-    else {
-        Args::getInstance().handleColor(&color, m);
-        useMFCCColor = false;
-        useRandomColor = false;
-    }
-}
-
-void TexData::setTint(const ofxOscMessage &m) {
-    if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
-        string value = m.getArgAsString(1);
-        if (value == "rand") {
-            tint = ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f));
-            useMFCCTint = false;
-        }
-        else if (value == "mfcc") {
-            useMFCCTint = m.getNumArgs() > 2 ? m.getArgAsBool(2) : true;
-        }
-        else if (value == "lerp") {
-            ofFloatColor fromColor = Args::getInstance().parseColor(m, 3);
-            ofFloatColor toColor = Args::getInstance().parseColor(m, 6);
-            float perc = m.getArgAsFloat(2);
-            tint = ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
-            useMFCCTint = false;
-        }
-    }
-    else {
-        Args::getInstance().handleColor(&tint, m);
-        useMFCCTint = false;
-    }
 }
 
 void TexData::set(const ofxOscMessage& m) {
@@ -101,12 +43,12 @@ void TexData::allocate(ofFbo& fbo) {
     ofEnableTextureEdgeHack();
 }
 
-void TexData::afterDraw(const map<string, VarConfig>& maps) {
-    for (map<string, VarConfig>::const_iterator it=maps.begin(); it!=maps.end(); ++it) {
-        if (it->second.type == "tidal") {
-            vars[it->first] -= 1.f/8.f;
-            if (vars[it->first] < 0) {
-                vars[it->first] = 0;
+void TexData::afterDraw(const map<string, Variable*>& vars) {
+    for (map<string, Variable*>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
+        if (it->second->type.substr(0, 5) == "tidal") {
+            it->second->values[0] -= 1.f/8.f;
+            if (it->second->values[0] < 0) {
+                it->second->values[0] = 0;
             }
         }
     }
