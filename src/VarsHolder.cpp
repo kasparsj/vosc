@@ -56,7 +56,7 @@ ofFloatColor VarsHolder::getVarColor(string name) {
 
 void VarsHolder::setVar(string name, Variable* var) {
     auto it = DataSourceMap.find(var->type);
-    if (it != DataSourceMap.end()) {
+    if (it != DataSourceMap.end() || var->type.substr(0, 5) == "tidal") {
         vars[name] = var;
     }
     else {

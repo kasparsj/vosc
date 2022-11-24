@@ -149,7 +149,9 @@ void Texture::draw(Layer* layer) {
         data.afterDraw(vars);
     }
     else if (hasTexture(layer->delay)) {
-        ofSetColor(getVarColor("tint"));
+        // todo: does not work
+        //ofPushStyle();
+        //ofSetColor(getVarColor("tint"));
         const ofTexture& tex = getTexture(layer->delay);
         if (data.aspectRatio) {
             if (tex.getWidth() > tex.getHeight()) {
@@ -162,17 +164,21 @@ void Texture::draw(Layer* layer) {
         else {
             tex.draw(layer->pos, layer->data.size.x, layer->data.size.y);
         }
+        //ofPopStyle();
     }
 }
 
 void Texture::texDraw(const glm::vec2& pos, const glm::vec2 size) {
-    ofSetColor(getVarColor("tint"));
+    // todo: does not work
+    //ofPushStyle();
+    //ofSetColor(getVarColor("tint"));
     if (looper == NULL) {
         tex->draw(pos, size);
     }
     else {
         looper->draw(pos.x, pos.y, size.x, size.y);
     }
+    //ofPopStyle();
 }
 
 void Texture::setNumFrames(int value) {

@@ -9,6 +9,7 @@
 ~visuals.sendMsg('/geom/choose', "*");
 
 ~visuals.sendMsg('/tex/color', "*", 1.0, 0.0, 0.0);
+~visuals.sendMsg('/layer/alpha', "*", "tidal0gain");
 ~visuals.sendMsg('/tex/color', "*", "mfcc");
 ~visuals.sendMsg('/tex/reload', "*");
 ~visuals.sendMsg('/tex/unload', "*");

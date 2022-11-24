@@ -129,8 +129,8 @@ void Variable::update(const vector<Sound> &sounds, const vector<TidalNote> &note
                 float diff = ofGetElapsedTimef() - notes[i].timeStamp;
                 if (diff > 0 && abs(diff) < 1.0 / ofGetFrameRate() && notes[i].s != "midi") {
                     int instNum = notes[i].instNum;
-                    if (type.substr(0, 6) == "tidal" + ofToString(instNum)) {
-                        if (type.substr(6) == "") {
+                    if (type.substr(5, 1) == ofToString(instNum)) {
+                        if (type.substr(6) == "" || type.substr(6) == "gain") {
                             values[0] += notes[i].gain;
                         }
                         else if (type.substr(6) == "amp") {
