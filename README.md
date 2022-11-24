@@ -21,6 +21,7 @@
 - `/tex/unload` [Unload texture](#texture-unload)
 - `/tex/choose` [Choose texture at random](#texture-choose)
 - `/tex/clear` [Clear texture](#texture-clear)
+- `/tex/var` [Set texture variable](#texture-variable)
 - `/tex/set` [Set texture property](#texture-set)
 - `/tex/size` [Set texture size](#texture-size)
 - `/tex/color` [Set texture color](#texture-color)
@@ -37,7 +38,7 @@
 
 ## Shaders
 - `/shader` [Load layer shader](#shader)
-- `/shader/uniform` [Set layer shader uniform](#shader-uniform)
+- `/shader/var` [Set layer shader variable](#shader-var)
 - `/shader/texture` [Set layer shader texture](#shader-texture)
 - `/shader/set` [Set layer shader property](#shader-set)
 
@@ -46,14 +47,19 @@
 - `/layer/size` [Set layer size](#layer-size)
 - `/layer/scale` [Set layer scale](#layer-scale)
 - `/layer/rot` [Set layer rotation](#layer-rotation)
-- `/layer/rot/point` [Set layer rotation point](#layer-rotation-point)
-- `/layer/rot/speed` [Set layer rotation speed](#layer-rotation-speed)
+- `/layer/pivot` [Set layer pivot point](#layer-pivot-point)
 - `/layer/reset` [Reset layer](#layer-reset)
 - `/layer/color` [Set layer color](#layer-color)
 - `/layer/tint` [Set layer tint](#layer-tint)
 - `/layer/alpha` [Set layer alpha](#layer-alpha)
 - `/layer/bri` [Set layer brightness](#layer-brightness)
 - `/layer/delay` [Set layer delay](#layer-delay)
+
+## Variables
+
+- `/var` [Set variable](#variable-set)
+- `/var/range` [Set variable range](#variable-range)
+- `/var/scale` [Set variable scale](#variable-scale)
 
 ## Materials
 - `/mat/diffuse` [Set material diffuse color](#diffuse)
@@ -527,36 +533,19 @@ Examples:
 ~visuals.sendMsg('/layer/rot', 0, 0, 0, 360, 10); // animate first layer rotation to 360 on the x axis
 ```
 
-### Layer Rotation point
+### Layer Pivot point
 
-`/layer/rot/point`
-
-Arguments:
-- **layer** (int|string) layer index or wildcard, e.g. "*"
-- **x** (float|string) x axis rotation point (0 to 1)
-- **y** (float|string) y axis rotation point (0 to 1)
-
-Examples:
-```supercollider
-~visuals.sendMsg('/layer/rot/point', 0, 0.5, 0.5); // set first layer rotation point to center
-~visuals.sendMsg('/layer/rot/point', 0, "center"); // set first layer rotation point to center
-```
-
-### Layer Rotation speed
-
-`/layer/rot/speed`
+`/layer/pivot`
 
 Arguments:
 - **layer** (int|string) layer index or wildcard, e.g. "*"
-- **x** (float)
-- **y** (float)
-- **z** (float)
-- duration (float)
+- **x** (float|string) x axis pivot point (0 to 1)
+- **y** (float|string) y axis pivot point (0 to 1)
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/layer/rot/speed', 0, 100, 0, 0); // set first layer rotation speed to 1 degree
-~visuals.sendMsg('/layer/rot/speed', 0, 360, 0, 0, 2); // increase first layer rotation speed to 360 degrees over 2 seconds
+~visuals.sendMsg('/layer/pivot', 0, 0.5, 0.5); // set first layer pivot to center
+~visuals.sendMsg('/layer/pivot', 0, "center"); // set first layer pivot to center
 ```
 
 ### Layer Reset
