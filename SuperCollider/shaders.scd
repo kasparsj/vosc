@@ -9,6 +9,8 @@
 )
 
 ~visuals.sendMsg('/tex', "*", "");
+~visuals.sendMsg('/layers', 9, "grid");
+~visuals.sendMsg('/tex/choose', "*", "shader");
 
 (
 ~visuals = NetAddr("127.0.0.1", 33333);

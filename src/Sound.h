@@ -15,11 +15,10 @@ public:
     
     ofSoundStream soundStream;
     int instNum;
-    float volume;
-    float volumeSmooth;
-    float volumeScaled;
-    vector<float> volumeHist;
     float amplitude;
+    float ampSmooth;
+    float ampScaled;
+    vector<float> ampHist;
     float loudness;
     int onset;
     std::vector<float> mfcc;

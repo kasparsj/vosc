@@ -156,13 +156,13 @@ float Variable::updateValue(const vector<Sound> &sounds, int idx) {
     if (type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
         int j = ofToInt(type.substr(type.length()-1));
         if (sounds.size() > j) {
-            if (type == "amp") {
+            if (type.substr(0, 3) == "amp") {
                 values[idx] = sounds[j].amplitude;
             }
-            else if (type == "loud") {
+            else if (type.substr(0, 4) == "loud") {
                 values[idx] = sounds[j].loudness;
             }
-            else if (type == "onset") {
+            else if (type.substr(0, 5) == "onset") {
                 values[idx] = sounds[j].onset;
             }
             else {

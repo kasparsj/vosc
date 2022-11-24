@@ -1,14 +1,24 @@
 ~visuals.sendMsg('/sounds', 1);
 ~visuals.sendMsg('/sound/stream', 0, "Microphone");
 
+~visuals.sendMsg('/layers', 9, "grid");
+~visuals.sendMsg('/layers', 3, "stack");
 ~visuals.sendMsg('/layers', 25, "grid");
 
 ~visuals.sendMsg('/tex/choose', "*", "shader");
+~visuals.sendMsg('/tex', "*", "webcam:1");
 ~visuals.sendMsg('/tex/speed', "*", 0.1);
+~visuals.sendMsg('/tex/set', "*", "blendMode", 5); // set blendMode to multiply
 
 ~visuals.sendMsg('/geom/choose', "*");
 
+7.do { |i|
+	~visuals.sendMsg('/layer/alpha', i, "amp", i);
+};
+
+
 ~visuals.sendMsg('/tex/color', "*", 1.0, 0.0, 0.0);
+~visuals.sendMsg('/layer/alpha', "*", 0.5);
 ~visuals.sendMsg('/layer/alpha', "*", "tidal0gain");
 ~visuals.sendMsg('/tex/color', "*", "mfcc");
 ~visuals.sendMsg('/tex/reload', "*");
@@ -16,14 +26,18 @@
 ~visuals.sendMsg('/tex/noclear', "*", true);
 ~visuals.sendMsg('/tex', 0, "color.frag");
 ~visuals.sendMsg('/tex', 0, "shader:100fragments/OscCircle");
+~visuals.sendMsg('/tex', 0, "shader:shadertoy/Energetic.frag");
 ~visuals.sendMsg('/tex', 0, "NoisySpirals");
 ~visuals.sendMsg('/tex', 0, "black_hole.jpg");
 //dont:~visuals.sendMsg('/tex', 0, "/Users/kasparsj/Desktop/Screenshot\ 2022-11-06\ at\ 02.57.56.png");
 //dont:~visuals.sendMsg('/tex', 0, "http://1.bp.blogspot.com/-8PQ_NKjf5MI/UK_iuF92QUI/AAAAAAAAAYI/GV0NCn74Ly0/s1600/oh-happy-day.jpg");
 ~visuals.sendMsg('/layer/pos', "*", 0, 0);
-~visuals.sendMsg('/layer/size', "*", 100, 100);
-~visuals.sendMsg('/layer/scale', 0, 3);
-~visuals.sendMsg('/tex/tint', "*", 256.rand, 256.rand, 256.rand);
+~visuals.sendMsg('/layer/rot', "*", 0, 360.rand, 360.rand, 10);
+~visuals.sendMsg('/cam', "easy");
+~visuals.sendMsg('/layer/size', "*", 800, 800);
+~visuals.sendMsg('/layer/scale', 0, 1.3);
+~visuals.sendMsg('/layer/tint', "*", 256.rand, 256.rand, 256.rand);
+~visuals.sendMsg('/layer/tint', "*", 1.0, 1.0, 1.0);
 ~visuals.sendMsg('/tex', "*", "");
 ~visuals.sendMsg('/tex/unload', "*");
 ~visuals.sendMsg('/tex/choose', 0, "shader");
@@ -66,6 +80,6 @@
 ~visuals.sendMsg('/rot', 0, 0, 0, 90);
 ~visuals.sendMsg('/rot/point', 0, 0.5, 0.5);
 
-~visuals.sendMsg('/cam', 1);
-~visuals.sendMsg('/cam/pos', 0, 0, -3000, 10);
+~visuals.sendMsg('/cam', "easy");
+~visuals.sendMsg('/cam/pos', 0, 0, 3000, 10);
 ~visuals.sendMsg('/tex', 0, "0xff0000"); // load red color into first layer

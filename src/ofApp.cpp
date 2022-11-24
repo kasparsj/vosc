@@ -791,17 +791,17 @@ void ofApp::drawDebug() {
 void ofApp::drawVolume(Sound& sound) {
     ofNoFill();
     //ofSetColor(225);
-    ofDrawBitmapString("avg vol (0-100): " + ofToString(sound.volumeScaled * 100.0, 0), 4, 18);
+    ofDrawBitmapString("avg vol (0-100): " + ofToString(sound.ampScaled * 100.0, 0), 4, 18);
     ofDrawRectangle(0, 0, 200, 200);
     ofFill();
-    ofDrawCircle(100, 100, sound.volumeScaled * 140.0f);
+    ofDrawCircle(100, 100, sound.ampScaled * 140.0f);
     ofBeginShape();
     ofSetColor(245, 58, 135);
-    for (unsigned int i = 0; i < sound.volumeHist.size(); i++){
+    for (unsigned int i = 0; i < sound.ampHist.size(); i++){
         float x = (float)i/2.f;
         if( i == 0 ) ofVertex(x, 200);
-        ofVertex(x, 200 - sound.volumeHist[i] * 70.f);
-        if( i == sound.volumeHist.size() -1 ) ofVertex(x, 200);
+        ofVertex(x, 200 - sound.ampHist[i] * 70.f);
+        if( i == sound.ampHist.size() -1 ) ofVertex(x, 200);
     }
     ofEndShape(false);
 }

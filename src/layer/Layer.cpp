@@ -46,6 +46,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
     doAlign();
     doRotate();
     ofPushStyle();
+    ofLog() << getVar("alpha");
     ofSetColor(getVarColor("tint") * getVar("bri"), getVar("alpha") * 255);
     
     if (hasGeom() || shader.isLoaded()) {

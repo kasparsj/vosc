@@ -1,16 +1,16 @@
 #include "Sound.h"
 
 void Sound::update() {
-    volumeScaled = ofMap(volumeSmooth, 0.0, maxVol, 0.0, 1.0, true);
-    volumeHist.push_back( volumeScaled );
-    if( volumeHist.size() >= 400 ){
-        volumeHist.erase(volumeHist.begin(), volumeHist.begin()+1);
+    ampHist.push_back( ampScaled );
+    if( ampHist.size() >= 400 ){
+        ampHist.erase(ampHist.begin(), ampHist.begin()+1);
     }
 }
 
 void Sound::parse(const ofxOscMessage& m) {
     //instNum = m.getArgAsInt(0);
     amplitude = m.getArgAsFloat(1);
+    ampScaled = ofMap(amplitude, 0.0, maxAmp, 0.0, 1.0, true);
     loudness = m.getArgAsFloat(2);
     onset = m.getArgAsInt(3);
     mfcc.clear();
@@ -58,8 +58,9 @@ void Sound::audioIn(ofSoundBuffer& input){
         }
     }
     curVol /= (float) numCounted;
-    volume = sqrt( curVol );
+    amplitude = sqrt( curVol );
     
-    volumeSmooth *= 0.93;
-    volumeSmooth += 0.07 * volume;
+    ampSmooth *= 0.93;
+    ampSmooth += 0.07 * amplitude;
+    ampScaled = ofMap(ampSmooth, 0.0, maxVol, 0.0, 1.0, true);
 }

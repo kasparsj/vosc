@@ -1,7 +1,7 @@
 (
 ~visuals = NetAddr("127.0.0.1", 33333);
 
-~visuals.sendMsg('/layers', 4, "stack");
+~visuals.sendMsg('/layers', 2, "stack");
 ~visuals.sendMsg('/cam', "easy");
 ~visuals.sendMsg('/cam/pos', 0, 0.5, -1.1);
 ~visuals.sendMsg('/cam/look', 0, 0, 0);
@@ -15,11 +15,11 @@
 ~visuals.sendMsg('/shader/set', 1, "geomInputType", 0x0001); // GL_LINES
 ~visuals.sendMsg('/shader/set', 1, "geomOutputType", 0x0005); // GL_TRIANGLE_STRIP
 ~visuals.sendMsg('/shader/set', 1, "geomOutputCount", 14);
-~visuals.sendMsg('/shader/uniform', 1, "stalkHalfWidth", 0.1 / 2);
-~visuals.sendMsg('/shader/uniform', 1, "stalkHeight", 1.0);
-~visuals.sendMsg('/shader/uniform', 1, "animationTimeMaxDifference", 1.0);
-~visuals.sendMsg('/shader/uniform', 1, "stalkSwayingMaxAngle", 20.degrad * 0.5);
-~visuals.sendMsg('/shader/uniform', 1, "grassSwayingTimeScale", 1.0);
-~visuals.sendMsg('/shader/uniform', 1, "grassSwayingNoiseFrequency", 0.1);
+~visuals.sendMsg('/shader/var', 1, "stalkHalfWidth", 0.1 / 2);
+~visuals.sendMsg('/shader/var', 1, "stalkHeight", 1.0);
+~visuals.sendMsg('/shader/var', 1, "animationTimeMaxDifference", 1.0);
+~visuals.sendMsg('/shader/var', 1, "stalkSwayingMaxAngle", 20.degrad * 0.5);
+~visuals.sendMsg('/shader/var', 1, "grassSwayingTimeScale", 1.0);
+~visuals.sendMsg('/shader/var', 1, "grassSwayingNoiseFrequency", 0.1);
 ~visuals.sendMsg('/shader', 1, "grass/Grass");
 )
