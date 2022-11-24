@@ -99,9 +99,10 @@ void Variable::init(const ofxOscMessage& m) {
                 init("const", values);
             }
             else {
-                vector<float> values;
+                vector<float> values = {0};
+                values.resize(m.getNumArgs() - 2);
                 for (int i=2; i<m.getNumArgs(); i++) {
-                    values.push_back(m.getArgAsFloat(i));
+                    values[i-2] = m.getArgAsFloat(i);
                 }
                 init(type, values);
             }
@@ -112,6 +113,9 @@ void Variable::init(const ofxOscMessage& m) {
             }
             else if (isVec3) {
                 Args::getInstance().handleVec3(&values, m);
+            }
+            else {
+                Args::getInstance().handleFloat(&values[0], m);
             }
         }
     }

@@ -61,6 +61,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
             }
         }
         
+        ofEnableDepthTest();
         ofTranslate(pos + data.size/2.f);
         doScale();
         ofScale(geom->getScale(data.size));
@@ -164,10 +165,10 @@ void Layer::unload() {
 void Layer::reset() {
     unload();
     shader.reset();
-    resetTransform();
+    setVar("speed", 1.f);
+    setVar("color", ofFloatColor(1.f, 1.f));
     setVar("tint", ofFloatColor(1.f, 1.f));
-    setVar("rotation", glm::vec3(0, 0, 0));
-    setVar("pivot", glm::vec3(0, 0, 0));
+    resetTransform();
     setVar("visibleThresh", 1.f);
     setVar("onsetThresh", 1.f);
 }

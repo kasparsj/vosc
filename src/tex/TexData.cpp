@@ -3,7 +3,7 @@
 
 void TexData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     const float timef = ofGetElapsedTimef();
-    time += ((timef - prevTime) * speed);
+    time += ((timef - prevTime) * parent->getVar("speed"));
     prevTime = timef;
 }
 

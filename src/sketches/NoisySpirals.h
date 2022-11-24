@@ -48,7 +48,7 @@ public:
             }
             lastx=x;
             lasty=y;
-            ang += (angleStep * data.speed);
+            ang += (angleStep * data.getVar("speed"));
         }
     }
     

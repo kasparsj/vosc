@@ -179,6 +179,7 @@ void Texture::reset() {
     }
     vars.clear();
     VariablePool::cleanup(this);
+    setVar("speed", 1.f);
     setVar("color", ofFloatColor(1.f, 1.f));
     setVar("tint", ofFloatColor(1.f, 1.f));
 }

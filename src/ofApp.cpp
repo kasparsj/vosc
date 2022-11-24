@@ -504,6 +504,9 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
     else if (command == "/tex/tint") {
         tex->setVar("tint", m);
     }
+    else if (command == "/tex/speed") {
+        tex->setVar("speed", m);
+    }
     else if (command.substr(0, 8) == "/tex/var") {
         string name = m.getArgAsString(1);
         tex->setVar(name, m);
@@ -529,9 +532,6 @@ void ofApp::texDataCommand(TexData& data, string command, const ofxOscMessage &m
         else {
             Args::getInstance().handlePercent(&data.timePct, m);
         }
-    }
-    else if (command == "/tex/speed") {
-        Args::getInstance().handleFloat(&data.speed, m);
     }
     else if (command == "/tex/fbo") {
         data.setFboSettings(m);

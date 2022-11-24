@@ -44,10 +44,6 @@ public:
     }
     void setFboSettings(const ofxOscMessage& m);
     void allocate(ofFbo& fbo);
-    void reset() {
-        //mfccColor = ofFloatColor(0);
-        speed = 1.f;
-    }
     void afterDraw(const map<string, Variable*>& vars);
     const map<string, Variable*>& getVars() {
         return parent->vars;
@@ -86,7 +82,6 @@ public:
     glm::vec3 size;
     float time = 0;
     float prevTime = 0;
-    float speed = 1.f;
     bool noClear;
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
     bool aspectRatio = true;

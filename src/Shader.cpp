@@ -76,7 +76,7 @@ void Shader::update(const vector<Sound> &sounds, const vector<TidalNote> &notes)
 void Shader::begin(TexData& data, int delay) {
     if (isLoaded()) {
         shader.begin();
-        shader.setUniform1f("time", ofGetElapsedTimef());
+        shader.setUniform1f("time", data.time);
         shader.setUniform2f("resolution", data.size.x, data.size.y);
         // todo: overlaps with Source::COLOR
         shader.setUniform4f("color", data.getVarColor("color"));

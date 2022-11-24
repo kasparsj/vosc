@@ -1,24 +1,27 @@
 ~visuals.sendMsg('/sounds', 1);
-~visuals.sendMsg('/layers', 9);
+~visuals.sendMsg('/sound/stream', 0, "Microphone");
 
-~visuals.sendMsg('/thresh', "*", 0.35);
-~visuals.sendMsg('/loud/max', "*", 32);
-~visuals.sendMsg('/amp/max', "*", 0.1);
+~visuals.sendMsg('/layers', 25, "grid");
 
-~visuals.sendMsg('/speed', "*", 0.1);
 ~visuals.sendMsg('/tex/choose', "*", "shader");
-~visuals.sendMsg('/reload', "*");
-~visuals.sendMsg('/unload', "*");
-~visuals.sendMsg('/noclear', "*", true);
+~visuals.sendMsg('/tex/speed', "*", 0.1);
+
+~visuals.sendMsg('/geom/choose', "*");
+
+~visuals.sendMsg('/tex/color', "*", 1.0, 0.0, 0.0);
+~visuals.sendMsg('/tex/color', "*", "mfcc");
+~visuals.sendMsg('/tex/reload', "*");
+~visuals.sendMsg('/tex/unload', "*");
+~visuals.sendMsg('/tex/noclear', "*", true);
 ~visuals.sendMsg('/tex', 0, "color.frag");
 ~visuals.sendMsg('/tex', 0, "shader:100fragments/OscCircle");
 ~visuals.sendMsg('/tex', 0, "NoisySpirals");
 ~visuals.sendMsg('/tex', 0, "black_hole.jpg");
 ~visuals.sendMsg('/tex', 0, "/Users/kasparsj/Desktop/Screenshot\ 2022-11-06\ at\ 02.57.56.png");
 ~visuals.sendMsg('/tex', 0, "http://1.bp.blogspot.com/-8PQ_NKjf5MI/UK_iuF92QUI/AAAAAAAAAYI/GV0NCn74Ly0/s1600/oh-happy-day.jpg");
-~visuals.sendMsg('/pos', "*", 0, 0);
-~visuals.sendMsg('/size', "*", 100, 100);
-~visuals.sendMsg('/scale', 0, 1);
+~visuals.sendMsg('/layer/pos', "*", 0, 0);
+~visuals.sendMsg('/layer/size', "*", 100, 100);
+~visuals.sendMsg('/tex/scale', 0, 1);
 ~visuals.sendMsg('/data', "*", "amp");
 ~visuals.sendMsg('/data', "*", "loud");
 ~visuals.sendMsg('/tint', "*", 256.rand, 256.rand, 256.rand);
