@@ -2,6 +2,14 @@
 2D/3D OSC VJing software built on openFrameworks. This is work in progress!
 # Command overview
 
+## Keyboard shortcuts
+
+- `f` toggle fullscreen
+
+- `d` toggle debug view
+
+- `g` toggle OpenGL info
+
 ## Setup
 - `/sound/stream` [Setup sound stream](#sound-stream)
 - `/sound/data` [Update sound data from SC](#sound-data)
