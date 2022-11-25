@@ -93,11 +93,11 @@ bool Geom::loadModel(const vector<float>& args) {
         // <= 0.11.1
         return model.loadModel(modelPath);
 #else
-        // 0.11.2
+        // > 0.11.1
         return model.load(modelPath);
 #endif
 #else
-        // > 0.11.2
+        // > 0.11
         return model.load(modelPath);
 #endif
     }
