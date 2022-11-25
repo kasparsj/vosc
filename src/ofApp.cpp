@@ -361,11 +361,13 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
 void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
         Texture* tex = layer->shader.getDefaultTexture();
+        bool isShared = false;
         if (command == "/tex" || command == "/tex/choose" || tex == NULL) {
             if (command == "/tex") {
-                string source = m.getArgAsString(1);
-                if (TexturePool::hasShared(source)) {
-                    tex = TexturePool::getShared(source);
+                string name = m.getArgAsString(1);
+                if (TexturePool::hasShared(name)) {
+                    tex = TexturePool::getShared(name);
+                    isShared = true;
                 }
                 else {
                     tex = TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId());
@@ -378,6 +380,9 @@ void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
             if (tex->data.size.x == 0 && tex->data.size.y == 0) {
                 tex->data.setSize(layer->data.size.x, layer->data.size.y);
             }
+        }
+        if (isShared) {
+            return;
         }
         textureCommand(tex, command, m);
     }
