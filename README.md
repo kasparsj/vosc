@@ -58,7 +58,7 @@
 
 - `/var` [Set variable](#variable-set)
 - `/var/range` [Set variable range](#variable-range)
-- `/var/scale` [Set variable scale](#variable-scale)
+- `/var/speed` [Set variable speed](#variable-speed)
 
 ## Lights
 
@@ -650,6 +650,32 @@ Examples:
 ```supercollider
 ~visuals.sendMsg('/layer/delay', 0, 60); // set layer 0 delay to 60 frames (1 second)
 ```
+
+## Variables
+
+### Variable set
+
+`/var`
+
+### Variable range
+
+`/var/range`
+
+### Variable speed
+
+`/var/speed`
+
+## Lights
+
+### Light set
+
+`/light`
+
+### Light remove
+
+`/light/remove`
+
+## Materials
 
 ## Enumerations
 
