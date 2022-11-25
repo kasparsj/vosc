@@ -6,7 +6,6 @@
 
 // load a random image in layer 1
 ~visuals.sendMsg('/tex/choose', 0, "image");
-~visuals.sendMsg('/tex/choose', 0, "image");
 
 // load a random video in layer 2
 ~visuals.sendMsg('/tex/choose', 1, "video");
@@ -20,23 +19,31 @@
 // unload all layers
 ~visuals.sendMsg('/tex', "*", "");
 
+// intialize 1 layer
+~visuals.sendMsg('/layers', 1);
+
 // initialize OSC_VJ SoundStream (only amplitude analysis)
-~visuals.sendMsg('/sound/stream', 0);
+~visuals.sendMsg('/sound/stream', 0, "Microphone");
 
-// run Spiral sketch with stroke alpha mapped to amplitude
+// run Spiral sketch with stroke alpha mapped to mic's amplitude
 ~visuals.sendMsg('/tex', 0, "Spiral");
-~visuals.sendMsg('/tex/var', 0, "strokeAlpha", "amp:0", 20);
+~visuals.sendMsg('/tex/var', 0, "strokeAlpha", 1);
+~visuals.sendMsg('/tex/var/scale', 0, "strokeAlpha", 50);
 
-// enable "easy" camera
+// enable "easy" camera (can not be animated)
 ~visuals.sendMsg('/cam', "easy");
 
+// enable "default" camera (can be animated)
+~visuals.sendMsg('/cam', "default");
+
 // animate camera close-up
-~visuals.sendMsg('/cam/pos', 0, 0, 0, 10);
+~visuals.sendMsg('/cam/pos', 0, 0, 100, 10);
 // animate camera back away
 ~visuals.sendMsg('/cam/pos', 0, 0, 870, 10);
 
 // load penguin 3D model
-~visuals.sendMsg('/geom', 0, "penguin/penguin.dae"); // set first layer geometry to the default plane
+~visuals.sendMsg('/geom', 0, "penguin/penguin.dae");
+~visuals.sendMsg('/light', 0, 0, 0, 500);
 
 // orbit camera around penguin (around scene center)
-~visuals.sendMsg('/cam/orbit', "easy");
+~visuals.sendMsg('/cam/orbit', 20);

@@ -23,7 +23,7 @@ public:
     void setVar(string name, vector<float> value);
     void setVar(string name, glm::vec3 value);
     void setVar(string name, ofFloatColor value);
-    void setVar(string name, const ofxOscMessage& value);
+    void setVar(string name, const ofxOscMessage& value, int idx = 1);
     int getId() {
         return _id;
     }

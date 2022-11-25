@@ -74,8 +74,8 @@ void VarsHolder::setVar(string name, ofFloatColor value) {
     setVar(name, var);
 }
 
-void VarsHolder::setVar(string name, const ofxOscMessage& value) {
+void VarsHolder::setVar(string name, const ofxOscMessage& value, int idx) {
     Variable* var = VariablePool::getOrCreate(this, name);
-    var->set(value);
+    var->set(value, idx);
     setVar(name, var);
 }

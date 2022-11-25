@@ -3,12 +3,26 @@
 
 void Value::set(string type) {
     if (type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
-        chan = ofToInt(type.substr(type.length()-1));
-        type = type.substr(0, type.length()-1);
+        size_t col = type.find(":");
+        if (col != std::string::npos) {
+            chan = ofToInt(type.substr(col+1));
+            type = type.substr(0, col);
+        }
+        else {
+            chan = ofToInt(type.substr(type.length()-1));
+            type = type.substr(0, type.length()-1);
+        }
     }
     else if (type.substr(0, 5) == "tidal") {
-        chan = ofToInt(type.substr(5, 1));
-        subtype = type.substr(6);
+        size_t col = type.find(":");
+        if (col != std::string::npos) {
+            chan = ofToInt(type.substr(col+1));
+            subtype = type.substr(col+2); // todo: support "10"
+        }
+        else {
+            chan = ofToInt(type.substr(5, 1));
+            subtype = type.substr(6);
+        }
         type = "tidal";
     }
     else {
@@ -74,7 +88,6 @@ void Value::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, 
 }
 
 void Value::update(const vector<Sound> &sounds, int index, int total) {
-    float value = 0;
     if (type == "amp" || type == "loud" || type == "onset" || type == "mfcc") {
         if (sounds.size() > chan) {
             if (type == "amp") {
@@ -87,6 +100,7 @@ void Value::update(const vector<Sound> &sounds, int index, int total) {
                 value = sounds[chan].onset;
             }
             else {
+                value = 0;
                 const vector<float>& mfcc = sounds[chan].mfcc;
                 int k = (mfcc.size() / total);
                 for (int i=index*k; i<index*k+k; i++) {
@@ -96,6 +110,7 @@ void Value::update(const vector<Sound> &sounds, int index, int total) {
             }
         }
         else {
+            value = 0;
             ofLog() << "sound data not available " + type + ":" + ofToString(value);
         }
     }

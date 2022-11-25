@@ -1033,14 +1033,14 @@
 		CBC027A06D910DC507BB91E4 /* var */ = {
 			isa = PBXGroup;
 			children = (
-				5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */,
-				04664096EB17620EF646AD96 /* Variable.h */,
-				1FAB6C574C03BF01577E4521 /* Value.h */,
-				8E9CE8F9BFE658E01E40193F /* VarsHolder.h */,
-				1898AEA4672CEAFCE203FF55 /* VariablePool.h */,
 				4D453A863C70334C3B77721C /* Value.cpp */,
+				1FAB6C574C03BF01577E4521 /* Value.h */,
 				CC95D6A4850BE0F8FFB7D5E5 /* Variable.cpp */,
+				04664096EB17620EF646AD96 /* Variable.h */,
 				FE6A0B50D6798FC3BC6A087A /* VariablePool.cpp */,
+				1898AEA4672CEAFCE203FF55 /* VariablePool.h */,
+				5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */,
+				8E9CE8F9BFE658E01E40193F /* VarsHolder.h */,
 			);
 			name = var;
 			sourceTree = "<group>";

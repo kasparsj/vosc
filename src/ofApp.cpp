@@ -505,7 +505,7 @@ void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m)
     }
     else if (command.substr(0, 8) == "/tex/var") {
         string name = m.getArgAsString(1);
-        tex->setVar(name, m);
+        tex->setVar(name, m, 2);
     }
     else {
         texDataCommand(tex->data, command, m);
