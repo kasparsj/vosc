@@ -60,6 +60,11 @@
 - `/var/range` [Set variable range](#variable-range)
 - `/var/scale` [Set variable scale](#variable-scale)
 
+## Lights
+
+- `/light` [Set light](#light-set)
+- `/light/remove` [Remove a light](#light-remove)
+
 ## Materials
 - `/mat/diffuse` [Set material diffuse color](#diffuse)
 - `/mat/ambient` [Set material ambient color](#ambient)
