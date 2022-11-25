@@ -88,7 +88,18 @@ bool Geom::loadModel(const vector<float>& args) {
     }
     else {
         usingModel = true;
+#if OF_VERSION_MAJOR==0 && OF_VERSION_MINOR<=11
+#if OF_VERSION_MINOR<11 || OF_VERSION_PATCH <= 1
+        // <= 0.11.1
+        return model.loadModel(modelPath);
+#else
+        // 0.11.2
         return model.load(modelPath);
+#endif
+#else
+        // > 0.11.2
+        return model.load(modelPath);
+#endif
     }
 }
 

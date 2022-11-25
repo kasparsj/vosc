@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:/Users/kasparsj/Work2/openframeworks/apps/myApps/of_vj/osc_vj.xcodeproj">
+      location = "self:">
    </FileRef>
 </Workspace>

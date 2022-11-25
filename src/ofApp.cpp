@@ -150,7 +150,8 @@ bool ofApp::checkOnset() {
     return isOnset;
 }
 
-auto parseIndex(const ofxOscMessage &m) {
+struct retVals { bool all; int idx; };
+retVals parseIndex(const ofxOscMessage &m) {
     bool all = false;
     int idx = -1;
     if (m.getArgType(0) == OFXOSC_TYPE_STRING) {
@@ -168,7 +169,6 @@ auto parseIndex(const ofxOscMessage &m) {
     else {
         idx = m.getArgAsInt(0);
     }
-    struct retVals { bool all; int idx; };
     return retVals { all, idx };
 }
 
