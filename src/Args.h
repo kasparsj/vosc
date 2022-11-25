@@ -11,6 +11,7 @@ struct Tween {
     float dur;
     float start;
     ofxeasing::function ease;
+    function<void()> onComplete;
 };
 
 class Args {
@@ -31,52 +32,65 @@ public:
     void handleFloat(float* value, const ofxOscMessage& m, int firstArg = 1);
     void handlePercent(float* value, const ofxOscMessage& m, int firstArg = 1);
     void handleVec3(glm::vec3* value, const ofxOscMessage& m, int firstArg = 1);
+    void tweenVec3(glm::vec3* value, const ofxOscMessage& m, int firstArg = 1);
+    void tweenVec3(glm::vec3* value, const ofxOscMessage& m, int firstArg, function<void()> onComplete);
     void handleVec3(vector<float>* value, const ofxOscMessage& m, int firstArg = 1);
     void handleColor(ofFloatColor* value, const ofxOscMessage& m, int firstArg = 1);
     void handleColor(vector<float>* value, const ofxOscMessage& m, int firstArg = 1);
-    void createTween(float* value, float target, float dur, ofxeasing::function ease);
+    bool isTweenVec3(const ofxOscMessage& m, int firstArg = 1);
+    void createTween(float* value, float target, float dur, function<void()> onComplete, ofxeasing::function ease);
+    void createTween(float* value, float target, float dur, function<void()> onComplete, string ease) {
+        // todo: implement
+        createTween(value, target, dur, onComplete, ofxeasing::linear::easeNone);
+    }
     void createTween(float* value, float target, float dur, string ease) {
         // todo: implement
-        createTween(value, target, dur, ofxeasing::linear::easeNone);
+        createTween(value, target, dur, function<void()>(), ofxeasing::linear::easeNone);
+    }
+    void createTween(float* value, float &target, float dur, ofxeasing::function ease) {
+        createTween(value, target, dur, function<void()>(), ease);
     }
     void createTween(float* value, float target, float dur) {
-        createTween(value, target, dur, ofxeasing::linear::easeNone);
+        createTween(value, target, dur, function<void()>(), ofxeasing::linear::easeNone);
     }
     void createTween(float* value, float target) {
-        createTween(value, target, 1.0, ofxeasing::linear::easeNone);
+        createTween(value, target, 1.0, function<void()>(), ofxeasing::linear::easeNone);
     }
-    void createTween(glm::vec3* value, const glm::vec3 &target, float dur, ofxeasing::function ease);
-    void createTween(glm::vec3* value, const glm::vec3 &target, float dur, string ease) {
+    void createTween(glm::vec3* value, const glm::vec3 &target, float dur, function<void()> onComplete, ofxeasing::function ease);
+    void createTween(glm::vec3* value, const glm::vec3 &target, float dur, function<void()> onComplete, string ease) {
         // todo: implement
-        createTween(value, target, dur, ofxeasing::linear::easeNone);
+        createTween(value, target, dur, onComplete, ofxeasing::linear::easeNone);
+    }
+    void createTween(glm::vec3* value, const glm::vec3 &target, float dur, function<void()> onComplete) {
+        createTween(value, target, dur, onComplete, ofxeasing::linear::easeNone);
     }
     void createTween(glm::vec3* value, const glm::vec3 &target, float dur) {
-        createTween(value, target, dur, ofxeasing::linear::easeNone);
+        createTween(value, target, dur, function<void()>(), ofxeasing::linear::easeNone);
     }
     void createTween(glm::vec3* value, const glm::vec3 &target) {
-        createTween(value, target, 1.0, ofxeasing::linear::easeNone);
+        createTween(value, target, 1.0, function<void()>(), ofxeasing::linear::easeNone);
     }
-    void createTween(ofFloatColor* value, const ofFloatColor &target, float dur, ofxeasing::function ease);
-    void createTween(ofFloatColor* value, const ofFloatColor &target, float dur, string ease) {
+    void createTween(ofFloatColor* value, const ofFloatColor &target, float dur, function<void()> onComplete, ofxeasing::function ease);
+    void createTween(ofFloatColor* value, const ofFloatColor &target, float dur, function<void()> onComplete, string ease) {
         // todo: implement
-        createTween(value, target, dur, ofxeasing::linear::easeNone);
+        createTween(value, target, dur, onComplete, ofxeasing::linear::easeNone);
     }
     void createTween(ofFloatColor* value, const ofFloatColor &target, float dur) {
-        createTween(value, target, dur, ofxeasing::linear::easeNone);
+        createTween(value, target, dur, function<void()>(), ofxeasing::linear::easeNone);
     }
     void createTween(ofFloatColor* value, const ofFloatColor &target) {
-        createTween(value, target, 1.0, ofxeasing::linear::easeNone);
+        createTween(value, target, 1.0, function<void()>(), ofxeasing::linear::easeNone);
     }
-    void createTween(vector<float>* value, const vector<float> &target, float dur, ofxeasing::function ease);
-    void createTween(vector<float>* value, const vector<float> &target, float dur, string ease) {
+    void createTween(vector<float>* value, const vector<float> &target, float dur, function<void()> onComplete, ofxeasing::function ease);
+    void createTween(vector<float>* value, const vector<float> &target, float dur, function<void()> onComplete, string ease) {
         // todo: implement
-        createTween(value, target, dur, ofxeasing::linear::easeNone);
+        createTween(value, target, dur, onComplete, ofxeasing::linear::easeNone);
     }
     void createTween(vector<float>* value, const vector<float> &target, float dur) {
-        createTween(value, target, dur, ofxeasing::linear::easeNone);
+        createTween(value, target, dur, function<void()>(), ofxeasing::linear::easeNone);
     }
     void createTween(vector<float>* value, const vector<float> &target) {
-        createTween(value, target, 1.0, ofxeasing::linear::easeNone);
+        createTween(value, target, 1.0, function<void()>(), ofxeasing::linear::easeNone);
     }
     void updateFloats();
     void updateVecs();

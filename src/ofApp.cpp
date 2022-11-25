@@ -213,15 +213,33 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
             ofLog() << command + " failed: camera not enabled (run /cam)";
         }
         else if (command == "/cam/pos") {
-            Args::getInstance().handleVec3(&camPos, m, 0);
-            if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
-                cam->setPosition(camPos);
+            if (Args::getInstance().isTweenVec3(m, 0)) {
+                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+                if (easyCam != NULL) {
+                    easyCam->disableMouseInput();
+                }
+                function<void()> onComplete = [easyCam]() {
+                    easyCam->enableMouseInput();
+                };
+                Args::getInstance().tweenVec3(&camPos, m, 0, onComplete);
+            }
+            else {
+                Args::getInstance().handleVec3(&camPos, m, 0);
             }
         }
         else if (command == "/cam/look") {
-            Args::getInstance().handleVec3(&camLook, m, 0);
-            if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
-                cam->lookAt(camLook);
+            if (Args::getInstance().isTweenVec3(m, 0)) {
+                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+                if (easyCam != NULL) {
+                    easyCam->disableMouseInput();
+                }
+                function<void()> onComplete = [easyCam]() {
+                    easyCam->enableMouseInput();
+                };
+                Args::getInstance().tweenVec3(&camLook, m, 0, onComplete);
+            }
+            else {
+                Args::getInstance().handleVec3(&camLook, m, 0);
             }
         }
         else if (command == "/cam/orbit") {

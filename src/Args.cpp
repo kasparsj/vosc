@@ -55,6 +55,7 @@ void Args::updateFloats() {
         if (*key == tween.to || ofGetElapsedTimef() >= endTime) {
             *key = tween.to;
             toDelete.push_back(key);
+            tween.onComplete();
         }
         else {
             *key = ofxeasing::map(ofGetElapsedTimef(), tween.start, endTime, tween.from, tween.to, tween.ease);
@@ -72,6 +73,7 @@ void Args::updateVecs() {
         if (*key == tween.to || ofGetElapsedTimef() >= endTime) {
             *key = tween.to;
             toDelete.push_back(key);
+            tween.onComplete();
         }
         else {
             glm::vec3 value;
@@ -93,6 +95,7 @@ void Args::updateColors() {
         if (*key == tween.to || ofGetElapsedTimef() >= endTime) {
             *key = tween.to;
             toDelete.push_back(key);
+            tween.onComplete();
         }
         else {
             float perc = (ofGetElapsedTimef() - tween.start) / tween.dur;
@@ -107,7 +110,7 @@ void Args::updateColors() {
 void Args::handleFloat(float* value, const ofxOscMessage &m, int i) {
     if (m.getNumArgs() > (i+1)) {
         if (m.getNumArgs() > (i+2)) {
-            createTween(value, m.getArgAsFloat(i), m.getArgAsFloat(i+1), m.getArgAsString(i+2));
+            createTween(value, m.getArgAsFloat(i), m.getArgAsFloat(i+1), function<void()>(), m.getArgAsString(i+2));
         }
         else {
             createTween(value, m.getArgAsFloat(i), m.getArgAsFloat(i+1));
@@ -124,7 +127,7 @@ void Args::handlePercent(float *value, const ofxOscMessage &m, int i) {
             createTween(value,
                         m.getArgType(1) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(1) > 1.f ? m.getArgAsFloat(1) / 100.f : m.getArgAsFloat(1),
                         m.getArgType(2) == OFXOSC_TYPE_INT32 || m.getArgAsFloat(2) > 1.f ? m.getArgAsFloat(2) / 100.f : m.getArgAsFloat(2),
-                        m.getArgAsString(3));
+                        function<void()>(), m.getArgAsString(3));
         }
         else {
             createTween(value,
@@ -145,15 +148,16 @@ void Args::handleVec3(glm::vec3* value, const ofxOscMessage &m, int firstArg) {
             *value = glm::vec3(align[0], align[1], align[2]);
         }
     }
-    else if (m.getNumArgs() > firstArg + 3) {
-        createTween(value, glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg+1), m.getArgAsFloat(firstArg+2)), m.getArgAsFloat(firstArg+3));
-    }
     else if (m.getNumArgs() > firstArg+1) {
         *value = glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg+1), m.getNumArgs() > firstArg+2 ? m.getArgAsFloat(firstArg+2) : 0);
     }
     else {
         *value = glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg));
     }
+}
+
+void Args::tweenVec3(glm::vec3* value, const ofxOscMessage &m, int firstArg, function<void()> onComplete) {
+    createTween(value, glm::vec3(m.getArgAsFloat(firstArg), m.getArgAsFloat(firstArg+1), m.getArgAsFloat(firstArg+2)), m.getArgAsFloat(firstArg+3), onComplete);
 }
 
 void Args::handleVec3(vector<float>* value, const ofxOscMessage &m, int firstArg) {
@@ -221,39 +225,46 @@ void Args::handleColor(vector<float>* value, const ofxOscMessage& m, int firstAr
     }
 }
 
-void Args::createTween(float* value, float target, float dur, ofxeasing::function ease) {
+bool Args::isTweenVec3(const ofxOscMessage& m, int firstArg) {
+    return m.getNumArgs() > firstArg + 3;
+}
+
+void Args::createTween(float* value, float target, float dur, function<void()> onComplete, ofxeasing::function ease) {
     Tween<float> tween;
     tween.from = *value;
     tween.to = target;
     tween.dur = dur;
     tween.start = ofGetElapsedTimef();
     tween.ease = ease;
+    tween.onComplete = onComplete;
     floatTweens[value] = tween;
 }
 
-void Args::createTween(glm::vec3* value, const glm::vec3& target, float dur, ofxeasing::function ease) {
+void Args::createTween(glm::vec3* value, const glm::vec3& target, float dur, function<void()> onComplete, ofxeasing::function ease) {
     Tween<glm::vec3> tween;
     tween.from = *value;
     tween.to = target;
     tween.dur = dur;
     tween.start = ofGetElapsedTimef();
     tween.ease = ease;
+    tween.onComplete = onComplete;
     vec3Tweens[value] = tween;
 }
 
-void Args::createTween(ofFloatColor* value, const ofFloatColor& target, float dur, ofxeasing::function ease) {
+void Args::createTween(ofFloatColor* value, const ofFloatColor& target, float dur, function<void()> onComplete, ofxeasing::function ease) {
     Tween<ofFloatColor> tween;
     tween.from = *value;
     tween.to = target;
     tween.dur = dur;
     tween.start = ofGetElapsedTimef();
     tween.ease = ease;
+    tween.onComplete = onComplete;
     colorTweens[value] = tween;
 }
 
-void Args::createTween(vector<float>* value, const vector<float>& target, float dur, ofxeasing::function ease) {
+void Args::createTween(vector<float>* value, const vector<float>& target, float dur, function<void()> onComplete, ofxeasing::function ease) {
     for (int i=0; i<value->size(); i++) {
-        createTween(&(*value)[i], target[i], dur, ease);
+        createTween(&(*value)[i], target[i], dur, onComplete, ease);
     }
 }
 
