@@ -1,7 +1,7 @@
 #include "Value.h"
 #include "Args.h"
 #include "Config.h"
-#include "Layer.h"
+#include "TexData.h"
 
 void Value::set(string type) {
     if (type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
@@ -22,10 +22,11 @@ void Value::set(string type) {
             subtype = type.substr(col+2); // todo: support "10"
         }
         else {
-            chan = ofToInt(type.substr(5, 1));
+            chan = type.length() > 5 ? ofToInt(type.substr(5, 1)) : 0;
             subtype = type.substr(6);
         }
         type = "tidal";
+        // todo: validate subtype
     }
     else if (DataSourceMap.find(type) == DataSourceMap.end()) {
         ofLog() << "invalid var type: " + type;
@@ -59,8 +60,11 @@ void Value::set(const ofxOscMessage& m, int i) {
     }
 }
 
-void Value::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, Layer* layer) {
+void Value::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data) {
     if (type == "tidal") {
+        if (subtype == "onset") {
+            value = 0;
+        }
         for (int i = 0; i < notes.size(); i++) {
             if (ofGetElapsedTimef() - notes[i].timeStamp < 32) {
                 //float diff = ofGetElapsedTimef() - notes[i].timeStamp - notes[i].latency;
@@ -85,12 +89,12 @@ void Value::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, 
         }
     }
     else {
-        update(sounds, index, total, layer);
+        update(sounds, index, total, data);
     }
 }
 
-void Value::update(const vector<Sound> &sounds, int index, int total, Layer* layer) {
-    float time = (layer != NULL ? layer->data.time : ofGetElapsedTimef()) * speed;
+void Value::update(const vector<Sound> &sounds, int index, int total, TexData* data) {
+    float time = (data != NULL ? data->time : ofGetElapsedTimef()) * speed;
     if (type == "time") {
         value = fmod(time, 1.f);
     }

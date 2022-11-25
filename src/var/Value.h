@@ -6,7 +6,7 @@
 #include "ofxOsc.h"
 #include "Args.h"
 
-class Layer;
+class TexData;
 
 class Value {
 public:
@@ -19,14 +19,14 @@ public:
     void tween(float target, float dur, ofxeasing::function ease) {
         Args::getInstance().createTween(&value, target, dur, ease);
     }
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, Layer* layer = NULL);
-    void update(const vector<Sound> &sounds, int index, int total, Layer* layer = NULL);
+    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data = NULL);
+    void update(const vector<Sound> &sounds, int index, int total, TexData* data = NULL);
     void afterDraw();
     
     int index;
     string type = "";
     string subtype = "";
-    int chan;
+    int chan = -1;
     float value;
     float rangeFrom = 0.f;
     float rangeTo = 1.f;

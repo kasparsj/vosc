@@ -1,7 +1,7 @@
 #include "Variable.h"
 #include "Args.h"
 #include "ColorUtil.h"
-#include "Layer.h"
+#include "TexData.h"
 
 void Variable::set(float value) {
     this->values.resize(1);
@@ -173,9 +173,9 @@ void Variable::tween(const vector<float>& target, float dur, ofxeasing::function
     }
 }
 
-void Variable::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, Layer* layer) {
+void Variable::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data) {
     for (int i=0; i<values.size(); i++) {
-        values[i].update(sounds, notes, i, values.size(), layer);
+        values[i].update(sounds, notes, i, values.size(), data);
     }
 }
 

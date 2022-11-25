@@ -6,7 +6,7 @@
 #include "ofxTidalCycles.h"
 #include "Value.h"
 
-class Layer;
+class TexData;
 
 class Variable {
 public:
@@ -33,7 +33,7 @@ public:
             values[i].rangeTo = to;
         }
     }
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, Layer* layer = NULL);
+    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data = NULL);
     float get(int idx = 0) {
         return values[idx].get();
     }

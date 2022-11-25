@@ -33,6 +33,7 @@ void VideoTex::update(TexData& data) {
         if (videoPlayer.load(absPath)) {
             videoPlayer.setVolume(0);
             videoPlayer.setLoopState(OF_LOOP_NORMAL);
+            videoPlayer.setSpeed(data.getVar("speed"));
             seek(data.timePct);
             videoPlayer.play();
             prevPath = path;
