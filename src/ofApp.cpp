@@ -548,7 +548,7 @@ void ofApp::shaderCommand(Shader& shader, string command, const ofxOscMessage& m
     }
     else if (command == "/shader/var") {
         string name = m.getArgAsString(1);
-        shader.setVar(name, m);
+        shader.setVar(name, m, 2);
     }
     else if (command == "/shader/texture") {
         shader.setTexture(m);

@@ -37,8 +37,8 @@ public:
     void afterDraw();
     
     vector<Value> values;
-    bool isColor;
-    bool isVec3;
+    bool isColor = false;
+    bool isVec3 = false;
 private:
     void tween(const vector<float>& target, float dur, ofxeasing::function ease);
     void tween(const vector<float> &target, float dur) {

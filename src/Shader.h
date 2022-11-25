@@ -51,6 +51,9 @@ public:
     void set(const ofxOscMessage& m);
     
 private:
+    void setUniformTextures(const map<string, Texture*>& textures, int delay = 0);
+    void setUniforms(const map<string, Variable*>& vars);
+
     map<string, Texture*> textures;
     ofxAutoReloadedShader shader;
 };

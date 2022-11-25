@@ -79,27 +79,10 @@ void Shader::begin(TexData& data, int delay) {
         shader.setUniform1f("time", data.time);
         shader.setUniform2f("resolution", data.size.x, data.size.y);
         shader.setUniform1i("random", data.randomSeed);
-        int texLoc = 0;
-        for (map<string, Texture*>::iterator it=textures.begin(); it!=textures.end(); ++it) {
-            if (it->second->hasTexture(delay)) {
-                shader.setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
-            }
-        }
-        for (map<string, Variable*>::const_iterator it=data.getVars().begin(); it!=data.getVars().end(); ++it) {
-            vector<float> values = it->second->getVec();
-            if (values.size() == 1) {
-                shader.setUniform1f(it->first, values[0]);
-            }
-            else if (values.size() == 2) {
-                shader.setUniform2f(it->first, values[0], values[1]);
-            }
-            else if (values.size() == 3) {
-                shader.setUniform3f(it->first, values[0], values[1], values[2]);
-            }
-            else if (values.size() == 4) {
-                shader.setUniform4f(it->first, values[0], values[1], values[2], values[3]);
-            }
-        }
+        setUniformTextures(textures, delay);
+        setUniforms(vars);
+        // todo: do we really need layer vars to override shader vars?
+        setUniforms(data.getVars());
     }
 }
 
@@ -107,6 +90,34 @@ void Shader::end() {
     if (isLoaded()) {
         shader.end();
     }
+}
+
+void Shader::setUniformTextures(const map<string, Texture*>& textures, int delay) {
+    int texLoc = 0;
+    for (map<string, Texture*>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
+        if (it->second->hasTexture(delay)) {
+            shader.setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
+        }
+    }
+}
+
+void Shader::setUniforms(const map<string, Variable*>& vars) {
+    for (map<string, Variable*>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
+        vector<float> values = it->second->getVec();
+        if (values.size() == 1) {
+            shader.setUniform1f(it->first, values[0]);
+        }
+        else if (values.size() == 2) {
+            shader.setUniform2f(it->first, values[0], values[1]);
+        }
+        else if (values.size() == 3) {
+            shader.setUniform3f(it->first, values[0], values[1], values[2]);
+        }
+        else if (values.size() == 4) {
+            shader.setUniform4f(it->first, values[0], values[1], values[2], values[3]);
+        }
+    }
+
 }
 
 void Shader::reset() {
