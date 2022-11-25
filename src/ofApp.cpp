@@ -809,6 +809,13 @@ void ofApp::drawDebug() {
         ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
         ofPopStyle();
     }
+    if (showGlVersion) {
+        ofDrawBitmapString("Vendor :" + ofToString(glGetString(GL_VENDOR)), ofGetWidth()-250, 40);
+        ofDrawBitmapString("GPU : " + ofToString(glGetString(GL_RENDERER)), ofGetWidth()-250, 60);
+        ofDrawBitmapString("OpenGL ver. " + ofToString(glGetString(GL_VERSION)), ofGetWidth()-250, 80);
+        ofDrawBitmapString("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)), ofGetWidth()-250, 100);
+        //cout << glGetString(GL_EXTENSIONS) <<endl;
+    }
 }
 
 void ofApp::drawVolume(Sound& sound) {
@@ -857,6 +864,9 @@ void ofApp::keyPressed(int key){
         }
         case 'd':
             showDebug = !showDebug;
+            break;
+        case 'g':
+            showGlVersion = !showGlVersion;
             break;
         case 'r': {
             ofxOscMessage m;
@@ -918,7 +928,9 @@ void ofApp::mouseExited(int x, int y){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
-    post.init(ofGetWidth(), ofGetHeight());
+    if (w > 0 && h > 0) {
+        post.init(ofGetWidth(), ofGetHeight());
+    }
     layoutLayers(layout, layers);
 }
 

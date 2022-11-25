@@ -75,4 +75,5 @@ public:
     Lights lights;
     
     bool showDebug = false;
+    bool showGlVersion = false;
 };
