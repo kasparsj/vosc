@@ -406,7 +406,7 @@ void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
     }
     else if (command.substr(0, 4) == "/var") {
         string name = m.getArgAsString(1);
-        layer->setVar(name, m);
+        layer->setVar(name, m, 2);
     }
     else if (command.substr(0, 5) == "/geom") {
         if (command == "/geom" || command == "/geom/choose") {

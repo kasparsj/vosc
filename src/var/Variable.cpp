@@ -66,7 +66,7 @@ void Variable::set(const ofxOscMessage& m, int idx) {
             if (m.getNumArgs() == idx + 1) {
                 Args::getInstance().handleFloat(&values[i].speed, m, idx);
             }
-            else if (m.getNumArgs() == values.size()) {
+            else if (m.getNumArgs() == idx + values.size()) {
                 Args::getInstance().handleFloat(&values[i].speed, m, idx+i);
             }
             else {
@@ -122,7 +122,21 @@ void Variable::setColor(const ofxOscMessage& m, int idx) {
 
 void Variable::setVec3(const ofxOscMessage &m, int idx) {
     values.resize(3);
-    if (m.getArgType(idx) == OFXOSC_TYPE_STRING) {
+    if (m.getNumArgs() == idx + 4) { // 4 args
+        vector<float> target = {m.getArgAsFloat(idx), m.getArgAsFloat(idx+1), m.getArgAsFloat(idx+2)};
+        tween(target, m.getArgAsFloat(idx+3));
+    }
+    else if (m.getNumArgs() == idx + 3) { // 3 args
+        for (int i=idx; i<m.getNumArgs(); i++) {
+            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+                values[i-idx].set(m.getArgAsString(i));
+            }
+            else {
+                values[i-idx].set(m.getArgAsFloat(i));
+            }
+        }
+    }
+    else if (m.getNumArgs() == idx + 2 && m.getArgType(idx) == OFXOSC_TYPE_STRING) { // 2 args
         string type = m.getArgAsString(idx);
         if (type == "center" || type == "left" || type == "right" || type == "top" || type == "bottom") {
             vector<float> align = Args::getInstance().parseAlign(m, idx);
@@ -131,19 +145,18 @@ void Variable::setVec3(const ofxOscMessage &m, int idx) {
             }
         }
     }
-    else if (m.getNumArgs() > idx + 3) {
-        vector<float> target = {m.getArgAsFloat(idx), m.getArgAsFloat(idx+1), m.getArgAsFloat(idx+2)};
-        tween(target, m.getArgAsFloat(idx+3));
-    }
-    else {
-        for (int i=(idx+1); i<m.getNumArgs(); i++) {
-            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-                values[i-(idx+1)].set(m.getArgAsString(i));
+    else if (m.getNumArgs() == idx + 1) { // 1 arg
+        for (int i=0; i<m.getNumArgs(); i++) {
+            if (m.getArgType(idx) == OFXOSC_TYPE_STRING) {
+                values[i].set(m.getArgAsString(idx));
             }
             else {
-                values[i-(idx+1)].set(m.getArgAsFloat(i));
+                values[i].set(m.getArgAsFloat(idx));
             }
         }
+    }
+    else {
+        ofLog() << "setVec3 unsupported format";
     }
 }
 

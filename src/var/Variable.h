@@ -22,6 +22,17 @@ public:
     void setColor(const ofxOscMessage& m, int idx = 1);
     void setVec3(const ofxOscMessage& m, int idx = 1);
     void setFloat(const ofxOscMessage& m, int idx = 1);
+    void setRange(float to) {
+        for (int i=0; i<values.size(); i++) {
+            values[i].rangeTo = to;
+        }
+    }
+    void setRange(float from, float to) {
+        for (int i=0; i<values.size(); i++) {
+            values[i].rangeFrom = from;
+            values[i].rangeTo = to;
+        }
+    }
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, Layer* layer = NULL);
     float get(int idx = 0) {
         return values[idx].get();

@@ -181,6 +181,7 @@ void Layer::resetTransform() {
     setVar("alpha", 1.f);
     setVar("bri", 1.f);
     setVar("rotation", glm::vec3(0, 0, 0));
+    vars["rotation"]->setRange(360);
     setVar("pivot", glm::vec3(0, 0, 0));
     setVar("scale", glm::vec3(1));
 }
