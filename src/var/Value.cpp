@@ -1,5 +1,7 @@
 #include "Value.h"
 #include "Args.h"
+#include "Config.h"
+#include "Layer.h"
 
 void Value::set(string type) {
     if (type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
@@ -25,7 +27,7 @@ void Value::set(string type) {
         }
         type = "tidal";
     }
-    else {
+    else if (DataSourceMap.find(type) == DataSourceMap.end()) {
         ofLog() << "invalid var type: " + type;
     }
     this->type = type;
@@ -57,7 +59,7 @@ void Value::set(const ofxOscMessage& m, int i) {
     }
 }
 
-void Value::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total) {
+void Value::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, Layer* layer) {
     if (type == "tidal") {
         for (int i = 0; i < notes.size(); i++) {
             if (ofGetElapsedTimef() - notes[i].timeStamp < 32) {
@@ -83,12 +85,28 @@ void Value::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, 
         }
     }
     else {
-        update(sounds, index, total);
+        update(sounds, index, total, layer);
     }
 }
 
-void Value::update(const vector<Sound> &sounds, int index, int total) {
-    if (type == "amp" || type == "loud" || type == "onset" || type == "mfcc") {
+void Value::update(const vector<Sound> &sounds, int index, int total, Layer* layer) {
+    float time = (layer != NULL ? layer->data.time : ofGetElapsedTimef()) * speed;
+    if (type == "time") {
+        value = fmod(time, 1.f);
+    }
+    else if (type == "noise") {
+        value = ofNoise((int)(size_t)this, time);
+    }
+    else if (type == "rand") {
+        value = ofRandom(1.f);
+    }
+    else if (type == "sin") {
+        value = (sin(time)+1)/2.f;
+    }
+    else if (type == "cos") {
+        value = (cos(time)+1)/2.f;
+    }
+    else if (type == "amp" || type == "loud" || type == "onset" || type == "mfcc") {
         if (sounds.size() > chan) {
             if (type == "amp") {
                 value = sounds[chan].amplitude;
@@ -112,20 +130,6 @@ void Value::update(const vector<Sound> &sounds, int index, int total) {
         else {
             value = 0;
             ofLog() << "sound data not available " + type + ":" + ofToString(value);
-        }
-    }
-    else {
-        if (type == "noise") {
-            value = ofNoise((int)(size_t)this, ofGetElapsedTimef());
-        }
-        else if (type == "rand") {
-            value = ofRandom(1.f);
-        }
-        else if (type == "sin") {
-            value = abs(sin(ofGetElapsedTimef()));
-        }
-        else if (type == "cos") {
-            value = abs(cos(ofGetElapsedTimef()));
         }
     }
 }

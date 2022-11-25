@@ -28,7 +28,7 @@
 // run Spiral sketch with stroke alpha mapped to mic's amplitude
 ~visuals.sendMsg('/tex', 0, "Spiral");
 ~visuals.sendMsg('/tex/var', 0, "strokeAlpha", 1);
-~visuals.sendMsg('/tex/var/scale', 0, "strokeAlpha", 50);
+~visuals.sendMsg('/tex/var/range', 0, "strokeAlpha", 50);
 
 // enable "easy" camera (can not be animated)
 ~visuals.sendMsg('/cam', "easy");

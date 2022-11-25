@@ -50,6 +50,7 @@ static std::unordered_map<std::string, Source> const SourceMap = {
 };
 
 enum class DataSource {
+    TIME,
     CONST,
     RAND,
     NOISE,
@@ -63,6 +64,7 @@ enum class DataSource {
 };
 
 static std::unordered_map<std::string, DataSource> const DataSourceMap = {
+    {"time", DataSource::TIME},
     {"const", DataSource::CONST},
     {"rand", DataSource::RAND},
     {"noise", DataSource::NOISE},

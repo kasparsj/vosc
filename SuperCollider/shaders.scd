@@ -15,7 +15,7 @@
 
 // map glow shader var (uniform) to channel 1 amplitude
 ~visuals.sendMsg('/tex/var', 0, "glow", "amp:0");
-~visuals.sendMsg('/tex/var/scale', 0, "glow", 10);
+~visuals.sendMsg('/tex/var/range', 0, "glow", 10);
 
 // load Ether shader (from shadertoy)
 ~visuals.sendMsg('/tex', 0, "shadertoy/Ether.frag");

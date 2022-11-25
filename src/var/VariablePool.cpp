@@ -61,11 +61,6 @@ void VariablePool::update(const vector<Sound> &sounds, const vector<TidalNote> &
             it2->second->update(sounds, notes);
         }
     }
-    for (map<int, map<string, Variable*>>::iterator it=layerPool.begin(); it!=layerPool.end(); ++it) {
-        for (map<string, Variable*>::iterator it2=it->second.begin(); it2!=it->second.end(); ++it2) {
-            it2->second->update(sounds, notes);
-        }
-    }
 }
 
 void VariablePool::cleanup(VarsHolder* holder) {

@@ -70,7 +70,7 @@
 ~visuals.sendMsg('/tex/loop', 0, 2, 60, 2.0);
 ~visuals.sendMsg('/size', 0, 100, 150);
 ~visuals.sendMsg('/size', 0, -100, -150);
-~visuals.sendMsg('/scale', 0, -1);
+~visuals.sendMsg('/layer/scale', 0, -1);
 ~visuals.sendMsg('/align', 0, "center");
 ~visuals.sendMsg('/align', 0, "right", "bottom");
 ~visuals.sendMsg('/rot', 0, 0, 0, 90);

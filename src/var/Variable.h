@@ -6,6 +6,8 @@
 #include "ofxTidalCycles.h"
 #include "Value.h"
 
+class Layer;
+
 class Variable {
 public:
     Variable() {}
@@ -20,7 +22,7 @@ public:
     void setColor(const ofxOscMessage& m, int idx = 1);
     void setVec3(const ofxOscMessage& m, int idx = 1);
     void setFloat(const ofxOscMessage& m, int idx = 1);
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
+    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, Layer* layer = NULL);
     float get(int idx = 0) {
         return values[idx].get();
     }

@@ -6,10 +6,12 @@
 #include "ofxOsc.h"
 #include "Args.h"
 
+class Layer;
+
 class Value {
 public:
     float get() {
-        return (rangeFrom + value * (rangeTo - rangeFrom)) * scale;
+        return ofMap(value, 0.f, 1.f, rangeFrom, rangeTo);
     }
     void set(string type);
     void set(float value);
@@ -17,8 +19,8 @@ public:
     void tween(float target, float dur, ofxeasing::function ease) {
         Args::getInstance().createTween(&value, target, dur, ease);
     }
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total);
-    void update(const vector<Sound> &sounds, int index, int total);
+    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, Layer* layer = NULL);
+    void update(const vector<Sound> &sounds, int index, int total, Layer* layer = NULL);
     void afterDraw();
     
     int index;
@@ -26,7 +28,7 @@ public:
     string subtype = "";
     int chan;
     float value;
-    float scale = 1.f;
     float rangeFrom = 0.f;
     float rangeTo = 1.f;
+    float speed = 1.f;
 };

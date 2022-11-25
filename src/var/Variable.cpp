@@ -1,6 +1,7 @@
 #include "Variable.h"
 #include "Args.h"
 #include "ColorUtil.h"
+#include "Layer.h"
 
 void Variable::set(float value) {
     this->values.resize(1);
@@ -37,20 +38,39 @@ void Variable::set(const ofxOscMessage& m, int idx) {
             }
         }
     }
-    else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/scale") {
-        for  (int i=0; i<values.size(); i++) {
-            Args::getInstance().handleFloat(&values[i].scale, m, m.getNumArgs() > idx+i ? idx+i : m.getNumArgs()-idx);
-        }
-    }
     else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/range") {
         for  (int i=0; i<values.size(); i++) {
-            if (m.getNumArgs() == 2) {
+            if (m.getNumArgs() == idx + 1) {
                 Args::getInstance().handleFloat(&values[i].rangeFrom, m, idx);
-                Args::getInstance().handleFloat(&values[i].rangeTo, m, idx+1);
             }
-            else {
+            else if (m.getNumArgs() == idx + 2) {
+                if (values.size() == 2) {
+                    Args::getInstance().handleFloat(&values[i].rangeFrom, m, idx+i);
+                }
+                else {
+                    Args::getInstance().handleFloat(&values[i].rangeFrom, m, idx);
+                    Args::getInstance().handleFloat(&values[i].rangeTo, m, idx+1);
+                }
+            }
+            else if (m.getNumArgs() == idx + values.size()*2) {
                 Args::getInstance().handleFloat(&values[i].rangeFrom, m, idx+i);
                 Args::getInstance().handleFloat(&values[i].rangeTo, m, idx+values.size()+i);
+            }
+            else {
+                ofLog() << "unsupported /var/range format";
+            }
+        }
+    }
+    else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/speed") {
+        for  (int i=0; i<values.size(); i++) {
+            if (m.getNumArgs() == idx + 1) {
+                Args::getInstance().handleFloat(&values[i].speed, m, idx);
+            }
+            else if (m.getNumArgs() == values.size()) {
+                Args::getInstance().handleFloat(&values[i].speed, m, idx+i);
+            }
+            else {
+                ofLog() << "unsupported /var/speed format";
             }
         }
     }
@@ -140,9 +160,9 @@ void Variable::tween(const vector<float>& target, float dur, ofxeasing::function
     }
 }
 
-void Variable::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
+void Variable::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, Layer* layer) {
     for (int i=0; i<values.size(); i++) {
-        values[i].update(sounds, notes, i, values.size());
+        values[i].update(sounds, notes, i, values.size(), layer);
     }
 }
 
