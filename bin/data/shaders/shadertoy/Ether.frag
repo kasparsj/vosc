@@ -10,9 +10,7 @@ const vec3 DEFAULT_COLOR = vec3(0.1,0.3,.4);
 uniform float time;
 uniform vec2 resolution;
 uniform vec2 offset;
-uniform int index;
 uniform vec4 color;
-uniform int random;
 
 out vec4 fragColor;
 
