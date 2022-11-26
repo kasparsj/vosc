@@ -50,6 +50,7 @@
 - `/shader/set` [Set layer shader property](#shader-set)
 
 ## Layers
+- `/layer/solo` [Hide all other layers](#layer-solo)
 - `/layer/pos` [Set layer position](#layer-position)
 - `/layer/size` [Set layer size](#layer-size)
 - `/layer/scale` [Set layer scale](#layer-scale)
@@ -489,6 +490,18 @@ Examples:
 ```
 
 ## Layers
+
+### Layer solo
+
+`/layer/solo`
+
+Arguments:
+- **layer** (int|string) layer index
+
+Examples:
+```supercollider
+~visuals.sendMsg('/layer/solo', 0); // hide all layers except first
+```
 
 ### Layer Position
 
