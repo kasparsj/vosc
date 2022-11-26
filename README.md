@@ -231,7 +231,7 @@ Examples:
 ~visuals.sendMsg('/cam/set', "farClip", 10000);
 ~visuals.sendMsg('/cam/set', "globalPosition", 0, 0, -870);
 ~visuals.sendMsg('/cam/set', "distance", 1000); // only when camera is set to "easy"
-~visuals.sendMsg('/cam/set', "autoDistamce", false); // only when camera is set to "easy"
+~visuals.sendMsg('/cam/set', "autoDistance", false); // only when camera is set to "easy"
 ~visuals.sendMsg('/cam/set', "movementMaxSpeed", 1); // only when camera is set to "fp"
 ```
 
