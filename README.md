@@ -50,6 +50,7 @@
 - `/shader/set` [Set layer shader property](#shader-set)
 
 ## Layers
+- `/layer/visible` [Show/hide layer](#layer-visible)
 - `/layer/solo` [Hide all other layers](#layer-solo)
 - `/layer/pos` [Set layer position](#layer-position)
 - `/layer/size` [Set layer size](#layer-size)
@@ -490,6 +491,20 @@ Examples:
 ```
 
 ## Layers
+
+### Layer visible
+
+`/layer/visible`
+
+Arguments:
+- **layer** (int|string) layer index
+- **visible** (bool) visibility
+
+Examples:
+```supercollider
+~visuals.sendMsg('/layer/visible', 0, false); // hide first layer
+~visuals.sendMsg('/layer/visible', 0, true); // show first layer
+```
 
 ### Layer solo
 
