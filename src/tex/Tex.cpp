@@ -5,6 +5,7 @@
 #include "SketchTex.h"
 #include "ImageTex.h"
 #include "HPVideoTex.h"
+#include "GVVideoTex.h"
 #include "WebcamTex.h"
 #include "DrawTex.h"
 #include "Config.h"
@@ -20,6 +21,9 @@ Tex* Tex::factory(string type, string path, const vector<float>& args) {
                 break;
             case Source::HPV:
                 tex = new HPVideoTex(path, args);
+                break;
+            case Source::GV:
+                tex = new GVVideoTex(path, args);
                 break;
             case Source::SHADER:
                 tex = new ShaderTex(path, args);
