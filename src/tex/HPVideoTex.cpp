@@ -57,12 +57,16 @@ void HPVideoTex::seek(float pct) {
 
 void HPVideoTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
     if (aspectRatio) {
+        ofPushMatrix();
         if (hpvPlayer.getWidth() > hpvPlayer.getHeight()) {
+            ofTranslate(0, (size.y - size.x/hpvPlayer.getWidth() * hpvPlayer.getHeight()) / 2);
             hpvPlayer.draw(pos.x, pos.y, size.x, size.x/hpvPlayer.getWidth() * hpvPlayer.getHeight());
         }
         else {
+            ofTranslate((size.x - size.y/hpvPlayer.getHeight() * hpvPlayer.getWidth()) / 2, 0);
             hpvPlayer.draw(pos.x, pos.y, size.y/hpvPlayer.getHeight() * hpvPlayer.getWidth(), size.y);
         }
+        ofPopMatrix();
     }
     else {
         hpvPlayer.draw(pos.x, pos.y, size.x, size.y);

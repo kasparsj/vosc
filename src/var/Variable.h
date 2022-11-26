@@ -41,7 +41,6 @@ public:
         return (int) get(idx);
     }
     bool getBool(int idx = 0) {
-        ofLog() << getInt(idx);
         return getInt(idx) > 0;
     }
     vector<float> getVec(int idx = 0) {

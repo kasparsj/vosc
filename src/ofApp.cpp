@@ -317,7 +317,7 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
         layer->reset();
     }
     else if (command == "/layer/pos") {
-        layer->setVar("pos",  m);
+        layer->setVar("pos", m);
     }
     else if (command == "/layer/size") {
         Args::getInstance().handleVec3(&layer->data.size, m);

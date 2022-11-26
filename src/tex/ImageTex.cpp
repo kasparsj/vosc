@@ -42,12 +42,16 @@ void ImageTex::update(TexData& data) {
 
 void ImageTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
     if (aspectRatio) {
+        ofPushMatrix();
         if (image.getWidth() > image.getHeight()) {
+            ofTranslate(0, (size.y - size.x/image.getWidth() * image.getHeight()) / 2.f);
             image.draw(pos, size.x, size.x/image.getWidth() * image.getHeight());
         }
         else {
+            ofTranslate((size.x - size.y/image.getHeight() * image.getWidth()) / 2.f, 0);
             image.draw(pos, size.y/image.getHeight() * image.getWidth(), size.y);
         }
+        ofPopMatrix();
     }
     else {
         image.draw(pos, size.x, size.y);

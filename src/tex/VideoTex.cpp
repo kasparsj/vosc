@@ -58,12 +58,16 @@ void VideoTex::seek(float pct) {
 
 void VideoTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
     if (aspectRatio) {
+        ofPushMatrix();
         if (videoPlayer.getWidth() > videoPlayer.getHeight()) {
+            ofTranslate(0, (size.y - size.x/videoPlayer.getWidth() * videoPlayer.getHeight()) / 2);
             videoPlayer.draw(pos, size.x, size.x/videoPlayer.getWidth() * videoPlayer.getHeight());
         }
         else {
+            ofTranslate((size.x - size.y/videoPlayer.getHeight() * videoPlayer.getWidth()) / 2, 0);
             videoPlayer.draw(pos, size.y/videoPlayer.getHeight() * videoPlayer.getWidth(), size.y);
         }
+        ofPopMatrix();
     }
     else {
         videoPlayer.draw(pos, size.x, size.y);
