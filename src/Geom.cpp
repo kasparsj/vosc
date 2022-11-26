@@ -209,13 +209,20 @@ void Geom::draw() {
     }
     else {
         if (drawInstanced > 1) {
-            mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
+            if (drawWireframe) {
+                mesh.drawInstanced(OF_MESH_WIREFRAME, drawInstanced);
+            }
+            else {
+                mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
+            }
         }
         else {
-            mesh.draw();
-        }
-        if (drawWireframe) {
-            mesh.drawWireframe();
+            if (drawWireframe) {
+                mesh.drawWireframe();
+            }
+            else {
+                mesh.draw();
+            }
         }
     }
 }
