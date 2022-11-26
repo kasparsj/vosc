@@ -4,7 +4,7 @@
 #include "TexData.h"
 
 void Value::set(string type) {
-    if (type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
+    if (type.substr(0, 3) == "mic" || type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
         size_t col = type.find(":");
         if (col != std::string::npos) {
             chan = ofToInt(type.substr(col+1));
@@ -60,7 +60,7 @@ void Value::set(const ofxOscMessage& m, int i) {
     }
 }
 
-void Value::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data) {
+void Value::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data) {
     if (type == "tidal") {
         if (subtype == "onset") {
             value = 0;
@@ -89,11 +89,11 @@ void Value::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, 
         }
     }
     else {
-        update(sounds, index, total, data);
+        update(mics, sounds, index, total, data);
     }
 }
 
-void Value::update(const vector<Sound> &sounds, int index, int total, TexData* data) {
+void Value::update(const vector<Mic> &mics, const vector<Sound> &sounds, int index, int total, TexData* data) {
     float time = (data != NULL ? data->time : ofGetElapsedTimef()) * speed;
     if (type == "time") {
         value = fmod(time, 1.f);
@@ -133,7 +133,16 @@ void Value::update(const vector<Sound> &sounds, int index, int total, TexData* d
         }
         else {
             value = 0;
-            ofLog() << "sound data not available " + type + ":" + ofToString(value);
+            ofLog() << "sound data not available " + type + ":" + ofToString(chan);
+        }
+    }
+    else if (type == "mic") {
+        if (mics.size() > chan) {
+            value = mics[chan].amplitude;
+        }
+        else {
+            value = 0;
+            ofLog() << "mic not available:" + ofToString(chan);
         }
     }
 }

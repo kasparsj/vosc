@@ -19,8 +19,8 @@ public:
     void tween(float target, float dur, ofxeasing::function ease) {
         Args::getInstance().createTween(&value, target, dur, ease);
     }
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data = NULL);
-    void update(const vector<Sound> &sounds, int index, int total, TexData* data = NULL);
+    void update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data = NULL);
+    void update(const vector<Mic> &mics, const vector<Sound> &sounds, int index, int total, TexData* data = NULL);
     void afterDraw();
     
     int index;

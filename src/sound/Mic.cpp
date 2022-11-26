@@ -1,28 +1,6 @@
-#include "Sound.h"
+#include "Mic.h"
 
-void Sound::update() {
-    ampHist.push_back( ampScaled );
-    if( ampHist.size() >= 400 ){
-        ampHist.erase(ampHist.begin(), ampHist.begin()+1);
-    }
-}
-
-void Sound::parse(const ofxOscMessage& m) {
-    //instNum = m.getArgAsInt(0);
-    amplitude = m.getArgAsFloat(1);
-    ampScaled = ofMap(amplitude, 0.0, maxAmp, 0.0, 1.0, true);
-    loudness = m.getArgAsFloat(2);
-    onset = m.getArgAsInt(3);
-    mfcc.clear();
-    if (m.getNumArgs()-4 > 0) {
-        mfcc.resize(m.getNumArgs()-4);
-        for (int i=0; i<m.getNumArgs()-4; i++) {
-            mfcc[i] = m.getArgAsFloat(4+i);
-        }
-    }
-}
-
-void Sound::stream(const ofxOscMessage& m) {
+void Mic::setupStream(const ofxOscMessage& m) {
     string name = m.getArgAsString(1);
     int numInputChannels = m.getNumArgs() > 2 ? m.getArgAsInt(2) : 1;
     if (numInputChannels > 0) {
@@ -46,7 +24,7 @@ void Sound::stream(const ofxOscMessage& m) {
     }
 }
 
-void Sound::audioIn(ofSoundBuffer& input){
+void Mic::audioIn(ofSoundBuffer& input){
     float curVol = 0.0;
     int numCounted = 0;
     int numChan = soundStream.getNumInputChannels();
@@ -62,5 +40,5 @@ void Sound::audioIn(ofSoundBuffer& input){
     
     ampSmooth *= 0.93;
     ampSmooth += 0.07 * amplitude;
-    ampScaled = ofMap(ampSmooth, 0.0, maxVol, 0.0, 1.0, true);
+    ampScaled = ofMap(ampSmooth, 0.0, maxAmp, 0.0, 1.0, true);
 }

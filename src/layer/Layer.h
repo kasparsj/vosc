@@ -20,7 +20,7 @@ public:
     }
     void setup(int index);
     void layout(Layout layout, int layoutIndex, int layoutTotal);
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
+    void update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes);
     void drawToFbo();
     void draw(const glm::vec3 &pos, const glm::vec2 &size);
     void draw(int totalVisible);

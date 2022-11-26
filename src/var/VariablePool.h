@@ -9,7 +9,7 @@ public:
     static map<string, Variable*>& getPool(VarsHolder* holder);
     static bool hasShared(string name);
     static Variable* getShared(string name, bool create = false);
-    static void update(const vector<Sound>& sounds, const vector<TidalNote>& notes);
+    static void update(const vector<Mic>& mics, const vector<Sound>& sounds, const vector<TidalNote>& notes);
     static void cleanup(VarsHolder* holder);
     
 private:

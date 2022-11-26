@@ -15,7 +15,6 @@ class ofApp : public ofBaseApp {
 
 public:
 	void setup();
-    void setupSounds(int numInsts);
     void setupLayers(int numLayers);
     void layoutLayers(Layout layout, const vector<Layer*> &layers);
 	void update();
@@ -46,6 +45,8 @@ public:
     void layerCommand(Layer* layer, string command, const ofxOscMessage& m);
     void indexCommand(Layer *layer, string command, const ofxOscMessage& m);
     void allLayersCommand(string command, const ofxOscMessage& m);
+    void micsCommand(string command, const ofxOscMessage& m);
+    void micCommand(Mic& mic, string command, const ofxOscMessage& m);
     void soundsCommand(string command, const ofxOscMessage& m);
     void soundCommand(Sound& sound, string command, const ofxOscMessage& m);
     void textureCommand(Texture* tex, string command, const ofxOscMessage& m);
@@ -61,6 +62,7 @@ public:
     vector<ofxOscMessage> messageQueue;
 	ofxTidalCycles *tidal;
     
+    vector<Mic> mics;
     vector<Sound> sounds;
     vector<Layer*> layers = {0};
     int waitOnset = -1;

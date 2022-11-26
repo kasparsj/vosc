@@ -32,9 +32,9 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
     }
 }
 
-void Layer::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
+void Layer::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     for (map<string, Variable*>::iterator it=vars.begin(); it!=vars.end(); ++it) {
-        it->second->update(sounds, notes, &data);
+        it->second->update(mics, sounds, notes, &data);
     }
     if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
         data.update(sounds, notes);

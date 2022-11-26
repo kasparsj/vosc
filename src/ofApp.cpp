@@ -14,15 +14,10 @@ void ofApp::setup(){
 
     receiver.setup(33333);
 	tidal = new ofxTidalCycles(1);
-    setupSounds(INITIAL_SOUNDS);
     setupLayers(INITIAL_VISUALS);
     windowResized(ofGetWidth(), ofGetHeight());
     
     ofDisableArbTex();
-}
-
-void ofApp::setupSounds(int numInsts) {
-    sounds.resize(numInsts);
 }
 
 void ofApp::setupLayers(int numVisuals) {
@@ -53,11 +48,11 @@ void ofApp::update(){
         tidal->notes.erase(tidal->notes.begin());
     }
     Args::update();
-    VariablePool::update(sounds, tidal->notes);
+    VariablePool::update(mics, sounds, tidal->notes);
     TexturePool::update(sounds, tidal->notes);
     GeomPool::update();
 	for (int i = 0; i < layers.size(); i++) {
-		layers[i]->update(sounds, tidal->notes);
+		layers[i]->update(mics, sounds, tidal->notes);
 	}
     if (cam != NULL) {
         ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
@@ -102,7 +97,10 @@ Layout parseLayout(const ofxOscMessage &m, int idx)
 
 void ofApp::parseMessage(const ofxOscMessage &m) {
     string command = m.getAddress();
-    if (command.substr(0, 6) == "/sound") {
+    if (command.substr(0, 4) == "/mic") {
+        micsCommand(command, m);
+    }
+    else if (command.substr(0, 6) == "/sound") {
         soundsCommand(command, m);
     }
     else if (command == "/dirt/play") {
@@ -118,7 +116,7 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
         forceOnset = true;
     }
     else if (command == "/sounds") {
-        setupSounds(m.getArgAsInt(0));
+        sounds.resize(m.getArgAsInt(0));
     }
     else if (command.substr(0, 7) == "/layers") {
         layersCommand(command, m);
@@ -443,6 +441,37 @@ void ofApp::allLayersCommand(string command, const ofxOscMessage &m) {
     }
 }
 
+void ofApp::micsCommand(string command, const ofxOscMessage &m) {
+    auto [all, idx] = parseIndex(m);
+    if (all) {
+        for (int i=0; i<mics.size(); i++) {
+            micCommand(mics[i], command, m);
+        }
+    }
+    else if (idx >= 0) {
+        if (!all && (idx+1) > mics.size()) {
+            mics.resize(idx+1);
+        }
+        Mic& mic = mics[idx];
+        micCommand(mic, command, m);
+    }
+    else {
+        ofLog() << "invalid sound index";
+    }
+}
+
+void ofApp::micCommand(Mic& mic, string command, const ofxOscMessage &m) {
+    if (command == "/mic") {
+        mic.setupStream(m);
+    }
+    else if (command == "/mic/set") {
+        string prop = m.getArgAsString(1);
+        if (prop == "maxAmp") {
+            Args::getInstance().handleFloat(&mic.maxAmp, m, 2);
+        }
+    }
+}
+
 void ofApp::soundsCommand(string command, const ofxOscMessage &m) {
     auto [all, idx] = parseIndex(m);
     if (all) {
@@ -452,7 +481,7 @@ void ofApp::soundsCommand(string command, const ofxOscMessage &m) {
     }
     else if (idx >= 0) {
         if (!all && (idx+1) > sounds.size()) {
-            setupSounds(idx+1);
+            sounds.resize(idx+1);
         }
         Sound& sound = sounds[idx];
         soundCommand(sound, command, m);
@@ -469,15 +498,9 @@ void ofApp::soundCommand(Sound& sound, string command, const ofxOscMessage &m) {
             waitOnset = 1;
         }
     }
-    else if (command == "/sound/stream") {
-        sound.stream(m);
-    }
     else if (command == "/sound/set") {
         string prop = m.getArgAsString(1);
-        if (prop == "maxVol") {
-            Args::getInstance().handleFloat(&sound.maxVol, m, 2);
-        }
-        else if (prop == "maxAmp") {
+        if (prop == "maxAmp") {
             Args::getInstance().handleFloat(&sound.maxAmp, m, 2);
         }
         else if (prop == "maxLoud") {

@@ -47,18 +47,18 @@ map<string, Variable*>& VariablePool::getPool(VarsHolder* holder) {
     }
 }
 
-void VariablePool::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
+void VariablePool::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes) {
     for (map<string, Variable*>::iterator it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
-        it->second->update(sounds, notes);
+        it->second->update(mics, sounds, notes);
     }
     for (map<int, map<string, Variable*>>::iterator it=texturePool.begin(); it!=texturePool.end(); ++it) {
         for (map<string, Variable*>::iterator it2=it->second.begin(); it2!=it->second.end(); ++it2) {
-            it2->second->update(sounds, notes);
+            it2->second->update(mics, sounds, notes);
         }
     }
     for (map<int, map<string, Variable*>>::iterator it=shaderPool.begin(); it!=shaderPool.end(); ++it) {
         for (map<string, Variable*>::iterator it2=it->second.begin(); it2!=it->second.end(); ++it2) {
-            it2->second->update(sounds, notes);
+            it2->second->update(mics, sounds, notes);
         }
     }
 }

@@ -33,7 +33,7 @@ public:
             values[i].rangeTo = to;
         }
     }
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data = NULL);
+    void update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data = NULL);
     float get(int idx = 0) {
         return values[idx].get();
     }

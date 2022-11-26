@@ -2,7 +2,6 @@
 
 #include "ofMain.h"
 
-#define INITIAL_SOUNDS 0
 #define INITIAL_VISUALS 9
 #define MAX_NOTES 10
 
@@ -56,6 +55,7 @@ enum class DataSource {
     NOISE,
     SINE,
     COSINE,
+    MIC,
     AMP,
     LOUD,
     ONSET,
@@ -70,6 +70,7 @@ static std::unordered_map<std::string, DataSource> const DataSourceMap = {
     {"noise", DataSource::NOISE},
     {"sin", DataSource::SINE},
     {"cos", DataSource::COSINE},
+    {"mic", DataSource::MIC},
     {"amp", DataSource::AMP},
     {"loud", DataSource::LOUD},
     {"onset", DataSource::ONSET},

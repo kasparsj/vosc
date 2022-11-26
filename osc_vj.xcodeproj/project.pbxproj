@@ -25,6 +25,7 @@
 		29DD298E0609B82CFFD50620 /* VarsHolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
 		2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
+		2BDD660F2931EBDB00D61AF7 /* Mic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BDD660D2931EBDB00D61AF7 /* Mic.cpp */; };
 		2D7732D4AC34CDDBDCFE9699 /* Tex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 23AB9B54C418735665B1EBA6 /* Tex.cpp */; };
 		33DB731E964056D7E35604A7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
 		3565AE7CE5956216CB234B8C /* SketchTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C2899CABC78CFBEDD426E85 /* SketchTex.cpp */; };
@@ -310,6 +311,8 @@
 		2BDD66092930C54B00D61AF7 /* of_default_uniforms.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = of_default_uniforms.glsl; sourceTree = "<group>"; };
 		2BDD660A2930C54B00D61AF7 /* SimplexNoiseDerivatives4D.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = SimplexNoiseDerivatives4D.glsl; sourceTree = "<group>"; };
 		2BDD660B2930C54B00D61AF7 /* texture.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = texture.frag; sourceTree = "<group>"; };
+		2BDD660D2931EBDB00D61AF7 /* Mic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Mic.cpp; sourceTree = "<group>"; };
+		2BDD660E2931EBDB00D61AF7 /* Mic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Mic.h; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
 		2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VerticalTiltShifPass.cpp; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.cpp; sourceTree = SOURCE_ROOT; };
@@ -330,7 +333,7 @@
 		3C39EA8CB1911093FD56F9ED /* HorizontalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HorizontalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/HorizontalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		3D5F33D66F2F166A4E8EA438 /* cfileio.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = cfileio.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/cfileio.h; sourceTree = SOURCE_ROOT; };
 		3DE27F8F3350100A56220776 /* ai_assert.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ai_assert.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/ai_assert.h; sourceTree = SOURCE_ROOT; };
-		3E8911C6B8ABF8D32A950348 /* Sound.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Sound.h; path = src/Sound.h; sourceTree = SOURCE_ROOT; };
+		3E8911C6B8ABF8D32A950348 /* Sound.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Sound.h; path = src/sound/Sound.h; sourceTree = SOURCE_ROOT; };
 		3F8A1741CC4F784D8B130531 /* HsbShiftPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HsbShiftPass.cpp; path = ../../../addons/ofxPostProcessing/src/HsbShiftPass.cpp; sourceTree = SOURCE_ROOT; };
 		3FE6C4A803E115F324568E6A /* Geom.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Geom.cpp; path = src/Geom.cpp; sourceTree = SOURCE_ROOT; };
 		402AF494E736B54C67F4D3BF /* Layer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Layer.h; path = src/layer/Layer.h; sourceTree = SOURCE_ROOT; };
@@ -441,7 +444,7 @@
 		AC9F55AC591B53654883DFEC /* TexturePool.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = TexturePool.h; path = src/TexturePool.h; sourceTree = SOURCE_ROOT; };
 		ACEF148664D862FB76A48E44 /* ShaderPingPongTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ShaderPingPongTex.h; path = src/tex/ShaderPingPongTex.h; sourceTree = SOURCE_ROOT; };
 		ADAE582E4696B9BD64E5B2B8 /* IOSystem.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IOSystem.hpp; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/IOSystem.hpp; sourceTree = SOURCE_ROOT; };
-		ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Sound.cpp; path = src/Sound.cpp; sourceTree = SOURCE_ROOT; };
+		ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Sound.cpp; path = src/sound/Sound.cpp; sourceTree = SOURCE_ROOT; };
 		ADD194746185E2DA11468377 /* IpEndpointName.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = IpEndpointName.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/IpEndpointName.cpp; sourceTree = SOURCE_ROOT; };
 		AE335EB4709BFD4671EEAC84 /* MessageMappingOscPacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = MessageMappingOscPacketListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/MessageMappingOscPacketListener.h; sourceTree = SOURCE_ROOT; };
 		AED6F84D8DABA623CAF59F13 /* color4.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = color4.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/color4.h; sourceTree = SOURCE_ROOT; };
@@ -1008,6 +1011,17 @@
 				2BDD660A2930C54B00D61AF7 /* SimplexNoiseDerivatives4D.glsl */,
 			);
 			path = common;
+			sourceTree = "<group>";
+		};
+		2BDD660C2931EBC600D61AF7 /* sound */ = {
+			isa = PBXGroup;
+			children = (
+				ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */,
+				3E8911C6B8ABF8D32A950348 /* Sound.h */,
+				2BDD660D2931EBDB00D61AF7 /* Mic.cpp */,
+				2BDD660E2931EBDB00D61AF7 /* Mic.h */,
+			);
+			path = sound;
 			sourceTree = "<group>";
 		};
 		2C8F245ACBE61E28646C17F2 /* ofxAssimpModelLoader */ = {
@@ -1783,8 +1797,7 @@
 				5D55687EAFB7EC68378DC960 /* Shader.h */,
 				DAE821FAFCDC321AA0AA245C /* Sketch.h */,
 				D668F2E5BEDA9E0D5669F52C /* sketches */,
-				ADBBA9C0BFE51E5257D4E881 /* Sound.cpp */,
-				3E8911C6B8ABF8D32A950348 /* Sound.h */,
+				2BDD660C2931EBC600D61AF7 /* sound */,
 				BDA6AA65A1AD7C1FF34E3E37 /* tex */,
 				F701FBB2BC4E0BB2C068EA34 /* Texture.cpp */,
 				F86419EE954CE687A9D7B2CD /* Texture.h */,
@@ -1958,6 +1971,7 @@
 				5D833E7A02CBA76EFDA2776E /* VariablePool.cpp in Sources */,
 				2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */,
 				F0CC8EC812D9864680C703B1 /* LayerShader.cpp in Sources */,
+				2BDD660F2931EBDB00D61AF7 /* Mic.cpp in Sources */,
 				3EBCD03048ED03CCB70D6972 /* LayerData.cpp in Sources */,
 				081251DFDA2F64A94FA7FE19 /* Layer.cpp in Sources */,
 				142F6F073EC205AF27861A96 /* FboPingPong.cpp in Sources */,

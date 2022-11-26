@@ -173,9 +173,9 @@ void Variable::tween(const vector<float>& target, float dur, ofxeasing::function
     }
 }
 
-void Variable::update(const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data) {
+void Variable::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data) {
     for (int i=0; i<values.size(); i++) {
-        values[i].update(sounds, notes, i, values.size(), data);
+        values[i].update(mics, sounds, notes, i, values.size(), data);
     }
 }
 
