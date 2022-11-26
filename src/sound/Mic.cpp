@@ -1,5 +1,12 @@
 #include "Mic.h"
 
+void Mic::update() {
+    ampHist.push_back( ampScaled );
+    if( ampHist.size() >= 200 ){
+        ampHist.erase(ampHist.begin(), ampHist.begin()+1);
+    }
+}
+
 void Mic::setupStream(const ofxOscMessage& m) {
     string name = m.getArgAsString(1);
     int numInputChannels = m.getNumArgs() > 2 ? m.getArgAsInt(2) : 1;

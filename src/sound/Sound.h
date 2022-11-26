@@ -11,7 +11,6 @@ public:
         maxAmp = MAX_AMP;
         maxLoud = MAX_LOUD;
     }
-    void update();
     void parse(const ofxOscMessage &m);
     
     float loudness;

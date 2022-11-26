@@ -1,6 +1,5 @@
 ~visuals = NetAddr("127.0.0.1", 33333);
-~visuals.sendMsg('/sounds', 1);
-~visuals.sendMsg('/sound/stream', 0, "Microphone");
+~visuals.sendMsg('/mic', 0, "Microphone");
 
 ~visuals.sendMsg('/layers', 9, "grid");
 ~visuals.sendMsg('/layers', 1, "stack");
@@ -15,8 +14,8 @@
 
 ~visuals.sendMsg('/tex/color', "*", 1.0, 0.0, 0.0);
 ~visuals.sendMsg('/layer/alpha', "*", 0.5);
-~visuals.sendMsg('/layer/alpha', "*", "amp");
-~visuals.sendMsg('/tex/color', "*", "mfcc");
+~visuals.sendMsg('/layer/alpha', "*", "mic");
+//~visuals.sendMsg('/tex/color', "*", "mfcc");
 ~visuals.sendMsg('/tex/reload', "*");
 ~visuals.sendMsg('/tex/unload', "*");
 ~visuals.sendMsg('/tex/noclear', "*", true);

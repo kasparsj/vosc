@@ -1,12 +1,5 @@
 #include "Sound.h"
 
-void Sound::update() {
-    ampHist.push_back( ampScaled );
-    if( ampHist.size() >= 400 ){
-        ampHist.erase(ampHist.begin(), ampHist.begin()+1);
-    }
-}
-
 void Sound::parse(const ofxOscMessage& m) {
     //instNum = m.getArgAsInt(0);
     amplitude = m.getArgAsFloat(1);

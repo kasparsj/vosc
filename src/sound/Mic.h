@@ -10,6 +10,7 @@ public:
     }
     void setupStream(const ofxOscMessage &m);
     void audioIn(ofSoundBuffer& input);
+    virtual void update();
     
     int instNum;
     ofSoundStream soundStream;

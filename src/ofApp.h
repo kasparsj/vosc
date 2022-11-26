@@ -24,7 +24,11 @@ public:
     bool checkOnset();
 	void draw();
     void drawDebug();
-    void drawVolume(Sound& sound);
+    void drawGeoms();
+    void drawTextures();
+    void drawMics();
+    void drawSounds();
+    void drawAmplitude(Mic& sound);
 	void exit();
 
 	void keyPressed(int key);

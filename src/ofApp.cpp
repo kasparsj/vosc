@@ -41,6 +41,9 @@ void ofApp::layoutLayers(Layout layout, const vector<Layer*> &layers) {
 //--------------------------------------------------------------
 void ofApp::update(){
     parseMessages();
+    for (int i=0; i<mics.size(); i++) {
+        mics[i].update();
+    }
     for (int i=0; i<sounds.size(); i++) {
         sounds[i].update();
     }
@@ -795,42 +798,30 @@ void ofApp::draw(){
 
 void ofApp::drawDebug() {
     if (showDebug) {
-        ofPushStyle();
-        if (sounds.size() > 0) {
-            for (int i=0; i<sounds.size(); i++) {
-                ofPushMatrix();
-                ofTranslate((i+1)*20 + i*200, 20);
-                drawVolume(sounds[i]);
-                ofPopMatrix();
-            }
-        }
-        // draw amplitude
-        // draw mfcc
-        for (int i=0; i<layers.size(); i++) {
-            if (layers[i]->hasGeom()) {
-                ofSetColor(255);
-                ofPushMatrix();
-                ofTranslate(20+i*120+60, ofGetHeight()-180);
-                layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
-                ofPopMatrix();
-            }
-            if (layers[i]->shader.hasDefaultTexture()) {
-                ofSetColor(255);
-                layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, ofGetHeight()-120, 100, 100);
-            }
-            else {
-                ofFill();
-                ofSetColor(0);
-                ofDrawRectangle(20+i*120, ofGetHeight()-120, 100, 100);
-                ofSetColor(255);
-                ofDrawBitmapString("not loaded", 20+i*120, ofGetHeight()-120);
-            }
-        }
         if (cam != NULL) {
             ofDrawBitmapString(ofToString(cam->getPosition()), 20, 20);
         }
         ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
-        ofPopStyle();
+        
+        ofPushMatrix();
+        
+        ofTranslate(20, 60);
+        ofDrawBitmapString("Geometry", 0, -20);
+        drawGeoms();
+        
+        ofTranslate(0, 180);
+        ofDrawBitmapString("Textures", 0, -20);
+        drawTextures();
+        
+        ofTranslate(0, 180);
+        ofDrawBitmapString("Microphones", 0, -20);
+        drawMics();
+        
+        ofTranslate(0, 180);
+        ofDrawBitmapString("Sounds", 0, -20);
+        drawSounds();
+        
+        ofPopMatrix();
     }
     if (showGlVersion) {
         ofDrawBitmapString("Vendor :" + ofToString(glGetString(GL_VENDOR)), ofGetWidth()-250, 40);
@@ -841,22 +832,79 @@ void ofApp::drawDebug() {
     }
 }
 
-void ofApp::drawVolume(Sound& sound) {
+void ofApp::drawGeoms() {
+    ofPushStyle();
+    for (int i=0; i<layers.size(); i++) {
+        if (layers[i]->hasGeom()) {
+            ofSetColor(255);
+            ofPushMatrix();
+            ofTranslate(20+i*120+60, 0);
+            layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
+            ofPopMatrix();
+        }
+    }
+    ofPopStyle();
+}
+
+void ofApp::drawTextures() {
+    ofPushStyle();
+    for (int i=0; i<layers.size(); i++) {
+        if (layers[i]->shader.hasDefaultTexture()) {
+            ofSetColor(255);
+            layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, 0, 100, 100);
+        }
+        else {
+            ofFill();
+            ofSetColor(0);
+            ofDrawRectangle(20+i*120, 0, 100, 100);
+            ofSetColor(255);
+            ofDrawBitmapString("not loaded", 20+i*120, 20);
+        }
+    }
+    ofPopStyle();
+}
+
+void ofApp::drawMics() {
+    if (mics.size() > 0) {
+        for (int i=0; i<mics.size(); i++) {
+            ofPushMatrix();
+            ofTranslate((i+1)*20 + i*200, 0);
+            drawAmplitude(mics[i]);
+            ofPopMatrix();
+        }
+    }
+}
+
+void ofApp::drawSounds() {
+    if (sounds.size() > 0) {
+        for (int i=0; i<sounds.size(); i++) {
+            ofPushMatrix();
+            ofTranslate((i+1)*20 + i*200, 0);
+            drawAmplitude(sounds[i]);
+            ofPopMatrix();
+        }
+    }
+    // draw mfcc
+}
+
+void ofApp::drawAmplitude(Mic& sound) {
+    ofPushStyle();
     ofNoFill();
-    //ofSetColor(225);
-    ofDrawBitmapString("avg vol (0-100): " + ofToString(sound.ampScaled * 100.0, 0), 4, 18);
-    ofDrawRectangle(0, 0, 200, 200);
+    ofSetColor(225);
+    ofDrawBitmapString(ofToString(sound.ampScaled * 100.0, 0), 4, 18);
+    ofDrawRectangle(0, 0, 100, 100);
     ofFill();
-    ofDrawCircle(100, 100, sound.ampScaled * 140.0f);
+    ofDrawCircle(50, 50, sound.ampScaled * 100.0f);
     ofBeginShape();
     ofSetColor(245, 58, 135);
     for (unsigned int i = 0; i < sound.ampHist.size(); i++){
         float x = (float)i/2.f;
-        if( i == 0 ) ofVertex(x, 200);
-        ofVertex(x, 200 - sound.ampHist[i] * 70.f);
-        if( i == sound.ampHist.size() -1 ) ofVertex(x, 200);
+        if( i == 0 ) ofVertex(x, 100);
+        ofVertex(x, 100 - sound.ampHist[i] * 100.f);
+        if( i == sound.ampHist.size() -1 ) ofVertex(x, 100);
     }
     ofEndShape(false);
+    ofPopStyle();
 }
 
 void ofApp::exit() {

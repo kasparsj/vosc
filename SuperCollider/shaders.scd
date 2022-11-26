@@ -10,11 +10,11 @@
 // map glow shader var (uniform) to sine function
 ~visuals.sendMsg('/tex/var', 0, "glow", "sin");
 
-// initialize OSC_VJ SoundStream (only amplitude analysis)
-~visuals.sendMsg('/sound/stream', 0, "Microphone");
+// initialize Microphone
+~visuals.sendMsg('/mic', 0, "Microphone");
 
-// map glow shader var (uniform) to channel 1 amplitude
-~visuals.sendMsg('/tex/var', 0, "glow", "amp:0");
+// map glow shader var (uniform) to mic 1 amplitude
+~visuals.sendMsg('/tex/var', 0, "glow", "mic:0");
 ~visuals.sendMsg('/tex/var/range', 0, "glow", 10);
 
 // load Ether shader (from shadertoy)
@@ -23,8 +23,8 @@
 // animate shader color to blue in 10 seconds
 ~visuals.sendMsg('/tex/color', 0, 0, 0, 255, 10);
 
-// map shader color blue channel to amplitude
-~visuals.sendMsg('/tex/color', 0, 255, 255, "amp:0");
+// map shader color blue channel to mic 1 amplitude
+~visuals.sendMsg('/tex/color', 0, 255, 255, "mic:0");
 
 // map shader color red channel to tidal
 ~visuals.sendMsg('/tex/color', 0, "tidal:0", 255, 255);
