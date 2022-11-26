@@ -370,10 +370,15 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
         layer->behaviour = m.getArgAsInt(1);
     }
     else if (command == "/layer/visible") {
-        layer->setVar("visibleThresh", m);
+        layer->setVar("visible", m);
     }
-    else if (command == "/layer/onset") {
-        layer->setVar("onsetThresh", m);
+    else if (command == "/layer/solo") {
+        layer->setVar("visible", true);
+        for (int i=0; i<layers.size(); i++) {
+            if (layer != layers[i]) {
+                layers[i]->setVar("visible", false);
+            }
+        }
     }
 }
 
@@ -781,7 +786,7 @@ void ofApp::draw(){
     ofClear(0, 0, 0, 0);
     int totalVisible = 0;
     for (int i=0; i<layers.size(); i++) {
-        if (layers[i]->data.visible) {
+        if (layers[i]->getVarBool("visible")) {
             totalVisible++;
         }
     }

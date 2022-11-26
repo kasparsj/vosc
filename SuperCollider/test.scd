@@ -78,7 +78,3 @@
 ~visuals.sendMsg('/cam', "easy");
 ~visuals.sendMsg('/cam/pos', 0, 0, 3000, 10);
 ~visuals.sendMsg('/tex', 0, "0xff0000"); // load red color into first layer
-
-~visuals.sendMsg('/tex', 0, "shadertoy/StarNest.frag");
-~visuals.sendMsg('/tex/speed', 0, 0.1);
-~visuals.sendMsg('/tex/color', 0, 0.01);

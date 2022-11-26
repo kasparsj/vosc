@@ -13,6 +13,7 @@ public:
     Variable* getVariable(string name);
     bool hasVar(string name);
     float getVar(string name, int idx = 0);
+    bool getVarBool(string name, int idx = 0);
     glm::vec3 getVarVec3(string name, glm::vec3 defVal);
     glm::vec3 getVarVec3(string name) {
         return getVarVec3(name, glm::vec3());

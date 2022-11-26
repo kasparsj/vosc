@@ -20,6 +20,14 @@ float VarsHolder::getVar(string name, int idx) {
     return 0;
 }
 
+bool VarsHolder::getVarBool(string name, int idx) {
+    Variable* var = getVariable(name);
+    if (var != NULL) {
+        return var->getBool(idx);
+    }
+    return false;
+}
+
 vector<float> VarsHolder::getVarVec(string name) {
     Variable* var = getVariable(name);
     if (var != NULL) {

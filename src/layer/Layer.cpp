@@ -95,7 +95,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
 
 void Layer::draw(int totalVisible) {
     if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
-        if (data.visible) {
+        if (getVarBool("visible")) {
             switch (data.blendMode) {
                 case OF_BLENDMODE_ALPHA:
                     ofSetColor(255, 255, 255, 255 / totalVisible);
@@ -170,6 +170,7 @@ void Layer::reset() {
     unload();
     shader.reset();
     setVar("speed", 1.f);
+    setVar("visible", true);
     setVar("color", ofFloatColor(1.f, 1.f));
     setVar("tint", ofFloatColor(1.f, 1.f));
     resetTransform();

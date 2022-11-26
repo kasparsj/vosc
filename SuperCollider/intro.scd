@@ -27,6 +27,18 @@
 // load a random sketch in layer 4
 ~visuals.sendMsg('/tex/choose', 3, "sketch");
 
+// hide layer 1
+~visuals.sendMsg('/layer/visible', 0, false);
+
+// show layer 1
+~visuals.sendMsg('/layer/visible', 0, true);
+
+// solo layer 2
+~visuals.sendMsg('/layer/solo', 1);
+
+// show all layers
+~visuals.sendMsg('/layer/visible', "*", true);
+
 // unload all layers
 ~visuals.sendMsg('/tex', "*", "");
 

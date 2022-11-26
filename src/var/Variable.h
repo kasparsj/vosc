@@ -37,6 +37,13 @@ public:
     float get(int idx = 0) {
         return values[idx].get();
     }
+    int getInt(int idx = 0) {
+        return (int) get(idx);
+    }
+    bool getBool(int idx = 0) {
+        ofLog() << getInt(idx);
+        return getInt(idx) > 0;
+    }
     vector<float> getVec(int idx = 0) {
         vector<float> vec;
         for (int i=0; i<values.size(); i++) {
