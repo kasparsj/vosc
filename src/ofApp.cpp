@@ -641,8 +641,14 @@ void ofApp::processQueue() {
         if (command.substr(0, 5) == "/post") {
             post.getPasses().clear();
             for (int i=0; i<m.getNumArgs(); i++) {
-                string passName = m.getArgAsString(i);
-                createPostPass(passName);
+                if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+                    string passName = m.getArgAsString(i);
+                    createPostPass(passName);
+                }
+                else {
+                    int passId = m.getArgAsInt(i);
+                    createPostPass(passId);
+                }
             }
         }
         else {
@@ -768,6 +774,101 @@ void ofApp::createPostPass(string passName) {
     }
     else if (passName == "split") {
         post.createPass<itg::Split>();
+    }
+}
+
+void ofApp::createPostPass(int passId) {
+    switch (static_cast<PostPass>(passId)) {
+        case PostPass::BLOOM:
+            post.createPass<itg::BloomPass>();
+            break;
+        case PostPass::CONVOLUTION:
+            post.createPass<itg::ConvolutionPass>();
+            break;
+        case PostPass::DOF:
+            post.createPass<itg::DofPass>();
+            break;
+        case PostPass::DOFALT:
+            post.createPass<itg::DofAltPass>();
+            break;
+        case PostPass::EDGE:
+            post.createPass<itg::EdgePass>();
+            break;
+        case PostPass::FXAA:
+            post.createPass<itg::FxaaPass>();
+            break;
+        case PostPass::KALEIDOSCOPE:
+            post.createPass<itg::KaleidoscopePass>();
+            break;
+        case PostPass::NOISEWARP:
+            post.createPass<itg::NoiseWarpPass>();
+            break;
+        case PostPass::PIXELATE:
+            post.createPass<itg::PixelatePass>();
+            break;
+        case PostPass::LUT:
+            post.createPass<itg::LUTPass>();
+            break;
+        case PostPass::CONTRAST:
+            post.createPass<itg::ContrastPass>();
+            break;
+        case PostPass::SSAO:
+            post.createPass<itg::SSAOPass>();
+            break;
+        case PostPass::HTILTSHIFT:
+            post.createPass<itg::HorizontalTiltShifPass>();
+            break;
+        case PostPass::VTILTSHIFT:
+            post.createPass<itg::VerticalTiltShifPass>();
+            break;
+        case PostPass::RGBSHIFT:
+            post.createPass<itg::RGBShiftPass>();
+            break;
+        case PostPass::FAKESSS:
+            post.createPass<itg::FakeSSSPass>();
+            break;
+        case PostPass::ZOOMBLUR:
+            post.createPass<itg::ZoomBlurPass>();
+            break;
+        case PostPass::BLEACHBYPASS:
+            post.createPass<itg::BleachBypassPass>();
+            break;
+        case PostPass::TOON:
+            post.createPass<itg::ToonPass>();
+            break;
+        case PostPass::GODRAYS:
+            post.createPass<itg::GodRaysPass>();
+            break;
+        case PostPass::RIMHIGHLIGHTING:
+            post.createPass<itg::RimHighlightingPass>();
+            break;
+        case PostPass::LIMBDARKENING:
+            post.createPass<itg::LimbDarkeningPass>();
+            break;
+        case PostPass::INVERT:
+            post.createPass<itg::Invert>();
+            break;
+        case PostPass::GLITCH:
+            post.createPass<itg::Glitch>();
+            break;
+        case PostPass::ROTATE:
+            post.createPass<itg::Rotate>();
+            break;
+        case PostPass::PIXELSORT:
+            post.createPass<itg::Pixelsort>();
+            break;
+        case PostPass::BEYOON:
+            post.createPass<itg::Beyoon>();
+            break;
+        case PostPass::REFLECTX:
+            post.createPass<itg::ReflectX>();
+            break;
+        case PostPass::REFLECTY:
+            post.createPass<itg::ReflectY>();
+            break;
+        case PostPass::SPLIT:
+            post.createPass<itg::Split>();
+            break;
     }
 }
 

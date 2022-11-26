@@ -61,6 +61,7 @@ public:
     void materialCommand(ofMaterialSettings& matSettings, string command, const ofxOscMessage& m);
     
     void createPostPass(string passName);
+    void createPostPass(int passId);
 
     ofxOscReceiver receiver;
     vector<ofxOscMessage> messageQueue;
