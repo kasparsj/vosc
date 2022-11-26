@@ -41,11 +41,11 @@
 ~visuals.sendMsg('/tex/var', 0, "strokeAlpha", "mic");
 ~visuals.sendMsg('/tex/var/range', 0, "strokeAlpha", 50);
 
-// enable "easy" camera (can not be animated)
-~visuals.sendMsg('/cam', "easy");
-
-// enable "default" camera (can be animated)
+// enable "default" 3D camera
 ~visuals.sendMsg('/cam', "default");
+
+// enable "easy" 3D camera (can be moved with mouse)
+~visuals.sendMsg('/cam', "easy");
 
 // animate camera close-up
 ~visuals.sendMsg('/cam/pos', 0, 0, 100, 10);

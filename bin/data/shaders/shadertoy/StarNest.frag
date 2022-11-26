@@ -70,7 +70,7 @@ void main(void)
     }
     vec4 col = color;
     if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
-    v=mix(vec3(length(v)),v,saturation); //color adjust
+    v=mix(vec3(length(v)),v * col.rgb,saturation); //color adjust
     fragColor = vec4(v*.01, col.a);
     
 }

@@ -3,15 +3,19 @@
 
 Args Args::instance;
 
+float Args::parseIntOrFloat(const ofxOscMessage &m, int i) {
+    if (m.getArgType(i) == OFXOSC_TYPE_FLOAT) {
+        return m.getArgAsFloat(i);
+    }
+    else {
+        return m.getArgAsInt(i) / 255.f;
+    }
+}
+
 ofFloatColor Args::parseColor(const ofxOscMessage &m, int idx) {
     ofFloatColor color;
     for (int i=idx; i<min(idx+3, (int) m.getNumArgs()); i++) {
-        if (m.getArgType(i) == OFXOSC_TYPE_FLOAT) {
-            color[i-idx] = m.getArgAsFloat(i);
-        }
-        else {
-            color[i-idx] = m.getArgAsInt(i) / 255.f;
-        }
+        color[i-idx] = parseIntOrFloat(m, idx);
     }
     return color;
 }

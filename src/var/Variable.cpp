@@ -89,34 +89,41 @@ void Variable::set(const ofxOscMessage& m, int idx) {
 }
 
 void Variable::setColor(const ofxOscMessage& m, int idx) {
-    if (m.getArgType(idx) == OFXOSC_TYPE_STRING) {
-        if (m.getArgAsString(idx) == "lerp") {
+    if (m.getNumArgs() > idx+3) { // args > 3
+        if (m.getArgType(idx) == OFXOSC_TYPE_STRING && m.getArgAsString(idx) == "lerp") {
             ofFloatColor color = Args::getInstance().parseLerpColor(m, idx);
             values[0].set(color.r);
             values[1].set(color.r);
             values[2].set(color.r);
         }
         else {
-            for (int i=(idx+1); i<m.getNumArgs(); i++) {
-                if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-                    values[i-(idx+1)].set(m.getArgAsString(i));
-                }
-                else {
-                    values[i-(idx+1)].set(m.getArgAsFloat(i));
-                }
+            ofFloatColor targetColor = Args::getInstance().parseColor(m, idx);
+            vector<float> target = {targetColor.r, targetColor.g, targetColor.b};
+            tween(target, m.getArgAsFloat(4));
+        }
+    }
+    else if (m.getNumArgs() == idx + 3) { // args == 3
+        for (int i=(idx+1); i<m.getNumArgs(); i++) {
+            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+                values[i-(idx+1)].set(m.getArgAsString(i));
+            }
+            else {
+                values[i-(idx+1)].set(Args::getInstance().parseIntOrFloat(m, i));
             }
         }
     }
-    else if (m.getNumArgs() > idx+3) {
-        ofFloatColor targetColor = Args::getInstance().parseColor(m, idx);
-        vector<float> target = {targetColor.r, targetColor.g, targetColor.b};
-        tween(target, m.getArgAsFloat(4));
+    else if (m.getNumArgs() == idx + 1) { // args == 1
+        for (int i=0; i<3; i++) {
+            if (m.getArgType(idx) == OFXOSC_TYPE_STRING) {
+                values[i].set(m.getArgAsString(idx));
+            }
+            else {
+                values[i].set(Args::getInstance().parseIntOrFloat(m, idx));
+            }
+        }
     }
     else {
-        ofFloatColor color = Args::getInstance().parseColor(m, idx);
-        values[0].set(color.r);
-        values[1].set(color.g);
-        values[2].set(color.b);
+        ofLog() << m.getAddress() + " : invalid color format";
     }
 }
 

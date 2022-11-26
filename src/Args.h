@@ -26,6 +26,7 @@ public:
         args.updateColors();
     }
     
+    float parseIntOrFloat(const ofxOscMessage &m, int i = 0);
     ofFloatColor parseColor(const ofxOscMessage& m, int idx = 0);
     ofFloatColor parseLerpColor(const ofxOscMessage &m, int firstArg = 1);
     vector<float> parseAlign(const ofxOscMessage &m, int firstArg = 1);
