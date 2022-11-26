@@ -50,6 +50,8 @@
 - `/shader/set` [Set layer shader property](#shader-set)
 
 ## Layers
+- `/layer/visible` [Show/hide layer](#layer-visible)
+- `/layer/solo` [Hide all other layers](#layer-solo)
 - `/layer/pos` [Set layer position](#layer-position)
 - `/layer/size` [Set layer size](#layer-size)
 - `/layer/scale` [Set layer scale](#layer-scale)
@@ -231,7 +233,7 @@ Examples:
 ~visuals.sendMsg('/cam/set', "farClip", 10000);
 ~visuals.sendMsg('/cam/set', "globalPosition", 0, 0, -870);
 ~visuals.sendMsg('/cam/set', "distance", 1000); // only when camera is set to "easy"
-~visuals.sendMsg('/cam/set', "autoDistamce", false); // only when camera is set to "easy"
+~visuals.sendMsg('/cam/set', "autoDistance", false); // only when camera is set to "easy"
 ~visuals.sendMsg('/cam/set', "movementMaxSpeed", 1); // only when camera is set to "fp"
 ```
 
@@ -489,6 +491,32 @@ Examples:
 ```
 
 ## Layers
+
+### Layer visible
+
+`/layer/visible`
+
+Arguments:
+- **layer** (int|string) layer index
+- **visible** (bool) visibility
+
+Examples:
+```supercollider
+~visuals.sendMsg('/layer/visible', 0, false); // hide first layer
+~visuals.sendMsg('/layer/visible', 0, true); // show first layer
+```
+
+### Layer solo
+
+`/layer/solo`
+
+Arguments:
+- **layer** (int|string) layer index
+
+Examples:
+```supercollider
+~visuals.sendMsg('/layer/solo', 0); // hide all layers except first
+```
 
 ### Layer Position
 
