@@ -2,7 +2,6 @@ ofxAssimpModelLoader
 ofxAutoReloadedShader
 ofxColorTheory
 ofxEasing
-ofxExtremeGpuVideo
 ofxHPVPlayer
 ofxLooper
 ofxOsc

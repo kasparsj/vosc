@@ -10,12 +10,9 @@
 		01B036F302D9F069DEDCD4F7 /* GeomPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 553241ABDCDFB7E8685963FC /* GeomPool.cpp */; };
 		04C13EEA813A786CC1D8137A /* FxaaPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9425843AEC3118B8FDEF1B0B /* FxaaPass.cpp */; };
 		0546D1A38E13BD319CC9755B /* OscReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9BF3AA0D4FAA89D0F8A0E545 /* OscReceivedElements.cpp */; };
-		076302CCA669DA47E9F0B24B /* lz4.c in Sources */ = {isa = PBXBuildFile; fileRef = 787A97924FCF2F83978EEAD6 /* lz4.c */; };
-		07EFD2E92292EFC1444EAC1B /* GpuVideoOnGpuMemoryTexture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C9AEC73E2419044B33B8D988 /* GpuVideoOnGpuMemoryTexture.cpp */; };
 		07F0761DF15EC42437CC8402 /* ColorScheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7F9AE8283BEDCBB358ACC40A /* ColorScheme.cpp */; };
 		081251DFDA2F64A94FA7FE19 /* Layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BA986CF673F742569173F979 /* Layer.cpp */; };
 		08C23182D394C53F6ECE6CCC /* easing_terms_of_use.html in Sources */ = {isa = PBXBuildFile; fileRef = 528CB0EB22F0A199A5F479D5 /* easing_terms_of_use.html */; };
-		0C2321A5B95B5E2BD3098546 /* xxhash.c in Sources */ = {isa = PBXBuildFile; fileRef = 49390FE9328E35A41B61A103 /* xxhash.c */; };
 		114C00B13F753E59BB0984BB /* DofPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E837DEBFAEA1CAD833A377DF /* DofPass.cpp */; };
 		142F6F073EC205AF27861A96 /* FboPingPong.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C5845FA3D294EBD94FC41FA /* FboPingPong.cpp */; };
 		1516DF100C1636ACDFEAC173 /* FlippedCompound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 05F3D9211F202EAD5E2AA9FA /* FlippedCompound.cpp */; };
@@ -28,12 +25,9 @@
 		29DD298E0609B82CFFD50620 /* VarsHolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
 		2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
-		2BFD41E82932425A00BA7A50 /* GVVideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BFD41E62932425A00BA7A50 /* GVVideoTex.cpp */; };
 		2D7732D4AC34CDDBDCFE9699 /* Tex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 23AB9B54C418735665B1EBA6 /* Tex.cpp */; };
-		30E627DBAD346AC285BCB3B2 /* lz4hc.c in Sources */ = {isa = PBXBuildFile; fileRef = 50C2608E9759CEF677129FFA /* lz4hc.c */; };
 		33DB731E964056D7E35604A7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
 		3565AE7CE5956216CB234B8C /* SketchTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C2899CABC78CFBEDD426E85 /* SketchTex.cpp */; };
-		38FC2776261E578E0F51B4E6 /* GpuVideoReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AFD2FD33B4C1CB87B29CB68B /* GpuVideoReader.cpp */; };
 		3A499904889C490DCF533C6E /* BloomPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41ED8C8083845703AA1FDFA /* BloomPass.cpp */; };
 		3ADFF3A230AFB18B9106AA18 /* Args.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DAF2AD43C2034AE2562BD805 /* Args.cpp */; };
 		3B8120368B4FCCD80883BAF3 /* ofxAssimpAnimation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 36068D6C1D6D412786A5C4C1 /* ofxAssimpAnimation.cpp */; };
@@ -53,11 +47,9 @@
 		622F2B6B3FFAA37224C22AD2 /* ofxAutoReloadedShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */; };
 		62545D179C94265CA1389D4A /* OscOutboundPacketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */; };
 		640279EE111671BD026CB013 /* ofxOscReceiver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C2FAC65C491D4231379F3298 /* ofxOscReceiver.cpp */; };
-		671E6CB5530ACCB38EB0B46A /* GpuVideoStreamingTexture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63D6C683F2486F1FD9036E42 /* GpuVideoStreamingTexture.cpp */; };
 		67FE4C7B15C2F0478C8126C2 /* NetworkingUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3B361208CD4107E479F04E7B /* NetworkingUtils.cpp */; };
 		6A505EAE8088949A9180FFE7 /* GodRaysPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07AAE715D8853EDA76BC909 /* GodRaysPass.cpp */; };
 		6D05523FAB0501580B1205C7 /* TexturePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 189C978C54FE51E73B0EADFD /* TexturePool.cpp */; };
-		6D67B285D38C1F35CF0617B8 /* GpuVideoReaderDecompressed.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 46FA334DBA0B1DF3ACA95812 /* GpuVideoReaderDecompressed.cpp */; };
 		72A929D3561B8232A182ABFC /* ofxOscBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65EEFA3DA3526E9CDD9C21F9 /* ofxOscBundle.cpp */; };
 		778DCA6792476E5B9F57F175 /* ConvolutionPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3AACD9661AF21261E24A05A4 /* ConvolutionPass.cpp */; };
 		79308B05C4D0A9B9E404FFED /* BleachBypassPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C5313A8CC477A5ECC0A7E4E8 /* BleachBypassPass.cpp */; };
@@ -72,7 +64,6 @@
 		884CB4D049E35C51E949A565 /* KaleidoscopePass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 108C4DB0C398388D00027091 /* KaleidoscopePass.cpp */; };
 		898CB0955CB42FEB5D750A5C /* VerticalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */; };
 		8BFCFECF4A310811C6DB428F /* ImageTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 979A9A3F0546EBDE6212FB67 /* ImageTex.cpp */; };
-		8D8225A748A13519BB37C752 /* lz4frame.c in Sources */ = {isa = PBXBuildFile; fileRef = 42772E59F29D99864BA3FDE1 /* lz4frame.c */; };
 		8DED5056525646FA71980866 /* ofxAssimpModelLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE55D82BD962DAC0E94B708 /* ofxAssimpModelLoader.cpp */; };
 		8F5205AEF8861EF234F0651A /* ofxOscSender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 81967292BFC87A0144BD32C6 /* ofxOscSender.cpp */; };
 		9372598B7CC8667697717419 /* ShaderTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDAE40F4409B52242243517B /* ShaderTex.cpp */; };
@@ -120,7 +111,6 @@
 		E9CB645BF1929FB452798E95 /* ShaderPingPongTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4B1216CB6EB3A54B8A5A5D94 /* ShaderPingPongTex.cpp */; };
 		F0CC8EC812D9864680C703B1 /* LayerShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 788B25E9947816B8DFDCAF81 /* LayerShader.cpp */; };
 		F56110F5281631EA7D770D38 /* SplitComplementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4E2B4BC4A65212574815E669 /* SplitComplementary.cpp */; };
-		F82803B762DBA06C94D43A83 /* ofxExtremeGpuVideo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F2ED9FB55231452BB12BE07 /* ofxExtremeGpuVideo.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -155,11 +145,9 @@
 		0BC82FF9BACF54030E42E808 /* RGBShiftPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RGBShiftPass.h; path = ../../../addons/ofxPostProcessing/src/RGBShiftPass.h; sourceTree = SOURCE_ROOT; };
 		0D811F3E1817C17351F97CCF /* BleachBypassPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BleachBypassPass.h; path = ../../../addons/ofxPostProcessing/src/BleachBypassPass.h; sourceTree = SOURCE_ROOT; };
 		0D89BE3AA93DB4811A6135A4 /* Shader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Shader.cpp; path = src/Shader.cpp; sourceTree = SOURCE_ROOT; };
-		0D911E96B713DBA0A754BF67 /* ofxExtremeGpuVideo.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxExtremeGpuVideo.hpp; path = ../../../addons/ofxExtremeGpuVideo/src/ofxExtremeGpuVideo.hpp; sourceTree = SOURCE_ROOT; };
 		0E3FB6D73DB6B260295B6855 /* LogStream.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LogStream.hpp; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/LogStream.hpp; sourceTree = SOURCE_ROOT; };
 		108C4DB0C398388D00027091 /* KaleidoscopePass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = KaleidoscopePass.cpp; path = ../../../addons/ofxPostProcessing/src/KaleidoscopePass.cpp; sourceTree = SOURCE_ROOT; };
 		10BDAD77820FDBCBF144C28A /* lz4hc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = lz4hc.h; path = ../../../addons/ofxHPVPlayer/src/lz4hc.h; sourceTree = SOURCE_ROOT; };
-		116BA1DE070EA0D658025311 /* GpuVideo.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GpuVideo.hpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideo.hpp; sourceTree = SOURCE_ROOT; };
 		144656B571305328D7DB94BB /* LayerData.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerData.h; path = src/layer/LayerData.h; sourceTree = SOURCE_ROOT; };
 		14F8B4286F653202B881D865 /* ToonPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ToonPass.h; path = ../../../addons/ofxPostProcessing/src/ToonPass.h; sourceTree = SOURCE_ROOT; };
 		15644D27B8AD78E007263288 /* Rotate.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Rotate.cpp; path = ../../../addons/ofxPostProcessing/src/Rotate.cpp; sourceTree = SOURCE_ROOT; };
@@ -187,14 +175,11 @@
 		26149D52CBE031B3F154D862 /* defs.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = defs.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/defs.h; sourceTree = SOURCE_ROOT; };
 		273649FD41D6E3133519E9A9 /* DrawTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DrawTex.h; path = src/tex/DrawTex.h; sourceTree = SOURCE_ROOT; };
 		27F1AFE400331DE8F477F084 /* ColorWheelSchemes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ColorWheelSchemes.cpp; path = ../../../addons/ofxColorTheory/src/ColorWheelSchemes.cpp; sourceTree = SOURCE_ROOT; };
-		281A830445429C3D14A0A958 /* lz4frame_static.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = lz4frame_static.h; path = ../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/lz4frame_static.h; sourceTree = SOURCE_ROOT; };
 		28A42A2103C59E7D30E9D245 /* Exporter.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Exporter.hpp; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Exporter.hpp; sourceTree = SOURCE_ROOT; };
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
 		2B629E4DB07A45391A420283 /* importerdesc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = importerdesc.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/importerdesc.h; sourceTree = SOURCE_ROOT; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
-		2BFD41E62932425A00BA7A50 /* GVVideoTex.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = GVVideoTex.cpp; path = tex/GVVideoTex.cpp; sourceTree = "<group>"; };
-		2BFD41E72932425A00BA7A50 /* GVVideoTex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GVVideoTex.h; path = tex/GVVideoTex.h; sourceTree = "<group>"; };
 		2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VerticalTiltShifPass.cpp; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.cpp; sourceTree = SOURCE_ROOT; };
 		2E2EF60AF55D0A39EC1BAC78 /* Log.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Log.h; path = ../../../addons/ofxHPVPlayer/src/Log.h; sourceTree = SOURCE_ROOT; };
 		2FD4B0329909D3527F003494 /* UdpSocket.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = UdpSocket.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/UdpSocket.h; sourceTree = SOURCE_ROOT; };
@@ -206,7 +191,6 @@
 		36068D6C1D6D412786A5C4C1 /* ofxAssimpAnimation.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxAssimpAnimation.cpp; path = ../../../addons/ofxAssimpModelLoader/src/ofxAssimpAnimation.cpp; sourceTree = SOURCE_ROOT; };
 		3636DB6F4CB449A9812ADD41 /* HPVRenderBridge.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVRenderBridge.h; path = ../../../addons/ofxHPVPlayer/src/HPVRenderBridge.h; sourceTree = SOURCE_ROOT; };
 		3724F9226258771751FF584D /* Monochrome.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Monochrome.h; path = ../../../addons/ofxColorTheory/src/Rules/Monochrome.h; sourceTree = SOURCE_ROOT; };
-		3861A4935D9D45EA32DDEACF /* lz4frame.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = lz4frame.h; path = ../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/lz4frame.h; sourceTree = SOURCE_ROOT; };
 		3949FAF742820CE558F33AA4 /* Beyoon.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Beyoon.h; path = ../../../addons/ofxPostProcessing/src/Beyoon.h; sourceTree = SOURCE_ROOT; };
 		3A5C80FF2CE2833134509749 /* HPVPlayer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HPVPlayer.cpp; path = ../../../addons/ofxHPVPlayer/src/HPVPlayer.cpp; sourceTree = SOURCE_ROOT; };
 		3AACD9661AF21261E24A05A4 /* ConvolutionPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ConvolutionPass.cpp; path = ../../../addons/ofxPostProcessing/src/ConvolutionPass.cpp; sourceTree = SOURCE_ROOT; };
@@ -220,18 +204,14 @@
 		40E3B175D68EA99116024843 /* FramesBuffer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FramesBuffer.h; path = ../../../addons/ofxLooper/src/FramesBuffer.h; sourceTree = SOURCE_ROOT; };
 		4176D2EC3811F1A6586B49A5 /* Beyoon.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Beyoon.cpp; path = ../../../addons/ofxPostProcessing/src/Beyoon.cpp; sourceTree = SOURCE_ROOT; };
 		41DBF41AB15D7C33CA52C05F /* NullLogger.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NullLogger.hpp; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/NullLogger.hpp; sourceTree = SOURCE_ROOT; };
-		42772E59F29D99864BA3FDE1 /* lz4frame.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4frame.c; path = ../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/lz4frame.c; sourceTree = SOURCE_ROOT; };
 		42B5D460590D03DC3009F243 /* material.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = material.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/material.h; sourceTree = SOURCE_ROOT; };
 		42D77E59A87937F5313E468D /* postprocess.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = postprocess.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/postprocess.h; sourceTree = SOURCE_ROOT; };
 		444657A12E59D0ED86981498 /* TimerListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = TimerListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/TimerListener.h; sourceTree = SOURCE_ROOT; };
 		45858BC21D396ED266B2333D /* Lights.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Lights.cpp; path = src/Lights.cpp; sourceTree = SOURCE_ROOT; };
-		46D7B67B0DF4C5EC67D4A20C /* lz4hc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = lz4hc.h; path = ../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/lz4hc.h; sourceTree = SOURCE_ROOT; };
-		46FA334DBA0B1DF3ACA95812 /* GpuVideoReaderDecompressed.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GpuVideoReaderDecompressed.cpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideoReaderDecompressed.cpp; sourceTree = SOURCE_ROOT; };
 		476684E60F0DDA0792F989BB /* GeomPool.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GeomPool.h; path = src/GeomPool.h; sourceTree = SOURCE_ROOT; };
 		484F662699DFE8176E1B750F /* PostProcessing.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostProcessing.cpp; path = ../../../addons/ofxPostProcessing/src/PostProcessing.cpp; sourceTree = SOURCE_ROOT; };
 		48974F980F51769171D0B2F5 /* IpEndpointName.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IpEndpointName.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/IpEndpointName.h; sourceTree = SOURCE_ROOT; };
 		48E4AC9F455A87F0448C70B2 /* ofxPostProcessing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxPostProcessing.h; path = ../../../addons/ofxPostProcessing/src/ofxPostProcessing.h; sourceTree = SOURCE_ROOT; };
-		49390FE9328E35A41B61A103 /* xxhash.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = xxhash.c; path = ../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/xxhash.c; sourceTree = SOURCE_ROOT; };
 		49CAE27DC1D138037CF88ACF /* FxaaPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FxaaPass.h; path = ../../../addons/ofxPostProcessing/src/FxaaPass.h; sourceTree = SOURCE_ROOT; };
 		4B1216CB6EB3A54B8A5A5D94 /* ShaderPingPongTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ShaderPingPongTex.cpp; path = src/tex/ShaderPingPongTex.cpp; sourceTree = SOURCE_ROOT; };
 		4C14E0ED476E874ADE1E028D /* ColorWheelSchemes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ColorWheelSchemes.h; path = ../../../addons/ofxColorTheory/src/ColorWheelSchemes.h; sourceTree = SOURCE_ROOT; };
@@ -241,9 +221,9 @@
 		4E95FB446A9C9C6F0DE12D75 /* OscPrintReceivedElements.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscPrintReceivedElements.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPrintReceivedElements.h; sourceTree = SOURCE_ROOT; };
 		4FAE4A0F69A8990513603BDF /* ofxAssimpUtils.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAssimpUtils.h; path = ../../../addons/ofxAssimpModelLoader/src/ofxAssimpUtils.h; sourceTree = SOURCE_ROOT; };
 		50800DAB6C4B18E4F92166FC /* KaleidoscopePass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = KaleidoscopePass.h; path = ../../../addons/ofxPostProcessing/src/KaleidoscopePass.h; sourceTree = SOURCE_ROOT; };
-		50C2608E9759CEF677129FFA /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/lz4hc.c; sourceTree = SOURCE_ROOT; };
 		50E07179CDF66AF17198BE27 /* Triad.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Triad.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Triad.cpp; sourceTree = SOURCE_ROOT; };
 		5201F6A7A19258B7F1CA2E43 /* RGBShiftPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = RGBShiftPass.cpp; path = ../../../addons/ofxPostProcessing/src/RGBShiftPass.cpp; sourceTree = SOURCE_ROOT; };
+		5249E7D2B0713A5CB8D4C144 /* GVVideoTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GVVideoTex.h; path = src/tex/GVVideoTex.h; sourceTree = SOURCE_ROOT; };
 		528CB0EB22F0A199A5F479D5 /* easing_terms_of_use.html */ = {isa = PBXFileReference; explicitFileType = file; fileEncoding = 4; name = easing_terms_of_use.html; path = ../../../addons/ofxEasing/src/easing_terms_of_use.html; sourceTree = SOURCE_ROOT; };
 		5311A9F18B9148BAFDDC189B /* ColorScheme.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ColorScheme.h; path = ../../../addons/ofxColorTheory/src/ColorScheme.h; sourceTree = SOURCE_ROOT; };
 		532314368EF973BD38C13AED /* ofxHPVPlayer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxHPVPlayer.h; path = ../../../addons/ofxHPVPlayer/src/ofxHPVPlayer.h; sourceTree = SOURCE_ROOT; };
@@ -252,18 +232,15 @@
 		553241ABDCDFB7E8685963FC /* GeomPool.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GeomPool.cpp; path = src/GeomPool.cpp; sourceTree = SOURCE_ROOT; };
 		57B6FEE57FB75BD3A937508D /* Spiral.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Spiral.h; path = src/sketches/Spiral.h; sourceTree = SOURCE_ROOT; };
 		57C74E095B1FE59989E0607D /* Sound.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Sound.h; path = src/sound/Sound.h; sourceTree = SOURCE_ROOT; };
-		57DAF36D8A506C867C52398C /* GpuVideoStreamingTexture.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GpuVideoStreamingTexture.hpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideoStreamingTexture.hpp; sourceTree = SOURCE_ROOT; };
 		5AF416401E18FEEFFE3474AC /* Sound.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Sound.cpp; path = src/sound/Sound.cpp; sourceTree = SOURCE_ROOT; };
 		5BC56A60E911F7488A58830A /* NoiseWarpPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = NoiseWarpPass.cpp; path = ../../../addons/ofxPostProcessing/src/NoiseWarpPass.cpp; sourceTree = SOURCE_ROOT; };
 		5BE5C3443286643DF629CB82 /* Tetrad.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Tetrad.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Tetrad.cpp; sourceTree = SOURCE_ROOT; };
 		5C5845FA3D294EBD94FC41FA /* FboPingPong.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FboPingPong.cpp; path = src/FboPingPong.cpp; sourceTree = SOURCE_ROOT; };
 		5D55687EAFB7EC68378DC960 /* Shader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Shader.h; path = src/Shader.h; sourceTree = SOURCE_ROOT; };
 		5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VarsHolder.cpp; path = src/var/VarsHolder.cpp; sourceTree = SOURCE_ROOT; };
-		603E3CCD66900DAA0427746D /* GpuVideoOnGpuMemoryTexture.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GpuVideoOnGpuMemoryTexture.hpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideoOnGpuMemoryTexture.hpp; sourceTree = SOURCE_ROOT; };
 		61F771AD70983C40DF6B7287 /* WebcamTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = WebcamTex.h; path = src/tex/WebcamTex.h; sourceTree = SOURCE_ROOT; };
 		62DF624EA4A8C9432E9B5471 /* TexData.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = TexData.h; path = src/tex/TexData.h; sourceTree = SOURCE_ROOT; };
 		63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscOutboundPacketStream.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscOutboundPacketStream.cpp; sourceTree = SOURCE_ROOT; };
-		63D6C683F2486F1FD9036E42 /* GpuVideoStreamingTexture.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GpuVideoStreamingTexture.cpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideoStreamingTexture.cpp; sourceTree = SOURCE_ROOT; };
 		656BC845C8E483C3D9E3A7A2 /* LayerShader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerShader.h; path = src/layer/LayerShader.h; sourceTree = SOURCE_ROOT; };
 		65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxAutoReloadedShader.cpp; path = ../../../addons/ofxAutoReloadedShader/src/ofxAutoReloadedShader.cpp; sourceTree = SOURCE_ROOT; };
 		65EEFA3DA3526E9CDD9C21F9 /* ofxOscBundle.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscBundle.cpp; path = ../../../addons/ofxOsc/src/ofxOscBundle.cpp; sourceTree = SOURCE_ROOT; };
@@ -276,14 +253,12 @@
 		6B65E6930994CC4B2D2B8B33 /* OscPacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscPacketListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPacketListener.h; sourceTree = SOURCE_ROOT; };
 		6BBE5C9251660EA96B398017 /* SSAOPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SSAOPass.h; path = ../../../addons/ofxPostProcessing/src/SSAOPass.h; sourceTree = SOURCE_ROOT; };
 		6E069CE4C58E970E3429DBE5 /* Importer.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Importer.hpp; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Importer.hpp; sourceTree = SOURCE_ROOT; };
-		6F2ED9FB55231452BB12BE07 /* ofxExtremeGpuVideo.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxExtremeGpuVideo.cpp; path = ../../../addons/ofxExtremeGpuVideo/src/ofxExtremeGpuVideo.cpp; sourceTree = SOURCE_ROOT; };
 		73E0E4213D89C594715F8F14 /* HPVideoTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HPVideoTex.cpp; path = src/tex/HPVideoTex.cpp; sourceTree = SOURCE_ROOT; };
 		7462D018F6D6E407E598A021 /* PixelatePass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PixelatePass.cpp; path = ../../../addons/ofxPostProcessing/src/PixelatePass.cpp; sourceTree = SOURCE_ROOT; };
 		74BDDD14F49833AD24862E87 /* RimHighlightingPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = RimHighlightingPass.cpp; path = ../../../addons/ofxPostProcessing/src/RimHighlightingPass.cpp; sourceTree = SOURCE_ROOT; };
 		7648D86674A13C326B506A34 /* ReflectX.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ReflectX.cpp; path = ../../../addons/ofxPostProcessing/src/ReflectX.cpp; sourceTree = SOURCE_ROOT; };
 		7689F8A0F3D0B7635A8C3104 /* ofxOscArg.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscArg.h; path = ../../../addons/ofxOsc/src/ofxOscArg.h; sourceTree = SOURCE_ROOT; };
 		7809B234B888B369B724B134 /* ofxTidalCycles.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxTidalCycles.h; path = ../../../addons/ofxTidalCycles/src/ofxTidalCycles.h; sourceTree = SOURCE_ROOT; };
-		787A97924FCF2F83978EEAD6 /* lz4.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4.c; path = ../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/lz4.c; sourceTree = SOURCE_ROOT; };
 		788B25E9947816B8DFDCAF81 /* LayerShader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerShader.cpp; path = src/layer/LayerShader.cpp; sourceTree = SOURCE_ROOT; };
 		7920005E4069FBD68DF30F56 /* config.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = config.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/config.h; sourceTree = SOURCE_ROOT; };
 		79CDBBBAC046662F1A156238 /* HPVPlayer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVPlayer.h; path = ../../../addons/ofxHPVPlayer/src/HPVPlayer.h; sourceTree = SOURCE_ROOT; };
@@ -303,7 +278,6 @@
 		8B473495EAE4247AC1A851F1 /* ofxAssimpTexture.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAssimpTexture.h; path = ../../../addons/ofxAssimpModelLoader/src/ofxAssimpTexture.h; sourceTree = SOURCE_ROOT; };
 		8C75AFC8774A62495DD53464 /* ofxOscReceiver.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscReceiver.h; path = ../../../addons/ofxOsc/src/ofxOscReceiver.h; sourceTree = SOURCE_ROOT; };
 		8CA80722114B53E79572651A /* ofxHPVPLayer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxHPVPLayer.cpp; path = ../../../addons/ofxHPVPlayer/src/ofxHPVPLayer.cpp; sourceTree = SOURCE_ROOT; };
-		8D45EC656DDAA5295F219465 /* ofxGvTexture.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxGvTexture.hpp; path = ../../../addons/ofxExtremeGpuVideo/src/ofxGvTexture.hpp; sourceTree = SOURCE_ROOT; };
 		8DB1C887A35BD5BC43CB82DC /* SyncopationData.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SyncopationData.h; path = ../../../addons/ofxTidalCycles/src/SyncopationData.h; sourceTree = SOURCE_ROOT; };
 		8E9CE8F9BFE658E01E40193F /* VarsHolder.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VarsHolder.h; path = src/var/VarsHolder.h; sourceTree = SOURCE_ROOT; };
 		8FF82F2EF8EE6573368278E4 /* HPVManager.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVManager.h; path = ../../../addons/ofxHPVPlayer/src/HPVManager.h; sourceTree = SOURCE_ROOT; };
@@ -316,14 +290,12 @@
 		943E84164BBE12A26025530F /* FboTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FboTex.cpp; path = src/tex/FboTex.cpp; sourceTree = SOURCE_ROOT; };
 		968D72C0F70A6BE01FC2AACC /* ReflectX.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ReflectX.h; path = ../../../addons/ofxPostProcessing/src/ReflectX.h; sourceTree = SOURCE_ROOT; };
 		96EBF8A6CD3F11C79F7950BC /* cexport.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = cexport.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/cexport.h; sourceTree = SOURCE_ROOT; };
-		97248EAAE088FCBB1FF89936 /* GpuVideoReader.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GpuVideoReader.hpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideoReader.hpp; sourceTree = SOURCE_ROOT; };
 		979A9A3F0546EBDE6212FB67 /* ImageTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ImageTex.cpp; path = src/tex/ImageTex.cpp; sourceTree = SOURCE_ROOT; };
 		97AC5D82D06DAB2345FDB039 /* Config.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Config.h; path = src/Config.h; sourceTree = SOURCE_ROOT; };
 		98033501202172DF458BD6CF /* vector2.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = vector2.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/vector2.h; sourceTree = SOURCE_ROOT; };
 		982F6A4F410C2A639409070D /* Rotate.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Rotate.h; path = ../../../addons/ofxPostProcessing/src/Rotate.h; sourceTree = SOURCE_ROOT; };
 		9AACF31BAE533E8F81AD4043 /* LUTPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LUTPass.h; path = ../../../addons/ofxPostProcessing/src/LUTPass.h; sourceTree = SOURCE_ROOT; };
 		9B435A4BA28BC6C8A0546147 /* HPVEvent.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVEvent.h; path = ../../../addons/ofxHPVPlayer/src/HPVEvent.h; sourceTree = SOURCE_ROOT; };
-		9BB316E6D63D3ACC455E20A5 /* GpuVideoTexture.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GpuVideoTexture.hpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideoTexture.hpp; sourceTree = SOURCE_ROOT; };
 		9BF3AA0D4FAA89D0F8A0E545 /* OscReceivedElements.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscReceivedElements.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscReceivedElements.cpp; sourceTree = SOURCE_ROOT; };
 		9C5EDF65915908821C72E565 /* Monochrome.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Monochrome.cpp; path = ../../../addons/ofxColorTheory/src/Rules/Monochrome.cpp; sourceTree = SOURCE_ROOT; };
 		9CEAAB55A88E4C0DB6B6C5CC /* Analogous.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Analogous.h; path = ../../../addons/ofxColorTheory/src/Rules/Analogous.h; sourceTree = SOURCE_ROOT; };
@@ -342,14 +314,12 @@
 		ADD194746185E2DA11468377 /* IpEndpointName.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = IpEndpointName.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/IpEndpointName.cpp; sourceTree = SOURCE_ROOT; };
 		AE335EB4709BFD4671EEAC84 /* MessageMappingOscPacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = MessageMappingOscPacketListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/MessageMappingOscPacketListener.h; sourceTree = SOURCE_ROOT; };
 		AED6F84D8DABA623CAF59F13 /* color4.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = color4.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/color4.h; sourceTree = SOURCE_ROOT; };
-		AFD2FD33B4C1CB87B29CB68B /* GpuVideoReader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GpuVideoReader.cpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideoReader.cpp; sourceTree = SOURCE_ROOT; };
 		B01394EA79C42507A03541CE /* Pixelsort.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Pixelsort.h; path = ../../../addons/ofxPostProcessing/src/Pixelsort.h; sourceTree = SOURCE_ROOT; };
 		B2F3289AB405C5BB496FC247 /* PixelatePass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PixelatePass.h; path = ../../../addons/ofxPostProcessing/src/PixelatePass.h; sourceTree = SOURCE_ROOT; };
 		B31C608870ECEB2490A93736 /* ofxOscParameterSync.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscParameterSync.h; path = ../../../addons/ofxOsc/src/ofxOscParameterSync.h; sourceTree = SOURCE_ROOT; };
 		B5CEF0B83529626C7E8410B7 /* BloomPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BloomPass.h; path = ../../../addons/ofxPostProcessing/src/BloomPass.h; sourceTree = SOURCE_ROOT; };
 		B6F2EE44AD04FF549AB13699 /* ofxAssimpTexture.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxAssimpTexture.cpp; path = ../../../addons/ofxAssimpModelLoader/src/ofxAssimpTexture.cpp; sourceTree = SOURCE_ROOT; };
 		B71F45AC74EC99A2E020142E /* SceneCombiner.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SceneCombiner.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/SceneCombiner.h; sourceTree = SOURCE_ROOT; };
-		B763FF195392C1B8D926C89A /* lz4.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = lz4.h; path = ../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/lz4.h; sourceTree = SOURCE_ROOT; };
 		BA847296AB5A3AA63ADE748F /* FboPingPongTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FboPingPongTex.cpp; path = src/tex/FboPingPongTex.cpp; sourceTree = SOURCE_ROOT; };
 		BA986CF673F742569173F979 /* Layer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Layer.cpp; path = src/layer/Layer.cpp; sourceTree = SOURCE_ROOT; };
 		BAA4E229C246D7B615917505 /* ZoomBlurPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ZoomBlurPass.h; path = ../../../addons/ofxPostProcessing/src/ZoomBlurPass.h; sourceTree = SOURCE_ROOT; };
@@ -358,7 +328,6 @@
 		BE0E73D8B9FC77CB69667EE9 /* Glitch.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Glitch.cpp; path = ../../../addons/ofxPostProcessing/src/Glitch.cpp; sourceTree = SOURCE_ROOT; };
 		C07AAE715D8853EDA76BC909 /* GodRaysPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GodRaysPass.cpp; path = ../../../addons/ofxPostProcessing/src/GodRaysPass.cpp; sourceTree = SOURCE_ROOT; };
 		C127DCF305861E6D5D6332E6 /* SSAOPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = SSAOPass.cpp; path = ../../../addons/ofxPostProcessing/src/SSAOPass.cpp; sourceTree = SOURCE_ROOT; };
-		C135168C837029DBC2A14A06 /* GpuVideoIO.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GpuVideoIO.hpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideoIO.hpp; sourceTree = SOURCE_ROOT; };
 		C1638C371AC7701E1A4D6671 /* types.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = types.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/types.h; sourceTree = SOURCE_ROOT; };
 		C224E0400677911C78D08627 /* poppack1.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = poppack1.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler/poppack1.h; sourceTree = SOURCE_ROOT; };
 		C23F79F9BFBAD0F41FB354FD /* LayerData.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerData.cpp; path = src/layer/LayerData.cpp; sourceTree = SOURCE_ROOT; };
@@ -369,7 +338,6 @@
 		C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FakeSSSPass.cpp; path = ../../../addons/ofxPostProcessing/src/FakeSSSPass.cpp; sourceTree = SOURCE_ROOT; };
 		C6937888E126BADC8777423B /* OscTypes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscTypes.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscTypes.h; sourceTree = SOURCE_ROOT; };
 		C69CBE4E4FA9530657A6CD23 /* FakeSSSPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FakeSSSPass.h; path = ../../../addons/ofxPostProcessing/src/FakeSSSPass.h; sourceTree = SOURCE_ROOT; };
-		C9AEC73E2419044B33B8D988 /* GpuVideoOnGpuMemoryTexture.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GpuVideoOnGpuMemoryTexture.cpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideoOnGpuMemoryTexture.cpp; sourceTree = SOURCE_ROOT; };
 		CC725CAE0A003458E5573DF9 /* GodRaysPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GodRaysPass.h; path = ../../../addons/ofxPostProcessing/src/GodRaysPass.h; sourceTree = SOURCE_ROOT; };
 		CC95D6A4850BE0F8FFB7D5E5 /* Variable.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Variable.cpp; path = src/var/Variable.cpp; sourceTree = SOURCE_ROOT; };
 		CCA10A4CF59EBAE5E0E4916B /* Split.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Split.h; path = ../../../addons/ofxPostProcessing/src/Split.h; sourceTree = SOURCE_ROOT; };
@@ -378,12 +346,11 @@
 		D137AEF3D0655BB96F6362DD /* HPVRenderBridge.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HPVRenderBridge.cpp; path = ../../../addons/ofxHPVPlayer/src/HPVRenderBridge.cpp; sourceTree = SOURCE_ROOT; };
 		D1B370068072AAB890CD42D2 /* pstdint.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = pstdint.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler/pstdint.h; sourceTree = SOURCE_ROOT; };
 		D41ED8C8083845703AA1FDFA /* BloomPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = BloomPass.cpp; path = ../../../addons/ofxPostProcessing/src/BloomPass.cpp; sourceTree = SOURCE_ROOT; };
-		D4AD4FEDAEFF16FF6E2B1ADC /* xxhash.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = xxhash.h; path = ../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/xxhash.h; sourceTree = SOURCE_ROOT; };
 		D501EB9AF5A65F43CB972589 /* matrix3x3.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = matrix3x3.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/matrix3x3.h; sourceTree = SOURCE_ROOT; };
 		D5301F5F302421B58951EA4C /* HPVideoTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVideoTex.h; path = src/tex/HPVideoTex.h; sourceTree = SOURCE_ROOT; };
+		D6E0F285E0088E6733AC3D70 /* GVVideoTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GVVideoTex.cpp; path = src/tex/GVVideoTex.cpp; sourceTree = SOURCE_ROOT; };
 		D825FF1F1EA48B305BB428B7 /* scene.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = scene.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/scene.h; sourceTree = SOURCE_ROOT; };
 		D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = WebcamTex.cpp; path = src/tex/WebcamTex.cpp; sourceTree = SOURCE_ROOT; };
-		D95D4D10ED68E01CD3A2BE88 /* lz4opt.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = lz4opt.h; path = ../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/lz4opt.h; sourceTree = SOURCE_ROOT; };
 		D9696434C087642B807AB3BE /* Geom.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Geom.h; path = src/Geom.h; sourceTree = SOURCE_ROOT; };
 		D9BFFBBF4CC43DEE890B3C3E /* OscTypes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscTypes.cpp; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscTypes.cpp; sourceTree = SOURCE_ROOT; };
 		DACACDF2F37260A0BFF826E2 /* PostProcessing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PostProcessing.h; path = ../../../addons/ofxPostProcessing/src/PostProcessing.h; sourceTree = SOURCE_ROOT; };
@@ -603,7 +570,6 @@
 		F98D3119B492CAFA65819DDA /* ContrastPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ContrastPass.h; path = ../../../addons/ofxPostProcessing/src/ContrastPass.h; sourceTree = SOURCE_ROOT; };
 		F9E69702DE151AD76690D1CF /* NoiseWarpPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoiseWarpPass.h; path = ../../../addons/ofxPostProcessing/src/NoiseWarpPass.h; sourceTree = SOURCE_ROOT; };
 		FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HorizontalTiltShifPass.cpp; path = ../../../addons/ofxPostProcessing/src/HorizontalTiltShifPass.cpp; sourceTree = SOURCE_ROOT; };
-		FC7F18CCFE6C143A2F80F7A1 /* GpuVideoReaderDecompressed.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GpuVideoReaderDecompressed.hpp; path = ../../../addons/ofxExtremeGpuVideo/src/GpuVideoReaderDecompressed.hpp; sourceTree = SOURCE_ROOT; };
 		FD83632739D59856DDAE820E /* ColorWheelScheme.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ColorWheelScheme.h; path = ../../../addons/ofxColorTheory/src/ColorWheelScheme.h; sourceTree = SOURCE_ROOT; };
 		FE6A0B50D6798FC3BC6A087A /* VariablePool.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VariablePool.cpp; path = src/var/VariablePool.cpp; sourceTree = SOURCE_ROOT; };
 		FE960CC357E122F0C4FF2170 /* Defines.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Defines.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Defines.h; sourceTree = SOURCE_ROOT; };
@@ -706,14 +672,6 @@
 			name = osc;
 			sourceTree = "<group>";
 		};
-		319B083E9C5BB5E80B87E353 /* libs */ = {
-			isa = PBXGroup;
-			children = (
-				5C11E92FF5280F1591B3F348 /* lz4 */,
-			);
-			name = libs;
-			sourceTree = "<group>";
-		};
 		348096EAEFAC358FDD5E584A /* src */ = {
 			isa = PBXGroup;
 			children = (
@@ -763,23 +721,6 @@
 			name = ofxAutoReloadedShader;
 			sourceTree = "<group>";
 		};
-		418BEEB59DB9672FB257D1C7 /* lib */ = {
-			isa = PBXGroup;
-			children = (
-				787A97924FCF2F83978EEAD6 /* lz4.c */,
-				B763FF195392C1B8D926C89A /* lz4.h */,
-				42772E59F29D99864BA3FDE1 /* lz4frame.c */,
-				3861A4935D9D45EA32DDEACF /* lz4frame.h */,
-				281A830445429C3D14A0A958 /* lz4frame_static.h */,
-				50C2608E9759CEF677129FFA /* lz4hc.c */,
-				46D7B67B0DF4C5EC67D4A20C /* lz4hc.h */,
-				D95D4D10ED68E01CD3A2BE88 /* lz4opt.h */,
-				49390FE9328E35A41B61A103 /* xxhash.c */,
-				D4AD4FEDAEFF16FF6E2B1ADC /* xxhash.h */,
-			);
-			name = lib;
-			sourceTree = "<group>";
-		};
 		52343BA855243688E36D6D1C /* AndroidJNI */ = {
 			isa = PBXGroup;
 			children = (
@@ -788,29 +729,12 @@
 			name = AndroidJNI;
 			sourceTree = "<group>";
 		};
-		5487DBC255734D03D2C57786 /* ofxExtremeGpuVideo */ = {
-			isa = PBXGroup;
-			children = (
-				319B083E9C5BB5E80B87E353 /* libs */,
-				E69EECAC14CD659E76D4BA65 /* src */,
-			);
-			name = ofxExtremeGpuVideo;
-			sourceTree = "<group>";
-		};
 		59905D957FDE48902CF1F729 /* assimp */ = {
 			isa = PBXGroup;
 			children = (
 				EEFDD7AE0009AE6F77EF2A93 /* include */,
 			);
 			name = assimp;
-			sourceTree = "<group>";
-		};
-		5C11E92FF5280F1591B3F348 /* lz4 */ = {
-			isa = PBXGroup;
-			children = (
-				418BEEB59DB9672FB257D1C7 /* lib */,
-			);
-			name = lz4;
 			sourceTree = "<group>";
 		};
 		641362CA659FAFEE4E81001B /* posix */ = {
@@ -1024,7 +948,6 @@
 				38A85F4B8B6D987F0B0390B2 /* ofxAutoReloadedShader */,
 				3562C67D15F76BC0790BF0A7 /* ofxColorTheory */,
 				0D0595A62FF5ED8D37029107 /* ofxEasing */,
-				5487DBC255734D03D2C57786 /* ofxExtremeGpuVideo */,
 				8A339919FA87B6FC5F1F0447 /* ofxHPVPlayer */,
 				860077A874ED877AC187ABA4 /* ofxLooper */,
 				E6053AB7FEC63D5F83825B88 /* ofxOsc */,
@@ -1070,8 +993,8 @@
 				DC9745FB6AABDD0D0943D7F4 /* FboPingPongTex.h */,
 				943E84164BBE12A26025530F /* FboTex.cpp */,
 				889CA2DFB0F83D1DC5991A62 /* FboTex.h */,
-				2BFD41E62932425A00BA7A50 /* GVVideoTex.cpp */,
-				2BFD41E72932425A00BA7A50 /* GVVideoTex.h */,
+				D6E0F285E0088E6733AC3D70 /* GVVideoTex.cpp */,
+				5249E7D2B0713A5CB8D4C144 /* GVVideoTex.h */,
 				73E0E4213D89C594715F8F14 /* HPVideoTex.cpp */,
 				D5301F5F302421B58951EA4C /* HPVideoTex.h */,
 				979A9A3F0546EBDE6212FB67 /* ImageTex.cpp */,
@@ -1515,27 +1438,6 @@
 			name = ofxOsc;
 			sourceTree = "<group>";
 		};
-		E69EECAC14CD659E76D4BA65 /* src */ = {
-			isa = PBXGroup;
-			children = (
-				116BA1DE070EA0D658025311 /* GpuVideo.hpp */,
-				C135168C837029DBC2A14A06 /* GpuVideoIO.hpp */,
-				C9AEC73E2419044B33B8D988 /* GpuVideoOnGpuMemoryTexture.cpp */,
-				603E3CCD66900DAA0427746D /* GpuVideoOnGpuMemoryTexture.hpp */,
-				AFD2FD33B4C1CB87B29CB68B /* GpuVideoReader.cpp */,
-				97248EAAE088FCBB1FF89936 /* GpuVideoReader.hpp */,
-				46FA334DBA0B1DF3ACA95812 /* GpuVideoReaderDecompressed.cpp */,
-				FC7F18CCFE6C143A2F80F7A1 /* GpuVideoReaderDecompressed.hpp */,
-				63D6C683F2486F1FD9036E42 /* GpuVideoStreamingTexture.cpp */,
-				57DAF36D8A506C867C52398C /* GpuVideoStreamingTexture.hpp */,
-				9BB316E6D63D3ACC455E20A5 /* GpuVideoTexture.hpp */,
-				6F2ED9FB55231452BB12BE07 /* ofxExtremeGpuVideo.cpp */,
-				0D911E96B713DBA0A754BF67 /* ofxExtremeGpuVideo.hpp */,
-				8D45EC656DDAA5295F219465 /* ofxGvTexture.hpp */,
-			);
-			name = src;
-			sourceTree = "<group>";
-		};
 		E78F8991E56DEF594815BB53 /* src */ = {
 			isa = PBXGroup;
 			children = (
@@ -1714,15 +1616,6 @@
 				C6D227F5B8C686EF7F391BA6 /* Tetrad.cpp in Sources */,
 				8753347E0F4B731B6D71538C /* Triad.cpp in Sources */,
 				08C23182D394C53F6ECE6CCC /* easing_terms_of_use.html in Sources */,
-				076302CCA669DA47E9F0B24B /* lz4.c in Sources */,
-				8D8225A748A13519BB37C752 /* lz4frame.c in Sources */,
-				30E627DBAD346AC285BCB3B2 /* lz4hc.c in Sources */,
-				0C2321A5B95B5E2BD3098546 /* xxhash.c in Sources */,
-				07EFD2E92292EFC1444EAC1B /* GpuVideoOnGpuMemoryTexture.cpp in Sources */,
-				38FC2776261E578E0F51B4E6 /* GpuVideoReader.cpp in Sources */,
-				6D67B285D38C1F35CF0617B8 /* GpuVideoReaderDecompressed.cpp in Sources */,
-				671E6CB5530ACCB38EB0B46A /* GpuVideoStreamingTexture.cpp in Sources */,
-				F82803B762DBA06C94D43A83 /* ofxExtremeGpuVideo.cpp in Sources */,
 				BAA2B779786EEE23A27F8E12 /* HPVManager.cpp in Sources */,
 				AF62A2E601FF59EB71F6D587 /* HPVPlayer.cpp in Sources */,
 				B4217C980B30B54D3489F8BE /* HPVRenderBridge.cpp in Sources */,
@@ -1741,7 +1634,6 @@
 				879A251454401BC0B6E4F238 /* OscTypes.cpp in Sources */,
 				72A929D3561B8232A182ABFC /* ofxOscBundle.cpp in Sources */,
 				5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */,
-				2BFD41E82932425A00BA7A50 /* GVVideoTex.cpp in Sources */,
 				4ADB88E2FB52E76A471065DE /* ofxOscParameterSync.cpp in Sources */,
 				640279EE111671BD026CB013 /* ofxOscReceiver.cpp in Sources */,
 				8F5205AEF8861EF234F0651A /* ofxOscSender.cpp in Sources */,
@@ -1831,12 +1723,6 @@
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/doc,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll/example,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/tests,
-					../../../addons/ofxExtremeGpuVideo/src,
 					../../../addons/ofxHPVPlayer/src,
 					../../../addons/ofxLooper/src,
 					../../../addons/ofxOsc/libs,
@@ -1892,12 +1778,6 @@
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/doc,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll/example,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/tests,
-					../../../addons/ofxExtremeGpuVideo/src,
 					../../../addons/ofxHPVPlayer/src,
 					../../../addons/ofxLooper/src,
 					../../../addons/ofxOsc/libs,
@@ -1973,12 +1853,6 @@
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/doc,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll/example,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/tests,
-					../../../addons/ofxExtremeGpuVideo/src,
 					../../../addons/ofxHPVPlayer/src,
 					../../../addons/ofxLooper/src,
 					../../../addons/ofxOsc/libs,
@@ -2045,12 +1919,6 @@
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/doc,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll/example,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/tests,
-					../../../addons/ofxExtremeGpuVideo/src,
 					../../../addons/ofxHPVPlayer/src,
 					../../../addons/ofxLooper/src,
 					../../../addons/ofxOsc/libs,
@@ -2106,12 +1974,6 @@
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/doc,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll/example,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/tests,
-					../../../addons/ofxExtremeGpuVideo/src,
 					../../../addons/ofxHPVPlayer/src,
 					../../../addons/ofxLooper/src,
 					../../../addons/ofxOsc/libs,
@@ -2176,12 +2038,6 @@
 					../../../addons/ofxColorTheory/src,
 					../../../addons/ofxColorTheory/src/Rules,
 					../../../addons/ofxEasing/src,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/doc,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/lib/dll/example,
-					../../../addons/ofxExtremeGpuVideo/libs/lz4/tests,
-					../../../addons/ofxExtremeGpuVideo/src,
 					../../../addons/ofxHPVPlayer/src,
 					../../../addons/ofxLooper/src,
 					../../../addons/ofxOsc/libs,
