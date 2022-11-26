@@ -11,7 +11,7 @@
 - `g` toggle OpenGL info
 
 ## Setup
-- `/sound/stream` [Setup sound stream](#sound-stream)
+- `/mic` [Setup microphone input](#setup-microphone)
 - `/sound/data` [Update sound data from SC](#sound-data)
 - `/layers` [Setup layers](#setup-layers)
 - `/layers/layout` [Change layout](#change-layout)
@@ -84,20 +84,21 @@
 
 ## Setup
 
-### Sound Stream
+### Setup microphone
 
-`/sound/stream`
+`/mic`
 
 Arguments:
-- **sound** (int) sound index
+- **mic** (int) mic index
+- **name** (string) device name
 - numChannels (int)
 - bufferSize (int)
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/sound/stream', 0); // setup OF sound listener
-~visuals.sendMsg('/sound/stream', 0, 2); // setup OF sound listener with 2 channels
-~visuals.sendMsg('/sound/stream', 0, 0); // close OF sound listener
+~visuals.sendMsg('/mic', 0, "Microphone"); // setup microphone (must have "Microphone" in device name)
+~visuals.sendMsg('/mic', 0, "Microphone", 2); // setup microphone with 2 channels
+~visuals.sendMsg('/mic', 0, "Microphone", 0); // close microphone
 ```
 
 ### Sound Data
@@ -716,6 +717,8 @@ Examples:
 - `"rand"`
 - `"noise"`
 - `"sin"`
+- `"cos"`
+- `"mic"`
 - `"amp"`
 - `"loud"`
 - `"onset"`
