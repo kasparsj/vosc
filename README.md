@@ -195,7 +195,14 @@ Arguments:
 
 Examples:
 ```supercollider
+~visuals.sendMsg('/cam/pos', 1, 2, 100); // set camera position
 ~visuals.sendMsg('/cam/pos', 0, 0, -3000, 10); // zoom out camera over 10 seconds
+
+// map camera distance to a sine variable oscillating between 400 and 500
+~visuals.sendMsg('/var', "sine_osc", "sin");
+~visuals.sendMsg('/var/range', "sine_osc", 400, 1500);
+// map camera's z coordinate to sine_osc variable
+~visuals.sendMsg('/cam/pos', 0, 0, "sine_osc");
 ```
 
 ### Camera look
