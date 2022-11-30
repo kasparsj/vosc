@@ -2,8 +2,10 @@
 #include "Args.h"
 #include "Config.h"
 #include "TexData.h"
+#include "VariablePool.h"
 
 void Value::set(string type) {
+    float value = 0.f;
     if (type.substr(0, 3) == "mic" || type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
         size_t col = type.find(":");
         if (col != std::string::npos) {
@@ -28,11 +30,20 @@ void Value::set(string type) {
         type = "tidal";
         // todo: validate subtype
     }
-    else if (DataSourceMap.find(type) == DataSourceMap.end()) {
+    else if (DataSourceMap.find(type) != DataSourceMap.end()) {
+        
+    }
+    else if (VariablePool::getShared(type) != NULL) {
+        Variable* var = VariablePool::getShared(type);
+        ref = type;
+        type = "var";
+        value = var->get();
+    }
+    else {
         ofLog() << "invalid var type: " + type;
     }
     this->type = type;
-    this->value = 0.f;
+    this->value = value;
 }
 
 void Value::set(float value) {
@@ -144,6 +155,9 @@ void Value::update(const vector<Mic> &mics, const vector<Sound> &sounds, int ind
             value = 0;
             ofLog() << "mic not available:" + ofToString(chan);
         }
+    }
+    else if (type == "var") {
+        value = VariablePool::getShared(ref)->get();
     }
 }
 

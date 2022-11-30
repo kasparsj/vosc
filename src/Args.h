@@ -31,6 +31,7 @@ public:
     ofFloatColor parseLerpColor(const ofxOscMessage &m, int firstArg = 1);
     vector<float> parseAlign(const ofxOscMessage &m, int firstArg = 1);
     void handleFloat(float* value, const ofxOscMessage& m, int firstArg = 1);
+    void setFloat(float* value, const ofxOscMessage& m, int firstArg = 1);
     void handlePercent(float* value, const ofxOscMessage& m, int firstArg = 1);
     void handleVec3(glm::vec3* value, const ofxOscMessage& m, int firstArg = 1);
     void tweenVec3(glm::vec3* value, const ofxOscMessage& m, int firstArg = 1);

@@ -18,6 +18,14 @@ void ofApp::setup(){
     windowResized(ofGetWidth(), ofGetHeight());
     
     ofDisableArbTex();
+    
+    camPos = VariablePool::getShared("camPos", true);
+    camPos->isVec3 = true;
+    camPos->set(glm::vec3(0, 0, -870));
+    
+    camLook = VariablePool::getShared("camLook", true);
+    camLook->isVec3 = true;
+    camLook->set(glm::vec3(0));
 }
 
 void ofApp::setupLayers(int numVisuals) {
@@ -58,11 +66,9 @@ void ofApp::update(){
 		layers[i]->update(mics, sounds, tidal->notes);
 	}
     if (cam != NULL) {
+        cam->setPosition(camPos->getVec3());
+        cam->lookAt(camLook->getVec3());
         ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
-        if (easyCam == NULL || !easyCam->getMouseInputEnabled()) {
-            cam->setPosition(camPos);
-            cam->lookAt(camLook);
-        }
         if (camOrbitPerSecond != 0 && easyCam != NULL) {
             camOrbit += ofGetLastFrameTime() * camOrbitPerSecond;
             easyCam->orbitDeg(camOrbit, 0., easyCam->getDistance(), {0., 0., 0.});
@@ -222,10 +228,10 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
                 function<void()> onComplete = [easyCam]() {
                     easyCam->enableMouseInput();
                 };
-                Args::getInstance().tweenVec3(&camPos, m, 0, onComplete);
+                camPos->tweenVec3(m, 0, onComplete);
             }
             else {
-                Args::getInstance().handleVec3(&camPos, m, 0);
+                camPos->setVec3(m, 0);
             }
         }
         else if (command == "/cam/look") {
@@ -237,10 +243,10 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
                 function<void()> onComplete = [easyCam]() {
                     easyCam->enableMouseInput();
                 };
-                Args::getInstance().tweenVec3(&camLook, m, 0, onComplete);
+                camLook->tweenVec3(m, 0, onComplete);
             }
             else {
-                Args::getInstance().handleVec3(&camLook, m, 0);
+                camLook->setVec3(m, 0);
             }
         }
         else if (command == "/cam/orbit") {

@@ -28,63 +28,84 @@ void Variable::set(ofFloatColor value) {
 void Variable::set(const ofxOscMessage& m, int idx) {
     string command = m.getAddress();
     if (command.length() >= 4 && command.substr(command.length()-4) == "/var") {
-        values.resize(m.getNumArgs() - idx);
-        for (int i=idx; i<m.getNumArgs(); i++) {
-            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-                values[(i-idx)].set(m.getArgAsString(i));
-            }
-            else {
-                values[(i-idx)].set(m.getArgAsFloat(i));
-            }
-        }
+        init(m, idx);
     }
     else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/range") {
-        for  (int i=0; i<values.size(); i++) {
-            if (m.getNumArgs() == idx + 1) {
-                Args::getInstance().handleFloat(&values[i].rangeFrom, m, idx);
-            }
-            else if (m.getNumArgs() == idx + 2) {
-                if (values.size() == 2) {
-                    Args::getInstance().handleFloat(&values[i].rangeFrom, m, idx+i);
-                }
-                else {
-                    Args::getInstance().handleFloat(&values[i].rangeFrom, m, idx);
-                    Args::getInstance().handleFloat(&values[i].rangeTo, m, idx+1);
-                }
-            }
-            else if (m.getNumArgs() == idx + values.size()*2) {
-                Args::getInstance().handleFloat(&values[i].rangeFrom, m, idx+i);
-                Args::getInstance().handleFloat(&values[i].rangeTo, m, idx+values.size()+i);
-            }
-            else {
-                ofLog() << "unsupported /var/range format";
-            }
-        }
+        setRange(m, idx);
     }
     else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/speed") {
-        for  (int i=0; i<values.size(); i++) {
-            if (m.getNumArgs() == idx + 1) {
-                Args::getInstance().handleFloat(&values[i].speed, m, idx);
-            }
-            else if (m.getNumArgs() == idx + values.size()) {
-                Args::getInstance().handleFloat(&values[i].speed, m, idx+i);
+        setSpeed(m, idx);
+    }
+    else {
+        setValue(m, idx);
+    }
+}
+
+void Variable::init(const ofxOscMessage& m, int idx) {
+    values.resize(m.getNumArgs() - idx);
+    for (int i=idx; i<m.getNumArgs(); i++) {
+        if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+            values[(i-idx)].set(m.getArgAsString(i));
+        }
+        else {
+            values[(i-idx)].set(m.getArgAsFloat(i));
+        }
+    }
+}
+
+void Variable::setRange(const ofxOscMessage& m, int idx) {
+    for  (int i=0; i<values.size(); i++) {
+        if (m.getNumArgs() == idx + 1) {
+            Args::getInstance().setFloat(&values[i].rangeFrom, m, idx);
+        }
+        else if (m.getNumArgs() == idx + 2) {
+            if (values.size() == 2) {
+                Args::getInstance().setFloat(&values[i].rangeFrom, m, idx+i);
             }
             else {
-                ofLog() << "unsupported /var/speed format";
+                Args::getInstance().setFloat(&values[i].rangeFrom, m, idx);
+                Args::getInstance().setFloat(&values[i].rangeTo, m, idx+1);
             }
+        }
+        else if (m.getNumArgs() == idx + values.size()*2) {
+            Args::getInstance().setFloat(&values[i].rangeFrom, m, idx+i);
+            Args::getInstance().setFloat(&values[i].rangeTo, m, idx+values.size()+i);
+        }
+        else {
+            ofLog() << "unsupported /var/range format";
+        }
+    }
+}
+
+void Variable::setSpeed(const ofxOscMessage& m, int idx) {
+    for  (int i=0; i<values.size(); i++) {
+        if (m.getNumArgs() == idx + 1) {
+            Args::getInstance().handleFloat(&values[i].speed, m, idx);
+        }
+        else if (m.getNumArgs() == idx + values.size()) {
+            Args::getInstance().handleFloat(&values[i].speed, m, idx+i);
+        }
+        else {
+            ofLog() << "unsupported /var/speed format";
+        }
+    }
+}
+
+void Variable::setValue(const ofxOscMessage& m, int idx) {
+    // target, value1, value2, value3
+    if (isColor) {
+        setColor(m, idx);
+    }
+    else if (isVec3) {
+        if (m.getNumArgs() == idx + 4) { // 4 args
+            tweenVec3(m, idx);
+        }
+        else {
+            setVec3(m, idx);
         }
     }
     else {
-        // target, value1, value2, value3
-        if (isColor) {
-            setColor(m, idx);
-        }
-        else if (isVec3) {
-            setVec3(m, idx);
-        }
-        else {
-            setFloat(m, idx);
-        }
+        setFloat(m, idx);
     }
 }
 
@@ -129,11 +150,7 @@ void Variable::setColor(const ofxOscMessage& m, int idx) {
 
 void Variable::setVec3(const ofxOscMessage &m, int idx) {
     values.resize(3);
-    if (m.getNumArgs() == idx + 4) { // 4 args
-        vector<float> target = {m.getArgAsFloat(idx), m.getArgAsFloat(idx+1), m.getArgAsFloat(idx+2)};
-        tween(target, m.getArgAsFloat(idx+3));
-    }
-    else if (m.getNumArgs() == idx + 3) { // 3 args
+    if (m.getNumArgs() == idx + 3) { // 3 args
         for (int i=idx; i<m.getNumArgs(); i++) {
             if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
                 values[i-idx].set(m.getArgAsString(i));
@@ -167,6 +184,11 @@ void Variable::setVec3(const ofxOscMessage &m, int idx) {
     }
 }
 
+void Variable::tweenVec3(const ofxOscMessage &m, int idx, function<void()> onComplete) {
+    vector<float> target = {m.getArgAsFloat(idx), m.getArgAsFloat(idx+1), m.getArgAsFloat(idx+2)};
+    tween(target, m.getArgAsFloat(idx+3), onComplete);
+}
+
 void Variable::setFloat(const ofxOscMessage& m, int idx) {
     values.resize(m.getNumArgs()-idx);
     for (int i=0; i<values.size(); i++) {
@@ -174,9 +196,9 @@ void Variable::setFloat(const ofxOscMessage& m, int idx) {
     }
 }
 
-void Variable::tween(const vector<float>& target, float dur, ofxeasing::function ease) {
+void Variable::tween(const vector<float>& target, float dur, function<void()> onComplete, ofxeasing::function ease) {
     for (int i=0; i<values.size(); i++) {
-        values[i].tween(target[i], dur, ease);
+        values[i].tween(target[i], dur, onComplete, ease);
     }
 }
 

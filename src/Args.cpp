@@ -121,8 +121,12 @@ void Args::handleFloat(float* value, const ofxOscMessage &m, int i) {
         }
     }
     else {
-        *value = m.getArgAsFloat(i);
+        setFloat(value, m, i);
     }
+}
+
+void Args::setFloat(float* value, const ofxOscMessage& m, int i) {
+    *value = m.getArgAsFloat(i);
 }
 
 void Args::handlePercent(float *value, const ofxOscMessage &m, int i) {
