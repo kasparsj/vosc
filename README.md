@@ -9,15 +9,15 @@ See [SuperCollider](SuperCollider) folder for examples.
 
 **For all other OS:** clone the repository into your openFrameworks apps folder, then use project generator to generate project files, then build.
 
-# Command overview
-
-## Keyboard shortcuts
+# Keyboard shortcuts
 
 - `f` toggle fullscreen
 
 - `d` toggle debug view
 
 - `g` toggle OpenGL info
+
+# Command overview
 
 ## Setup
 - `/mic` [Setup microphone input](#setup-microphone)
