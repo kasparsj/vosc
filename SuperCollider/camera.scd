@@ -18,9 +18,11 @@
 ~visuals.sendMsg('/cam/pos', 0, 0, 870, 10);
 
 // oscilate camera distance using sine function
-~visuals.sendMsg('/var', "cam_sine", "sin");
-~visuals.sendMsg('/var/range', "cam_sine", 400, 1500);
-~visuals.sendMsg('/cam/pos', 0, 0, "cam_sine");
+~visuals.sendMsg('/var', "sine_osc", "sin");
+~visuals.sendMsg('/var/range', "sine_osc", 400, 1500);
+
+// map camera's z coordinate to since_osc variable
+~visuals.sendMsg('/cam/pos', 0, 0, "sine_osc");
 
 // orbit camera around penguin (around scene center)
 ~visuals.sendMsg('/cam/orbit', 20);
