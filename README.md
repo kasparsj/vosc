@@ -3,6 +3,14 @@
 
 See [SuperCollider](SuperCollider) folder for examples.
 
+# Installation
+
+**For MacOS:** download pre-compiled [version Alpha binary](https://github.com/kasparsj/osc_vj/releases/tag/alpha).
+
+**All else:**
+
+Clone the repository into your openFrameworks apps folder, then use project generator to generate project files, then build.
+
 # Command overview
 
 ## Keyboard shortcuts
