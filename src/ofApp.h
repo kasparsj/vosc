@@ -10,6 +10,14 @@
 #include "Texture.h"
 #include "Variable.h"
 #include "Lights.h"
+#include "ofxMidi.h"
+#include "ofxImGui.h"
+
+struct Line {
+    float time;
+    string message;
+    ofFloatColor color;
+};
 
 class ofApp : public ofBaseApp {
 
@@ -24,6 +32,8 @@ public:
     bool checkOnset();
 	void draw();
     void drawDebug();
+    void drawGLVersion();
+    void drawConsole();
     void drawGeoms();
     void drawTextures();
     void drawMics();
@@ -51,6 +61,7 @@ public:
     void allLayersCommand(string command, const ofxOscMessage& m);
     void micsCommand(string command, const ofxOscMessage& m);
     void micCommand(Mic& mic, string command, const ofxOscMessage& m);
+    void midiCommand(string command, const ofxOscMessage& m);
     void soundsCommand(string command, const ofxOscMessage& m);
     void soundCommand(Sound& sound, string command, const ofxOscMessage& m);
     void textureCommand(Texture* tex, string command, const ofxOscMessage& m);
@@ -62,6 +73,21 @@ public:
     
     void createPostPass(string passName);
     void createPostPass(int passId);
+    
+    void addToConsole(string msg, ofColor color) {
+        console.push_back({ofGetElapsedTimef(), msg, color});
+    }
+    void addToConsole(string msg) {
+        addToConsole(msg, ofColor::white);
+    }
+    bool hasNewConsoleItems() {
+        for (int i=console.size()-1; i>= 0; i--) {
+            if (console[i].time > ofGetElapsedTimef() - 60) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     ofxOscReceiver receiver;
     vector<ofxOscMessage> messageQueue;
@@ -80,6 +106,11 @@ public:
     float camOrbit = 0;
     float camOrbitPerSecond = 0;
     Lights lights;
+    ofxMidiIn midiIn;
+    
+    vector<Line> console;
+    ofxImGui::Gui gui;
+    ImGuiTextFilter Filter;
     
     bool showDebug = false;
     bool showGlVersion = false;

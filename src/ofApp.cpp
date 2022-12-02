@@ -15,6 +15,7 @@ void ofApp::setup(){
     receiver.setup(33333);
 	tidal = new ofxTidalCycles(1);
     setupLayers(INITIAL_VISUALS);
+    gui.setup();
     windowResized(ofGetWidth(), ofGetHeight());
     
     ofDisableArbTex();
@@ -108,6 +109,9 @@ void ofApp::parseMessage(const ofxOscMessage &m) {
     string command = m.getAddress();
     if (command.substr(0, 4) == "/mic") {
         micsCommand(command, m);
+    }
+    else if (command.substr(0, 5) == "/midi") {
+        midiCommand(command, m);
     }
     else if (command.substr(0, 6) == "/sound") {
         soundsCommand(command, m);
@@ -456,21 +460,29 @@ void ofApp::allLayersCommand(string command, const ofxOscMessage &m) {
 }
 
 void ofApp::micsCommand(string command, const ofxOscMessage &m) {
-    auto [all, idx] = parseIndex(m);
-    if (all) {
-        for (int i=0; i<mics.size(); i++) {
-            micCommand(mics[i], command, m);
+    if (command == "/mics/list") {
+        vector<ofSoundDevice> devices = ofSoundStreamListDevices();
+        for (int i=0; i<devices.size(); i++) {
+            addToConsole(devices[i].deviceID + ": " + devices[i].name);
         }
-    }
-    else if (idx >= 0) {
-        if (!all && (idx+1) > mics.size()) {
-            mics.resize(idx+1);
-        }
-        Mic& mic = mics[idx];
-        micCommand(mic, command, m);
     }
     else {
-        ofLog() << "invalid sound index";
+        auto [all, idx] = parseIndex(m);
+        if (all) {
+            for (int i=0; i<mics.size(); i++) {
+                micCommand(mics[i], command, m);
+            }
+        }
+        else if (idx >= 0) {
+            if (!all && (idx+1) > mics.size()) {
+                mics.resize(idx+1);
+            }
+            Mic& mic = mics[idx];
+            micCommand(mic, command, m);
+        }
+        else {
+            ofLog() << "invalid sound index";
+        }
     }
 }
 
@@ -482,6 +494,18 @@ void ofApp::micCommand(Mic& mic, string command, const ofxOscMessage &m) {
         string prop = m.getArgAsString(1);
         if (prop == "maxAmp") {
             Args::getInstance().handleFloat(&mic.maxAmp, m, 2);
+        }
+    }
+}
+
+void ofApp::midiCommand(string command, const ofxOscMessage &m) {
+    if (command == "/midi") {
+        
+    }
+    else if (command == "/midi/list") {
+        vector<string> inPorts = midiIn.getInPortList();
+        for (int i=0; i<inPorts.size(); i++) {
+            addToConsole(inPorts[i]);
         }
     }
 }
@@ -905,43 +929,50 @@ void ofApp::draw(){
     ofDisableDepthTest();
     ofPopMatrix();
     
-    drawDebug();
+    if (showDebug) {
+        drawDebug();
+        if (showGlVersion) {
+            drawGLVersion();
+        }
+    }
+    if (showDebug || hasNewConsoleItems()) {
+        drawConsole();
+    }
 }
 
 void ofApp::drawDebug() {
-    if (showDebug) {
-        if (cam != NULL) {
-            ofDrawBitmapString(ofToString(cam->getPosition()), 20, 20);
-        }
-        ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
-        
-        ofPushMatrix();
-        
-        ofTranslate(20, 60);
-        ofDrawBitmapString("Geometry", 0, -20);
-        drawGeoms();
-        
-        ofTranslate(0, 180);
-        ofDrawBitmapString("Textures", 0, -20);
-        drawTextures();
-        
-        ofTranslate(0, 180);
-        ofDrawBitmapString("Microphones", 0, -20);
-        drawMics();
-        
-        ofTranslate(0, 180);
-        ofDrawBitmapString("Sounds", 0, -20);
-        drawSounds();
-        
-        ofPopMatrix();
+    if (cam != NULL) {
+        ofDrawBitmapString(ofToString(cam->getPosition()), 20, 20);
     }
-    if (showGlVersion) {
-        ofDrawBitmapString("Vendor :" + ofToString(glGetString(GL_VENDOR)), ofGetWidth()-250, 40);
-        ofDrawBitmapString("GPU : " + ofToString(glGetString(GL_RENDERER)), ofGetWidth()-250, 60);
-        ofDrawBitmapString("OpenGL ver. " + ofToString(glGetString(GL_VERSION)), ofGetWidth()-250, 80);
-        ofDrawBitmapString("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)), ofGetWidth()-250, 100);
-        //cout << glGetString(GL_EXTENSIONS) <<endl;
-    }
+    ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
+    
+    ofPushMatrix();
+    
+    ofTranslate(20, 60);
+    ofDrawBitmapString("Geometry", 0, -20);
+    drawGeoms();
+    
+    ofTranslate(0, 180);
+    ofDrawBitmapString("Textures", 0, -20);
+    drawTextures();
+    
+    ofTranslate(0, 180);
+    ofDrawBitmapString("Microphones", 0, -20);
+    drawMics();
+    
+    ofTranslate(0, 180);
+    ofDrawBitmapString("Sounds", 0, -20);
+    drawSounds();
+    
+    ofPopMatrix();
+}
+
+void ofApp::drawGLVersion() {
+    ofDrawBitmapString("Vendor :" + ofToString(glGetString(GL_VENDOR)), ofGetWidth()-250, 40);
+    ofDrawBitmapString("GPU : " + ofToString(glGetString(GL_RENDERER)), ofGetWidth()-250, 60);
+    ofDrawBitmapString("OpenGL ver. " + ofToString(glGetString(GL_VERSION)), ofGetWidth()-250, 80);
+    ofDrawBitmapString("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)), ofGetWidth()-250, 100);
+    //cout << glGetString(GL_EXTENSIONS) <<endl;
 }
 
 void ofApp::drawGeoms() {
@@ -1017,6 +1048,64 @@ void ofApp::drawAmplitude(Mic& sound) {
     }
     ofEndShape(false);
     ofPopStyle();
+}
+
+void ofApp::drawConsole() {
+    // todo: fix
+    return;
+    
+    gui.begin();
+    
+    ImGui::SetNextWindowSize(ofVec2f(ofGetWidth(),200), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ofVec2f(0,ofGetHeight()-200), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Console");
+           
+    
+    if (ImGui::SmallButton("Clear")) { console.clear(); }
+    ImGui::SameLine();
+    bool copy_to_clipboard = ImGui::SmallButton("Copy");
+
+    ImGui::Separator();
+
+    const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing(); // 1 separator, 1 input text
+    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
+    if (ImGui::BeginPopupContextWindow())
+    {
+        if (ImGui::Selectable("Clear")) {
+            console.clear();
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4,1)); // Tighten spacing
+    if (copy_to_clipboard) {
+        ImGui::LogToClipboard();
+    }
+    for (int i = 0; i < console.size(); i++)
+    {
+        Line item = console[i];
+        string msg = item.message;
+        if (!Filter.PassFilter(msg.c_str()))
+            continue;
+
+        // Normally you would store more information in your item (e.g. make Items[] an array of structure, store color/type etc.)
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(item.color.r, item.color.g, item.color.b, item.color.a));
+        ImGui::TextUnformatted(msg.c_str());
+       ImGui::PopStyleColor();
+    }
+    if (copy_to_clipboard)
+        ImGui::LogFinish();
+
+    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+        ImGui::SetScrollHereY(1.0f);
+
+    ImGui::PopStyleVar();
+    ImGui::EndChild();
+    ImGui::Separator();
+    
+    ImGui::End();
+
+    gui.end();
 }
 
 void ofApp::exit() {

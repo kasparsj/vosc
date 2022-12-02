@@ -3,7 +3,9 @@ ofxAutoReloadedShader
 ofxColorTheory
 ofxEasing
 ofxHPVPlayer
+ofxImGui
 ofxLooper
+ofxMidi
 ofxOsc
 ofxPostProcessing
 ofxTidalCycles
