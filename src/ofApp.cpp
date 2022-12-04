@@ -781,30 +781,30 @@ void ofApp::createPostPass(string passName) {
     else if (passName == "limbdarkening") {
         post.createPass<itg::LimbDarkeningPass>();
     }
-    else if (passName == "invert") {
-        post.createPass<itg::Invert>();
-    }
-    else if (passName == "glitch") {
-        post.createPass<itg::Glitch>();
-    }
-    else if (passName == "rotate") {
-        post.createPass<itg::Rotate>();
-    }
-    else if (passName == "pixelsort") {
-        post.createPass<itg::Pixelsort>();
-    }
-    else if (passName == "beyoon") {
-        post.createPass<itg::Beyoon>();
-    }
-    else if (passName == "reflectx") {
-        post.createPass<itg::ReflectX>();
-    }
-    else if (passName == "reflecty") {
-        post.createPass<itg::ReflectY>();
-    }
-    else if (passName == "split") {
-        post.createPass<itg::Split>();
-    }
+//    else if (passName == "invert") {
+//        post.createPass<itg::Invert>();
+//    }
+//    else if (passName == "glitch") {
+//        post.createPass<itg::Glitch>();
+//    }
+//    else if (passName == "rotate") {
+//        post.createPass<itg::Rotate>();
+//    }
+//    else if (passName == "pixelsort") {
+//        post.createPass<itg::Pixelsort>();
+//    }
+//    else if (passName == "beyoon") {
+//        post.createPass<itg::Beyoon>();
+//    }
+//    else if (passName == "reflectx") {
+//        post.createPass<itg::ReflectX>();
+//    }
+//    else if (passName == "reflecty") {
+//        post.createPass<itg::ReflectY>();
+//    }
+//    else if (passName == "split") {
+//        post.createPass<itg::Split>();
+//    }
 }
 
 void ofApp::createPostPass(int passId) {
@@ -875,30 +875,30 @@ void ofApp::createPostPass(int passId) {
         case PostPass::LIMBDARKENING:
             post.createPass<itg::LimbDarkeningPass>();
             break;
-        case PostPass::INVERT:
-            post.createPass<itg::Invert>();
-            break;
-        case PostPass::GLITCH:
-            post.createPass<itg::Glitch>();
-            break;
-        case PostPass::ROTATE:
-            post.createPass<itg::Rotate>();
-            break;
-        case PostPass::PIXELSORT:
-            post.createPass<itg::Pixelsort>();
-            break;
-        case PostPass::BEYOON:
-            post.createPass<itg::Beyoon>();
-            break;
-        case PostPass::REFLECTX:
-            post.createPass<itg::ReflectX>();
-            break;
-        case PostPass::REFLECTY:
-            post.createPass<itg::ReflectY>();
-            break;
-        case PostPass::SPLIT:
-            post.createPass<itg::Split>();
-            break;
+//        case PostPass::INVERT:
+//            post.createPass<itg::Invert>();
+//            break;
+//        case PostPass::GLITCH:
+//            post.createPass<itg::Glitch>();
+//            break;
+//        case PostPass::ROTATE:
+//            post.createPass<itg::Rotate>();
+//            break;
+//        case PostPass::PIXELSORT:
+//            post.createPass<itg::Pixelsort>();
+//            break;
+//        case PostPass::BEYOON:
+//            post.createPass<itg::Beyoon>();
+//            break;
+//        case PostPass::REFLECTX:
+//            post.createPass<itg::ReflectX>();
+//            break;
+//        case PostPass::REFLECTY:
+//            post.createPass<itg::ReflectY>();
+//            break;
+//        case PostPass::SPLIT:
+//            post.createPass<itg::Split>();
+//            break;
     }
 }
 

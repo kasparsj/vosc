@@ -13,7 +13,7 @@ public:
         return fbo.source()->getTexture();
     }
     virtual const ofTexture & getTexture() const override {
-        // todo: throw error?
+        return ofTexture();
     }
     void setUseTexture(bool bUseTex) override {
         /*irrevelant*/

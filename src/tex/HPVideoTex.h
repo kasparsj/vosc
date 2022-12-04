@@ -24,7 +24,7 @@ public:
         return *hpvPlayer.getTexturePtr();
     }
     const ofTexture & getTexture() const override {
-        // todo: throw error
+        return ofTexture();
     }
     bool isUsingTexture() const override {
         return true;

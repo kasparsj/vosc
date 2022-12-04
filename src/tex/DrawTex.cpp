@@ -4,7 +4,7 @@
 vector<string> DrawTex::draws = {"rect", "gridplane"};
 
 string DrawTex::random() {
-    draws[ofRandom(draws.size())];
+    return draws[ofRandom(draws.size())];
 }
 
 void DrawTex::update(TexData& data) {
