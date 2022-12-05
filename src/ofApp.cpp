@@ -5,6 +5,7 @@
 #include "VariablePool.h"
 #include "ShaderTex.h"
 #include "Args.h"
+#include "Console.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -173,7 +174,7 @@ retVals parseIndex(const ofxOscMessage &m) {
                 idx = std::stoi(which);
             }
             catch (...) {
-                ofLog() << "invalid layer index " << which;
+                Console::get().error("invalid layer index " + which);
             }
         }
     }
@@ -221,10 +222,10 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
     }
     else {
         if (cam == NULL) {
-            ofLog() << command + " failed: camera not enabled (run /cam)";
+            Console::get().info(command + " failed: camera not enabled (run /cam)");
         }
         else if (command == "/cam/pos") {
-            if (Args::getInstance().isTweenVec3(m, 0)) {
+            if (Args::get().isTweenVec3(m, 0)) {
                 ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
                 if (easyCam != NULL) {
                     easyCam->disableMouseInput();
@@ -239,7 +240,7 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
             }
         }
         else if (command == "/cam/look") {
-            if (Args::getInstance().isTweenVec3(m, 0)) {
+            if (Args::get().isTweenVec3(m, 0)) {
                 ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
                 if (easyCam != NULL) {
                     easyCam->disableMouseInput();
@@ -255,10 +256,10 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
         }
         else if (command == "/cam/orbit") {
             if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
-                Args::getInstance().handleFloat(&camOrbitPerSecond, m, 0);
+                Args::get().handleFloat(&camOrbitPerSecond, m, 0);
             }
             else {
-                ofLog() << "/cam/orbit supported only for 'easy' cam";
+                Console::get().error("/cam/orbit supported only for 'easy' cam");
             }
         }
         else if (command == "/cam/set") {
@@ -330,7 +331,7 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
         layer->setVar("pos", m);
     }
     else if (command == "/layer/size") {
-        Args::getInstance().handleVec3(&layer->data.size, m);
+        Args::get().handleVec3(&layer->data.size, m);
     }
     else if (command == "/layer/rot") {
         layer->setVar("rotation", m);
@@ -463,7 +464,7 @@ void ofApp::micsCommand(string command, const ofxOscMessage &m) {
     if (command == "/mics/list") {
         vector<ofSoundDevice> devices = ofSoundStreamListDevices();
         for (int i=0; i<devices.size(); i++) {
-            addToConsole(devices[i].deviceID + ": " + devices[i].name);
+            Console::get().info(devices[i].deviceID + ": " + devices[i].name);
         }
     }
     else {
@@ -481,7 +482,7 @@ void ofApp::micsCommand(string command, const ofxOscMessage &m) {
             micCommand(mic, command, m);
         }
         else {
-            ofLog() << "invalid sound index";
+            Console::get().error("invalid sound index: " + ofToString(idx));
         }
     }
 }
@@ -493,7 +494,7 @@ void ofApp::micCommand(Mic& mic, string command, const ofxOscMessage &m) {
     else if (command == "/mic/set") {
         string prop = m.getArgAsString(1);
         if (prop == "maxAmp") {
-            Args::getInstance().handleFloat(&mic.maxAmp, m, 2);
+            Args::get().handleFloat(&mic.maxAmp, m, 2);
         }
     }
 }
@@ -505,7 +506,7 @@ void ofApp::midiCommand(string command, const ofxOscMessage &m) {
     else if (command == "/midi/list") {
         vector<string> inPorts = midiIn.getInPortList();
         for (int i=0; i<inPorts.size(); i++) {
-            addToConsole(inPorts[i]);
+            Console::get().info(inPorts[i]);
         }
     }
 }
@@ -525,7 +526,7 @@ void ofApp::soundsCommand(string command, const ofxOscMessage &m) {
         soundCommand(sound, command, m);
     }
     else {
-        ofLog() << "invalid sound index";
+        Console::get().error("invalid sound index: " + ofToString(idx));
     }
 }
 
@@ -539,10 +540,10 @@ void ofApp::soundCommand(Sound& sound, string command, const ofxOscMessage &m) {
     else if (command == "/sound/set") {
         string prop = m.getArgAsString(1);
         if (prop == "maxAmp") {
-            Args::getInstance().handleFloat(&sound.maxAmp, m, 2);
+            Args::get().handleFloat(&sound.maxAmp, m, 2);
         }
         else if (prop == "maxLoud") {
-            Args::getInstance().handleFloat(&sound.maxLoud, m, 2);
+            Args::get().handleFloat(&sound.maxLoud, m, 2);
         }
     }
 }
@@ -610,7 +611,7 @@ void ofApp::texDataCommand(TexData& data, string command, const ofxOscMessage &m
             }
         }
         else {
-            Args::getInstance().handlePercent(&data.timePct, m);
+            Args::get().handlePercent(&data.timePct, m);
         }
     }
     else if (command == "/tex/fbo") {
@@ -648,19 +649,19 @@ void ofApp::geomCommand(Geom* geom, string command, const ofxOscMessage& m) {
 
 void ofApp::materialCommand(ofMaterialSettings& matSettings, string command, const ofxOscMessage& m) {
     if (command == "/mat/diffuse") {
-        Args::getInstance().handleColor(&matSettings.diffuse, m);
+        Args::get().handleColor(&matSettings.diffuse, m);
     }
     else if (command == "/mat/ambient") {
-        Args::getInstance().handleColor(&matSettings.ambient, m);
+        Args::get().handleColor(&matSettings.ambient, m);
     }
     else if (command == "/mat/specular") {
-        Args::getInstance().handleColor(&matSettings.specular, m);
+        Args::get().handleColor(&matSettings.specular, m);
     }
     else if (command == "/mat/emissive") {
-        Args::getInstance().handleColor(&matSettings.emissive, m);
+        Args::get().handleColor(&matSettings.emissive, m);
     }
     else if (command == "/mat/shininess") {
-        Args::getInstance().handleFloat(&matSettings.shininess, m);
+        Args::get().handleFloat(&matSettings.shininess, m);
     }
 }
 
@@ -935,9 +936,7 @@ void ofApp::draw(){
             drawGLVersion();
         }
     }
-    if (showDebug || hasNewConsoleItems()) {
-        drawConsole();
-    }
+    drawConsole();
 }
 
 void ofApp::drawDebug() {
@@ -1051,61 +1050,16 @@ void ofApp::drawAmplitude(Mic& sound) {
 }
 
 void ofApp::drawConsole() {
-    // todo: fix
-    return;
-    
-    gui.begin();
-    
-    ImGui::SetNextWindowSize(ofVec2f(ofGetWidth(),200), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowPos(ofVec2f(0,ofGetHeight()-200), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Console");
-           
-    
-    if (ImGui::SmallButton("Clear")) { console.clear(); }
-    ImGui::SameLine();
-    bool copy_to_clipboard = ImGui::SmallButton("Copy");
-
-    ImGui::Separator();
-
-    const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing(); // 1 separator, 1 input text
-    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
-    if (ImGui::BeginPopupContextWindow())
-    {
-        if (ImGui::Selectable("Clear")) {
-            console.clear();
-        }
-        ImGui::EndPopup();
+    if (Console::get().hasNewErrors()) {
+        showConsole = true;
     }
+    if (showDebug || showConsole) {
+        gui.begin();
+        
+        Console::get().draw(&showConsole);
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4,1)); // Tighten spacing
-    if (copy_to_clipboard) {
-        ImGui::LogToClipboard();
+        gui.end();
     }
-    for (int i = 0; i < console.size(); i++)
-    {
-        Line item = console[i];
-        string msg = item.message;
-        if (!Filter.PassFilter(msg.c_str()))
-            continue;
-
-        // Normally you would store more information in your item (e.g. make Items[] an array of structure, store color/type etc.)
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(item.color.r, item.color.g, item.color.b, item.color.a));
-        ImGui::TextUnformatted(msg.c_str());
-       ImGui::PopStyleColor();
-    }
-    if (copy_to_clipboard)
-        ImGui::LogFinish();
-
-    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-        ImGui::SetScrollHereY(1.0f);
-
-    ImGui::PopStyleVar();
-    ImGui::EndChild();
-    ImGui::Separator();
-    
-    ImGui::End();
-
-    gui.end();
 }
 
 void ofApp::exit() {
@@ -1134,6 +1088,9 @@ void ofApp::keyPressed(int key){
             allLayersCommand("/blendmode", m);
             break;
         }
+        case 'c':
+            showConsole = !showConsole;
+            break;
         case 'd':
             showDebug = !showDebug;
             break;

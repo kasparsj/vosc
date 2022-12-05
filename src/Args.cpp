@@ -21,8 +21,8 @@ ofFloatColor Args::parseColor(const ofxOscMessage &m, int idx) {
 }
 
 ofFloatColor Args::parseLerpColor(const ofxOscMessage &m, int firstArg) {
-    ofFloatColor fromColor = Args::getInstance().parseColor(m, firstArg+2);
-    ofFloatColor toColor = Args::getInstance().parseColor(m, firstArg+5);
+    ofFloatColor fromColor = Args::get().parseColor(m, firstArg+2);
+    ofFloatColor toColor = Args::get().parseColor(m, firstArg+5);
     float perc = m.getArgAsFloat(firstArg+1);
     return ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
 }

@@ -13,12 +13,6 @@
 #include "ofxMidi.h"
 #include "ofxImGui.h"
 
-struct Line {
-    float time;
-    string message;
-    ofFloatColor color;
-};
-
 class ofApp : public ofBaseApp {
 
 public:
@@ -74,21 +68,6 @@ public:
     void createPostPass(string passName);
     void createPostPass(int passId);
     
-    void addToConsole(string msg, ofColor color) {
-        console.push_back({ofGetElapsedTimef(), msg, color});
-    }
-    void addToConsole(string msg) {
-        addToConsole(msg, ofColor::white);
-    }
-    bool hasNewConsoleItems() {
-        for (int i=console.size()-1; i>= 0; i--) {
-            if (console[i].time > ofGetElapsedTimef() - 60) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     ofxOscReceiver receiver;
     vector<ofxOscMessage> messageQueue;
 	ofxTidalCycles *tidal;
@@ -108,10 +87,9 @@ public:
     Lights lights;
     ofxMidiIn midiIn;
     
-    vector<Line> console;
     ofxImGui::Gui gui;
-    ImGuiTextFilter Filter;
     
     bool showDebug = false;
+    bool showConsole = false;
     bool showGlVersion = false;
 };

@@ -2,6 +2,7 @@
 #include "Args.h"
 #include "ColorUtil.h"
 #include "TexData.h"
+#include "Console.h"
 
 void Variable::set(float value) {
     this->values.resize(1);
@@ -56,23 +57,23 @@ void Variable::init(const ofxOscMessage& m, int idx) {
 void Variable::setRange(const ofxOscMessage& m, int idx) {
     for  (int i=0; i<values.size(); i++) {
         if (m.getNumArgs() == idx + 1) {
-            Args::getInstance().setFloat(&values[i].rangeFrom, m, idx);
+            Args::get().setFloat(&values[i].rangeFrom, m, idx);
         }
         else if (m.getNumArgs() == idx + 2) {
             if (values.size() == 2) {
-                Args::getInstance().setFloat(&values[i].rangeFrom, m, idx+i);
+                Args::get().setFloat(&values[i].rangeFrom, m, idx+i);
             }
             else {
-                Args::getInstance().setFloat(&values[i].rangeFrom, m, idx);
-                Args::getInstance().setFloat(&values[i].rangeTo, m, idx+1);
+                Args::get().setFloat(&values[i].rangeFrom, m, idx);
+                Args::get().setFloat(&values[i].rangeTo, m, idx+1);
             }
         }
         else if (m.getNumArgs() == idx + values.size()*2) {
-            Args::getInstance().setFloat(&values[i].rangeFrom, m, idx+i);
-            Args::getInstance().setFloat(&values[i].rangeTo, m, idx+values.size()+i);
+            Args::get().setFloat(&values[i].rangeFrom, m, idx+i);
+            Args::get().setFloat(&values[i].rangeTo, m, idx+values.size()+i);
         }
         else {
-            ofLog() << "unsupported /var/range format";
+            Console::get().error("unsupported /var/range format");
         }
     }
 }
@@ -80,13 +81,13 @@ void Variable::setRange(const ofxOscMessage& m, int idx) {
 void Variable::setSpeed(const ofxOscMessage& m, int idx) {
     for  (int i=0; i<values.size(); i++) {
         if (m.getNumArgs() == idx + 1) {
-            Args::getInstance().handleFloat(&values[i].speed, m, idx);
+            Args::get().handleFloat(&values[i].speed, m, idx);
         }
         else if (m.getNumArgs() == idx + values.size()) {
-            Args::getInstance().handleFloat(&values[i].speed, m, idx+i);
+            Args::get().handleFloat(&values[i].speed, m, idx+i);
         }
         else {
-            ofLog() << "unsupported /var/speed format";
+            Console::get().error("unsupported /var/speed format");
         }
     }
 }
@@ -112,13 +113,13 @@ void Variable::setValue(const ofxOscMessage& m, int idx) {
 void Variable::setColor(const ofxOscMessage& m, int idx) {
     if (m.getNumArgs() > idx+3) { // args > 3
         if (m.getArgType(idx) == OFXOSC_TYPE_STRING && m.getArgAsString(idx) == "lerp") {
-            ofFloatColor color = Args::getInstance().parseLerpColor(m, idx);
+            ofFloatColor color = Args::get().parseLerpColor(m, idx);
             values[0].set(color.r);
             values[1].set(color.r);
             values[2].set(color.r);
         }
         else {
-            ofFloatColor targetColor = Args::getInstance().parseColor(m, idx);
+            ofFloatColor targetColor = Args::get().parseColor(m, idx);
             vector<float> target = {targetColor.r, targetColor.g, targetColor.b};
             tween(target, m.getArgAsFloat(4));
         }
@@ -129,7 +130,7 @@ void Variable::setColor(const ofxOscMessage& m, int idx) {
                 values[i-(idx+1)].set(m.getArgAsString(i));
             }
             else {
-                values[i-(idx+1)].set(Args::getInstance().parseIntOrFloat(m, i));
+                values[i-(idx+1)].set(Args::get().parseIntOrFloat(m, i));
             }
         }
     }
@@ -139,12 +140,12 @@ void Variable::setColor(const ofxOscMessage& m, int idx) {
                 values[i].set(m.getArgAsString(idx));
             }
             else {
-                values[i].set(Args::getInstance().parseIntOrFloat(m, idx));
+                values[i].set(Args::get().parseIntOrFloat(m, idx));
             }
         }
     }
     else {
-        ofLog() << m.getAddress() + " : invalid color format";
+        Console::get().error(m.getAddress() + " : invalid color format");
     }
 }
 
@@ -163,7 +164,7 @@ void Variable::setVec3(const ofxOscMessage &m, int idx) {
     else if (m.getNumArgs() == idx + 2 && m.getArgType(idx) == OFXOSC_TYPE_STRING) { // 2 args
         string type = m.getArgAsString(idx);
         if (type == "center" || type == "left" || type == "right" || type == "top" || type == "bottom") {
-            vector<float> align = Args::getInstance().parseAlign(m, idx);
+            vector<float> align = Args::get().parseAlign(m, idx);
             for (int i=0; i<align.size(); i++) {
                 values[i].set(align[i]);
             }
@@ -180,7 +181,7 @@ void Variable::setVec3(const ofxOscMessage &m, int idx) {
         }
     }
     else {
-        ofLog() << "setVec3 unsupported format";
+        Console::get().error("setVec3 unsupported format");
     }
 }
 

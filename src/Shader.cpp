@@ -1,6 +1,7 @@
 #include "Shader.h"
 #include "Layer.h"
 #include "VariablePool.h"
+#include "Console.h"
 
 void loadShaders(string path, map<string, ofxAutoReloadedShader>& shaders) {
     ofDirectory dir(path);
@@ -66,7 +67,7 @@ bool Shader::load(string path) {
         string geomPath = pathNoExt + ".geom";
         return shader.load(vertPath, fragPath, geomPath);
     }
-    ofLog() << "could not find shader " << path;
+    Console::get().error("could not find shader: " + path);
     return false;
 }
 

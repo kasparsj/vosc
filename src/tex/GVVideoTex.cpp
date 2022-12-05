@@ -1,5 +1,6 @@
 #include "GVVideoTex.h"
 #include "Layer.h"
+#include "Console.h"
 
 vector<string> loadLocalGVs()
 {
@@ -37,7 +38,7 @@ void GVVideoTex::update(TexData& data) {
             data.setSize(_gpuVideo.getWidth(), _gpuVideo.getHeight());
         }
         else {
-            ofLog() << "could not load hpv: " << path;
+            Console::getInstance().error("could not load hpv: " + path);
             path = prevPath;
             return;
         }

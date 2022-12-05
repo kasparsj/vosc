@@ -16,11 +16,11 @@ struct Tween {
 
 class Args {
 public:
-    static Args& getInstance() {
+    static Args& get() {
         return instance;
     }
     static void update() {
-        Args& args = Args::getInstance();
+        Args& args = Args::get();
         args.updateFloats();
         args.updateVecs();
         args.updateColors();

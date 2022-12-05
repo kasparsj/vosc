@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "TexData.h"
 #include "VariablePool.h"
+#include "Console.h"
 
 void Value::set(string type) {
     float value = 0.f;
@@ -40,7 +41,7 @@ void Value::set(string type) {
         value = var->get();
     }
     else {
-        ofLog() << "invalid var type: " + type;
+        Console::get().error("invalid var type: " + type);
     }
     this->type = type;
     this->value = value;
@@ -55,10 +56,10 @@ void Value::set(const ofxOscMessage& m, int i) {
     if (m.getNumArgs() > (i+1)) {
         type = "const";
         if (m.getNumArgs() > (i+2)) {
-            Args::getInstance().createTween(&value, m.getArgAsFloat(i), m.getArgAsFloat(i+1), m.getArgAsString(i+2));
+            Args::get().createTween(&value, m.getArgAsFloat(i), m.getArgAsFloat(i+1), m.getArgAsString(i+2));
         }
         else {
-            Args::getInstance().createTween(&value, m.getArgAsFloat(i), m.getArgAsFloat(i+1));
+            Args::get().createTween(&value, m.getArgAsFloat(i), m.getArgAsFloat(i+1));
         }
     }
     else {
@@ -144,7 +145,7 @@ void Value::update(const vector<Mic> &mics, const vector<Sound> &sounds, int ind
         }
         else {
             value = 0;
-            ofLog() << "sound data not available " + type + ":" + ofToString(chan);
+            Console::get().error("sound data not available " + type + ":" + ofToString(chan));
         }
     }
     else if (type == "mic") {
@@ -153,7 +154,7 @@ void Value::update(const vector<Mic> &mics, const vector<Sound> &sounds, int ind
         }
         else {
             value = 0;
-            ofLog() << "mic not available:" + ofToString(chan);
+            Console::get().error("mic not available:" + ofToString(chan));
         }
     }
     else if (type == "var") {

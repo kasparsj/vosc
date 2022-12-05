@@ -17,7 +17,7 @@ public:
     void set(float value);
     void set(const ofxOscMessage& m, int i);
     void tween(float target, float dur, function<void()> onComplete, ofxeasing::function ease) {
-        Args::getInstance().createTween(&value, target, dur, onComplete, ease);
+        Args::get().createTween(&value, target, dur, onComplete, ease);
     }
     void update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data = NULL);
     void update(const vector<Mic> &mics, const vector<Sound> &sounds, int index, int total, TexData* data = NULL);
