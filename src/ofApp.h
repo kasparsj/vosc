@@ -91,5 +91,4 @@ public:
     
     bool showDebug = false;
     bool showConsole = false;
-    bool showGlVersion = false;
 };

@@ -28,6 +28,11 @@ void ofApp::setup(){
     camLook = VariablePool::getShared("camLook", true);
     camLook->isVec3 = true;
     camLook->set(glm::vec3(0));
+    
+    Console::get().info("Vendor :" + ofToString(glGetString(GL_VENDOR)));
+    Console::get().info("GPU : " + ofToString(glGetString(GL_RENDERER)));
+    Console::get().info("OpenGL ver. " + ofToString(glGetString(GL_VERSION)));
+    Console::get().info("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 }
 
 void ofApp::setupLayers(int numVisuals) {
@@ -932,9 +937,6 @@ void ofApp::draw(){
     
     if (showDebug) {
         drawDebug();
-        if (showGlVersion) {
-            drawGLVersion();
-        }
     }
     drawConsole();
 }
@@ -964,14 +966,6 @@ void ofApp::drawDebug() {
     drawSounds();
     
     ofPopMatrix();
-}
-
-void ofApp::drawGLVersion() {
-    ofDrawBitmapString("Vendor :" + ofToString(glGetString(GL_VENDOR)), ofGetWidth()-250, 40);
-    ofDrawBitmapString("GPU : " + ofToString(glGetString(GL_RENDERER)), ofGetWidth()-250, 60);
-    ofDrawBitmapString("OpenGL ver. " + ofToString(glGetString(GL_VERSION)), ofGetWidth()-250, 80);
-    ofDrawBitmapString("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)), ofGetWidth()-250, 100);
-    //cout << glGetString(GL_EXTENSIONS) <<endl;
 }
 
 void ofApp::drawGeoms() {
@@ -1093,9 +1087,6 @@ void ofApp::keyPressed(int key){
             break;
         case 'd':
             showDebug = !showDebug;
-            break;
-        case 'g':
-            showGlVersion = !showGlVersion;
             break;
         case 'r': {
             ofxOscMessage m;

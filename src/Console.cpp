@@ -3,12 +3,11 @@
 Console Console::instance;
 
 void Console::draw(bool* isOpen) {
-    ImGui::SetNextWindowSize(ofVec2f(ofGetWidth(),200), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowPos(ofVec2f(0,ofGetHeight()-200), ImGuiCond_FirstUseEver);
-    if (!ImGui::Begin("Console", isOpen)) {
+    ImGui::SetNextWindowSize(ofVec2f(ofGetWidth(),200));
+    ImGui::SetNextWindowPos(ofVec2f(0,ofGetHeight()-200));
+    if (!ImGui::Begin("Console", isOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
         ImGui::End();
     }
-           
     
     if (ImGui::SmallButton("Clear")) { lines.clear(); }
     ImGui::SameLine();
