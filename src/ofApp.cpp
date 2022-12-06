@@ -978,7 +978,7 @@ void ofApp::drawGeoms() {
         if (layers[i]->hasGeom()) {
             ofSetColor(255);
             ofPushMatrix();
-            ofTranslate(20+i*120+60, 0);
+            ofTranslate(i*120+60, 0);
             layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
             ofPopMatrix();
         }

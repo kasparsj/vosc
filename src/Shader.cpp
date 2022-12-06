@@ -1,6 +1,7 @@
 #include "Shader.h"
 #include "Layer.h"
 #include "VariablePool.h"
+#include <regex>
 
 void loadShaders(string path, map<string, ofxAutoReloadedShader>& shaders) {
     ofDirectory dir(path);
@@ -33,11 +34,37 @@ string Shader::random() {
     return it->first;
 }
 
+bool isSource(string path) {
+    return path.find("void main(") != string::npos;
+}
+
+bool isShadertoy(string path) {
+    std::regex re("^https?://(www\\.)?shadertoy\\.com(.*)");
+    std::cmatch m;
+    return std::regex_match(path.c_str(), m, re);
+}
+
 bool Shader::load(string path) {
     bool success = false;
-    bool isPath = path.find('void main(') == string::npos;
+    bool _isSource = isSource(path);
+    bool _isShadertoy = isShadertoy(path);
+    bool _isFile = !_isSource && !_isShadertoy;
     string fragPath = "";
-    if (isPath) {
+    if (_isSource) {
+        ofShaderSettings settings;
+        settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
+        settings.shaderSources[GL_FRAGMENT_SHADER] = path;
+        success = shader.setup(settings);
+    }
+    else if (_isShadertoy) {
+        ofLog() << "shadertoy not implemented";
+        // todo:
+        // parse shadertoy id
+        // use the api to get the shader source
+        // save the source as file
+        // use ofxShadertoy to run it
+    }
+    else {
         vector<string> fragPaths;
         if (!ofFilePath::isAbsolute(path)) {
             fragPaths.insert(fragPaths.end(), {
@@ -70,14 +97,8 @@ bool Shader::load(string path) {
             success = shader.load(vertPath, fragPath, geomPath);
         }
     }
-    else {
-        ofShaderSettings settings;
-        settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
-        settings.shaderSources[GL_FRAGMENT_SHADER] = path;
-        success = shader.setup(settings);
-    }
     if (!success) {
-        if (isPath && fragPath == "") {
+        if (_isFile && fragPath == "") {
             ofLogError() << ("could not find shader: " + path);
         }
         
