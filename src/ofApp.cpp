@@ -466,10 +466,11 @@ void ofApp::allLayersCommand(string command, const ofxOscMessage &m) {
 }
 
 void ofApp::micsCommand(string command, const ofxOscMessage &m) {
-    if (command == "/mics/list") {
+    if (command == "/mic/list") {
         vector<ofSoundDevice> devices = ofSoundStreamListDevices();
+        Console::get().info("ofSoundStreamListDevices:");
         for (int i=0; i<devices.size(); i++) {
-            Console::get().info(devices[i].deviceID + ": " + devices[i].name);
+            Console::get().info(ofToString(i) + ": " + devices[i].name);
         }
     }
     else {
@@ -510,8 +511,9 @@ void ofApp::midiCommand(string command, const ofxOscMessage &m) {
     }
     else if (command == "/midi/list") {
         vector<string> inPorts = midiIn.getInPortList();
+        Console::get().info("MIDI in ports:");
         for (int i=0; i<inPorts.size(); i++) {
-            Console::get().info(inPorts[i]);
+            Console::get().info(ofToString(i) + ": " + inPorts[i]);
         }
     }
 }
