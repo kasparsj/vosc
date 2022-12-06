@@ -49,11 +49,11 @@ See [SuperCollider](SuperCollider) folder for examples.
 - `/tex/looper` [Enable texture looper](#texture-looper)
 
 ## Geometry
-- `/geom` [Load geometry](#geometry)
+- `/geom` [Load geometry](#geometry-load)
 - `/geom/set` [Set geometry property](#geometry-set)
 
 ## Shaders
-- `/shader` [Load layer shader](#shader)
+- `/shader` [Load layer shader](#shader-load)
 - `/shader/var` [Set layer shader variable](#shader-var)
 - `/shader/texture` [Set layer shader texture](#shader-texture)
 - `/shader/set` [Set layer shader property](#shader-set)
@@ -251,39 +251,6 @@ Examples:
 ~visuals.sendMsg('/cam/set', "distance", 1000); // only when camera is set to "easy"
 ~visuals.sendMsg('/cam/set', "autoDistance", false); // only when camera is set to "easy"
 ~visuals.sendMsg('/cam/set', "movementMaxSpeed", 1); // only when camera is set to "fp"
-```
-
-## Geometry
-
-### Geometry load
-
-`/geom`
-
-Arguments:
-- **target** (int|string) layer index or wildcard or shared geometry name, e.g. "*"
-- **source** (string) model file or [primitive](#primitive)
-
-Examples:
-```supercollider
-~visuals.sendMsg('/geom', 0, "plane"); // set first layer geometry to the default plane
-~visuals.sendMsg('/geom', 0, "box"); // set first layer geometry to box/cube
-~visuals.sendMsg('/geom', 0, "sphere"); // set first layer geometry to sphere
-```
-
-### Geometry set
-
-`/geom/set`
-
-Arguments:
-- **target** (int|string) layer index or wildcard or shared geometry name, e.g. "*"
-- **property** (string) property name
-- **value** (int|bool) property value
-
-Examples:
-```supercollider
-~visuals.sendMsg('/geom/set', 0, "drawInstanced", 100); // set first layer geometry to draw 100 instanced
-~visuals.sendMsg('/geom/set', 0, "meshMode", 3); // set first layer geometry mesh mode to OF_PRIMITIVE_LINES
-~visuals.sendMsg('/geom/set', 0, "drawWireframe", true); // set first layer geometry to drawWireframe
 ```
 
 ## Texture
@@ -504,6 +471,85 @@ Examples:
 ```supercollider
 ~visuals.sendMsg('/tex/looper', 0, 10, 30, 2); // enable looper 10 seconds durations, 30 fps, double speed
 ~visuals.sendMsg('/tex/looper', 0, 0); // disable looper
+```
+
+## Geometry
+
+### Geometry load
+
+`/geom`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared geometry name, e.g. "*"
+- **source** (string) model file or [primitive](#primitive)
+
+Examples:
+```supercollider
+~visuals.sendMsg('/geom', 0, "plane"); // set first layer geometry to the default plane
+~visuals.sendMsg('/geom', 0, "box"); // set first layer geometry to box/cube
+~visuals.sendMsg('/geom', 0, "sphere"); // set first layer geometry to sphere
+```
+
+### Geometry set
+
+`/geom/set`
+
+Arguments:
+- **target** (int|string) layer index or wildcard or shared geometry name, e.g. "*"
+- **property** (string) property name
+- **value** (int|bool) property value
+
+Examples:
+```supercollider
+~visuals.sendMsg('/geom/set', 0, "drawInstanced", 100); // set first layer geometry to draw 100 instanced
+~visuals.sendMsg('/geom/set', 0, "meshMode", 3); // set first layer geometry mesh mode to OF_PRIMITIVE_LINES
+~visuals.sendMsg('/geom/set', 0, "drawWireframe", true); // set first layer geometry to drawWireframe
+```
+
+## Shaders
+
+### Shader load
+
+`/shader`
+
+Arguments:
+- **target** (int|string) layer index or wildcard, e.g. "*"
+- **path** (string) path
+
+### Shader var
+
+`/shader/var`
+
+Arguments:
+- **target** (int|string) layer index or wildcard, e.g. "*"
+- **name** (string) variable name
+- **value1** (mixed) value
+- value2 (mixed) value
+- value3 (mixed) value
+
+### Shader texture
+
+`/shader/texture`
+
+Arguments:
+- **target** (int|string) layer index or wildcard, e.g. "*"
+- **name** (string) uniform name
+- **value** (mixed) texture load path or shared texture name
+
+### Shader set
+
+`/shader/set`
+
+Arguments:
+- **target** (int|string) layer index or wildcard, e.g. "*"
+- **name** (string) property name
+- **value** (mixed) property value
+
+Examples:
+```supercollider
+~visuals.sendMsg('/shader/set', 0, "geomInputType", 0x0001); // set first layer shader geomInputType to GL_LINES
+~visuals.sendMsg('/shader/set', 0, "geomOutputType", 0x0005); // set first layer shader geomOutputType to GL_TRIANGLE_STRIP
+~visuals.sendMsg('/shader/set', 0, "geomOutputCount", 14); // set first layer shader geomOutputCount to 14
 ```
 
 ## Layers
