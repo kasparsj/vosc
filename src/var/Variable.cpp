@@ -2,7 +2,6 @@
 #include "Args.h"
 #include "ColorUtil.h"
 #include "TexData.h"
-#include "Console.h"
 
 void Variable::set(float value) {
     this->values.resize(1);
@@ -73,7 +72,7 @@ void Variable::setRange(const ofxOscMessage& m, int idx) {
             Args::get().setFloat(&values[i].rangeTo, m, idx+values.size()+i);
         }
         else {
-            Console::get().error("unsupported /var/range format");
+            ofLogError() << ("unsupported /var/range format");
         }
     }
 }
@@ -87,7 +86,7 @@ void Variable::setSpeed(const ofxOscMessage& m, int idx) {
             Args::get().handleFloat(&values[i].speed, m, idx+i);
         }
         else {
-            Console::get().error("unsupported /var/speed format");
+            ofLogError() << ("unsupported /var/speed format");
         }
     }
 }
@@ -145,7 +144,7 @@ void Variable::setColor(const ofxOscMessage& m, int idx) {
         }
     }
     else {
-        Console::get().error(m.getAddress() + " : invalid color format");
+        ofLogError() << (m.getAddress() + " : invalid color format");
     }
 }
 
@@ -181,7 +180,7 @@ void Variable::setVec3(const ofxOscMessage &m, int idx) {
         }
     }
     else {
-        Console::get().error("setVec3 unsupported format");
+        ofLogError() << ("setVec3 unsupported format");
     }
 }
 

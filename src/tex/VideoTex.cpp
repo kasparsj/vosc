@@ -1,6 +1,5 @@
 #include "VideoTex.h"
 #include "Layer.h"
-#include "Console.h"
 
 vector<string> loadLocalVideos()
 {
@@ -41,7 +40,7 @@ void VideoTex::update(TexData& data) {
             data.setSize(videoPlayer.getWidth(), videoPlayer.getHeight());
         }
         else {
-            Console::get().error("could not load video: " + path);
+            ofLogError() << ("could not load video: " + path);
             path = prevPath;
             return;
         }

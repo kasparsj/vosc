@@ -30,7 +30,7 @@ public:
     }
     void choose(const ofxOscMessage& m);
     void update();
-    void draw();
+    void draw() const;
     ofVboMesh& getMesh() { return mesh; }
     glm::vec3 getSize() {
         return boundingBox.max - boundingBox.min;

@@ -1,6 +1,5 @@
 #include "ImageTex.h"
 #include "Layer.h"
-#include "Console.h"
 
 vector<string> loadLocalImages()
 {
@@ -33,7 +32,7 @@ void ImageTex::update(TexData& data) {
             data.setSize(image.getWidth(), image.getHeight());
         }
         else {
-            Console::get().error("could not load image: " + path);
+            ofLogError() << ("could not load image: " + path);
             path = prevPath;
             return;
         }

@@ -1,7 +1,6 @@
 #include "Shader.h"
 #include "Layer.h"
 #include "VariablePool.h"
-#include "Console.h"
 
 void loadShaders(string path, map<string, ofxAutoReloadedShader>& shaders) {
     ofDirectory dir(path);
@@ -35,40 +34,55 @@ string Shader::random() {
 }
 
 bool Shader::load(string path) {
-    vector<string> fragPaths;
-    if (!ofFilePath::isAbsolute(path)) {
-        fragPaths.insert(fragPaths.end(), {
-            ofToDataPath(path),
-            ofToDataPath(path + ".frag"),
-            ofToDataPath("shaders/" + path),
-            ofToDataPath("shaders/" + path + ".frag"),
-        });
+    bool success = false;
+    bool isPath = path.find('void main(') == string::npos;
+    string fragPath = "";
+    if (isPath) {
+        vector<string> fragPaths;
+        if (!ofFilePath::isAbsolute(path)) {
+            fragPaths.insert(fragPaths.end(), {
+                ofToDataPath(path),
+                ofToDataPath(path + ".frag"),
+                ofToDataPath("shaders/" + path),
+                ofToDataPath("shaders/" + path + ".frag"),
+            });
+        }
+        else {
+            fragPaths.insert(fragPaths.end(), {
+                path,
+                path + ".frag",
+            });
+        }
+        for (int i=0; i<fragPaths.size(); i++) {
+            if (ofFile(fragPaths[i]).exists()) {
+                fragPath = fragPaths[i];
+                break;
+            }
+        }
+        if (fragPath != "") {
+            string vertPath = "shaders/passthru.vert";
+            string pathNoExt = fragPath.substr(0, fragPath.find(".frag"));
+            string tmpVertPath = pathNoExt + ".vert";
+            if (ofFile(tmpVertPath).exists()) {
+                vertPath = tmpVertPath;
+            }
+            string geomPath = pathNoExt + ".geom";
+            success = shader.load(vertPath, fragPath, geomPath);
+        }
     }
     else {
-        fragPaths.insert(fragPaths.end(), {
-            path,
-            path + ".frag",
-        });
+        ofShaderSettings settings;
+        settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
+        settings.shaderSources[GL_FRAGMENT_SHADER] = path;
+        success = shader.setup(settings);
     }
-    string fragPath = "";
-    for (int i=0; i<fragPaths.size(); i++) {
-        if (ofFile(fragPaths[i]).exists()) {
-            fragPath = fragPaths[i];
-            break;
+    if (!success) {
+        if (isPath && fragPath == "") {
+            ofLogError() << ("could not find shader: " + path);
         }
+        
     }
-    if (fragPath != "") {
-        string vertPath = "shaders/passthru.vert";
-        string pathNoExt = fragPath.substr(0, fragPath.find(".frag"));
-        string tmpVertPath = pathNoExt + ".vert";
-        if (ofFile(tmpVertPath).exists()) {
-            vertPath = tmpVertPath;
-        }
-        string geomPath = pathNoExt + ".geom";
-        return shader.load(vertPath, fragPath, geomPath);
-    }
-    Console::get().error("could not find shader: " + path);
-    return false;
+    return success;
 }
 
 void Shader::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {

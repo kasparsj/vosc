@@ -1,8 +1,30 @@
-#include "Console.h"
+#include "Logger.h"
 
-Console Console::instance;
+Logger::Logger() {}
 
-void Console::draw(bool* isOpen) {
+Logger::Logger(const string & path, bool append) :
+    fileLogger(path, append) {}
+
+void Logger::log(ofLogLevel level, const string &module, const string &message) {
+    consoleLogger.log(level, module, message);
+    if (level >= consoleLogLevel) lines.push_back({ofGetElapsedTimef(), message, toColor(level)});
+    if (level >= fileLogLevel) fileLogger.log(level, module, message);
+}
+
+void Logger::log(ofLogLevel level, const string & module, const char* format, ...){
+    va_list args;
+    va_start(args, format);
+    log(level, module, format, args);
+    va_end(args);
+}
+
+void Logger::log(ofLogLevel level, const string & module, const char* format, va_list args) {
+    consoleLogger.log(level, module, format, args);
+    if (level >= consoleLogLevel) lines.push_back({ofGetElapsedTimef(), module + ": " + format, toColor(level)});
+    if (level >= fileLogLevel) fileLogger.log(level, module, format, args);
+}
+
+void Logger::draw(bool* isOpen) {
     ImGui::SetNextWindowSize(ofVec2f(ofGetWidth(),200));
     ImGui::SetNextWindowPos(ofVec2f(0,ofGetHeight()-200));
     if (!ImGui::Begin("Console", isOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
@@ -31,7 +53,7 @@ void Console::draw(bool* isOpen) {
     }
     for (int i = 0; i < lines.size(); i++)
     {
-        Line item = lines[i];
+        LoggerLine item = lines[i];
         string msg = item.message;
         if (!Filter.PassFilter(msg.c_str()))
             continue;

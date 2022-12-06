@@ -32,7 +32,7 @@
 		29DD298E0609B82CFFD50620 /* VarsHolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
 		2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
-		2B3834A3293E4FE70037476B /* Console.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B3834A1293E4FE70037476B /* Console.cpp */; };
+		2B3834A3293E4FE70037476B /* Logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B3834A1293E4FE70037476B /* Logger.cpp */; };
 		2D7732D4AC34CDDBDCFE9699 /* Tex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 23AB9B54C418735665B1EBA6 /* Tex.cpp */; };
 		33DB731E964056D7E35604A7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
 		3565AE7CE5956216CB234B8C /* SketchTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C2899CABC78CFBEDD426E85 /* SketchTex.cpp */; };
@@ -337,8 +337,8 @@
 		2B0389C5293A7D71007B517B /* of_default_uniforms.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = of_default_uniforms.glsl; sourceTree = "<group>"; };
 		2B0389C6293A7D71007B517B /* SimplexNoiseDerivatives4D.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = SimplexNoiseDerivatives4D.glsl; sourceTree = "<group>"; };
 		2B0389C7293A7D71007B517B /* texture.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = texture.frag; sourceTree = "<group>"; };
-		2B3834A1293E4FE70037476B /* Console.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Console.cpp; sourceTree = "<group>"; };
-		2B3834A2293E4FE70037476B /* Console.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Console.h; sourceTree = "<group>"; };
+		2B3834A1293E4FE70037476B /* Logger.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Logger.cpp; sourceTree = "<group>"; };
+		2B3834A2293E4FE70037476B /* Logger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
 		2B629E4DB07A45391A420283 /* importerdesc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = importerdesc.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/importerdesc.h; sourceTree = SOURCE_ROOT; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
@@ -2017,8 +2017,8 @@
 				189C978C54FE51E73B0EADFD /* TexturePool.cpp */,
 				AC9F55AC591B53654883DFEC /* TexturePool.h */,
 				CBC027A06D910DC507BB91E4 /* var */,
-				2B3834A1293E4FE70037476B /* Console.cpp */,
-				2B3834A2293E4FE70037476B /* Console.h */,
+				2B3834A1293E4FE70037476B /* Logger.cpp */,
+				2B3834A2293E4FE70037476B /* Logger.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -2270,7 +2270,7 @@
 				E6EB0253C7456C2442D3560C /* Invert.cpp in Sources */,
 				884CB4D049E35C51E949A565 /* KaleidoscopePass.cpp in Sources */,
 				B1747F12881D899DCA2647FC /* LUTPass.cpp in Sources */,
-				2B3834A3293E4FE70037476B /* Console.cpp in Sources */,
+				2B3834A3293E4FE70037476B /* Logger.cpp in Sources */,
 				7AB51F1099DC01486D18FAF6 /* LimbDarkeningPass.cpp in Sources */,
 				8072A86E35F7000F7CDEEF42 /* NoiseWarpPass.cpp in Sources */,
 				B951AAE35209993B4E399E77 /* PixelatePass.cpp in Sources */,

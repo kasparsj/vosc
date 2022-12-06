@@ -5,7 +5,6 @@
 #include "VariablePool.h"
 #include "ShaderTex.h"
 #include "Args.h"
-#include "Console.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -29,10 +28,13 @@ void ofApp::setup(){
     camLook->isVec3 = true;
     camLook->set(glm::vec3(0));
     
-    Console::get().info("Vendor :" + ofToString(glGetString(GL_VENDOR)));
-    Console::get().info("GPU : " + ofToString(glGetString(GL_RENDERER)));
-    Console::get().info("OpenGL ver. " + ofToString(glGetString(GL_VERSION)));
-    Console::get().info("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+    console = std::make_shared<Logger>();
+    ofSetLoggerChannel(console);
+    
+    ofLog() << ("Vendor :" + ofToString(glGetString(GL_VENDOR)));
+    ofLog() << ("GPU : " + ofToString(glGetString(GL_RENDERER)));
+    ofLog() << ("OpenGL ver. " + ofToString(glGetString(GL_VERSION)));
+    ofLog() << ("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 }
 
 void ofApp::setupLayers(int numVisuals) {
@@ -179,7 +181,7 @@ retVals parseIndex(const ofxOscMessage &m) {
                 idx = std::stoi(which);
             }
             catch (...) {
-                Console::get().error("invalid layer index " + which);
+                ofLogError() << ("invalid layer index " + which);
             }
         }
     }
@@ -227,7 +229,7 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
     }
     else {
         if (cam == NULL) {
-            Console::get().info(command + " failed: camera not enabled (run /cam)");
+            ofLog() << (command + " failed: camera not enabled (run /cam)");
         }
         else if (command == "/cam/pos") {
             if (Args::get().isTweenVec3(m, 0)) {
@@ -264,7 +266,7 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
                 Args::get().handleFloat(&camOrbitPerSecond, m, 0);
             }
             else {
-                Console::get().error("/cam/orbit supported only for 'easy' cam");
+                ofLogError() << ("/cam/orbit supported only for 'easy' cam");
             }
         }
         else if (command == "/cam/set") {
@@ -468,9 +470,9 @@ void ofApp::allLayersCommand(string command, const ofxOscMessage &m) {
 void ofApp::micsCommand(string command, const ofxOscMessage &m) {
     if (command == "/mic/list") {
         vector<ofSoundDevice> devices = ofSoundStreamListDevices();
-        Console::get().info("ofSoundStreamListDevices:");
+        ofLog() << ("ofSoundStreamListDevices:");
         for (int i=0; i<devices.size(); i++) {
-            Console::get().info(ofToString(i) + ": " + devices[i].name);
+            ofLog() << (ofToString(i) + ": " + devices[i].name);
         }
     }
     else {
@@ -488,7 +490,7 @@ void ofApp::micsCommand(string command, const ofxOscMessage &m) {
             micCommand(mic, command, m);
         }
         else {
-            Console::get().error("invalid sound index: " + ofToString(idx));
+            ofLogError() << ("invalid sound index: " + ofToString(idx));
         }
     }
 }
@@ -511,9 +513,9 @@ void ofApp::midiCommand(string command, const ofxOscMessage &m) {
     }
     else if (command == "/midi/list") {
         vector<string> inPorts = midiIn.getInPortList();
-        Console::get().info("MIDI in ports:");
+        ofLog() << ("MIDI in ports:");
         for (int i=0; i<inPorts.size(); i++) {
-            Console::get().info(ofToString(i) + ": " + inPorts[i]);
+            ofLog() << (ofToString(i) + ": " + inPorts[i]);
         }
     }
 }
@@ -533,7 +535,7 @@ void ofApp::soundsCommand(string command, const ofxOscMessage &m) {
         soundCommand(sound, command, m);
     }
     else {
-        Console::get().error("invalid sound index: " + ofToString(idx));
+        ofLogError() << ("invalid sound index: " + ofToString(idx));
     }
 }
 
@@ -1046,13 +1048,13 @@ void ofApp::drawAmplitude(Mic& sound) {
 }
 
 void ofApp::drawConsole() {
-    if (Console::get().hasNewErrors()) {
+    if (console->hasNewErrors()) {
         showConsole = true;
     }
     if (showDebug || showConsole) {
         gui.begin();
         
-        Console::get().draw(&showConsole);
+        console->draw(&showConsole);
 
         gui.end();
     }

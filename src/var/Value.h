@@ -10,7 +10,7 @@ class TexData;
 
 class Value {
 public:
-    const float& get() const {
+    float get() const {
         return ofMap(value, 0.f, 1.f, rangeFrom, rangeTo);
     }
     void set(string type);

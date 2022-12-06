@@ -42,7 +42,7 @@ public:
         return parent->getVar(name, idx);
     }
     vector<float> getVarVec(string name) {
-        Variable* var = parent->getVariable(name);
+        const Variable* var = parent->getVariable(name);
         if (var != NULL) {
             return var->getVec();
         }

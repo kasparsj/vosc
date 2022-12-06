@@ -3,7 +3,6 @@
 #include "Config.h"
 #include "TexData.h"
 #include "VariablePool.h"
-#include "Console.h"
 
 void Value::set(string type) {
     float value = 0.f;
@@ -41,7 +40,7 @@ void Value::set(string type) {
         value = var->get();
     }
     else {
-        Console::get().error("invalid var type: " + type);
+        ofLogError() << ("invalid var type: " + type);
     }
     this->type = type;
     this->value = value;
@@ -145,7 +144,7 @@ void Value::update(const vector<Mic> &mics, const vector<Sound> &sounds, int ind
         }
         else {
             value = 0;
-            Console::get().error("sound data not available " + type + ":" + ofToString(chan));
+            ofLogError() << ("sound data not available " + type + ":" + ofToString(chan));
         }
     }
     else if (type == "mic") {
@@ -154,7 +153,7 @@ void Value::update(const vector<Mic> &mics, const vector<Sound> &sounds, int ind
         }
         else {
             value = 0;
-            Console::get().error("mic not available:" + ofToString(chan));
+            ofLogError() << ("mic not available:" + ofToString(chan));
         }
     }
     else if (type == "var") {

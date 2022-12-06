@@ -10,16 +10,16 @@ public:
         _id = nextId++;
     }
     virtual ~VarsHolder() {}
-    Variable* getVariable(string name);
-    bool hasVar(string name);
-    float getVar(string name, int idx = 0);
-    bool getVarBool(string name, int idx = 0);
-    glm::vec3 getVarVec3(string name, glm::vec3 defVal);
-    glm::vec3 getVarVec3(string name) {
+    const Variable* getVariable(string name) const;
+    bool hasVar(string name) const;
+    float getVar(string name, int idx = 0) const;
+    bool getVarBool(string name, int idx = 0) const;
+    glm::vec3 getVarVec3(string name, glm::vec3 defVal) const;
+    glm::vec3 getVarVec3(string name) const {
         return getVarVec3(name, glm::vec3());
     }
-    vector<float> getVarVec(string name);
-    ofFloatColor getVarColor(string name);
+    vector<float> getVarVec(string name) const;
+    ofFloatColor getVarColor(string name) const;
     void setVar(string name, float value);
     void setVar(string name, vector<float> value);
     void setVar(string name, glm::vec3 value);

@@ -3,7 +3,6 @@
 #include "Config.h"
 #include "Layer.h"
 #include "VariablePool.h"
-#include "Console.h"
 
 bool isColor(string path) {
     return (path.substr(0, 1) == "#" && path.size() == 7) || (path.substr(0, 2) == "0x" && path.size() == 8);
@@ -44,7 +43,7 @@ void Texture::load(string source, const vector<float>& args) {
         }
     }
     if (tex == NULL) {
-        Console::get().error("invalid source: " + source);
+        ofLogError() << ("invalid source: " + source);
     }
 }
 
@@ -66,7 +65,7 @@ void Texture::choose(const ofxOscMessage& m) {
     }
     tex = chooseTex(type, args);
     if (tex == NULL) {
-        Console::get().error("chooseTex: invalid source type " + type);
+        ofLogError() << ("chooseTex: invalid source type " + type);
     }
 }
 
@@ -99,7 +98,7 @@ void Texture::reload() {
         tex->reload();
     }
     else {
-        Console::get().info("cannot reload layer " + ofToString(index));
+        ofLog() << ("cannot reload layer " + ofToString(index));
     }
 }
 
@@ -108,7 +107,7 @@ void Texture::clear() {
         tex->clear();
     }
     else {
-        Console::get().info("cannot clear layer " + ofToString(index));
+        ofLog() << ("cannot clear layer " + ofToString(index));
     }
 }
 

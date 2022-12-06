@@ -1,6 +1,5 @@
 #include "ShaderPingPongTex.h"
 #include "Layer.h"
-#include "Console.h"
 
 void ShaderPingPongTex::update(TexData& data) {
     FboPingPongTex::update(data);
@@ -10,7 +9,7 @@ void ShaderPingPongTex::update(TexData& data) {
             prevPath = path;
         }
         else {
-            Console::get().error("could not load shader: " + path);
+            ofLogError() << ("could not load shader: " + path);
             path = prevPath;
             return;
         }

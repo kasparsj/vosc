@@ -35,26 +35,26 @@ public:
         }
     }
     void update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data = NULL);
-    const float& get(int idx = 0) const {
+    float get(int idx = 0) const {
         return values[idx].get();
     }
-    int getInt(int idx = 0) {
+    int getInt(int idx = 0) const {
         return (int) get(idx);
     }
-    bool getBool(int idx = 0) {
+    bool getBool(int idx = 0) const {
         return getInt(idx) > 0;
     }
-    vector<float> getVec() {
+    vector<float> getVec() const {
         vector<float> vec;
         for (int i=0; i<values.size(); i++) {
             vec.push_back(get(i));
         }
         return vec;
     }
-    glm::vec3 getVec3() {
+    glm::vec3 getVec3() const {
         return glm::vec3(get(0), get(1), get(2));
     }
-    ofFloatColor getColor() {
+    ofFloatColor getColor() const {
         return ofFloatColor(get(0), get(1), get(2), get(3));
     }
     void afterDraw();

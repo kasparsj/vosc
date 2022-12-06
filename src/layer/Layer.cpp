@@ -56,10 +56,10 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
         if (geom == NULL) {
             geom = GeomPool::getForLayer(getId());
         }
+        if (!geom->isLoaded()) {
+            geom->load("plane");
+        }
         if (shader.hasDefaultTexture()) {
-            if (!geom->isLoaded()) {
-                geom->load("plane");
-            }
             if (!shader.isLoaded()) {
                 shader.load("texture");
             }

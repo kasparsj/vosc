@@ -12,6 +12,7 @@
 #include "Lights.h"
 #include "ofxMidi.h"
 #include "ofxImGui.h"
+#include "Logger.h"
 
 class ofApp : public ofBaseApp {
 
@@ -87,6 +88,7 @@ public:
     Lights lights;
     ofxMidiIn midiIn;
     
+    std::shared_ptr<Logger> console;
     ofxImGui::Gui gui;
     
     bool showDebug = false;

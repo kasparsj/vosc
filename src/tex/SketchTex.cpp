@@ -3,7 +3,6 @@
 #include "NoisySpirals.h"
 #include "WaveClock.h"
 #include "Spiral.h"
-#include "Console.h"
 
 map<string, Sketch*> createSketches()
 {
@@ -30,7 +29,7 @@ void SketchTex::update(TexData& data) {
     FboTex::update(data);
     if (path != prevPath) {
         if (!exists(path)) {
-            Console::get().error("sketch does not exist: " + path);
+            ofLogError() << ("sketch does not exist: " + path);
             path = prevPath;
             return;
         }

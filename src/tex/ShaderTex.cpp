@@ -1,6 +1,5 @@
 #include "ShaderTex.h"
 #include "Layer.h"
-#include "Console.h"
 
 void ShaderTex::update(TexData& data) {
     FboTex::update(data);
@@ -9,7 +8,7 @@ void ShaderTex::update(TexData& data) {
             prevPath = path;
         }
         else {
-            Console::get().error("could not load shader: " + path);
+            ofLogError() << ("could not load shader: " + path);
             path = prevPath;
             return;
         }

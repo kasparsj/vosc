@@ -1,51 +1,51 @@
 #include "VarsHolder.h"
 #include "VariablePool.h"
 
-Variable* VarsHolder::getVariable(string name) {
+const Variable* VarsHolder::getVariable(string name) const {
     if (vars.find(name) != vars.end()) {
-        return vars[name];
+        return vars.at(name);
     }
     return NULL;
 }
 
-bool VarsHolder::hasVar(string name) {
+bool VarsHolder::hasVar(string name) const {
     return getVariable(name) != NULL;
 }
 
-float VarsHolder::getVar(string name, int idx) {
-    Variable* var = getVariable(name);
+float VarsHolder::getVar(string name, int idx) const {
+    const Variable* var = getVariable(name);
     if (var != NULL) {
         return var->get(idx);
     }
     return 0;
 }
 
-bool VarsHolder::getVarBool(string name, int idx) {
-    Variable* var = getVariable(name);
+bool VarsHolder::getVarBool(string name, int idx) const {
+    const Variable* var = getVariable(name);
     if (var != NULL) {
         return var->getBool(idx);
     }
     return false;
 }
 
-vector<float> VarsHolder::getVarVec(string name) {
-    Variable* var = getVariable(name);
+vector<float> VarsHolder::getVarVec(string name) const {
+    const Variable* var = getVariable(name);
     if (var != NULL) {
         return var->getVec();
     }
     return vector<float>();
 }
 
-glm::vec3 VarsHolder::getVarVec3(string name, glm::vec3 defVal) {
-    Variable* var = getVariable(name);
+glm::vec3 VarsHolder::getVarVec3(string name, glm::vec3 defVal) const {
+    const Variable* var = getVariable(name);
     if (var != NULL) {
         return glm::vec3(var->get(0), var->get(1), var->get(2));
     }
     return defVal;
 }
 
-ofFloatColor VarsHolder::getVarColor(string name) {
-    Variable* var = getVariable(name);
+ofFloatColor VarsHolder::getVarColor(string name) const {
+    const Variable* var = getVariable(name);
     if (var != NULL) {
         return var->getColor();
     }

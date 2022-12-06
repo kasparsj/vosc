@@ -1,6 +1,5 @@
 #include "HPVideoTex.h"
 #include "Layer.h"
-#include "Console.h"
 
 vector<string> loadLocalHPVs()
 {
@@ -41,7 +40,7 @@ void HPVideoTex::update(TexData& data) {
             data.setSize(hpvPlayer.getWidth(), hpvPlayer.getHeight());
         }
         else {
-            Console::get().error("could not load hpv: " + path);
+            ofLogError() << ("could not load hpv: " + path);
             path = prevPath;
             return;
         }

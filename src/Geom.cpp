@@ -1,6 +1,5 @@
 #include "Geom.h"
 #include "Layer.h"
-#include "Console.h"
 
 vector<string> Geom::primitives = {"box", "sphere", "icosphere", "cylinder", "plane", "cone"};
 
@@ -26,7 +25,7 @@ void Geom::load(string newPath, const vector<float>& args) {
             updateBoundingBox();
         }
         else {
-            Console::get().error("could not load primitive: " + path);
+            ofLogError() << ("could not load primitive: " + path);
             path = newPrevPath;
         }
     }
@@ -37,7 +36,7 @@ void Geom::load(string newPath, const vector<float>& args) {
             updateBoundingBox();
         }
         else {
-            Console::get().error("could not load grass: " + path);
+            ofLogError() << ("could not load grass: " + path);
             path = newPrevPath;
         }
     }
@@ -47,7 +46,7 @@ void Geom::load(string newPath, const vector<float>& args) {
             updateBoundingBox();
         }
         else {
-            Console::get().error("could not load model: " + path);
+            ofLogError() << ("could not load model: " + path);
             path = newPrevPath;
         }
     }
@@ -204,7 +203,7 @@ void Geom::updateBoundingBox() {
     }
 }
 
-void Geom::draw() {
+void Geom::draw() const {
     if (usingModel) {
         model.drawFaces();
     }
