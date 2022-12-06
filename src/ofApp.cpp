@@ -953,15 +953,15 @@ void ofApp::drawDebug() {
     ofDrawBitmapString("Geometry", 0, -20);
     drawGeoms();
     
-    ofTranslate(0, 180);
+    ofTranslate(0, 140);
     ofDrawBitmapString("Textures", 0, -20);
     drawTextures();
     
-    ofTranslate(0, 180);
+    ofTranslate(0, 140);
     ofDrawBitmapString("Microphones", 0, -20);
     drawMics();
     
-    ofTranslate(0, 180);
+    ofTranslate(0, 140);
     ofDrawBitmapString("Sounds", 0, -20);
     drawSounds();
     
@@ -987,14 +987,14 @@ void ofApp::drawTextures() {
     for (int i=0; i<layers.size(); i++) {
         if (layers[i]->shader.hasDefaultTexture()) {
             ofSetColor(255);
-            layers[i]->shader.getDefaultTexture()->getTexture().draw(20+i*120, 0, 100, 100);
+            layers[i]->shader.getDefaultTexture()->getTexture().draw(i*120, 0, 100, 100);
         }
         else {
             ofFill();
             ofSetColor(0);
-            ofDrawRectangle(20+i*120, 0, 100, 100);
+            ofDrawRectangle(i*120, 0, 100, 100);
             ofSetColor(255);
-            ofDrawBitmapString("not loaded", 20+i*120, 20);
+            ofDrawBitmapString("not loaded", 8+i*120, 20);
         }
     }
     ofPopStyle();
