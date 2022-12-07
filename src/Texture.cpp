@@ -3,15 +3,22 @@
 #include "Config.h"
 #include "Layer.h"
 #include "VariablePool.h"
+#include <regex>
 
 bool isColor(string path) {
     return (path.substr(0, 1) == "#" && path.size() == 7) || (path.substr(0, 2) == "0x" && path.size() == 8);
 }
 
+bool isURL(string path) {
+    std::regex re("^https?://.+");
+    return regex_match(path, re);
+}
+
 void Texture::load(string source, const vector<float>& args) {
     _unload();
     bool explicitType = source.find(":") != string::npos;
-    if (explicitType && source.substr(0, 4) != "http") {
+    bool _isURL = isURL(source);
+    if (explicitType && !_isURL) {
         tex = Tex::factory(source, args);
     }
     else {
@@ -25,11 +32,14 @@ void Texture::load(string source, const vector<float>& args) {
         else if (extension == "jpg" || extension == "jpeg" || extension == "png") {
             tex = Tex::factory("image", source, args);
         }
-        else if (extension == "mov") {
+        else if (extension == "mov" || extension == "mp4") {
             tex = Tex::factory("video", source, args);
         }
         else if (extension == "hpv") {
             tex = Tex::factory("hpv", source, args);
+        }
+        else if (extension == "html" || _isURL) {
+            tex = Tex::factory("html", source, args);
         }
         else {
             if (isColor(source)) {

@@ -127,6 +127,7 @@
 		DD70F1493421AE507A4C0156 /* Logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 372124C2D4BE337F66C4B210 /* Logger.cpp */; };
 		DFB75F1EBE744A456AC999F4 /* ContrastPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6788311DC7D945282047837A /* ContrastPass.cpp */; };
 		E00EDA256444953D8429D9F3 /* TexData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 67B4E9095603F3F375B58675 /* TexData.cpp */; };
+		E2CDAC7898F038227EE4716D /* UltralightTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 31968776444EEDE0F69917EC /* UltralightTex.cpp */; };
 		E4797F1786BE22985F7EE55F /* RGBShiftPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5201F6A7A19258B7F1CA2E43 /* RGBShiftPass.cpp */; };
 		E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1D0A3A1BDC003C02F2 /* main.cpp */; };
 		E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */; };
@@ -230,6 +231,7 @@
 		2FD4B0329909D3527F003494 /* UdpSocket.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = UdpSocket.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/UdpSocket.h; sourceTree = SOURCE_ROOT; };
 		3160BA8560C0ECC51DC47454 /* Tex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Tex.h; path = src/tex/Tex.h; sourceTree = SOURCE_ROOT; };
 		3174462C64E918D8DA23041B /* EngineOpenGLES.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = EngineOpenGLES.cpp; path = ../../../addons/ofxImGui/src/EngineOpenGLES.cpp; sourceTree = SOURCE_ROOT; };
+		31968776444EEDE0F69917EC /* UltralightTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = UltralightTex.cpp; path = src/UltralightTex.cpp; sourceTree = SOURCE_ROOT; };
 		3281EEF1668D868C286EE509 /* Invert.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Invert.h; path = ../../../addons/ofxPostProcessing/src/Invert.h; sourceTree = SOURCE_ROOT; };
 		340310DF58CADC860B3B50E5 /* ReflectY.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ReflectY.cpp; path = ../../../addons/ofxPostProcessing/src/ReflectY.cpp; sourceTree = SOURCE_ROOT; };
 		347D0C39A1C7D6331C7B8E07 /* FramesBuffer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FramesBuffer.cpp; path = ../../../addons/ofxLooper/src/FramesBuffer.cpp; sourceTree = SOURCE_ROOT; };
@@ -376,6 +378,7 @@
 		94B3C3C21F92F9310CA90986 /* ofxBaseMidi.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxBaseMidi.cpp; path = ../../../addons/ofxMidi/src/ofxBaseMidi.cpp; sourceTree = SOURCE_ROOT; };
 		968D72C0F70A6BE01FC2AACC /* ReflectX.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ReflectX.h; path = ../../../addons/ofxPostProcessing/src/ReflectX.h; sourceTree = SOURCE_ROOT; };
 		96EBF8A6CD3F11C79F7950BC /* cexport.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = cexport.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/cexport.h; sourceTree = SOURCE_ROOT; };
+		96FCF1903F8CF5BC13871048 /* UltralightTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = UltralightTex.h; path = src/UltralightTex.h; sourceTree = SOURCE_ROOT; };
 		979A9A3F0546EBDE6212FB67 /* ImageTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ImageTex.cpp; path = src/tex/ImageTex.cpp; sourceTree = SOURCE_ROOT; };
 		97AC5D82D06DAB2345FDB039 /* Config.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Config.h; path = src/Config.h; sourceTree = SOURCE_ROOT; };
 		98033501202172DF458BD6CF /* vector2.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = vector2.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/vector2.h; sourceTree = SOURCE_ROOT; };
@@ -1835,6 +1838,8 @@
 				F86419EE954CE687A9D7B2CD /* Texture.h */,
 				189C978C54FE51E73B0EADFD /* TexturePool.cpp */,
 				AC9F55AC591B53654883DFEC /* TexturePool.h */,
+				31968776444EEDE0F69917EC /* UltralightTex.cpp */,
+				96FCF1903F8CF5BC13871048 /* UltralightTex.h */,
 				CBC027A06D910DC507BB91E4 /* var */,
 			);
 			path = src;
@@ -1989,6 +1994,7 @@
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
 				6D05523FAB0501580B1205C7 /* TexturePool.cpp in Sources */,
+				E2CDAC7898F038227EE4716D /* UltralightTex.cpp in Sources */,
 				01B036F302D9F069DEDCD4F7 /* GeomPool.cpp in Sources */,
 				E8F628D23F8FFF6E80EA3203 /* DrawTex.cpp in Sources */,
 				B8482B23AC6E1576A3211E8E /* FboPingPongTex.cpp in Sources */,

@@ -8,6 +8,7 @@
 //#include "GVVideoTex.h"
 #include "WebcamTex.h"
 #include "DrawTex.h"
+#include "UltralightTex.h"
 #include "Config.h"
 #include "VariablePool.h"
 
@@ -16,6 +17,9 @@ Tex* Tex::factory(string type, string path, const vector<float>& args) {
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
+            case Source::HTML:
+                tex = new UltralightTex(path, args);
+                break;
             case Source::VIDEO:
                 tex = new VideoTex(path, args);
                 break;
@@ -65,6 +69,10 @@ Tex* Tex::factory(string source, const vector<float>& args) {
         auto it = SourceMap.find(type);
         if (it != SourceMap.end()) {
             switch (it->second) {
+                case Source::HTML:
+                    // todo: use google's "I'm feeling lucky"
+                    ofLogError() << "/tex/choose for html not implemented";
+                    break;
                 case Source::VIDEO:
                     path = VideoTex::random();
                     break;
