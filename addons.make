@@ -10,3 +10,4 @@ ofxOsc
 ofxPostProcessing
 ofxShadertoy
 ofxTidalCycles
+ofxUltralight

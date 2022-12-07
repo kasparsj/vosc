@@ -2,3 +2,5 @@ bin/*.app
 bin/*.zip
 bin/data/videos
 *.user
+bin/data/shaders/shadertoy
+log.txt

@@ -78,6 +78,7 @@ bool Shader::load(string path) {
                 shaderFile << json["Shader"]["renderpass"][0]["code"].get<string>();
                 shaderFile.close();
                 shadertoy = new ofxShadertoy();
+                shadertoy->setUseAutoUpdate(true);
                 success = shadertoy->load(fragPath);
             }
             catch (exception& ex) {
