@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-               BuildableName = "osc_vj.app"
-               BlueprintName = "osc_vj"
+               BuildableName = "osc_vj x86_64.app"
+               BlueprintName = "osc_vj x86_64"
                ReferencedContainer = "container:osc_vj.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -31,8 +31,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "osc_vj.app"
-            BlueprintName = "osc_vj"
+            BuildableName = "osc_vj x86_64.app"
+            BlueprintName = "osc_vj x86_64"
             ReferencedContainer = "container:osc_vj.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -54,8 +54,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "osc_vj.app"
-            BlueprintName = "osc_vj"
+            BuildableName = "osc_vj x86_64.app"
+            BlueprintName = "osc_vj x86_64"
             ReferencedContainer = "container:osc_vj.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -71,8 +71,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "osc_vj.app"
-            BlueprintName = "osc_vj"
+            BuildableName = "osc_vj x86_64.app"
+            BlueprintName = "osc_vj x86_64"
             ReferencedContainer = "container:osc_vj.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

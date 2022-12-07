@@ -8,18 +8,23 @@
 //#include "GVVideoTex.h"
 #include "WebcamTex.h"
 #include "DrawTex.h"
-#include "UltralightTex.h"
 #include "Config.h"
 #include "VariablePool.h"
+
+#ifndef TARGET_CPU_ARM64
+#include "UltralightTex.h"
+#endif
 
 Tex* Tex::factory(string type, string path, const vector<float>& args) {
     Tex *tex = NULL;
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
+#ifndef TARGET_CPU_ARM64
             case Source::HTML:
                 tex = new UltralightTex(path, args);
                 break;
+#endif
             case Source::VIDEO:
                 tex = new VideoTex(path, args);
                 break;

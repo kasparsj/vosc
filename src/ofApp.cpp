@@ -5,7 +5,10 @@
 #include "VariablePool.h"
 #include "ShaderTex.h"
 #include "Args.h"
+
+#ifndef TARGET_CPU_ARM64
 #include "ofxUltralight.h"
+#endif
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -85,7 +88,9 @@ void ofApp::update(){
         }
     }
     HPV::Update();
+#ifndef TARGET_CPU_ARM64
     ofxUltralight::update();
+#endif
 }
 
 void ofApp::parseMessages(){

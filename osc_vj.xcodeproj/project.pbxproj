@@ -32,6 +32,137 @@
 		29DD298E0609B82CFFD50620 /* VarsHolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
 		2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
+		2B19F779294102D200982AB7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1D0A3A1BDC003C02F2 /* main.cpp */; };
+		2B19F77A294102D200982AB7 /* ofApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */; };
+		2B19F77B294102D200982AB7 /* TexturePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 189C978C54FE51E73B0EADFD /* TexturePool.cpp */; };
+		2B19F77C294102D200982AB7 /* GeomPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 553241ABDCDFB7E8685963FC /* GeomPool.cpp */; };
+		2B19F77D294102D200982AB7 /* DrawTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 88984603F62DE9EB61ECDFF6 /* DrawTex.cpp */; };
+		2B19F77E294102D200982AB7 /* FboPingPongTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BA847296AB5A3AA63ADE748F /* FboPingPongTex.cpp */; };
+		2B19F77F294102D200982AB7 /* SketchTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C2899CABC78CFBEDD426E85 /* SketchTex.cpp */; };
+		2B19F780294102D200982AB7 /* WebcamTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */; };
+		2B19F781294102D200982AB7 /* HPVideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 73E0E4213D89C594715F8F14 /* HPVideoTex.cpp */; };
+		2B19F782294102D200982AB7 /* ImageTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 979A9A3F0546EBDE6212FB67 /* ImageTex.cpp */; };
+		2B19F783294102D200982AB7 /* ShaderTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDAE40F4409B52242243517B /* ShaderTex.cpp */; };
+		2B19F784294102D200982AB7 /* FboTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 943E84164BBE12A26025530F /* FboTex.cpp */; };
+		2B19F785294102D200982AB7 /* ShaderPingPongTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4B1216CB6EB3A54B8A5A5D94 /* ShaderPingPongTex.cpp */; };
+		2B19F786294102D200982AB7 /* VideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9174FE620B649DE0C36D5259 /* VideoTex.cpp */; };
+		2B19F787294102D200982AB7 /* TexData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 67B4E9095603F3F375B58675 /* TexData.cpp */; };
+		2B19F788294102D200982AB7 /* Tex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 23AB9B54C418735665B1EBA6 /* Tex.cpp */; };
+		2B19F789294102D200982AB7 /* Args.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DAF2AD43C2034AE2562BD805 /* Args.cpp */; };
+		2B19F78A294102D200982AB7 /* Lights.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45858BC21D396ED266B2333D /* Lights.cpp */; };
+		2B19F78B294102D200982AB7 /* Texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F701FBB2BC4E0BB2C068EA34 /* Texture.cpp */; };
+		2B19F78C294102D200982AB7 /* VarsHolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */; };
+		2B19F78D294102D200982AB7 /* Value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D453A863C70334C3B77721C /* Value.cpp */; };
+		2B19F78E294102D200982AB7 /* Variable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC95D6A4850BE0F8FFB7D5E5 /* Variable.cpp */; };
+		2B19F78F294102D200982AB7 /* VariablePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE6A0B50D6798FC3BC6A087A /* VariablePool.cpp */; };
+		2B19F790294102D200982AB7 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
+		2B19F791294102D200982AB7 /* LayerShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 788B25E9947816B8DFDCAF81 /* LayerShader.cpp */; };
+		2B19F792294102D200982AB7 /* LayerData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C23F79F9BFBAD0F41FB354FD /* LayerData.cpp */; };
+		2B19F793294102D200982AB7 /* Layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BA986CF673F742569173F979 /* Layer.cpp */; };
+		2B19F794294102D200982AB7 /* FboPingPong.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C5845FA3D294EBD94FC41FA /* FboPingPong.cpp */; };
+		2B19F795294102D200982AB7 /* Logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 372124C2D4BE337F66C4B210 /* Logger.cpp */; };
+		2B19F796294102D200982AB7 /* Geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FE6C4A803E115F324568E6A /* Geom.cpp */; };
+		2B19F797294102D200982AB7 /* Mic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 05DD3FAA723D1DAA2DE8FC75 /* Mic.cpp */; };
+		2B19F798294102D200982AB7 /* Sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5AF416401E18FEEFFE3474AC /* Sound.cpp */; };
+		2B19F799294102D200982AB7 /* ofxAssimpAnimation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 36068D6C1D6D412786A5C4C1 /* ofxAssimpAnimation.cpp */; };
+		2B19F79A294102D200982AB7 /* ofxAssimpMeshHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F67FE68E327BEFBD4B777571 /* ofxAssimpMeshHelper.cpp */; };
+		2B19F79B294102D200982AB7 /* ofxAssimpModelLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDE55D82BD962DAC0E94B708 /* ofxAssimpModelLoader.cpp */; };
+		2B19F79C294102D200982AB7 /* ofxAssimpTexture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6F2EE44AD04FF549AB13699 /* ofxAssimpTexture.cpp */; };
+		2B19F79D294102D200982AB7 /* ofxAutoReloadedShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */; };
+		2B19F79E294102D200982AB7 /* ColorScheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7F9AE8283BEDCBB358ACC40A /* ColorScheme.cpp */; };
+		2B19F79F294102D200982AB7 /* ColorUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55138D8657D9D09949E54626 /* ColorUtil.cpp */; };
+		2B19F7A0294102D200982AB7 /* ColorWheelScheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D09A011EA9E66CDCAAB4FD25 /* ColorWheelScheme.cpp */; };
+		2B19F7A1294102D200982AB7 /* ColorWheelSchemes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27F1AFE400331DE8F477F084 /* ColorWheelSchemes.cpp */; };
+		2B19F7A2294102D200982AB7 /* Analogous.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 24317A596BC892793AEA0706 /* Analogous.cpp */; };
+		2B19F7A3294102D200982AB7 /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
+		2B19F7A4294102D200982AB7 /* Compound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A9C7EB625886EF6596D28D8E /* Compound.cpp */; };
+		2B19F7A5294102D200982AB7 /* FlippedCompound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 05F3D9211F202EAD5E2AA9FA /* FlippedCompound.cpp */; };
+		2B19F7A6294102D200982AB7 /* Monochrome.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C5EDF65915908821C72E565 /* Monochrome.cpp */; };
+		2B19F7A7294102D200982AB7 /* SplitComplementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4E2B4BC4A65212574815E669 /* SplitComplementary.cpp */; };
+		2B19F7A8294102D200982AB7 /* Tetrad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5BE5C3443286643DF629CB82 /* Tetrad.cpp */; };
+		2B19F7A9294102D200982AB7 /* Triad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50E07179CDF66AF17198BE27 /* Triad.cpp */; };
+		2B19F7AA294102D200982AB7 /* easing_terms_of_use.html in Sources */ = {isa = PBXBuildFile; fileRef = 528CB0EB22F0A199A5F479D5 /* easing_terms_of_use.html */; };
+		2B19F7AB294102D200982AB7 /* HPVManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E73D5C2347DF2FD4913DD347 /* HPVManager.cpp */; };
+		2B19F7AC294102D200982AB7 /* HPVPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3A5C80FF2CE2833134509749 /* HPVPlayer.cpp */; };
+		2B19F7AD294102D200982AB7 /* HPVRenderBridge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D137AEF3D0655BB96F6362DD /* HPVRenderBridge.cpp */; };
+		2B19F7AE294102D200982AB7 /* Log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 697B169C0F7B7A765EB7BECB /* Log.cpp */; };
+		2B19F7AF294102D200982AB7 /* lz4.c in Sources */ = {isa = PBXBuildFile; fileRef = 9144546E5481902E77870A52 /* lz4.c */; };
+		2B19F7B0294102D200982AB7 /* lz4hc.c in Sources */ = {isa = PBXBuildFile; fileRef = 2BF170BF7B01F0B07513390B /* lz4hc.c */; };
+		2B19F7B1294102D200982AB7 /* ofxHPVPLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CA80722114B53E79572651A /* ofxHPVPLayer.cpp */; };
+		2B19F7B2294102D200982AB7 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CF9B1FD213484DDDB7AE362 /* imgui.cpp */; };
+		2B19F7B3294102D200982AB7 /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CC36552DD0A47E758D71FB5 /* imgui_demo.cpp */; };
+		2B19F7B4294102D200982AB7 /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9E02D9F3A04B5573758EBCF8 /* imgui_draw.cpp */; };
+		2B19F7B5294102D200982AB7 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C525795C6CCB99616535318 /* imgui_widgets.cpp */; };
+		2B19F7B6294102D200982AB7 /* BaseEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D7C7BDAD29F580A47FF56B52 /* BaseEngine.cpp */; };
+		2B19F7B7294102D200982AB7 /* DefaultTheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A9A7E144D697FCBB4216A73E /* DefaultTheme.cpp */; };
+		2B19F7B8294102D200982AB7 /* EngineGLFW.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1C686ADB50E8F79292BA80 /* EngineGLFW.cpp */; };
+		2B19F7B9294102D200982AB7 /* EngineOpenGLES.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3174462C64E918D8DA23041B /* EngineOpenGLES.cpp */; };
+		2B19F7BA294102D200982AB7 /* EngineVk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 91D1568F53D3EC80AC718E7B /* EngineVk.cpp */; };
+		2B19F7BB294102D200982AB7 /* Gui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F0E2047B4D03D5151730B52B /* Gui.cpp */; };
+		2B19F7BC294102D200982AB7 /* ImHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3A286071F8A3AE1988CAF6D3 /* ImHelpers.cpp */; };
+		2B19F7BD294102D200982AB7 /* ofxImGuiLoggerChannel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64438C8902B287DA10BCD63B /* ofxImGuiLoggerChannel.cpp */; };
+		2B19F7BE294102D200982AB7 /* FramesBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 347D0C39A1C7D6331C7B8E07 /* FramesBuffer.cpp */; };
+		2B19F7BF294102D200982AB7 /* ofxLooper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 15FB2E86C44B0C97D2B82E65 /* ofxLooper.cpp */; };
+		2B19F7C0294102D200982AB7 /* RtMidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ABDEF0ACF05BF28F5C74E008 /* RtMidi.cpp */; };
+		2B19F7C1294102D200982AB7 /* ofxRtMidiIn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F634AA6CA2E3C60F3B87B59A /* ofxRtMidiIn.cpp */; };
+		2B19F7C2294102D200982AB7 /* ofxRtMidiOut.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 712B183BC00EBFFB1EEA5AB8 /* ofxRtMidiOut.cpp */; };
+		2B19F7C3294102D200982AB7 /* ofxBaseMidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 94B3C3C21F92F9310CA90986 /* ofxBaseMidi.cpp */; };
+		2B19F7C4294102D200982AB7 /* ofxMidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E238CCDE032640E0FEBFAD82 /* ofxMidi.cpp */; };
+		2B19F7C5294102D200982AB7 /* ofxMidiClock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A937731265782800A8359098 /* ofxMidiClock.cpp */; };
+		2B19F7C6294102D200982AB7 /* ofxMidiIn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3DD359247F3ED1550D8BB5C9 /* ofxMidiIn.cpp */; };
+		2B19F7C7294102D200982AB7 /* ofxMidiMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0E7EDA67EDF213FC0E83D17 /* ofxMidiMessage.cpp */; };
+		2B19F7C8294102D200982AB7 /* ofxMidiOut.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04F77E5C73A62E2E77C78EC6 /* ofxMidiOut.cpp */; };
+		2B19F7C9294102D200982AB7 /* ofxMidiTimecode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 10E2C891AAA166534B1F3B4E /* ofxMidiTimecode.cpp */; };
+		2B19F7CA294102D200982AB7 /* IpEndpointName.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ADD194746185E2DA11468377 /* IpEndpointName.cpp */; };
+		2B19F7CB294102D200982AB7 /* NetworkingUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3B361208CD4107E479F04E7B /* NetworkingUtils.cpp */; };
+		2B19F7CC294102D200982AB7 /* UdpSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DEF695B88BA5FAACEAA937 /* UdpSocket.cpp */; };
+		2B19F7CD294102D200982AB7 /* OscOutboundPacketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */; };
+		2B19F7CE294102D200982AB7 /* OscPrintReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BC8881B3C8C0A1C45F042E7A /* OscPrintReceivedElements.cpp */; };
+		2B19F7CF294102D200982AB7 /* OscReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9BF3AA0D4FAA89D0F8A0E545 /* OscReceivedElements.cpp */; };
+		2B19F7D0294102D200982AB7 /* OscTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BFFBBF4CC43DEE890B3C3E /* OscTypes.cpp */; };
+		2B19F7D1294102D200982AB7 /* ofxOscBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65EEFA3DA3526E9CDD9C21F9 /* ofxOscBundle.cpp */; };
+		2B19F7D2294102D200982AB7 /* ofxOscMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DF49D76C45D5DB505A234880 /* ofxOscMessage.cpp */; };
+		2B19F7D3294102D200982AB7 /* ofxOscParameterSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0AED834CE4DEC5260AF302A2 /* ofxOscParameterSync.cpp */; };
+		2B19F7D4294102D200982AB7 /* ofxOscReceiver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C2FAC65C491D4231379F3298 /* ofxOscReceiver.cpp */; };
+		2B19F7D5294102D200982AB7 /* ofxOscSender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 81967292BFC87A0144BD32C6 /* ofxOscSender.cpp */; };
+		2B19F7D6294102D200982AB7 /* Beyoon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4176D2EC3811F1A6586B49A5 /* Beyoon.cpp */; };
+		2B19F7D7294102D200982AB7 /* BleachBypassPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C5313A8CC477A5ECC0A7E4E8 /* BleachBypassPass.cpp */; };
+		2B19F7D8294102D200982AB7 /* BloomPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D41ED8C8083845703AA1FDFA /* BloomPass.cpp */; };
+		2B19F7D9294102D200982AB7 /* ContrastPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6788311DC7D945282047837A /* ContrastPass.cpp */; };
+		2B19F7DA294102D200982AB7 /* ConvolutionPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3AACD9661AF21261E24A05A4 /* ConvolutionPass.cpp */; };
+		2B19F7DB294102D200982AB7 /* DofAltPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 91F91C3BEAD0B3C2B92BB9A5 /* DofAltPass.cpp */; };
+		2B19F7DC294102D200982AB7 /* DofPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E837DEBFAEA1CAD833A377DF /* DofPass.cpp */; };
+		2B19F7DD294102D200982AB7 /* EdgePass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC8B4DE8CD341280FDE798A /* EdgePass.cpp */; };
+		2B19F7DE294102D200982AB7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
+		2B19F7DF294102D200982AB7 /* FxaaPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9425843AEC3118B8FDEF1B0B /* FxaaPass.cpp */; };
+		2B19F7E0294102D200982AB7 /* Glitch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE0E73D8B9FC77CB69667EE9 /* Glitch.cpp */; };
+		2B19F7E1294102D200982AB7 /* GodRaysPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07AAE715D8853EDA76BC909 /* GodRaysPass.cpp */; };
+		2B19F7E2294102D200982AB7 /* HorizontalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */; };
+		2B19F7E3294102D200982AB7 /* HsbShiftPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F8A1741CC4F784D8B130531 /* HsbShiftPass.cpp */; };
+		2B19F7E4294102D200982AB7 /* Invert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 20CE1E405861E6EFEDA0A144 /* Invert.cpp */; };
+		2B19F7E5294102D200982AB7 /* KaleidoscopePass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 108C4DB0C398388D00027091 /* KaleidoscopePass.cpp */; };
+		2B19F7E6294102D200982AB7 /* LUTPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F171898BD12F77CCAD29B7C1 /* LUTPass.cpp */; };
+		2B19F7E7294102D200982AB7 /* LimbDarkeningPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9222AE2464AE1CF72876A4ED /* LimbDarkeningPass.cpp */; };
+		2B19F7E8294102D200982AB7 /* NoiseWarpPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5BC56A60E911F7488A58830A /* NoiseWarpPass.cpp */; };
+		2B19F7E9294102D200982AB7 /* PixelatePass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7462D018F6D6E407E598A021 /* PixelatePass.cpp */; };
+		2B19F7EA294102D200982AB7 /* Pixelsort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 199A2F0F6EFDD17E50C9FD34 /* Pixelsort.cpp */; };
+		2B19F7EB294102D200982AB7 /* PostProcessing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 484F662699DFE8176E1B750F /* PostProcessing.cpp */; };
+		2B19F7EC294102D200982AB7 /* RGBShiftPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5201F6A7A19258B7F1CA2E43 /* RGBShiftPass.cpp */; };
+		2B19F7ED294102D200982AB7 /* ReflectX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7648D86674A13C326B506A34 /* ReflectX.cpp */; };
+		2B19F7EE294102D200982AB7 /* ReflectY.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 340310DF58CADC860B3B50E5 /* ReflectY.cpp */; };
+		2B19F7EF294102D200982AB7 /* RenderPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 54F36382628E4D0FF07206D7 /* RenderPass.cpp */; };
+		2B19F7F0294102D200982AB7 /* RimHighlightingPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74BDDD14F49833AD24862E87 /* RimHighlightingPass.cpp */; };
+		2B19F7F1294102D200982AB7 /* Rotate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 15644D27B8AD78E007263288 /* Rotate.cpp */; };
+		2B19F7F2294102D200982AB7 /* SSAOPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C127DCF305861E6D5D6332E6 /* SSAOPass.cpp */; };
+		2B19F7F3294102D200982AB7 /* Split.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E952AF032B351FB32CCBD2B /* Split.cpp */; };
+		2B19F7F4294102D200982AB7 /* ToonPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E547AB568F5E5027A880C47C /* ToonPass.cpp */; };
+		2B19F7F5294102D200982AB7 /* VerticalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */; };
+		2B19F7F6294102D200982AB7 /* ZoomBlurPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF8D27B3DEDC121DE85F5B7B /* ZoomBlurPass.cpp */; };
+		2B19F7F7294102D200982AB7 /* ofxShadertoy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 16B7250F8DD49D0209DFEF3C /* ofxShadertoy.cpp */; };
+		2B19F7F8294102D200982AB7 /* ofxTidalCycles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A5288DE681747CD43B30E8C3 /* ofxTidalCycles.cpp */; };
+		2B19F7FA294102D200982AB7 /* CoreMIDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81AC32CCCB56FAABA3E1BDE0 /* CoreMIDI.framework */; };
+		2B19F8042941030500982AB7 /* ofxUltralight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75CE68B0155679264FE10473 /* ofxUltralight.cpp */; };
+		2B19F8052941030B00982AB7 /* UltralightTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 31968776444EEDE0F69917EC /* UltralightTex.cpp */; };
 		2D7732D4AC34CDDBDCFE9699 /* Tex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 23AB9B54C418735665B1EBA6 /* Tex.cpp */; };
 		33DB731E964056D7E35604A7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
 		3565AE7CE5956216CB234B8C /* SketchTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C2899CABC78CFBEDD426E85 /* SketchTex.cpp */; };
@@ -86,7 +217,6 @@
 		9AC85341DEAB6A0366A10521 /* WebcamTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */; };
 		A1D2F32CDE34F3703ECD8A01 /* Geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FE6C4A803E115F324568E6A /* Geom.cpp */; };
 		A1F13275253C91855DD1A1D0 /* Compound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A9C7EB625886EF6596D28D8E /* Compound.cpp */; };
-		A21F931B4F89844B53FE5065 /* ofxUltralight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75CE68B0155679264FE10473 /* ofxUltralight.cpp */; };
 		A40A1934868B9C3BEF746DFA /* Rotate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 15644D27B8AD78E007263288 /* Rotate.cpp */; };
 		A6F396BE5D1E24326E1F796A /* ofxImGuiLoggerChannel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64438C8902B287DA10BCD63B /* ofxImGuiLoggerChannel.cpp */; };
 		A94A4AAB6D95011FA3020914 /* HPVideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 73E0E4213D89C594715F8F14 /* HPVideoTex.cpp */; };
@@ -127,7 +257,6 @@
 		DD70F1493421AE507A4C0156 /* Logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 372124C2D4BE337F66C4B210 /* Logger.cpp */; };
 		DFB75F1EBE744A456AC999F4 /* ContrastPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6788311DC7D945282047837A /* ContrastPass.cpp */; };
 		E00EDA256444953D8429D9F3 /* TexData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 67B4E9095603F3F375B58675 /* TexData.cpp */; };
-		E2CDAC7898F038227EE4716D /* UltralightTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 31968776444EEDE0F69917EC /* UltralightTex.cpp */; };
 		E4797F1786BE22985F7EE55F /* RGBShiftPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5201F6A7A19258B7F1CA2E43 /* RGBShiftPass.cpp */; };
 		E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1D0A3A1BDC003C02F2 /* main.cpp */; };
 		E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */; };
@@ -141,6 +270,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		2B19F7FC294102D200982AB7 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E4C2427710CC5ABF004149E2 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -221,6 +359,8 @@
 		283FC0CCFA95CB3B45FE6893 /* Geometry.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Geometry.h; path = ../../../addons/ofxUltralight/libs/include/Ultralight/Geometry.h; sourceTree = SOURCE_ROOT; };
 		28A42A2103C59E7D30E9D245 /* Exporter.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Exporter.hpp; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Exporter.hpp; sourceTree = SOURCE_ROOT; };
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
+		2B19F802294102D200982AB7 /* osc_vj universal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "osc_vj universal.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B19F803294102D200982AB7 /* osc_vj copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "osc_vj copy-Info.plist"; path = "/Users/kasparsj/Work2/of_v0.11.1/apps/myApps/osc_vj/osc_vj copy-Info.plist"; sourceTree = "<absolute>"; };
 		2B629E4DB07A45391A420283 /* importerdesc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = importerdesc.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/importerdesc.h; sourceTree = SOURCE_ROOT; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
@@ -665,7 +805,7 @@
 		E42963712163EDD300A6A9E2 /* ofFmodSoundPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ofFmodSoundPlayer.h; path = ../../../libs/openFrameworks/sound/ofFmodSoundPlayer.h; sourceTree = SOURCE_ROOT; };
 		E42963722163EDD300A6A9E2 /* ofSoundBuffer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ofSoundBuffer.cpp; path = ../../../libs/openFrameworks/sound/ofSoundBuffer.cpp; sourceTree = SOURCE_ROOT; };
 		E42963732163EDD300A6A9E2 /* ofSoundBaseTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ofSoundBaseTypes.h; path = ../../../libs/openFrameworks/sound/ofSoundBaseTypes.h; sourceTree = SOURCE_ROOT; };
-		E4B69B5B0A3A1756003C02F2 /* osc_vjDebug.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = osc_vjDebug.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E4B69B5B0A3A1756003C02F2 /* osc_vj x86_64Debug.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "osc_vj x86_64Debug.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4B69E1D0A3A1BDC003C02F2 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = src/main.cpp; sourceTree = SOURCE_ROOT; };
 		E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofApp.cpp; path = src/ofApp.cpp; sourceTree = SOURCE_ROOT; };
 		E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ofApp.h; path = src/ofApp.h; sourceTree = SOURCE_ROOT; };
@@ -714,6 +854,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		2B19F7F9294102D200982AB7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B19F7FA294102D200982AB7 /* CoreMIDI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E4B69B590A3A1756003C02F2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1806,7 +1954,9 @@
 				E42962AA2163EDD300A6A9E2 /* openFrameworks */,
 				BB4B014C10F69532006C3DED /* addons */,
 				6948EE371B920CB800B5AC1A /* local_addons */,
-				E4B69B5B0A3A1756003C02F2 /* osc_vjDebug.app */,
+				E4B69B5B0A3A1756003C02F2 /* osc_vj x86_64Debug.app */,
+				2B19F802294102D200982AB7 /* osc_vj universal.app */,
+				2B19F803294102D200982AB7 /* osc_vj copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1896,9 +2046,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E4B69B5A0A3A1756003C02F2 /* osc_vj */ = {
+		2B19F776294102D200982AB7 /* osc_vj universal */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E4B69B5F0A3A1757003C02F2 /* Build configuration list for PBXNativeTarget "osc_vj" */;
+			buildConfigurationList = 2B19F7FE294102D200982AB7 /* Build configuration list for PBXNativeTarget "osc_vj universal" */;
+			buildPhases = (
+				2B19F777294102D200982AB7 /* ShellScript */,
+				2B19F778294102D200982AB7 /* Sources */,
+				2B19F7F9294102D200982AB7 /* Frameworks */,
+				2B19F7FB294102D200982AB7 /* ShellScript */,
+				2B19F7FC294102D200982AB7 /* CopyFiles */,
+				2B19F7FD294102D200982AB7 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "osc_vj universal";
+			productName = myOFApp;
+			productReference = 2B19F802294102D200982AB7 /* osc_vj universal.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E4B69B5A0A3A1756003C02F2 /* osc_vj x86_64 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E4B69B5F0A3A1757003C02F2 /* Build configuration list for PBXNativeTarget "osc_vj x86_64" */;
 			buildPhases = (
 				E42962A92163ECCD00A6A9E2 /* ShellScript */,
 				E4B69B580A3A1756003C02F2 /* Sources */,
@@ -1911,9 +2081,9 @@
 			);
 			dependencies = (
 			);
-			name = osc_vj;
+			name = "osc_vj x86_64";
 			productName = myOFApp;
-			productReference = E4B69B5B0A3A1756003C02F2 /* osc_vjDebug.app */;
+			productReference = E4B69B5B0A3A1756003C02F2 /* osc_vj x86_64Debug.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -1939,12 +2109,52 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E4B69B5A0A3A1756003C02F2 /* osc_vj */,
+				E4B69B5A0A3A1756003C02F2 /* osc_vj x86_64 */,
+				2B19F776294102D200982AB7 /* osc_vj universal */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		2B19F777294102D200982AB7 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "xcodebuild -project \"$OF_PATH/libs/openFrameworksCompiled/project/osx/openFrameworksLib.xcodeproj\" -target openFrameworks -configuration \"${CONFIGURATION}\"";
+		};
+		2B19F7FB294102D200982AB7 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "mkdir -p \"$TARGET_BUILD_DIR/$PRODUCT_NAME.app/Contents/Resources/\"\n# Copy default icon file into App/Resources\nrsync -aved \"$ICON_FILE\" \"$TARGET_BUILD_DIR/$PRODUCT_NAME.app/Contents/Resources/\"\n# Copy libfmod and change install directory for fmod to run\nrsync -aved \"$OF_PATH/libs/fmod/lib/osx/libfmod.dylib\" \"$TARGET_BUILD_DIR/$PRODUCT_NAME.app/Contents/Frameworks/\";\n# Not needed as we now call install_name_tool -id @loader_path/../Frameworks/libfmod.dylib libfmod.dylib on the dylib directly which prevents the need for calling every post build - keeping here for reference and possible legacy usage \n# install_name_tool -change @rpath/libfmod.dylib @executable_path/../Frameworks/libfmod.dylib \"$TARGET_BUILD_DIR/$PRODUCT_NAME.app/Contents/MacOS/$PRODUCT_NAME\";\n\necho \"$GCC_PREPROCESSOR_DEFINITIONS\";\n";
+		};
+		2B19F7FD294102D200982AB7 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 12;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "echo \"$GCC_PREPROCESSOR_DEFINITIONS\";\nAPPSTORE=`expr \"$GCC_PREPROCESSOR_DEFINITIONS\" : \".*APPSTORE=\\([0-9]*\\)\"`\nif [ -z \"$APPSTORE\" ] ; then\necho \"Note: Not copying bin/data to App Package or doing App Code signing. Use AppStore target for AppStore distribution\";\nelse\n# Copy bin/data into App/Resources\nrsync -avz --exclude='.DS_Store' \"${SRCROOT}/bin/data/\" \"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/data/\"\n\n# ---- Code Sign App Package ----\n\n# WARNING: You may have to run Clean in Xcode after changing CODE_SIGN_IDENTITY!\n\n# Verify that $CODE_SIGN_IDENTITY is set\nif [ -z \"${CODE_SIGN_IDENTITY}\" ] ; then\necho \"CODE_SIGN_IDENTITY needs to be set for framework code-signing\"\nexit 0\nfi\n\nif [ -z \"${CODE_SIGN_ENTITLEMENTS}\" ] ; then\necho \"CODE_SIGN_ENTITLEMENTS needs to be set for framework code-signing!\"\n\nif [ \"${CONFIGURATION}\" = \"Release\" ] ; then\nexit 1\nelse\n# Code-signing is optional for non-release builds.\nexit 0\nfi\nfi\n\nITEMS=\"\"\n\nFRAMEWORKS_DIR=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\necho \"$FRAMEWORKS_DIR\"\nif [ -d \"$FRAMEWORKS_DIR\" ] ; then\nFRAMEWORKS=$(find \"${FRAMEWORKS_DIR}\" -depth -type d -name \"*.framework\" -or -name \"*.dylib\" -or -name \"*.bundle\" | sed -e \"s/\\(.*framework\\)/\\1\\/Versions\\/A\\//\")\nRESULT=$?\nif [[ $RESULT != 0 ]] ; then\nexit 1\nfi\n\nITEMS=\"${FRAMEWORKS}\"\nfi\n\nLOGINITEMS_DIR=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Library/LoginItems/\"\nif [ -d \"$LOGINITEMS_DIR\" ] ; then\nLOGINITEMS=$(find \"${LOGINITEMS_DIR}\" -depth -type d -name \"*.app\")\nRESULT=$?\nif [[ $RESULT != 0 ]] ; then\nexit 1\nfi\n\nITEMS=\"${ITEMS}\"$'\\n'\"${LOGINITEMS}\"\nfi\n\n# Prefer the expanded name, if available.\nCODE_SIGN_IDENTITY_FOR_ITEMS=\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\nif [ \"${CODE_SIGN_IDENTITY_FOR_ITEMS}\" = \"\" ] ; then\n# Fall back to old behavior.\nCODE_SIGN_IDENTITY_FOR_ITEMS=\"${CODE_SIGN_IDENTITY}\"\nfi\n\necho \"Identity:\"\necho \"${CODE_SIGN_IDENTITY_FOR_ITEMS}\"\n\necho \"Entitlements:\"\necho \"${CODE_SIGN_ENTITLEMENTS}\"\n\necho \"Found:\"\necho \"${ITEMS}\"\n\n# Change the Internal Field Separator (IFS) so that spaces in paths will not cause problems below.\nSAVED_IFS=$IFS\nIFS=$(echo -en \"\\n\\b\")\n\n# Loop through all items.\nfor ITEM in $ITEMS;\ndo\necho \"Stripping invalid archs '${ITEM}'\"\nlipo -extract x86_64 \"${ITEM}\" -o \"${ITEM}\"\necho \"Signing '${ITEM}'\"\ncodesign --force --verbose --sign \"${CODE_SIGN_IDENTITY_FOR_ITEMS}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" \"${ITEM}\"\nRESULT=$?\nif [[ $RESULT != 0 ]] ; then\necho \"Failed to sign '${ITEM}'.\"\nIFS=$SAVED_IFS\nexit 1\nfi\ndone\n\n# Restore $IFS.\nIFS=$SAVED_IFS\n\nfi\n";
+		};
 		8466F1851C04CA0E00918B1C /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 12;
@@ -1987,6 +2197,141 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		2B19F778294102D200982AB7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B19F779294102D200982AB7 /* main.cpp in Sources */,
+				2B19F77A294102D200982AB7 /* ofApp.cpp in Sources */,
+				2B19F77B294102D200982AB7 /* TexturePool.cpp in Sources */,
+				2B19F77C294102D200982AB7 /* GeomPool.cpp in Sources */,
+				2B19F77D294102D200982AB7 /* DrawTex.cpp in Sources */,
+				2B19F77E294102D200982AB7 /* FboPingPongTex.cpp in Sources */,
+				2B19F77F294102D200982AB7 /* SketchTex.cpp in Sources */,
+				2B19F780294102D200982AB7 /* WebcamTex.cpp in Sources */,
+				2B19F781294102D200982AB7 /* HPVideoTex.cpp in Sources */,
+				2B19F782294102D200982AB7 /* ImageTex.cpp in Sources */,
+				2B19F783294102D200982AB7 /* ShaderTex.cpp in Sources */,
+				2B19F784294102D200982AB7 /* FboTex.cpp in Sources */,
+				2B19F785294102D200982AB7 /* ShaderPingPongTex.cpp in Sources */,
+				2B19F786294102D200982AB7 /* VideoTex.cpp in Sources */,
+				2B19F787294102D200982AB7 /* TexData.cpp in Sources */,
+				2B19F788294102D200982AB7 /* Tex.cpp in Sources */,
+				2B19F789294102D200982AB7 /* Args.cpp in Sources */,
+				2B19F78A294102D200982AB7 /* Lights.cpp in Sources */,
+				2B19F78B294102D200982AB7 /* Texture.cpp in Sources */,
+				2B19F78C294102D200982AB7 /* VarsHolder.cpp in Sources */,
+				2B19F78D294102D200982AB7 /* Value.cpp in Sources */,
+				2B19F78E294102D200982AB7 /* Variable.cpp in Sources */,
+				2B19F78F294102D200982AB7 /* VariablePool.cpp in Sources */,
+				2B19F790294102D200982AB7 /* Shader.cpp in Sources */,
+				2B19F791294102D200982AB7 /* LayerShader.cpp in Sources */,
+				2B19F792294102D200982AB7 /* LayerData.cpp in Sources */,
+				2B19F793294102D200982AB7 /* Layer.cpp in Sources */,
+				2B19F794294102D200982AB7 /* FboPingPong.cpp in Sources */,
+				2B19F795294102D200982AB7 /* Logger.cpp in Sources */,
+				2B19F796294102D200982AB7 /* Geom.cpp in Sources */,
+				2B19F797294102D200982AB7 /* Mic.cpp in Sources */,
+				2B19F798294102D200982AB7 /* Sound.cpp in Sources */,
+				2B19F799294102D200982AB7 /* ofxAssimpAnimation.cpp in Sources */,
+				2B19F79A294102D200982AB7 /* ofxAssimpMeshHelper.cpp in Sources */,
+				2B19F79B294102D200982AB7 /* ofxAssimpModelLoader.cpp in Sources */,
+				2B19F79C294102D200982AB7 /* ofxAssimpTexture.cpp in Sources */,
+				2B19F79D294102D200982AB7 /* ofxAutoReloadedShader.cpp in Sources */,
+				2B19F79E294102D200982AB7 /* ColorScheme.cpp in Sources */,
+				2B19F79F294102D200982AB7 /* ColorUtil.cpp in Sources */,
+				2B19F7A0294102D200982AB7 /* ColorWheelScheme.cpp in Sources */,
+				2B19F7A1294102D200982AB7 /* ColorWheelSchemes.cpp in Sources */,
+				2B19F7A2294102D200982AB7 /* Analogous.cpp in Sources */,
+				2B19F7A3294102D200982AB7 /* Complementary.cpp in Sources */,
+				2B19F7A4294102D200982AB7 /* Compound.cpp in Sources */,
+				2B19F7A5294102D200982AB7 /* FlippedCompound.cpp in Sources */,
+				2B19F7A6294102D200982AB7 /* Monochrome.cpp in Sources */,
+				2B19F7A7294102D200982AB7 /* SplitComplementary.cpp in Sources */,
+				2B19F7A8294102D200982AB7 /* Tetrad.cpp in Sources */,
+				2B19F7A9294102D200982AB7 /* Triad.cpp in Sources */,
+				2B19F7AA294102D200982AB7 /* easing_terms_of_use.html in Sources */,
+				2B19F7AB294102D200982AB7 /* HPVManager.cpp in Sources */,
+				2B19F7AC294102D200982AB7 /* HPVPlayer.cpp in Sources */,
+				2B19F7AD294102D200982AB7 /* HPVRenderBridge.cpp in Sources */,
+				2B19F7AE294102D200982AB7 /* Log.cpp in Sources */,
+				2B19F7AF294102D200982AB7 /* lz4.c in Sources */,
+				2B19F7B0294102D200982AB7 /* lz4hc.c in Sources */,
+				2B19F7B1294102D200982AB7 /* ofxHPVPLayer.cpp in Sources */,
+				2B19F7B2294102D200982AB7 /* imgui.cpp in Sources */,
+				2B19F7B3294102D200982AB7 /* imgui_demo.cpp in Sources */,
+				2B19F7B4294102D200982AB7 /* imgui_draw.cpp in Sources */,
+				2B19F7B5294102D200982AB7 /* imgui_widgets.cpp in Sources */,
+				2B19F7B6294102D200982AB7 /* BaseEngine.cpp in Sources */,
+				2B19F7B7294102D200982AB7 /* DefaultTheme.cpp in Sources */,
+				2B19F7B8294102D200982AB7 /* EngineGLFW.cpp in Sources */,
+				2B19F7B9294102D200982AB7 /* EngineOpenGLES.cpp in Sources */,
+				2B19F7BA294102D200982AB7 /* EngineVk.cpp in Sources */,
+				2B19F7BB294102D200982AB7 /* Gui.cpp in Sources */,
+				2B19F7BC294102D200982AB7 /* ImHelpers.cpp in Sources */,
+				2B19F7BD294102D200982AB7 /* ofxImGuiLoggerChannel.cpp in Sources */,
+				2B19F7BE294102D200982AB7 /* FramesBuffer.cpp in Sources */,
+				2B19F7BF294102D200982AB7 /* ofxLooper.cpp in Sources */,
+				2B19F7C0294102D200982AB7 /* RtMidi.cpp in Sources */,
+				2B19F7C1294102D200982AB7 /* ofxRtMidiIn.cpp in Sources */,
+				2B19F7C2294102D200982AB7 /* ofxRtMidiOut.cpp in Sources */,
+				2B19F7C3294102D200982AB7 /* ofxBaseMidi.cpp in Sources */,
+				2B19F7C4294102D200982AB7 /* ofxMidi.cpp in Sources */,
+				2B19F7C5294102D200982AB7 /* ofxMidiClock.cpp in Sources */,
+				2B19F7C6294102D200982AB7 /* ofxMidiIn.cpp in Sources */,
+				2B19F7C7294102D200982AB7 /* ofxMidiMessage.cpp in Sources */,
+				2B19F7C8294102D200982AB7 /* ofxMidiOut.cpp in Sources */,
+				2B19F7C9294102D200982AB7 /* ofxMidiTimecode.cpp in Sources */,
+				2B19F7CA294102D200982AB7 /* IpEndpointName.cpp in Sources */,
+				2B19F7CB294102D200982AB7 /* NetworkingUtils.cpp in Sources */,
+				2B19F7CC294102D200982AB7 /* UdpSocket.cpp in Sources */,
+				2B19F7CD294102D200982AB7 /* OscOutboundPacketStream.cpp in Sources */,
+				2B19F7CE294102D200982AB7 /* OscPrintReceivedElements.cpp in Sources */,
+				2B19F7CF294102D200982AB7 /* OscReceivedElements.cpp in Sources */,
+				2B19F7D0294102D200982AB7 /* OscTypes.cpp in Sources */,
+				2B19F7D1294102D200982AB7 /* ofxOscBundle.cpp in Sources */,
+				2B19F7D2294102D200982AB7 /* ofxOscMessage.cpp in Sources */,
+				2B19F7D3294102D200982AB7 /* ofxOscParameterSync.cpp in Sources */,
+				2B19F7D4294102D200982AB7 /* ofxOscReceiver.cpp in Sources */,
+				2B19F7D5294102D200982AB7 /* ofxOscSender.cpp in Sources */,
+				2B19F7D6294102D200982AB7 /* Beyoon.cpp in Sources */,
+				2B19F7D7294102D200982AB7 /* BleachBypassPass.cpp in Sources */,
+				2B19F7D8294102D200982AB7 /* BloomPass.cpp in Sources */,
+				2B19F7D9294102D200982AB7 /* ContrastPass.cpp in Sources */,
+				2B19F7DA294102D200982AB7 /* ConvolutionPass.cpp in Sources */,
+				2B19F7DB294102D200982AB7 /* DofAltPass.cpp in Sources */,
+				2B19F7DC294102D200982AB7 /* DofPass.cpp in Sources */,
+				2B19F7DD294102D200982AB7 /* EdgePass.cpp in Sources */,
+				2B19F7DE294102D200982AB7 /* FakeSSSPass.cpp in Sources */,
+				2B19F7DF294102D200982AB7 /* FxaaPass.cpp in Sources */,
+				2B19F7E0294102D200982AB7 /* Glitch.cpp in Sources */,
+				2B19F7E1294102D200982AB7 /* GodRaysPass.cpp in Sources */,
+				2B19F7E2294102D200982AB7 /* HorizontalTiltShifPass.cpp in Sources */,
+				2B19F7E3294102D200982AB7 /* HsbShiftPass.cpp in Sources */,
+				2B19F7E4294102D200982AB7 /* Invert.cpp in Sources */,
+				2B19F7E5294102D200982AB7 /* KaleidoscopePass.cpp in Sources */,
+				2B19F7E6294102D200982AB7 /* LUTPass.cpp in Sources */,
+				2B19F7E7294102D200982AB7 /* LimbDarkeningPass.cpp in Sources */,
+				2B19F7E8294102D200982AB7 /* NoiseWarpPass.cpp in Sources */,
+				2B19F7E9294102D200982AB7 /* PixelatePass.cpp in Sources */,
+				2B19F7EA294102D200982AB7 /* Pixelsort.cpp in Sources */,
+				2B19F7EB294102D200982AB7 /* PostProcessing.cpp in Sources */,
+				2B19F7EC294102D200982AB7 /* RGBShiftPass.cpp in Sources */,
+				2B19F7ED294102D200982AB7 /* ReflectX.cpp in Sources */,
+				2B19F7EE294102D200982AB7 /* ReflectY.cpp in Sources */,
+				2B19F7EF294102D200982AB7 /* RenderPass.cpp in Sources */,
+				2B19F7F0294102D200982AB7 /* RimHighlightingPass.cpp in Sources */,
+				2B19F7F1294102D200982AB7 /* Rotate.cpp in Sources */,
+				2B19F7F2294102D200982AB7 /* SSAOPass.cpp in Sources */,
+				2B19F7F3294102D200982AB7 /* Split.cpp in Sources */,
+				2B19F7F4294102D200982AB7 /* ToonPass.cpp in Sources */,
+				2B19F7F5294102D200982AB7 /* VerticalTiltShifPass.cpp in Sources */,
+				2B19F7F6294102D200982AB7 /* ZoomBlurPass.cpp in Sources */,
+				2B19F7F7294102D200982AB7 /* ofxShadertoy.cpp in Sources */,
+				2B19F7F8294102D200982AB7 /* ofxTidalCycles.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E4B69B580A3A1756003C02F2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1994,7 +2339,6 @@
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
 				6D05523FAB0501580B1205C7 /* TexturePool.cpp in Sources */,
-				E2CDAC7898F038227EE4716D /* UltralightTex.cpp in Sources */,
 				01B036F302D9F069DEDCD4F7 /* GeomPool.cpp in Sources */,
 				E8F628D23F8FFF6E80EA3203 /* DrawTex.cpp in Sources */,
 				B8482B23AC6E1576A3211E8E /* FboPingPongTex.cpp in Sources */,
@@ -2031,6 +2375,7 @@
 				622F2B6B3FFAA37224C22AD2 /* ofxAutoReloadedShader.cpp in Sources */,
 				07F0761DF15EC42437CC8402 /* ColorScheme.cpp in Sources */,
 				1EF68DFFFDB46A876B77338B /* ColorUtil.cpp in Sources */,
+				2B19F8042941030500982AB7 /* ofxUltralight.cpp in Sources */,
 				CC7496C750B49DFCA0D43427 /* ColorWheelScheme.cpp in Sources */,
 				8125D6B9D61EA08A446A53B8 /* ColorWheelSchemes.cpp in Sources */,
 				3D6BA46406CE29B32055340C /* Analogous.cpp in Sources */,
@@ -2054,6 +2399,7 @@
 				00413C35AAE31B483D7538AB /* imgui_draw.cpp in Sources */,
 				0090B479605B26E7C387B02D /* imgui_widgets.cpp in Sources */,
 				DBBE189ECD171A97DCF46C6A /* BaseEngine.cpp in Sources */,
+				2B19F8052941030B00982AB7 /* UltralightTex.cpp in Sources */,
 				C2114978C2A333BA9867109F /* DefaultTheme.cpp in Sources */,
 				462C212713EFFA5383B35DAB /* EngineGLFW.cpp in Sources */,
 				000315A9FA4E2F9A09533E05 /* EngineOpenGLES.cpp in Sources */,
@@ -2120,17 +2466,285 @@
 				D752EB8BA905C25F5E7F2B30 /* ZoomBlurPass.cpp in Sources */,
 				CDBCEBF4EEAB5E2F6F1E23FD /* ofxShadertoy.cpp in Sources */,
 				D91BBD56E65F1B0195ABD2FB /* ofxTidalCycles.cpp in Sources */,
-				A21F931B4F89844B53FE5065 /* ofxUltralight.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		2B19F7FF294102D200982AB7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E4EB6923138AFD0F00A09F29 /* Project.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					/System/Library/Frameworks,
+				);
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = NONE;
+				HEADER_SEARCH_PATHS = (
+					"$(OF_CORE_HEADERS)",
+					src,
+					src,
+					src/layer,
+					src/sketches,
+					src/sound,
+					src/tex,
+					src/var,
+					../../../addons/ofxAssimpModelLoader/libs,
+					../../../addons/ofxAssimpModelLoader/libs/assimp,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/port,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/port/AndroidJNI,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/emscripten,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/osx,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/license,
+					../../../addons/ofxAssimpModelLoader/src,
+					../../../addons/ofxAutoReloadedShader/src,
+					../../../addons/ofxColorTheory/src,
+					../../../addons/ofxColorTheory/src/Rules,
+					../../../addons/ofxEasing/src,
+					../../../addons/ofxHPVPlayer/src,
+					../../../addons/ofxImGui/libs,
+					../../../addons/ofxImGui/libs/imgui,
+					../../../addons/ofxImGui/libs/imgui/src,
+					../../../addons/ofxImGui/src,
+					../../../addons/ofxLooper/src,
+					../../../addons/ofxMidi/libs,
+					../../../addons/ofxMidi/libs/pgmidi,
+					../../../addons/ofxMidi/libs/rtmidi,
+					../../../addons/ofxMidi/src,
+					../../../addons/ofxMidi/src/desktop,
+					../../../addons/ofxMidi/src/ios,
+					../../../addons/ofxOsc/libs,
+					../../../addons/ofxOsc/libs/oscpack,
+					../../../addons/ofxOsc/libs/oscpack/src,
+					../../../addons/ofxOsc/libs/oscpack/src/ip,
+					../../../addons/ofxOsc/libs/oscpack/src/ip/posix,
+					../../../addons/ofxOsc/libs/oscpack/src/ip/win32,
+					../../../addons/ofxOsc/libs/oscpack/src/osc,
+					../../../addons/ofxOsc/src,
+					../../../addons/ofxPostProcessing/src,
+					../../../addons/ofxShadertoy/src,
+					../../../addons/ofxTidalCycles/src,
+					../../../addons/ofxUltralight/src,
+					../../../addons/ofxUltralight/libs,
+					../../../addons/ofxUltralight/libs/include,
+				);
+				ICON = "$(ICON_NAME_DEBUG)";
+				ICON_FILE = "$(ICON_FILE_PATH)$(ICON)";
+				INFOPLIST_FILE = "osc_vj copy-Info.plist";
+				INSTALL_PATH = /Applications;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					"$(OF_CORE_LIBS)",
+					"$(OF_CORE_FRAMEWORKS)",
+					"$(LIB_OF_DEBUG)",
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/osx/libIrrXML.a,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/osx/assimp.a,
+					../../../addons/ofxUltralight/libs/lib/osx/libWebCore.dylib,
+					../../../addons/ofxUltralight/libs/lib/osx/libUltralightCore.dylib,
+					../../../addons/ofxUltralight/libs/lib/osx/libUltralight.dylib,
+					../../../addons/ofxUltralight/libs/lib/osx/libAppCore.dylib,
+					"-rpath",
+					"@loader_path/../../../../../../../addons/ofxUltralight/libs/lib/osx",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		2B19F800294102D200982AB7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E4EB6923138AFD0F00A09F29 /* Project.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					/System/Library/Frameworks,
+				);
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = NONE;
+				HEADER_SEARCH_PATHS = (
+					"$(OF_CORE_HEADERS)",
+					src,
+					src,
+					src/layer,
+					src/sketches,
+					src/sound,
+					src/tex,
+					src/var,
+					../../../addons/ofxAssimpModelLoader/libs,
+					../../../addons/ofxAssimpModelLoader/libs/assimp,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/port,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/port/AndroidJNI,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/emscripten,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/osx,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/license,
+					../../../addons/ofxAssimpModelLoader/src,
+					../../../addons/ofxAutoReloadedShader/src,
+					../../../addons/ofxColorTheory/src,
+					../../../addons/ofxColorTheory/src/Rules,
+					../../../addons/ofxEasing/src,
+					../../../addons/ofxHPVPlayer/src,
+					../../../addons/ofxImGui/libs,
+					../../../addons/ofxImGui/libs/imgui,
+					../../../addons/ofxImGui/libs/imgui/src,
+					../../../addons/ofxImGui/src,
+					../../../addons/ofxLooper/src,
+					../../../addons/ofxMidi/libs,
+					../../../addons/ofxMidi/libs/pgmidi,
+					../../../addons/ofxMidi/libs/rtmidi,
+					../../../addons/ofxMidi/src,
+					../../../addons/ofxMidi/src/desktop,
+					../../../addons/ofxMidi/src/ios,
+					../../../addons/ofxOsc/libs,
+					../../../addons/ofxOsc/libs/oscpack,
+					../../../addons/ofxOsc/libs/oscpack/src,
+					../../../addons/ofxOsc/libs/oscpack/src/ip,
+					../../../addons/ofxOsc/libs/oscpack/src/ip/posix,
+					../../../addons/ofxOsc/libs/oscpack/src/ip/win32,
+					../../../addons/ofxOsc/libs/oscpack/src/osc,
+					../../../addons/ofxOsc/src,
+					../../../addons/ofxPostProcessing/src,
+					../../../addons/ofxShadertoy/src,
+					../../../addons/ofxTidalCycles/src,
+					../../../addons/ofxUltralight/src,
+					../../../addons/ofxUltralight/libs,
+					../../../addons/ofxUltralight/libs/include,
+				);
+				ICON = "$(ICON_NAME_RELEASE)";
+				ICON_FILE = "$(ICON_FILE_PATH)$(ICON)";
+				INFOPLIST_FILE = "osc_vj copy-Info.plist";
+				INSTALL_PATH = /Applications;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					"$(OF_CORE_LIBS)",
+					"$(OF_CORE_FRAMEWORKS)",
+					"$(LIB_OF)",
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/osx/libIrrXML.a,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/osx/assimp.a,
+					../../../addons/ofxUltralight/libs/lib/osx/libWebCore.dylib,
+					../../../addons/ofxUltralight/libs/lib/osx/libUltralightCore.dylib,
+					../../../addons/ofxUltralight/libs/lib/osx/libUltralight.dylib,
+					../../../addons/ofxUltralight/libs/lib/osx/libAppCore.dylib,
+					"-rpath",
+					"@loader_path/../../../../../../../addons/ofxUltralight/libs/lib/osx",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+				baseConfigurationReference = E4EB6923138AFD0F00A09F29;
+			};
+			name = Release;
+		};
+		2B19F801294102D200982AB7 /* AppStore */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E4EB6923138AFD0F00A09F29 /* Project.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					/System/Library/Frameworks,
+				);
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = NONE;
+				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = "APPSTORE=1";
+				HEADER_SEARCH_PATHS = (
+					"$(OF_CORE_HEADERS)",
+					src,
+					src,
+					src/layer,
+					src/sketches,
+					src/sound,
+					src/tex,
+					src/var,
+					../../../addons/ofxAssimpModelLoader/libs,
+					../../../addons/ofxAssimpModelLoader/libs/assimp,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/port,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/port/AndroidJNI,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/emscripten,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/osx,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/license,
+					../../../addons/ofxAssimpModelLoader/src,
+					../../../addons/ofxAutoReloadedShader/src,
+					../../../addons/ofxColorTheory/src,
+					../../../addons/ofxColorTheory/src/Rules,
+					../../../addons/ofxEasing/src,
+					../../../addons/ofxHPVPlayer/src,
+					../../../addons/ofxImGui/libs,
+					../../../addons/ofxImGui/libs/imgui,
+					../../../addons/ofxImGui/libs/imgui/src,
+					../../../addons/ofxImGui/src,
+					../../../addons/ofxLooper/src,
+					../../../addons/ofxMidi/libs,
+					../../../addons/ofxMidi/libs/pgmidi,
+					../../../addons/ofxMidi/libs/rtmidi,
+					../../../addons/ofxMidi/src,
+					../../../addons/ofxMidi/src/desktop,
+					../../../addons/ofxMidi/src/ios,
+					../../../addons/ofxOsc/libs,
+					../../../addons/ofxOsc/libs/oscpack,
+					../../../addons/ofxOsc/libs/oscpack/src,
+					../../../addons/ofxOsc/libs/oscpack/src/ip,
+					../../../addons/ofxOsc/libs/oscpack/src/ip/posix,
+					../../../addons/ofxOsc/libs/oscpack/src/ip/win32,
+					../../../addons/ofxOsc/libs/oscpack/src/osc,
+					../../../addons/ofxOsc/src,
+					../../../addons/ofxPostProcessing/src,
+					../../../addons/ofxShadertoy/src,
+					../../../addons/ofxTidalCycles/src,
+					../../../addons/ofxUltralight/src,
+					../../../addons/ofxUltralight/libs,
+					../../../addons/ofxUltralight/libs/include,
+				);
+				ICON = "$(ICON_NAME_RELEASE)";
+				ICON_FILE = "$(ICON_FILE_PATH)$(ICON)";
+				INFOPLIST_FILE = "osc_vj copy-Info.plist";
+				INSTALL_PATH = /Applications;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					"$(OF_CORE_LIBS)",
+					"$(OF_CORE_FRAMEWORKS)",
+					"$(LIB_OF)",
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/osx/libIrrXML.a,
+					../../../addons/ofxAssimpModelLoader/libs/assimp/lib/osx/assimp.a,
+					../../../addons/ofxUltralight/libs/lib/osx/libWebCore.dylib,
+					../../../addons/ofxUltralight/libs/lib/osx/libUltralightCore.dylib,
+					../../../addons/ofxUltralight/libs/lib/osx/libUltralight.dylib,
+					../../../addons/ofxUltralight/libs/lib/osx/libAppCore.dylib,
+					"-rpath",
+					"@loader_path/../../../../../../../addons/ofxUltralight/libs/lib/osx",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+				baseConfigurationReference = E4EB6923138AFD0F00A09F29;
+			};
+			name = AppStore;
+		};
 		99FA3DBB1C7456C400CFA0EE /* AppStore */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E4EB6923138AFD0F00A09F29 /* Project.xcconfig */;
 			buildSettings = {
+				ARCHS = x86_64;
 				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/bin/";
 				COPY_PHASE_STRIP = YES;
 				DEAD_CODE_STRIPPING = YES;
@@ -2300,6 +2914,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E4EB6923138AFD0F00A09F29 /* Project.xcconfig */;
 			buildSettings = {
+				ARCHS = x86_64;
 				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/bin/";
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
@@ -2379,6 +2994,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E4EB6923138AFD0F00A09F29 /* Project.xcconfig */;
 			buildSettings = {
+				ARCHS = x86_64;
 				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/bin/";
 				COPY_PHASE_STRIP = YES;
 				DEAD_CODE_STRIPPING = YES;
@@ -2633,6 +3249,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2B19F7FE294102D200982AB7 /* Build configuration list for PBXNativeTarget "osc_vj universal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B19F7FF294102D200982AB7 /* Debug */,
+				2B19F800294102D200982AB7 /* Release */,
+				2B19F801294102D200982AB7 /* AppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		E4B69B4D0A3A1720003C02F2 /* Build configuration list for PBXProject "osc_vj" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -2643,7 +3269,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E4B69B5F0A3A1757003C02F2 /* Build configuration list for PBXNativeTarget "osc_vj" */ = {
+		E4B69B5F0A3A1757003C02F2 /* Build configuration list for PBXNativeTarget "osc_vj x86_64" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E4B69B600A3A1757003C02F2 /* Debug */,

@@ -15,8 +15,22 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-               BuildableName = "osc_vj.app"
-               BlueprintName = "osc_vj"
+               BuildableName = "osc_vj x86_64.app"
+               BlueprintName = "osc_vj x86_64"
+               ReferencedContainer = "container:osc_vj.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2B19F776294102D200982AB7"
+               BuildableName = "osc_vj universal.app"
+               BlueprintName = "osc_vj universal"
                ReferencedContainer = "container:osc_vj.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -31,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "osc_vj.app"
-            BlueprintName = "osc_vj"
+            BuildableName = "osc_vj x86_64.app"
+            BlueprintName = "osc_vj x86_64"
             ReferencedContainer = "container:osc_vj.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -54,8 +68,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "osc_vj.app"
-            BlueprintName = "osc_vj"
+            BuildableName = "osc_vj x86_64.app"
+            BlueprintName = "osc_vj x86_64"
             ReferencedContainer = "container:osc_vj.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -71,8 +85,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "osc_vj.app"
-            BlueprintName = "osc_vj"
+            BuildableName = "osc_vj x86_64.app"
+            BlueprintName = "osc_vj x86_64"
             ReferencedContainer = "container:osc_vj.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
