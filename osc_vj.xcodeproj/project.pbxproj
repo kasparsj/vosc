@@ -1365,6 +1365,8 @@
 				3160BA8560C0ECC51DC47454 /* Tex.h */,
 				67B4E9095603F3F375B58675 /* TexData.cpp */,
 				62DF624EA4A8C9432E9B5471 /* TexData.h */,
+				31968776444EEDE0F69917EC /* UltralightTex.cpp */,
+				96FCF1903F8CF5BC13871048 /* UltralightTex.h */,
 				9174FE620B649DE0C36D5259 /* VideoTex.cpp */,
 				0007F94E72255780D908645A /* VideoTex.h */,
 				D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */,
@@ -1415,14 +1417,14 @@
 		CBC027A06D910DC507BB91E4 /* var */ = {
 			isa = PBXGroup;
 			children = (
-				5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */,
-				04664096EB17620EF646AD96 /* Variable.h */,
-				1FAB6C574C03BF01577E4521 /* Value.h */,
-				8E9CE8F9BFE658E01E40193F /* VarsHolder.h */,
-				1898AEA4672CEAFCE203FF55 /* VariablePool.h */,
 				4D453A863C70334C3B77721C /* Value.cpp */,
+				1FAB6C574C03BF01577E4521 /* Value.h */,
 				CC95D6A4850BE0F8FFB7D5E5 /* Variable.cpp */,
+				04664096EB17620EF646AD96 /* Variable.h */,
 				FE6A0B50D6798FC3BC6A087A /* VariablePool.cpp */,
+				1898AEA4672CEAFCE203FF55 /* VariablePool.h */,
+				5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */,
+				8E9CE8F9BFE658E01E40193F /* VarsHolder.h */,
 			);
 			name = var;
 			sourceTree = "<group>";
@@ -1838,8 +1840,6 @@
 				F86419EE954CE687A9D7B2CD /* Texture.h */,
 				189C978C54FE51E73B0EADFD /* TexturePool.cpp */,
 				AC9F55AC591B53654883DFEC /* TexturePool.h */,
-				31968776444EEDE0F69917EC /* UltralightTex.cpp */,
-				96FCF1903F8CF5BC13871048 /* UltralightTex.h */,
 				CBC027A06D910DC507BB91E4 /* var */,
 			);
 			path = src;
