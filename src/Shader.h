@@ -5,6 +5,7 @@
 #include "ofxOsc.h"
 #include "Texture.h"
 #include "TexturePool.h"
+#include "ofxShadertoy.h"
 
 #define DEFAULT_TEX "tex"
 
@@ -21,7 +22,10 @@ public:
         reset();
     }
     bool isLoaded() const {
-        return shader.isLoaded();
+        return isShaderLoaded() || shadertoy != NULL;
+    }
+    bool isShaderLoaded() const {
+        return shader != NULL && shader->isLoaded();
     }
     bool load(string path);
     void reload();
@@ -29,9 +33,7 @@ public:
     void begin(TexData& data, int delay = 0);
     void end();
     void reset();
-    ofxAutoReloadedShader& getShader() {
-        return shader;
-    };
+    void unload();
     bool hasTexture(string name) {
         return textures.find(name) != textures.end();
     }
@@ -48,6 +50,22 @@ public:
     void setDefaultTexture(Texture* tex);
     void setTexture(const ofxOscMessage& m);
     void setTexture(string name, const ofxOscMessage& m, int arg = 1);
+    void setUniform1i(string name, int v1) {
+        if (shadertoy == NULL) {
+            shader->setUniform1i(name, v1);
+        }
+        else {
+            shadertoy->setUniform1i(name, v1);
+        }
+    }
+    void setUniform2f(string name, float v1, float v2) {
+        if (shadertoy == NULL) {
+            shader->setUniform2f(name, v1, v2);
+        }
+        else {
+            shadertoy->setUniform2f(name, v1, v2);
+        }
+    }
     void set(const ofxOscMessage& m);
     
 private:
@@ -55,6 +73,7 @@ private:
     void setUniforms(const map<string, Variable*>& vars);
 
     map<string, Texture*> textures;
-    ofxAutoReloadedShader shader;
+    ofShader* shader = NULL;
+    ofxShadertoy* shadertoy = NULL;
 };
 

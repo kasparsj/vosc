@@ -57,7 +57,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
             geom = GeomPool::getForLayer(getId());
         }
         if (!geom->isLoaded()) {
-            geom->load("plane");
+            geom->load("quad");
         }
         if (shader.hasDefaultTexture()) {
             if (!shader.isLoaded()) {
@@ -72,8 +72,8 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
         
         if (shader.isLoaded()) {
             shader.begin(data, delay);
-            shader.getShader().setUniform1i("index", index);
-            shader.getShader().setUniform2f("offset", pos.x, pos.y);
+            shader.setUniform1i("index", index);
+            shader.setUniform2f("offset", pos.x, pos.y);
             // todo: fix material
             //material.begin();
             geom->draw();

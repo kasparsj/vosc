@@ -38,31 +38,52 @@ bool isSource(string path) {
     return path.find("void main(") != string::npos;
 }
 
-bool isShadertoy(string path) {
-    std::regex re("^https?://(www\\.)?shadertoy\\.com(.*)");
-    std::cmatch m;
-    return std::regex_match(path.c_str(), m, re);
+string parseShadertoy(string path) {
+    std::regex re_view("^https?://(www\\.)?shadertoy\\.com/view/(.+)(/|\\?.*)?");
+    std::regex re_api("^https?://(www\\.)?shadertoy\\.com/api/v1/shaders/(.+)(/|\\?.*)");
+    std::smatch m;
+    if (regex_match(path, m, re_view) && m.size() >= 3) {
+        ssub_match submatch = m[2];
+        return submatch.str();
+    }
+    else if (regex_match(path, m, re_api) && m.size() >= 3) {
+        ssub_match submatch = m[2];
+        return submatch.str();
+    }
+    return "";
 }
 
 bool Shader::load(string path) {
+    unload();
     bool success = false;
     bool _isSource = isSource(path);
-    bool _isShadertoy = isShadertoy(path);
-    bool _isFile = !_isSource && !_isShadertoy;
+    string shadertoyId = parseShadertoy(path);
+    bool _isFile = !_isSource && shadertoyId == "";
     string fragPath = "";
     if (_isSource) {
         ofShaderSettings settings;
         settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
         settings.shaderSources[GL_FRAGMENT_SHADER] = path;
-        success = shader.setup(settings);
+        shader = new ofShader();
+        success = shader->setup(settings);
     }
-    else if (_isShadertoy) {
-        ofLog() << "shadertoy not implemented";
-        // todo:
-        // parse shadertoy id
-        // use the api to get the shader source
-        // save the source as file
-        // use ofxShadertoy to run it
+    else if (shadertoyId != "") {
+        ofHttpResponse resp = ofLoadURL("https://www.shadertoy.com/api/v1/shaders/" + shadertoyId + "?key=ft8tMh");
+        if (resp.status == 200) {
+            try {
+                ofJson json = ofJson::parse(resp.data.getText());
+                string fragPath = "shaders/shadertoy/" + shadertoyId + ".frag";
+                ofFile shaderFile;
+                shaderFile.open(fragPath, ofFile::WriteOnly);
+                shaderFile << json["Shader"]["renderpass"][0]["code"].get<string>();
+                shaderFile.close();
+                shadertoy = new ofxShadertoy();
+                success = shadertoy->load(fragPath);
+            }
+            catch (exception& ex) {
+                ofLogError() << ("could not load shadertoy: " + path + "(" + ex.what() + ")");
+            }
+        }
     }
     else {
         vector<string> fragPaths;
@@ -94,7 +115,8 @@ bool Shader::load(string path) {
                 vertPath = tmpVertPath;
             }
             string geomPath = pathNoExt + ".geom";
-            success = shader.load(vertPath, fragPath, geomPath);
+            shader = new ofxAutoReloadedShader();
+            success = shader->load(vertPath, fragPath, geomPath);
         }
     }
     if (!success) {
@@ -111,10 +133,18 @@ void Shader::update(const vector<Sound> &sounds, const vector<TidalNote> &notes)
 
 void Shader::begin(TexData& data, int delay) {
     if (isLoaded()) {
-        shader.begin();
-        shader.setUniform1f("time", data.time);
-        shader.setUniform2f("resolution", data.size.x, data.size.y);
-        shader.setUniform1i("random", data.randomSeed);
+        if (shadertoy == NULL) {
+            shader->begin();
+            shader->setUniform1f("time", data.time);
+            shader->setUniform2f("resolution", data.size.x, data.size.y);
+            shader->setUniform1i("random", data.randomSeed);
+        }
+        else {
+            shadertoy->begin();
+            shadertoy->setUniform1f("time", data.time);
+            shadertoy->setUniform2f("resolution", data.size.x, data.size.y);
+            shadertoy->setUniform1i("random", data.randomSeed);
+        }
         setUniformTextures(textures, delay);
         setUniforms(vars);
         // todo: do we really need layer vars to override shader vars?
@@ -124,46 +154,94 @@ void Shader::begin(TexData& data, int delay) {
 
 void Shader::end() {
     if (isLoaded()) {
-        shader.end();
+        if (shadertoy == NULL) {
+            shader->end();
+        }
+        else {
+            shadertoy->end();
+        }
     }
 }
 
 void Shader::setUniformTextures(const map<string, Texture*>& textures, int delay) {
     int texLoc = 0;
-    for (map<string, Texture*>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
-        if (it->second->hasTexture(delay)) {
-            shader.setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
+    if (shadertoy == NULL) {
+        for (map<string, Texture*>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
+            if (it->second->hasTexture(delay)) {
+                shader->setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
+            }
+        }
+    }
+    else {
+        for (map<string, Texture*>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
+            if (it->second->hasTexture(delay)) {
+                shadertoy->setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
+            }
         }
     }
 }
 
 void Shader::setUniforms(const map<string, Variable*>& vars) {
-    for (map<string, Variable*>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
-        vector<float> values = it->second->getVec();
-        if (values.size() == 1) {
-            shader.setUniform1f(it->first, values[0]);
-        }
-        else if (values.size() == 2) {
-            shader.setUniform2f(it->first, values[0], values[1]);
-        }
-        else if (values.size() == 3) {
-            shader.setUniform3f(it->first, values[0], values[1], values[2]);
-        }
-        else if (values.size() == 4) {
-            shader.setUniform4f(it->first, values[0], values[1], values[2], values[3]);
+    if (shadertoy == NULL) {
+        for (map<string, Variable*>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
+            vector<float> values = it->second->getVec();
+            if (values.size() == 1) {
+                shader->setUniform1f(it->first, values[0]);
+            }
+            else if (values.size() == 2) {
+                shader->setUniform2f(it->first, values[0], values[1]);
+            }
+            else if (values.size() == 3) {
+                shader->setUniform3f(it->first, values[0], values[1], values[2]);
+            }
+            else if (values.size() == 4) {
+                shader->setUniform4f(it->first, values[0], values[1], values[2], values[3]);
+            }
         }
     }
+    else {
+        for (map<string, Variable*>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
+            vector<float> values = it->second->getVec();
+            if (values.size() == 1) {
+                shadertoy->setUniform1f(it->first, values[0]);
+            }
+            else if (values.size() == 2) {
+                shadertoy->setUniform2f(it->first, values[0], values[1]);
+            }
+            else if (values.size() == 3) {
+                shadertoy->setUniform3f(it->first, values[0], values[1], values[2]);
+            }
+            else if (values.size() == 4) {
+                shadertoy->setUniform4f(it->first, values[0], values[1], values[2], values[3]);
+            }
+        }
 
+    }
 }
 
 void Shader::reset() {
-    if (shader.isLoaded()) {
-        shader.unload();
-    }
+    unload();
     textures.clear();
     vars.clear();
     TexturePool::clean(_id);
     VariablePool::cleanup(this);
+}
+
+void Shader::unload() {
+    if (shader != NULL) {
+        if (shader->isLoaded()) {
+            shader->unload();
+        }
+        delete shader;
+        shader = NULL;
+    }
+    else if (shadertoy != NULL) {
+//        if (shadertoy->isLoaded()) {
+//            shadertoy->unload();
+//        }
+        delete shadertoy;
+        shadertoy = NULL;
+    }
 }
 
 Texture* Shader::getDefaultTexture() {
@@ -194,14 +272,16 @@ void Shader::setTexture(string name, const ofxOscMessage& m, int arg) {
 }
 
 void Shader::set(const ofxOscMessage& m) {
-    string prop = m.getArgAsString(1);
-    if (prop == "geomInputType") {
-        getShader().setGeometryInputType(static_cast<GLenum>(m.getArgAsInt(2)));
-    }
-    else if (prop == "geomOutputType") {
-        getShader().setGeometryOutputType(static_cast<GLenum>(m.getArgAsInt(2)));
-    }
-    else if (prop == "geomOutputCount") {
-        getShader().setGeometryOutputCount(m.getArgAsInt(2));
+    if (isShaderLoaded()) {
+        string prop = m.getArgAsString(1);
+        if (prop == "geomInputType") {
+            shader->setGeometryInputType(static_cast<GLenum>(m.getArgAsInt(2)));
+        }
+        else if (prop == "geomOutputType") {
+            shader->setGeometryOutputType(static_cast<GLenum>(m.getArgAsInt(2)));
+        }
+        else if (prop == "geomOutputCount") {
+            shader->setGeometryOutputCount(m.getArgAsInt(2));
+        }
     }
 }

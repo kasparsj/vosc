@@ -35,9 +35,12 @@ public:
     glm::vec3 getSize() {
         return boundingBox.max - boundingBox.min;
     }
-    float getScale(const glm::vec2& target) {
+    glm::vec3 getScale(const glm::vec2& target) {
+        if (path == "quad") {
+            return glm::vec3(target, 1.f);
+        }
         glm::vec3 size = getSize();
-        return MIN(target.x / size.x, target.y / size.y) * 0.9;
+        return glm::vec3(MIN(target.x / size.x, target.y / size.y) * 0.9);
     }
     bool isLoaded() const {
         return path != "";
@@ -52,6 +55,7 @@ private:
     
     bool loadModel(const vector<float> &args);
     bool loadPrimitive(const vector<float>& args);
+    bool loadQuad(const vector<float>& args);
     bool loadGrass(const vector<float>& args);
     
     string path = "";

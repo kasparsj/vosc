@@ -8,4 +8,5 @@ ofxLooper
 ofxMidi
 ofxOsc
 ofxPostProcessing
+ofxShadertoy
 ofxTidalCycles

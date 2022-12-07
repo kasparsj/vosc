@@ -29,6 +29,12 @@ void Geom::load(string newPath, const vector<float>& args) {
             path = newPrevPath;
         }
     }
+    else if (newPath == "quad") {
+        loadQuad(args);
+        usingModel = false;
+        prevPath = newPrevPath;
+        updateBoundingBox();
+    }
     else if (newPath == "grass") {
         if (loadGrass(args)) {
             usingModel = false;
@@ -133,6 +139,41 @@ bool Geom::loadPrimitive(const vector<float>& args) {
         return true;
     }
     return false;
+}
+
+bool Geom::loadQuad(const vector<float>& args) {
+    mesh.clear();
+    
+    // -1.0 to +1.0 is the full viewport (screen) if you use these as vertices in your vertex shader
+    // (without multiplying by model, view, and projection matrices)    
+    glm::vec3 vertices[4] =
+    {
+        ofVec3f(  1.0f,  1.0f, 0.0f ),
+        ofVec3f( -1.0f,  1.0f, 0.0f ),
+        ofVec3f(  1.0f, -1.0f, 0.0f ),
+        ofVec3f( -1.0f, -1.0f, 0.0f )
+    };
+    
+    // the 6 indices representing the two triangles making up our quad
+    ofIndexType indices[6] =
+    {
+        0, 1, 2,
+        2, 1, 3
+    };
+    
+    // Texture coordinates vary from 0.0 to 1.0 when they are in normalized format
+    // ofDisableArbTex() was called earlier set that we're using normalized texture coordinates
+    glm::vec2 texCoords[4] =
+    {
+        ofVec2f( 1.0f, 1.0f ),
+        ofVec2f( 0.0f, 1.0f ),
+        ofVec2f( 1.0f, 0.0f ),
+        ofVec2f( 0.0f, 0.0f )
+    };
+    
+    mesh.addVertices( vertices, 4 );
+    mesh.addTexCoords( texCoords, 4 );
+    mesh.addIndices( indices, 6 );
 }
 
 bool Geom::loadGrass(const vector<float>& args) {
