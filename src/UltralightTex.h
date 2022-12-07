@@ -5,8 +5,6 @@
 
 class UltralightTex : public Tex {
 public:
-    static ofxUL::ofxUltralight ul;
-    
     UltralightTex(string path, const vector<float>& args) : Tex(path, args) {}
     ~UltralightTex() {
         _unload();
@@ -17,21 +15,21 @@ public:
         ofLogError() << "UltralightTex::choose not implemented";
     }
     ofTexture & getTexture() override {
-        return ul.getTexture(ulIndex);
+        return ofxUltralight::get()->getTexture(ulId);
     }
     const ofTexture & getTexture() const override {
-        return ul.getTexture(ulIndex);
+        return ofxUltralight::get()->getTexture(ulId);
     }
     ofPixels& getPixels() override {
-        return ul.getPixels(ulIndex);
+        return ofxUltralight::get()->getPixels(ulId);
     }
 
 private:
     void _unload() {
-        if (ulIndex > -1) {
-            ul.unload(ulIndex);
+        if (ulId > -1) {
+            ofxUltralight::removeView(ulId);
         }
     }
     
-    int ulIndex = -1;
+    int ulId = -1;
 };

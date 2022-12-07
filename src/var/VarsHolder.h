@@ -33,5 +33,5 @@ public:
 protected:
     void setVar(string name, Variable* var);
     
-    int _id;
+    unsigned int _id;
 };

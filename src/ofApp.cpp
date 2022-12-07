@@ -5,7 +5,7 @@
 #include "VariablePool.h"
 #include "ShaderTex.h"
 #include "Args.h"
-#include "UltralightTex.h"
+#include "ofxUltralight.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -85,7 +85,7 @@ void ofApp::update(){
         }
     }
     HPV::Update();
-    UltralightTex::ul.update();
+    ofxUltralight::update();
 }
 
 void ofApp::parseMessages(){
