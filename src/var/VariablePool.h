@@ -1,20 +1,25 @@
 #pragma once
 
-#include "VarsHolder.h"
+#include "Variable.h"
+
+class VarsHolder;
 
 class VariablePool {
 public:
-    static Variable* get(VarsHolder* holder, string name);
-    static Variable* getOrCreate(VarsHolder* holder, string name);
-    static map<string, Variable*>& getPool(VarsHolder* holder);
+    static BaseVar* get(VarsHolder* holder, string name);
+    template <typename T>
+    static Variable<T>* getOrCreate(VarsHolder* holder, string name);
+    static map<string, BaseVar*>& getPool(VarsHolder* holder);
     static bool hasShared(string name);
-    static Variable* getShared(string name, bool create = false);
+    static BaseVar* getShared(string name);
+    template <typename T>
+    static Variable<T>* getOrCreateShared(string name);
     static void update(const vector<Mic>& mics, const vector<Sound>& sounds, const vector<TidalNote>& notes);
     static void cleanup(VarsHolder* holder);
     
 private:
-    static map<string, Variable*> sharedPool;
-    static map<int, map<string, Variable*>> texturePool;
-    static map<int, map<string, Variable*>> shaderPool;
-    static map<int, map<string, Variable*>> layerPool;
+    static map<string, BaseVar*> sharedPool;
+    static map<int, map<string, BaseVar*>> texturePool;
+    static map<int, map<string, BaseVar*>> shaderPool;
+    static map<int, map<string, BaseVar*>> layerPool;
 };

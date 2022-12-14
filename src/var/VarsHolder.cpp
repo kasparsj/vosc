@@ -1,7 +1,7 @@
 #include "VarsHolder.h"
 #include "VariablePool.h"
 
-const Variable* VarsHolder::getVariable(string name) const {
+const BaseVar* VarsHolder::getVariable(string name) const {
     if (vars.find(name) != vars.end()) {
         return vars.at(name);
     }
@@ -13,7 +13,7 @@ bool VarsHolder::hasVar(string name) const {
 }
 
 float VarsHolder::getVar(string name, int idx) const {
-    const Variable* var = getVariable(name);
+    const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name));
     if (var != NULL) {
         return var->get(idx);
     }
@@ -21,15 +21,15 @@ float VarsHolder::getVar(string name, int idx) const {
 }
 
 bool VarsHolder::getVarBool(string name, int idx) const {
-    const Variable* var = getVariable(name);
+    const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name));
     if (var != NULL) {
-        return var->getBool(idx);
+        return var->get(idx);
     }
     return false;
 }
 
 vector<float> VarsHolder::getVarVec(string name) const {
-    const Variable* var = getVariable(name);
+    const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name));
     if (var != NULL) {
         return var->getVec();
     }
@@ -37,53 +37,83 @@ vector<float> VarsHolder::getVarVec(string name) const {
 }
 
 glm::vec3 VarsHolder::getVarVec3(string name, glm::vec3 defVal) const {
-    const Variable* var = getVariable(name);
+    const Variable<glm::vec3>* var = dynamic_cast<const Variable<glm::vec3>*>(getVariable(name));
     if (var != NULL) {
-        return glm::vec3(var->get(0), var->get(1), var->get(2));
+        return var->get();
     }
     return defVal;
 }
 
 ofFloatColor VarsHolder::getVarColor(string name) const {
-    const Variable* var = getVariable(name);
+    const Variable<ofFloatColor>* var = dynamic_cast<const Variable<ofFloatColor>*>(getVariable(name));
     if (var != NULL) {
-        return var->getColor();
+        return var->get();
     }
     return ofFloatColor();
 }
 
-void VarsHolder::setVar(string name, Variable* var) {
+template <typename T>
+Variable<T>* VarsHolder::setVar(string name, T value) {
+    Variable<T>* var = VariablePool::getOrCreate<T>(this, name);
+    var->set(value);
     vars[name] = var;
+    return var;
 }
 
-void VarsHolder::setVar(string name, float value) {
-    Variable* var = VariablePool::getOrCreate(this, name);
-    var->set(value);
-    setVar(name, var);
+Variable<float>* VarsHolder::setVar(string name, bool value) {
+    return setVar(name, (float) value);
 }
 
-void VarsHolder::setVar(string name, vector<float> value) {
-    Variable* var = VariablePool::getOrCreate(this, name);
+template <typename T>
+Variable<T>* VarsHolder::setVar(string name, vector<T> value) {
+    Variable<T>* var = VariablePool::getOrCreate<T>(this, name);
     var->set(value);
-    setVar(name, var);
-}
-
-void VarsHolder::setVar(string name, glm::vec3 value) {
-    Variable* var = VariablePool::getOrCreate(this, name);
-    var->isVec3 = true;
-    var->set(value);
-    setVar(name, var);
-}
-
-void VarsHolder::setVar(string name, ofFloatColor value) {
-    Variable* var = VariablePool::getOrCreate(this, name);
-    var->isColor = true;
-    var->set(value);
-    setVar(name, var);
+    vars[name] = var;
+    return var;
 }
 
 void VarsHolder::setVar(string name, const ofxOscMessage& value, int idx) {
-    Variable* var = VariablePool::getOrCreate(this, name);
-    var->set(value, idx);
-    setVar(name, var);
+    switch (value.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            Variable<float>* var = VariablePool::getOrCreate<float>(this, name);
+            var->set(value, idx);
+            vars[name] = var;
+            break;
+        }
+        case OFXOSC_TYPE_FLOAT:
+        case OFXOSC_TYPE_INT32:
+        case OFXOSC_TYPE_TRUE:
+        case OFXOSC_TYPE_FALSE: {
+            Variable<float>* var = VariablePool::getOrCreate<float>(this, name);
+            var->set(value, idx);
+            vars[name] = var;
+            break;
+        }
+        case OFXOSC_TYPE_BLOB:
+        default:
+            ofBuffer buf = value.getArgAsBlob(idx);
+            if (buf.size() == 3) {
+                // vec3
+            }
+            else if (buf.size() == 4) {
+                // ofFloatColor
+            }
+            else if (buf.size() == 16) {
+                // mat4
+            }
+            else {
+                ofLogError() << "BLOB vars not implemented!";
+            }
+            break;
+    }
 }
+
+template Variable<float>* VarsHolder::setVar(string name, float value);
+template Variable<glm::vec3>* VarsHolder::setVar(string name, glm::vec3 value);
+template Variable<glm::mat4>* VarsHolder::setVar(string name, glm::mat4 value);
+template Variable<ofFloatColor>* VarsHolder::setVar(string name, ofFloatColor value);
+
+template Variable<float>* VarsHolder::setVar(string name, vector<float> value);
+template Variable<glm::vec3>* VarsHolder::setVar(string name, vector<glm::vec3> value);
+template Variable<glm::mat4>* VarsHolder::setVar(string name, vector<glm::mat4> value);
+template Variable<ofFloatColor>* VarsHolder::setVar(string name, vector<ofFloatColor> value);

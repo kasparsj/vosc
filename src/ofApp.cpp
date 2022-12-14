@@ -24,12 +24,10 @@ void ofApp::setup(){
     
     ofDisableArbTex();
     
-    camPos = VariablePool::getShared("camPos", true);
-    camPos->isVec3 = true;
+    camPos = VariablePool::getOrCreateShared<glm::vec3>("camPos");
     camPos->set(glm::vec3(0, 0, -870));
     
-    camLook = VariablePool::getShared("camLook", true);
-    camLook->isVec3 = true;
+    camLook = VariablePool::getOrCreateShared<glm::vec3>("camLook");
     camLook->set(glm::vec3(0));
     
     console = std::make_shared<Logger>();
@@ -79,8 +77,8 @@ void ofApp::update(){
 		layers[i]->update(mics, sounds, tidal->notes);
 	}
     if (cam != NULL) {
-        cam->setPosition(camPos->getVec3());
-        cam->lookAt(camLook->getVec3());
+        cam->setPosition(camPos->get());
+        cam->lookAt(camLook->get());
         ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
         if (camOrbitPerSecond != 0 && easyCam != NULL) {
             camOrbit += ofGetLastFrameTime() * camOrbitPerSecond;
@@ -239,34 +237,34 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
             ofLog() << (command + " failed: camera not enabled (run /cam)");
         }
         else if (command == "/cam/pos") {
-            if (Args::get().isTweenVec3(m, 0)) {
-                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
-                if (easyCam != NULL) {
-                    easyCam->disableMouseInput();
-                }
-                function<void()> onComplete = [easyCam]() {
-                    easyCam->enableMouseInput();
-                };
-                camPos->tweenVec3(m, 0, onComplete);
-            }
-            else {
-                camPos->setVec3(m, 0);
-            }
+//            if (Args::get().isTweenVec3(m, 0)) {
+//                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+//                if (easyCam != NULL) {
+//                    easyCam->disableMouseInput();
+//                }
+//                function<void()> onComplete = [easyCam]() {
+//                    easyCam->enableMouseInput();
+//                };
+//                camPos->tween(m, 0, onComplete);
+//            }
+//            else {
+                camPos->set(m, 0);
+//            }
         }
         else if (command == "/cam/look") {
-            if (Args::get().isTweenVec3(m, 0)) {
-                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
-                if (easyCam != NULL) {
-                    easyCam->disableMouseInput();
-                }
-                function<void()> onComplete = [easyCam]() {
-                    easyCam->enableMouseInput();
-                };
-                camLook->tweenVec3(m, 0, onComplete);
-            }
-            else {
-                camLook->setVec3(m, 0);
-            }
+//            if (Args::get().isTweenVec3(m, 0)) {
+//                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+//                if (easyCam != NULL) {
+//                    easyCam->disableMouseInput();
+//                }
+//                function<void()> onComplete = [easyCam]() {
+//                    easyCam->enableMouseInput();
+//                };
+//                camLook->tween(m, 0, onComplete);
+//            }
+//            else {
+                camLook->set(m, 0);
+//            }
         }
         else if (command == "/cam/orbit") {
             if (dynamic_cast<ofEasyCam*>(cam) != NULL) {
@@ -465,6 +463,9 @@ void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
     }
     else if (command.substr(0, 4) == "/mat") {
         materialCommand(layer->matSettings, command, m);
+    }
+    else {
+        ofLog() << "invalid indexCommand: " << m;
     }
 }
 
@@ -713,18 +714,33 @@ void ofApp::processQueue() {
                     }
                 }
                 else if (command.substr(0, 4) == "/var") {
-                    Variable* var = VariablePool::getShared(which, true);
-                    var->set(m);
+                    // todo: fix
+                    //Variable* var = VariablePool::getOr   CreateShared(which);
+                    //var->set(m);
                 }
                 else if (command.substr(0, 5) == "/geom") {
                     geomCommand(GeomPool::getShared(which, true), command, m);
                 }
+                else {
+                    ofLog() << "could not process message: " << m;
+                }
             }
-            else {
+            else if (m.getArgType(0) == OFXOSC_TYPE_INT32) {
                 int idx = m.getArgAsInt(0);
                 if (idx > -1 && layers.size() > idx) {
                     indexCommand(layers[idx], command, m);
                 }
+                else {
+                    ofLog() << "layer index out of bounds: " << m;
+                }
+            }
+            else {
+                ofLogError() << "command not recognized: " << m;
+//                for (int i=0; i<m.getNumArgs(); i++) {
+//                    if (m.getArgType(i) == OFXOSC_TYPE_BLOB) {
+//                        ofLog() << m.getArgAsBlob(i).getText();
+//                    }
+//                }
             }
         }
         messageQueue.erase(messageQueue.begin());

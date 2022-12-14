@@ -4,7 +4,25 @@
 #include "TexData.h"
 #include "VariablePool.h"
 
-void Value::set(string type) {
+template<typename T>
+Value<T>::Value() {
+}
+
+template<typename T>
+T Value<T>::get() const {
+    return value;
+}
+
+template<typename T>
+void Value<T>::set(string expr) {
+    type = "expr";
+    this->expr.set(expr);
+    // todo: shared variables should be added
+    this->value = this->expr.get();
+}
+
+template<>
+void Value<float>::set(string type) {
     float value = 0.f;
     if (type.substr(0, 3) == "mic" || type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
         size_t col = type.find(":");
@@ -33,12 +51,6 @@ void Value::set(string type) {
     else if (DataSourceMap.find(type) != DataSourceMap.end()) {
         
     }
-    else if (VariablePool::getShared(type) != NULL) {
-        Variable* var = VariablePool::getShared(type);
-        ref = type;
-        type = "var";
-        value = var->get();
-    }
     else {
         ofLogError() << ("invalid var type: " + type);
     }
@@ -46,33 +58,45 @@ void Value::set(string type) {
     this->value = value;
 }
 
-void Value::set(float value) {
-    this->type = "const";
+template <typename T>
+void Value<T>::set(T value) {
+    type = "const";
     this->value = value;
 }
 
-void Value::set(const ofxOscMessage& m, int i) {
-    if (m.getNumArgs() > (i+1)) {
-        type = "const";
-        if (m.getNumArgs() > (i+2)) {
-            Args::get().createTween(&value, m.getArgAsFloat(i), m.getArgAsFloat(i+1), m.getArgAsString(i+2));
-        }
-        else {
-            Args::get().createTween(&value, m.getArgAsFloat(i), m.getArgAsFloat(i+1));
-        }
+template<>
+void Value<float>::set(const ofxOscMessage& m, int i) {
+    if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+        set(m.getArgAsString(i));
     }
     else {
-        if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-            set(m.getArgAsString(i));
-        }
-        else {
-            set(m.getArgAsFloat(i));
-        }
+        set(m.getArgAsFloat(i));
     }
 }
 
-void Value::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data) {
-    if (type == "tidal") {
+template<>
+void Value<glm::vec3>::set(const ofxOscMessage& m, int i) {
+    // todo: implement
+}
+
+template<>
+void Value<ofFloatColor>::set(const ofxOscMessage& m, int i) {
+    // todo: implement
+}
+
+template<typename T>
+void Value<T>::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data) {
+    if (type == "expr") {
+        value = expr.get();
+    }
+}
+
+template<>
+void Value<float>::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data) {
+    if (type == "expr") {
+        value = expr.get();
+    }
+    else if (type == "tidal") {
         if (subtype == "onset") {
             value = 0;
         }
@@ -100,68 +124,66 @@ void Value::update(const vector<Mic> &mics, const vector<Sound> &sounds, const v
         }
     }
     else {
-        update(mics, sounds, index, total, data);
-    }
-}
-
-void Value::update(const vector<Mic> &mics, const vector<Sound> &sounds, int index, int total, TexData* data) {
-    float time = (data != NULL ? data->time : ofGetElapsedTimef()) * speed;
-    if (type == "time") {
-        value = fmod(time, 1.f);
-    }
-    else if (type == "noise") {
-        value = ofNoise((int)(size_t)this, time);
-    }
-    else if (type == "rand") {
-        value = ofRandom(1.f);
-    }
-    else if (type == "sin") {
-        value = (sin(time)+1)/2.f;
-    }
-    else if (type == "cos") {
-        value = (cos(time)+1)/2.f;
-    }
-    else if (type == "amp" || type == "loud" || type == "onset" || type == "mfcc") {
-        if (sounds.size() > chan) {
-            if (type == "amp") {
-                value = sounds[chan].amplitude;
-            }
-            else if (type == "loud") {
-                value = sounds[chan].loudness;
-            }
-            else if (type == "onset") {
-                value = sounds[chan].onset;
+        float time = (data != NULL ? data->time : ofGetElapsedTimef()) * speed;
+        if (type == "time") {
+            value = fmod(time, 1.f);
+        }
+        else if (type == "noise") {
+            value = ofNoise((int)(size_t)this, time);
+        }
+        else if (type == "rand") {
+            value = ofRandom(1.f);
+        }
+        else if (type == "sin") {
+            value = (sin(time)+1)/2.f;
+        }
+        else if (type == "cos") {
+            value = (cos(time)+1)/2.f;
+        }
+        else if (type == "amp" || type == "loud" || type == "onset" || type == "mfcc") {
+            if (sounds.size() > chan) {
+                if (type == "amp") {
+                    value = sounds[chan].amplitude;
+                }
+                else if (type == "loud") {
+                    value = sounds[chan].loudness;
+                }
+                else if (type == "onset") {
+                    value = sounds[chan].onset;
+                }
+                else {
+                    value = 0;
+                    const vector<float>& mfcc = sounds[chan].mfcc;
+                    int k = (mfcc.size() / total);
+                    for (int i=index*k; i<index*k+k; i++) {
+                        value += mfcc[i];
+                    }
+                    value /= k;
+                }
             }
             else {
                 value = 0;
-                const vector<float>& mfcc = sounds[chan].mfcc;
-                int k = (mfcc.size() / total);
-                for (int i=index*k; i<index*k+k; i++) {
-                    value += mfcc[i];
-                }
-                value /= k;
+                ofLogError() << ("sound data not available " + type + ":" + ofToString(chan));
             }
         }
-        else {
-            value = 0;
-            ofLogError() << ("sound data not available " + type + ":" + ofToString(chan));
+        else if (type == "mic") {
+            if (mics.size() > chan) {
+                value = mics[chan].amplitude;
+            }
+            else {
+                value = 0;
+                ofLogError() << ("mic not available:" + ofToString(chan));
+            }
         }
-    }
-    else if (type == "mic") {
-        if (mics.size() > chan) {
-            value = mics[chan].amplitude;
-        }
-        else {
-            value = 0;
-            ofLogError() << ("mic not available:" + ofToString(chan));
-        }
-    }
-    else if (type == "var") {
-        value = VariablePool::getShared(ref)->get();
     }
 }
 
-void Value::afterDraw() {
+template<typename T>
+void Value<T>::afterDraw() {
+}
+
+template<>
+void Value<float>::afterDraw() {
     if (type == "tidal") {
         value -= 1.f/8.f;
         if (value < 0) {
@@ -169,3 +191,8 @@ void Value::afterDraw() {
         }
     }
 }
+
+template class Value<float>;
+template class Value<glm::vec3>;
+template class Value<glm::mat4>;
+template class Value<ofFloatColor>;

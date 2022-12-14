@@ -14,10 +14,13 @@
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
-		<key>osc_vj copy.xcscheme_^#shared#^_</key>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>2B997A52294A59FF0041D31E</key>
 		<dict>
-			<key>orderHint</key>
-			<integer>2</integer>
+			<key>primary</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

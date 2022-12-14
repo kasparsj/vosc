@@ -19,6 +19,10 @@
 ~visuals.sendMsg('/cam/orbit', 20);
 )
 
+~visuals = NetAddr("127.0.0.1", 33333);
+~visuals.sendMsg('/tex', 0, "https://apod.nasa.gov/apod/astropix.html");
+~visuals.sendMsg('/tex', 0, "https://kaspars.cc");
+
 (
 // create visuals sender
 ~visuals = NetAddr("127.0.0.1", 33333);
@@ -35,10 +39,7 @@
 	~visuals.sendMsg('/layer/rot', i, 360.rand, 360.rand, 360.rand);
 };
 
-// add a few lights
-2.do { |i|
-	~visuals.sendMsg('/light', i, 500.rand, 0, 500);
-};
+~visuals.sendMsg('/light', 0, 500.rand, 0, 500);
 
 ~visuals.sendMsg('/cam', "easy");
 ~visuals.sendMsg('/cam/set', "distance", 870);

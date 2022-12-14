@@ -81,8 +81,8 @@ public:
     Layout layout = Layout::STACK;
     ofCamera* cam;
     ofxPostProcessing post;
-    Variable* camPos;
-    Variable* camLook;
+    Variable<glm::vec3>* camPos;
+    Variable<glm::vec3>* camLook;
     float camOrbit = 0;
     float camOrbitPerSecond = 0;
     Lights lights;

@@ -33,7 +33,7 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 }
 
 void Layer::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes) {
-    for (map<string, Variable*>::iterator it=vars.begin(); it!=vars.end(); ++it) {
+    for (map<string, BaseVar*>::iterator it=vars.begin(); it!=vars.end(); ++it) {
         it->second->update(mics, sounds, notes, &data);
     }
     if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
@@ -182,7 +182,6 @@ void Layer::resetTransform() {
     setVar("alpha", 1.f);
     setVar("bri", 1.f);
     setVar("rotation", glm::vec3(0, 0, 0));
-    vars["rotation"]->setRange(360);
     setVar("pivot", glm::vec3(0, 0, 0));
     setVar("scale", glm::vec3(1));
 }

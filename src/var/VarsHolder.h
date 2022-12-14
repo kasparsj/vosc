@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ofMain.h"
 #include "Variable.h"
 
 class VarsHolder {
@@ -10,7 +9,7 @@ public:
         _id = nextId++;
     }
     virtual ~VarsHolder() {}
-    const Variable* getVariable(string name) const;
+    const BaseVar* getVariable(string name) const;
     bool hasVar(string name) const;
     float getVar(string name, int idx = 0) const;
     bool getVarBool(string name, int idx = 0) const;
@@ -20,18 +19,17 @@ public:
     }
     vector<float> getVarVec(string name) const;
     ofFloatColor getVarColor(string name) const;
-    void setVar(string name, float value);
-    void setVar(string name, vector<float> value);
-    void setVar(string name, glm::vec3 value);
-    void setVar(string name, ofFloatColor value);
+    template <typename T>
+    Variable<T>* setVar(string name, T value);
+    template <typename T>
+    Variable<T>* setVar(string name, vector<T> value);
+    Variable<float>* setVar(string name, bool value);
     void setVar(string name, const ofxOscMessage& value, int idx = 1);
     int getId() {
         return _id;
     }
 
-    map<string, Variable*> vars;
+    map<string, BaseVar*> vars;
 protected:
-    void setVar(string name, Variable* var);
-    
     unsigned int _id;
 };

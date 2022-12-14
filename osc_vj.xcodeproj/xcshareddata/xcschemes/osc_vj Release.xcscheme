@@ -28,7 +28,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "2B19F776294102D200982AB7"
+               BlueprintIdentifier = "2B997A52294A59FF0041D31E"
                BuildableName = "osc_vj universal.app"
                BlueprintName = "osc_vj universal"
                ReferencedContainer = "container:osc_vj.xcodeproj">

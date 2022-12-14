@@ -70,7 +70,9 @@ public:
     
 private:
     void setUniformTextures(const map<string, Texture*>& textures, int delay = 0);
-    void setUniforms(const map<string, Variable*>& vars);
+    void setUniforms(const map<string, BaseVar*>& vars);
+    template<typename T>
+    void setUniforms(T* shader, const map<string, BaseVar*>& vars);
 
     map<string, Texture*> textures;
     ofShader* shader = NULL;

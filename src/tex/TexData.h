@@ -31,8 +31,8 @@ public:
     }
     void setFboSettings(const ofxOscMessage& m);
     void allocate(ofFbo& fbo);
-    void afterDraw(const map<string, Variable*>& vars);
-    const map<string, Variable*>& getVars() {
+    void afterDraw(const map<string, BaseVar*>& vars);
+    const map<string, BaseVar*>& getVars() {
         return parent->vars;
     }
     bool hasVar(string name) {
@@ -42,11 +42,7 @@ public:
         return parent->getVar(name, idx);
     }
     vector<float> getVarVec(string name) {
-        const Variable* var = parent->getVariable(name);
-        if (var != NULL) {
-            return var->getVec();
-        }
-        return vector<float>();
+        return parent->getVarVec(name);
     }
     ofFloatColor getVarColor(string name) {
         return parent->getVarColor(name);
