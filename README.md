@@ -1,6 +1,8 @@
 # osc_vj
 
-2D/3D OSC VJing software built on openFrameworks. **This is work in progress!**
+**This is work in progress!**
+
+2D/3D OSC VJing software for SuperCollider/TidalCycles built on openFrameworks.
 
 See [Wiki](https://github.com/kasparsj/osc_vj/wiki) for documentation.
 
