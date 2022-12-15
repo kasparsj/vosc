@@ -11,7 +11,7 @@
 #include "Config.h"
 #include "VariablePool.h"
 
-#ifndef TARGET_CPU_ARM64
+#ifndef TARGET_CPU_UNIVERSAL
 #include "UltralightTex.h"
 #endif
 
@@ -20,7 +20,7 @@ Tex* Tex::factory(string type, string path, const vector<float>& args) {
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
-#ifndef TARGET_CPU_ARM64
+#ifndef TARGET_CPU_UNIVERSAL
             case Source::HTML:
                 tex = new UltralightTex(path, args);
                 break;

@@ -1961,8 +1961,6 @@
 		BDA6AA65A1AD7C1FF34E3E37 /* tex */ = {
 			isa = PBXGroup;
 			children = (
-				2B997AE7294A61BB0041D31E /* UltralightTex.cpp */,
-				2B997AE6294A61BB0041D31E /* UltralightTex.h */,
 				88984603F62DE9EB61ECDFF6 /* DrawTex.cpp */,
 				273649FD41D6E3133519E9A9 /* DrawTex.h */,
 				BA847296AB5A3AA63ADE748F /* FboPingPongTex.cpp */,
@@ -1985,6 +1983,8 @@
 				3160BA8560C0ECC51DC47454 /* Tex.h */,
 				67B4E9095603F3F375B58675 /* TexData.cpp */,
 				62DF624EA4A8C9432E9B5471 /* TexData.h */,
+				2B997AE7294A61BB0041D31E /* UltralightTex.cpp */,
+				2B997AE6294A61BB0041D31E /* UltralightTex.h */,
 				9174FE620B649DE0C36D5259 /* VideoTex.cpp */,
 				0007F94E72255780D908645A /* VideoTex.h */,
 				D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */,
@@ -2966,6 +2966,10 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = NONE;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TARGET_CPU_UNIVERSAL,
+					OFXEXPR_NOGUI,
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(OF_CORE_HEADERS)",
 					src,
@@ -3061,6 +3065,10 @@
 				);
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = NONE;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TARGET_CPU_UNIVERSAL,
+					OFXEXPR_NOGUI,
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(OF_CORE_HEADERS)",
 					src,
@@ -3157,6 +3165,10 @@
 				);
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = NONE;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TARGET_CPU_UNIVERSAL,
+					OFXEXPR_NOGUI,
+				);
 				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = "APPSTORE=1";
 				HEADER_SEARCH_PATHS = (
 					"$(OF_CORE_HEADERS)",
@@ -3337,6 +3349,7 @@
 				ARCHS = x86_64;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
+				EXCLUDED_ARCHS = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/System/Library/Frameworks,
@@ -3609,6 +3622,7 @@
 				ARCHS = x86_64;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				EXCLUDED_ARCHS = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/System/Library/Frameworks,
@@ -3706,6 +3720,7 @@
 				ARCHS = x86_64;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
+				EXCLUDED_ARCHS = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/System/Library/Frameworks,

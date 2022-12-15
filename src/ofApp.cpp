@@ -6,7 +6,7 @@
 #include "ShaderTex.h"
 #include "Args.h"
 
-#ifndef TARGET_CPU_ARM64
+#ifndef TARGET_CPU_UNIVERSAL
 #include "ofxUltralight.h"
 #endif
 
@@ -33,6 +33,11 @@ void ofApp::setup(){
     console = std::make_shared<Logger>();
     ofSetLoggerChannel(console);
     
+#ifdef TARGET_CPU_UNIVERSAL
+    ofLog() << ("ARM64: Yes");
+#else
+    ofLog() << ("ARM64: No");
+#endif
     ofLog() << ("Vendor :" + ofToString(glGetString(GL_VENDOR)));
     ofLog() << ("GPU : " + ofToString(glGetString(GL_RENDERER)));
     ofLog() << ("OpenGL ver. " + ofToString(glGetString(GL_VERSION)));
@@ -86,7 +91,7 @@ void ofApp::update(){
         }
     }
     HPV::Update();
-#ifndef TARGET_CPU_ARM64
+#ifndef TARGET_CPU_UNIVERSAL
     ofxUltralight::update();
 #endif
 }

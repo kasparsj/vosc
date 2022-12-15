@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-               BuildableName = "osc_vj x86_64.app"
-               BlueprintName = "osc_vj x86_64"
+               BlueprintIdentifier = "2B997A52294A59FF0041D31E"
+               BuildableName = "osc_vj universal.app"
+               BlueprintName = "osc_vj universal"
                ReferencedContainer = "container:osc_vj.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,9 +28,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "2B997A52294A59FF0041D31E"
-               BuildableName = "osc_vj universal.app"
-               BlueprintName = "osc_vj universal"
+               BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
+               BuildableName = "osc_vj x86_64.app"
+               BlueprintName = "osc_vj x86_64"
                ReferencedContainer = "container:osc_vj.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -80,16 +80,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "NO">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "osc_vj x86_64.app"
-            BlueprintName = "osc_vj x86_64"
+            BlueprintIdentifier = "2B997A52294A59FF0041D31E"
+            BuildableName = "osc_vj universal.app"
+            BlueprintName = "osc_vj universal"
             ReferencedContainer = "container:osc_vj.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Release">
