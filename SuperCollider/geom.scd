@@ -39,7 +39,7 @@
 	~visuals.sendMsg('/layer/rot', i, 360.rand, 360.rand, 360.rand);
 };
 
-~visuals.sendMsg('/light', 0, 500.rand, 0, 500);
+~visuals.sendMsg('/light', 0, [500.rand, 0, 500]);
 
 ~visuals.sendMsg('/cam', "easy");
 ~visuals.sendMsg('/cam/set', "distance", 870);

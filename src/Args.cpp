@@ -178,15 +178,15 @@ vector<string> Args::parseVec3Expr(const ofxOscMessage &m, int idx) {
             string str = m.getArgAsString(idx);
             if (isJSONArr(str)) {
                 auto json = ofJson::parse(str);
-                vec3Expr[0] = json.at(0);
-                vec3Expr[1] = json.at(1);
-                vec3Expr[2] = json.at(2);
+                vec3Expr[0] = ofToString(json.at(0));
+                vec3Expr[1] = ofToString(json.at(1));
+                vec3Expr[2] = ofToString(json.at(2));
             }
             else if (isJSONObj(str)) {
                 auto json = ofJson::parse(str);
-                vec3Expr[0] = json.at("x");
-                vec3Expr[1] = json.at("y");
-                vec3Expr[2] = json.at("z");
+                vec3Expr[0] = ofToString(json.at("x"));
+                vec3Expr[1] = ofToString(json.at("y"));
+                vec3Expr[2] = ofToString(json.at("z"));
             }
             else {
                 vec3Expr[0] = str;

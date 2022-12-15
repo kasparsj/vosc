@@ -29,41 +29,42 @@ void Value<T>::set(const vector<string>& expr, int i) {
     this->value = this->expr.get();
 }
 
-template<>
-void Value<float>::set(const string& type) {
-    float value = 0.f;
-    if (type.substr(0, 3) == "mic" || type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
-        size_t col = type.find(":");
-        if (col != std::string::npos) {
-            chan = ofToInt(type.substr(col+1));
-            this->type = type.substr(0, col);
-        }
-        else {
-            chan = ofToInt(type.substr(type.length()-1));
-            this->type = type.substr(0, type.length()-1);
-        }
-    }
-    else if (type.substr(0, 5) == "tidal") {
-        size_t col = type.find(":");
-        if (col != std::string::npos) {
-            chan = ofToInt(type.substr(col+1));
-            subtype = type.substr(col+2); // todo: support "10"
-        }
-        else {
-            chan = type.length() > 5 ? ofToInt(type.substr(5, 1)) : 0;
-            subtype = type.substr(6);
-        }
-        this->type = "tidal";
-        // todo: validate subtype
-    }
-    else if (DataSourceMap.find(type) != DataSourceMap.end()) {
-        this->type = type;
-    }
-    else {
-        ofLogError() << ("invalid var type: " + type);
-    }
-    this->value = value;
-}
+// todo: fix
+//template<>
+//void Value<float>::set(const string& type) {
+//    float value = 0.f;
+//    if (type.substr(0, 3) == "mic" || type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
+//        size_t col = type.find(":");
+//        if (col != std::string::npos) {
+//            chan = ofToInt(type.substr(col+1));
+//            this->type = type.substr(0, col);
+//        }
+//        else {
+//            chan = ofToInt(type.substr(type.length()-1));
+//            this->type = type.substr(0, type.length()-1);
+//        }
+//    }
+//    else if (type.substr(0, 5) == "tidal") {
+//        size_t col = type.find(":");
+//        if (col != std::string::npos) {
+//            chan = ofToInt(type.substr(col+1));
+//            subtype = type.substr(col+2); // todo: support "10"
+//        }
+//        else {
+//            chan = type.length() > 5 ? ofToInt(type.substr(5, 1)) : 0;
+//            subtype = type.substr(6);
+//        }
+//        this->type = "tidal";
+//        // todo: validate subtype
+//    }
+//    else if (DataSourceMap.find(type) != DataSourceMap.end()) {
+//        this->type = type;
+//    }
+//    else {
+//        ofLogError() << ("invalid var type: " + type);
+//    }
+//    this->value = value;
+//}
 
 template <typename T>
 void Value<T>::set(const T& value) {
