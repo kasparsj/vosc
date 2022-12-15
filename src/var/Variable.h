@@ -12,7 +12,7 @@ public:
     }
     void set(T value);
     void set(vector<T> value);
-    virtual void set(const ofxOscMessage& value, int idx = 1) override;
+    void set(const ofxOscMessage& m, int idx = 1);
     T get(int idx = 0) const {
         return values[idx].get();
     }
@@ -30,8 +30,4 @@ public:
     }
 
     vector<Value<T>> values;
-    
-private:
-    void init(const ofxOscMessage& value, int idx = 1);
-    void setValue(const ofxOscMessage& m, int idx = 1);
 };

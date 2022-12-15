@@ -19,76 +19,10 @@ void Variable<T>::set(vector<T> value) {
 
 template <typename T>
 void Variable<T>::set(const ofxOscMessage& m, int idx) {
-    string command = m.getAddress();
-    if (command.length() >= 4 && command.substr(command.length()-4) == "/var") {
-        init(m, idx);
-    }
-    else {
-        setValue(m, idx);
-    }
-}
-
-template<>
-void Variable<float>::init(const ofxOscMessage& m, int idx) {
-    values.resize(m.getNumArgs() - idx);
-    for (int i=idx; i<m.getNumArgs(); i++) {
-        if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-            values[(i-idx)].set(m.getArgAsString(i));
-        }
-        else {
-            values[(i-idx)].set(m.getArgAsFloat(i));
-        }
-    }
-}
-
-template<>
-void Variable<glm::vec3>::init(const ofxOscMessage& m, int idx) {
-    values.resize(m.getNumArgs() - idx);
-    for (int i=idx; i<m.getNumArgs(); i++) {
-        if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-            values[(i-idx)].set(m.getArgAsString(i));
-        }
-        else {
-            values[(i-idx)].set(m.getArgAsBlob(i));
-        }
-    }
-}
-
-template<>
-void Variable<ofFloatColor>::init(const ofxOscMessage& m, int idx) {
-    values.resize(m.getNumArgs() - idx);
-    for (int i=idx; i<m.getNumArgs(); i++) {
-        if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-            values[(i-idx)].set(m.getArgAsString(i));
-        }
-        else {
-            values[(i-idx)].set(m.getArgAsBlob(i));
-        }
-    }
-}
-
-template <typename T>
-void Variable<T>::setValue(const ofxOscMessage& m, int idx) {
     values.resize(m.getNumArgs()-idx);
     for (int i=0; i<values.size(); i++) {
         values[i].set(m, i+idx);
     }
-
-//    // target, value1, value2, value3
-//    if (isColor) {
-//        setColor(m, idx);
-//    }
-//    else if (isVec3) {
-//        if (m.getNumArgs() == idx + 4) { // 4 args
-//            tweenVec3(m, idx);
-//        }
-//        else {
-//            setVec3(m, idx);
-//        }
-//    }
-//    else {
-//        setFloat(m, idx);
-//    }
 }
 
 //void Variable::setColor(const ofxOscMessage& m, int idx) {

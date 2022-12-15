@@ -54,7 +54,7 @@ ofFloatColor VarsHolder::getVarColor(string name) const {
 
 template <typename T>
 Variable<T>* VarsHolder::setVar(string name, T value) {
-    Variable<T>* var = VariablePool::getOrCreate<T>(this, name);
+    Variable<T>* var = VariablePool::getOrCreate<T>(name, this);
     var->set(value);
     vars[name] = var;
     return var;
@@ -66,46 +66,16 @@ Variable<float>* VarsHolder::setVar(string name, bool value) {
 
 template <typename T>
 Variable<T>* VarsHolder::setVar(string name, vector<T> value) {
-    Variable<T>* var = VariablePool::getOrCreate<T>(this, name);
+    Variable<T>* var = VariablePool::getOrCreate<T>(name, this);
     var->set(value);
     vars[name] = var;
     return var;
 }
 
 void VarsHolder::setVar(string name, const ofxOscMessage& value, int idx) {
-    switch (value.getArgType(idx)) {
-        case OFXOSC_TYPE_STRING: {
-            Variable<float>* var = VariablePool::getOrCreate<float>(this, name);
-            var->set(value, idx);
-            vars[name] = var;
-            break;
-        }
-        case OFXOSC_TYPE_FLOAT:
-        case OFXOSC_TYPE_INT32:
-        case OFXOSC_TYPE_TRUE:
-        case OFXOSC_TYPE_FALSE: {
-            Variable<float>* var = VariablePool::getOrCreate<float>(this, name);
-            var->set(value, idx);
-            vars[name] = var;
-            break;
-        }
-        case OFXOSC_TYPE_BLOB:
-        default:
-            ofBuffer buf = value.getArgAsBlob(idx);
-            if (buf.size() == 3) {
-                // vec3
-            }
-            else if (buf.size() == 4) {
-                // ofFloatColor
-            }
-            else if (buf.size() == 16) {
-                // mat4
-            }
-            else {
-                ofLogError() << "BLOB vars not implemented!";
-            }
-            break;
-    }
+    BaseVar* var = VariablePool::getOrCreate(name, value, idx, this);
+    vars[name] = var;
+    return var;
 }
 
 template Variable<float>* VarsHolder::setVar(string name, float value);

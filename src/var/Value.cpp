@@ -76,12 +76,32 @@ void Value<float>::set(const ofxOscMessage& m, int i) {
 
 template<>
 void Value<glm::vec3>::set(const ofxOscMessage& m, int i) {
-    // todo: implement
+    if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+        set(m.getArgAsString(i));
+    }
+    else {
+        set(m.getArgAsBlob(i));
+    }
+}
+
+template<>
+void Value<glm::mat4>::set(const ofxOscMessage& m, int i) {
+    if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+        set(m.getArgAsString(i));
+    }
+    else {
+        set(m.getArgAsBlob(i));
+    }
 }
 
 template<>
 void Value<ofFloatColor>::set(const ofxOscMessage& m, int i) {
-    // todo: implement
+    if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+        set(m.getArgAsString(i));
+    }
+    else {
+        set(m.getArgAsBlob(i));
+    }
 }
 
 template<typename T>

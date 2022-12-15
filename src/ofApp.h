@@ -22,8 +22,9 @@ public:
     void layoutLayers(Layout layout, const vector<Layer*> &layers);
 	void update();
     void parseMessages();
-    void parseMessage(const ofxOscMessage &m);
+    void parseMessage(const ofxOscMessage& m);
     void processQueue();
+    void invalidCommand(const ofxOscMessage& m);
     bool checkOnset();
 	void draw();
     void drawDebug();

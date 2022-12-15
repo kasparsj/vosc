@@ -25,6 +25,9 @@ public:
         args.updateVecs();
         args.updateColors();
     }
+    static bool isHexColor(const string& str);
+    static bool isURL(const string& str);
+    static ofFloatColor parseHexColor(const string& str);
     
     float parseIntOrFloat(const ofxOscMessage &m, int i = 0);
     ofFloatColor parseColor(const ofxOscMessage& m, int idx = 0);

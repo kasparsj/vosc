@@ -1,6 +1,6 @@
 #version 150
 
-const vec3 DEFAULT_COLOR = vec3(1, 1, 1);
+const vec3 DEFAULT_COLOR = vec3(1, 0, 0);
 
 uniform float time;
 uniform vec2 resolution;

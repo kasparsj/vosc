@@ -719,15 +719,13 @@ void ofApp::processQueue() {
                     }
                 }
                 else if (command.substr(0, 4) == "/var") {
-                    // todo: fix
-                    //Variable* var = VariablePool::getOr   CreateShared(which);
-                    //var->set(m);
+                    VariablePool::getOrCreateShared(which, m, 1);
                 }
                 else if (command.substr(0, 5) == "/geom") {
                     geomCommand(GeomPool::getShared(which, true), command, m);
                 }
                 else {
-                    ofLog() << "could not process message: " << m;
+                    invalidCommand(m);
                 }
             }
             else if (m.getArgType(0) == OFXOSC_TYPE_INT32) {
@@ -740,15 +738,19 @@ void ofApp::processQueue() {
                 }
             }
             else {
-                ofLogError() << "command not recognized: " << m;
-//                for (int i=0; i<m.getNumArgs(); i++) {
-//                    if (m.getArgType(i) == OFXOSC_TYPE_BLOB) {
-//                        ofLog() << m.getArgAsBlob(i).getText();
-//                    }
-//                }
+                invalidCommand(m);
             }
         }
         messageQueue.erase(messageQueue.begin());
+    }
+}
+
+void ofApp::invalidCommand(const ofxOscMessage& m) {
+    ofLogError() << "command not recognized: " << m;
+    for (int i=0; i<m.getNumArgs(); i++) {
+        if (m.getArgType(i) == OFXOSC_TYPE_BLOB) {
+            ofLog() << m.getArgAsBlob(i);
+        }
     }
 }
 

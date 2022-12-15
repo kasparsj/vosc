@@ -1,8 +1,8 @@
 #version 150
 
-#pragma include "shaders/common/of_default_uniforms.glsl"
-#pragma include "shaders/common/of_default_vertex_in_attributes.glsl"
-#pragma include "shaders/common/ShaderHelpers.glsl"
+#pragma include "shaders/include/of_default_uniforms.glsl"
+#pragma include "shaders/include/of_default_vertex_in_attributes.glsl"
+#pragma include "shaders/include/ShaderHelpers.glsl"
 
 uniform vec2 resolution;
 

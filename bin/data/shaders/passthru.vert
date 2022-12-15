@@ -1,7 +1,7 @@
 #version 330
 
-#pragma include "common/of_default_uniforms.glsl"
-#pragma include "common/of_default_vertex_in_attributes.glsl"
+#pragma include "include/of_default_uniforms.glsl"
+#pragma include "include/of_default_vertex_in_attributes.glsl"
 
 out VertexAttrib {
     vec4 position;

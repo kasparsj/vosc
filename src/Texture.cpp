@@ -3,21 +3,11 @@
 #include "Config.h"
 #include "Layer.h"
 #include "VariablePool.h"
-#include <regex>
-
-bool isColor(string path) {
-    return (path.substr(0, 1) == "#" && path.size() == 7) || (path.substr(0, 2) == "0x" && path.size() == 8);
-}
-
-bool isURL(string path) {
-    std::regex re("^https?://.+");
-    return regex_match(path, re);
-}
 
 void Texture::load(string source, const vector<float>& args) {
     _unload();
     bool explicitType = source.find(":") != string::npos;
-    bool _isURL = isURL(source);
+    bool _isURL = Args::isURL(source);
     if (explicitType && !_isURL) {
         tex = Tex::factory(source, args);
     }
@@ -42,8 +32,8 @@ void Texture::load(string source, const vector<float>& args) {
             tex = Tex::factory("html", source, args);
         }
         else {
-            if (isColor(source)) {
-                ofFloatColor color = ofFloatColor::fromHex(ofHexToInt(source));
+            if (Args::isHexColor(source)) {
+                ofFloatColor color = Args::parseHexColor(source);
                 vector<float> args1 = {color.r, color.g, color.b, color.a};
                 tex = Tex::factory("color", "color", args1);
             }

@@ -1,7 +1,21 @@
 #include "Args.h"
 #include "ColorUtil.h"
+#include <regex>
 
 Args Args::instance;
+
+bool Args::isHexColor(const string& str) {
+    return (str.substr(0, 1) == "#" && str.size() == 7) || (str.substr(0, 2) == "0x" && str.size() == 8);
+}
+
+bool Args::isURL(const string& str) {
+    std::regex re("^https?://.+");
+    return regex_match(str, re);
+}
+
+ofFloatColor Args::parseHexColor(const string& str) {
+    return ofFloatColor::fromHex(ofHexToInt(str));
+}
 
 float Args::parseIntOrFloat(const ofxOscMessage &m, int i) {
     if (m.getArgType(i) == OFXOSC_TYPE_FLOAT) {
@@ -14,9 +28,48 @@ float Args::parseIntOrFloat(const ofxOscMessage &m, int i) {
 
 ofFloatColor Args::parseColor(const ofxOscMessage &m, int idx) {
     ofFloatColor color;
-    for (int i=idx; i<min(idx+3, (int) m.getNumArgs()); i++) {
-        color[i-idx] = parseIntOrFloat(m, idx);
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            string str = m.getArgAsString(idx);
+            if (isHexColor(str)) {
+                color = parseHexColor(str);
+            }
+            else if (str.substr(0, 5) == "rgba(") {
+                
+            }
+            else if (str.substr(0, 4) == "rgb(") {
+                
+            }
+            else if (str.substr(0, 1) == "{") {
+                
+            }
+            else if (str.substr(0, 1) == "[") {
+                
+            }
+            else {
+                // accept expressions?
+            }
+            break;
+        }
+        case OFXOSC_TYPE_INT32:
+        case OFXOSC_TYPE_INT64:
+        case OFXOSC_TYPE_CHAR:
+            color = ofColor(m.getArgAsInt(idx));
+            break;
+        case OFXOSC_TYPE_FLOAT:
+        case OFXOSC_TYPE_DOUBLE:
+            color = ofFloatColor(m.getArgAsFloat(idx));
+            break;
+        case OFXOSC_TYPE_RGBA_COLOR:
+            color = m.getArgAsRgbaColor(idx);
+            break;
+        default:
+            ofLogError() << "could not parse color: " << m << idx;
+            break;
     }
+//    for (int i=idx; i<min(idx+3, (int) m.getNumArgs()); i++) {
+//        color[i-idx] = parseIntOrFloat(m, idx);
+//    }
     return color;
 }
 

@@ -1,8 +1,8 @@
 #version 150
 
 // Hmm, do we really need to give the path to the shader if it's in the same folder?
-#pragma include "shaders/common/ShaderHelpers.glslinc"
-#pragma include "shaders/common/SimplexNoiseDerivatives4D.glslinc"
+#pragma include "shaders/include/ShaderHelpers.glslinc"
+#pragma include "shaders/include/SimplexNoiseDerivatives4D.glslinc"
 
 uniform sampler2D tex0;
 uniform sampler2D tex1;
