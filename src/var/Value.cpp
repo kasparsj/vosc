@@ -14,25 +14,33 @@ T Value<T>::get() const {
 }
 
 template<typename T>
-void Value<T>::set(string expr) {
+void Value<T>::set(const string& expr) {
     type = "expr";
     this->expr.set(expr);
     // todo: shared variables should be added
     this->value = this->expr.get();
 }
 
+template<typename T>
+void Value<T>::set(const vector<string>& expr, int i) {
+    type = "expr";
+    this->expr.set(expr, i);
+    // todo: shared variables should be added
+    this->value = this->expr.get();
+}
+
 template<>
-void Value<float>::set(string type) {
+void Value<float>::set(const string& type) {
     float value = 0.f;
     if (type.substr(0, 3) == "mic" || type.substr(0, 3) == "amp" || type.substr(0, 4) == "loud" || type.substr(0, 5) == "onset" || type.substr(0, 4) == "mfcc") {
         size_t col = type.find(":");
         if (col != std::string::npos) {
             chan = ofToInt(type.substr(col+1));
-            type = type.substr(0, col);
+            this->type = type.substr(0, col);
         }
         else {
             chan = ofToInt(type.substr(type.length()-1));
-            type = type.substr(0, type.length()-1);
+            this->type = type.substr(0, type.length()-1);
         }
     }
     else if (type.substr(0, 5) == "tidal") {
@@ -45,21 +53,20 @@ void Value<float>::set(string type) {
             chan = type.length() > 5 ? ofToInt(type.substr(5, 1)) : 0;
             subtype = type.substr(6);
         }
-        type = "tidal";
+        this->type = "tidal";
         // todo: validate subtype
     }
     else if (DataSourceMap.find(type) != DataSourceMap.end()) {
-        
+        this->type = type;
     }
     else {
         ofLogError() << ("invalid var type: " + type);
     }
-    this->type = type;
     this->value = value;
 }
 
 template <typename T>
-void Value<T>::set(T value) {
+void Value<T>::set(const T& value) {
     type = "const";
     this->value = value;
 }
@@ -76,32 +83,37 @@ void Value<float>::set(const ofxOscMessage& m, int i) {
 
 template<>
 void Value<glm::vec3>::set(const ofxOscMessage& m, int i) {
-    if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-        set(m.getArgAsString(i));
+    try {
+        set(Args::parseVec3(m, i));
     }
-    else {
-        set(m.getArgAsBlob(i));
+    catch (...) {
+        set(Args::parseVec3Expr(m, i));
     }
 }
 
 template<>
 void Value<glm::mat4>::set(const ofxOscMessage& m, int i) {
-    if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-        set(m.getArgAsString(i));
-    }
-    else {
-        set(m.getArgAsBlob(i));
-    }
+    throw "Value<glm::mat4>::set not implemented";
 }
 
 template<>
 void Value<ofFloatColor>::set(const ofxOscMessage& m, int i) {
-    if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-        set(m.getArgAsString(i));
+    try {
+        set(Args::parseColor(m, i));
     }
-    else {
-        set(m.getArgAsBlob(i));
+    catch (...) {
+        set(Args::parseColorExpr(m, i));
     }
+}
+
+template<>
+void Value<ofxExprNode>::set(const ofxOscMessage& m, int i) {
+    vector<string> pos = Args::parseVec3Expr(m, i);
+    set(pos);
+    vector<string> rota = Args::parseVec3Expr(m, i+1);
+    set(rota, 3);
+    vector<string> scale = Args::parseVec3Expr(m, i+2);
+    set(scale, 6);
 }
 
 template<typename T>
@@ -216,3 +228,4 @@ template class Value<float>;
 template class Value<glm::vec3>;
 template class Value<glm::mat4>;
 template class Value<ofFloatColor>;
+template class Value<ofxExprNode>;

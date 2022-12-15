@@ -4,6 +4,7 @@
 #include "Layer.h"
 #include "VarsHolder.h"
 #include "ColorWheelSchemes.h"
+#include "ofxExpr.hpp"
 
 map<string, BaseVar*> VariablePool::sharedPool;
 map<int, map<string, BaseVar*>> VariablePool::texturePool;
@@ -36,11 +37,19 @@ Variable<T>* VariablePool::getOrCreateShared(string name) {
 BaseVar* VariablePool::create(const ofxOscMessage& m, int idx) {
     string command = m.getAddress();
     if (command.length() >= 4 && command.substr(command.length()-4) == "/var") {
-        switch (m.getArgType(idx)) {
+        ofxOscArgType type = m.getArgType(idx);
+        switch (type) {
             case OFXOSC_TYPE_STRING: {
-                Variable<float>* var = new Variable<float>();
-                var->set(m, idx);
-                return var;
+                string str = m.getArgAsString(idx);
+                if (Args::isJSON(str)) {
+                    auto json = ofJson::parse(str);
+                    return create(m, idx, json.size());
+                }
+                else {
+                    Variable<float>* var = new Variable<float>();
+                    var->set(m, idx);
+                    return var;
+                }
             }
             case OFXOSC_TYPE_FLOAT:
             case OFXOSC_TYPE_INT32:
@@ -50,48 +59,62 @@ BaseVar* VariablePool::create(const ofxOscMessage& m, int idx) {
                 var->set(m, idx);
                 return var;
             }
-            case OFXOSC_TYPE_BLOB:
-            default:
+            case OFXOSC_TYPE_BLOB: {
                 ofBuffer buf = m.getArgAsBlob(idx);
-                if (buf.size() == 3) {
-                    Variable<glm::vec3>* var = new Variable<glm::vec3>();
-                    var->set(m, idx);
-                    return var;
-                }
-                else if (buf.size() == 4) {
-                    Variable<ofFloatColor>* var = new Variable<ofFloatColor>();
-                    var->set(m, idx);
-                    return var;
-                }
-                else if (buf.size() == 16) {
-                    Variable<glm::mat4>* var = new Variable<glm::mat4>();
-                    var->set(m, idx);
-                    return var;
-                }
-                else {
-                    ofLogError() << "BLOB vars not implemented!";
-                }
-                break;
+                return create(m, idx, buf.size());
+            }
+            default:
+                ofLogError() << "VariablePool::create type not implemented: " << type << m << idx;
+                return NULL;
         }
     }
     else if (command.length() >= 11 && command.substr(command.length()-11) == "/var/colors") {
         Variable<ofFloatColor>* var = new Variable<ofFloatColor>();
+        var->set(m, idx);
+        return var;
+    }
+    else if (command.length() >= 18 && command.substr(command.length()-18) == "/var/colors/scheme") {
+        Variable<ofFloatColor>* var = new Variable<ofFloatColor>();
+        int numColors = m.getArgAsInt(idx);
         string schemeName = m.getArgAsString(idx+1);
+        ofFloatColor primaryColor = Args::parseColor(m, idx+2);
         shared_ptr<ofxColorTheory::FloatColorWheelScheme> scheme = ofxColorTheory::FloatColorWheelSchemes::get(schemeName);
         if (scheme != NULL) {
-            ofBuffer buf = m.getArgAsBlob(idx);
-            scheme->setPrimaryColor(Args::get().parseColor(m, idx));
-            int numColors = m.getArgAsInt(idx+2);
+            scheme->setPrimaryColor(primaryColor);
             var->set(scheme->interpolate(numColors));
         }
         else {
-            ofLogError() << "/var/colors invalid scheme name: " << schemeName;
+            ofLogError() << "/var/colors/scheme invalid scheme name: " << schemeName;
         }
         return var;
     }
-    else {
-        ofLogError() << "command not recognized: " << m;
+    else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/nodes") {
+        Variable<ofxExprNode>* var = new Variable<ofxExprNode>();
+        var->set(m, idx);
+        return var;
     }
+    ofLogError() << "VariablePool::create command not recognized: " << m;
+    return NULL;
+}
+
+BaseVar* VariablePool::create(const ofxOscMessage& m, int idx, size_t size) {
+    if (size == 3) {
+        Variable<glm::vec3>* var = new Variable<glm::vec3>();
+        var->set(m, idx);
+        return var;
+    }
+    else if (size == 4) {
+        Variable<ofFloatColor>* var = new Variable<ofFloatColor>();
+        var->set(m, idx);
+        return var;
+    }
+    else if (size == 16) {
+        Variable<glm::mat4>* var = new Variable<glm::mat4>();
+        var->set(m, idx);
+        return var;
+    }
+    ofLogError() << "VariablePool::create not implemented for size: " << size;
+    return NULL;
 }
 
 BaseVar* VariablePool::get(VarsHolder* holder, string name) {

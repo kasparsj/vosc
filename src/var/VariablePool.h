@@ -18,6 +18,7 @@ public:
     template<typename T>
     static Variable<T>* getOrCreateShared(string name);
     static BaseVar* create(const ofxOscMessage& m, int idx = 1);
+    static BaseVar* create(const ofxOscMessage& m, int idx, size_t size);
     static void update(const vector<Mic>& mics, const vector<Sound>& sounds, const vector<TidalNote>& notes);
     static void cleanup(VarsHolder* holder);
     

@@ -14,8 +14,9 @@ class Value {
 public:
     Value();
     T get() const;
-    void set(string expr);
-    void set(T value);
+    void set(const string& expr);
+    void set(const vector<string>& expr, int i = 0);
+    void set(const T& value);
     void set(const ofxOscMessage& m, int i);
     void update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data = NULL);
     void afterDraw();

@@ -1,11 +1,13 @@
 #include "Lights.h"
+#include "Args.h"
 
-void Lights::create(const ofxOscMessage& m) {
+ofLight& Lights::create(const ofxOscMessage& m) {
     string name = m.getArgType(0) == OFXOSC_TYPE_STRING ? m.getArgAsString(0) : ofToString(m.getArgAsInt(0));
     lights[name] = ofLight();
-    if (m.getNumArgs() >= 4) {
-        lights[name].setPosition(m.getArgAsInt(1), m.getArgAsInt(2), m.getArgAsInt(3));
-    }
+    ofLight& light = lights.at(name);
+    // todo: to allow expressions ofLight needs to be wrapped inside Light class that extends VarsHolder
+    light.setPosition(Args::parseVec3(m, 1));
+    return light;
 }
 
 void Lights::remove(const ofxOscMessage& m) {

@@ -293,6 +293,24 @@ void Shader::setTexture(string name, const ofxOscMessage& m, int arg) {
     }
 }
 
+void Shader::setBuffer(const ofxOscMessage& m) {
+    string name = m.getArgAsString(1);
+    setBuffer(name, m, 2);
+}
+
+void Shader::setBuffer(string name, const ofxOscMessage& m, int arg) {
+    if (buffers.find(name) != buffers.end()) {
+        delete buffers[name];
+        buffers.erase(name);
+    }
+    if (VariablePool::hasShared(name)) {
+        buffers[name] = VariablePool::getShared(name);
+    }
+    else {
+        buffers[name] = VariablePool::getOrCreate(name, m, arg, this);
+    }
+}
+
 void Shader::set(const ofxOscMessage& m) {
     if (isShaderLoaded()) {
         string prop = m.getArgAsString(1);

@@ -50,6 +50,8 @@ public:
     void setDefaultTexture(Texture* tex);
     void setTexture(const ofxOscMessage& m);
     void setTexture(string name, const ofxOscMessage& m, int arg = 1);
+    void setBuffer(const ofxOscMessage& m);
+    void setBuffer(string name, const ofxOscMessage& m, int arg = 1);
     void setUniform1i(string name, int v1) {
         if (shadertoy == NULL) {
             shader->setUniform1i(name, v1);
@@ -75,6 +77,7 @@ private:
     void setUniforms(T* shader, const map<string, BaseVar*>& vars);
 
     map<string, Texture*> textures;
+    map<string, BaseVar*> buffers;
     ofShader* shader = NULL;
     ofxShadertoy* shadertoy = NULL;
 };

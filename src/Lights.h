@@ -5,7 +5,7 @@
 
 class Lights {
 public:
-    void create(const ofxOscMessage& m);
+    ofLight& create(const ofxOscMessage& m);
     void remove(const ofxOscMessage& m);
     void enable();
     void disable();

@@ -27,10 +27,16 @@ public:
     }
     static bool isHexColor(const string& str);
     static bool isURL(const string& str);
+    static bool isJSON(const string& str);
+    static bool isJSONObj(const string& str);
+    static bool isJSONArr(const string& str);
     static ofFloatColor parseHexColor(const string& str);
+    static ofFloatColor parseColor(const ofxOscMessage& m, int idx = 0);
+    static vector<string> parseColorExpr(const ofxOscMessage& m, int idx);
+    static glm::vec3 parseVec3(const ofxOscMessage& m, int idx = 0);
+    static vector<string> parseVec3Expr(const ofxOscMessage& m, int idx = 1);
     
     float parseIntOrFloat(const ofxOscMessage &m, int i = 0);
-    ofFloatColor parseColor(const ofxOscMessage& m, int idx = 0);
     ofFloatColor parseLerpColor(const ofxOscMessage &m, int firstArg = 1);
     vector<float> parseAlign(const ofxOscMessage &m, int firstArg = 1);
     void handleFloat(float* value, const ofxOscMessage& m, int firstArg = 1);

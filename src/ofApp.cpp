@@ -655,6 +655,9 @@ void ofApp::shaderCommand(Shader& shader, string command, const ofxOscMessage& m
     else if (command == "/shader/texture") {
         shader.setTexture(m);
     }
+    else if (command == "/shader/buffer") {
+        shader.setBuffer(m);
+    }
 }
 
 void ofApp::geomCommand(Geom* geom, string command, const ofxOscMessage& m) {

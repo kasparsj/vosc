@@ -13,6 +13,18 @@ bool Args::isURL(const string& str) {
     return regex_match(str, re);
 }
 
+bool Args::isJSON(const string& str) {
+    return isJSONObj(str) || isJSONArr(str);
+}
+
+bool Args::isJSONObj(const string& str) {
+    return str.substr(0, 1) == "{";
+}
+
+bool Args::isJSONArr(const string& str) {
+    return str.substr(0, 1) == "[";
+}
+
 ofFloatColor Args::parseHexColor(const string& str) {
     return ofFloatColor::fromHex(ofHexToInt(str));
 }
@@ -34,20 +46,28 @@ ofFloatColor Args::parseColor(const ofxOscMessage &m, int idx) {
             if (isHexColor(str)) {
                 color = parseHexColor(str);
             }
-            else if (str.substr(0, 5) == "rgba(") {
-                
+//            else if (str.substr(0, 5) == "rgba(") {
+//
+//            }
+//            else if (str.substr(0, 4) == "rgb(") {
+//
+//            }
+            else if (isJSONObj(str)) {
+                auto json = ofJson::parse(str);
+                color.r = json.at("r");
+                color.g = json.at("g");
+                color.b = json.at("b");
+                color.a = json.at("a");
             }
-            else if (str.substr(0, 4) == "rgb(") {
-                
-            }
-            else if (str.substr(0, 1) == "{") {
-                
-            }
-            else if (str.substr(0, 1) == "[") {
-                
+            else if (isJSONArr(str)) {
+                auto json = ofJson::parse(str);
+                color.r = json[0];
+                color.g = json[1];
+                color.b = json[2];
+                color.a = json[3];
             }
             else {
-                // accept expressions?
+                throw ("string not color: " + str);
             }
             break;
         }
@@ -73,9 +93,122 @@ ofFloatColor Args::parseColor(const ofxOscMessage &m, int idx) {
     return color;
 }
 
+vector<string> Args::parseColorExpr(const ofxOscMessage& m, int idx) {
+    vector<string> colorExpr;
+    colorExpr.resize(4);
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            string str = m.getArgAsString(idx);
+            if (isJSONArr(str)) {
+                auto json = ofJson::parse(str);
+                colorExpr[0] = json.at(0);
+                colorExpr[1] = json.at(1);
+                colorExpr[2] = json.at(2);
+                colorExpr[3] = json.at(3);
+            }
+            else if (isJSONObj(str)) {
+                auto json = ofJson::parse(str);
+                colorExpr[0] = json.at("r");
+                colorExpr[1] = json.at("g");
+                colorExpr[2] = json.at("b");
+                colorExpr[3] = json.at("a");
+            }
+            else {
+                colorExpr[0] = str;
+                colorExpr[1] = str;
+                colorExpr[2] = str;
+                colorExpr[3] = str;
+            }
+            break;
+        }
+        case OFXOSC_TYPE_BLOB:
+            // todo: implement
+            // m.getArgAsBlob(idx);
+            break;
+        default:
+            ofLogError() << "could not parse vec3: " << m << idx;
+            break;
+    }
+    return colorExpr;
+}
+
+glm::vec3 Args::parseVec3(const ofxOscMessage &m, int idx) {
+    glm::vec3 vec;
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            string str = m.getArgAsString(idx);
+            if (isJSONObj(str)) {
+                auto json = ofJson::parse(str);
+                vec.x = json.at("r");
+                vec.y = json.at("g");
+                vec.z = json.at("b");
+            }
+            else if (isJSONArr(str)) {
+                auto json = ofJson::parse(str);
+                vec.x = json[0];
+                vec.y = json[1];
+                vec.z = json[2];
+            }
+            else {
+                // accept expressions?
+            }
+            break;
+        }
+        case OFXOSC_TYPE_INT32:
+        case OFXOSC_TYPE_INT64:
+        case OFXOSC_TYPE_CHAR:
+            vec = glm::vec3(m.getArgAsInt(idx));
+            break;
+        case OFXOSC_TYPE_FLOAT:
+        case OFXOSC_TYPE_DOUBLE:
+            vec = glm::vec3(m.getArgAsFloat(idx));
+            break;
+        default:
+            ofLogError() << "could not parse color: " << m << idx;
+            break;
+    }
+    return vec;
+}
+
+vector<string> Args::parseVec3Expr(const ofxOscMessage &m, int idx) {
+    vector<string> vec3Expr;
+    vec3Expr.resize(3);
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            string str = m.getArgAsString(idx);
+            if (isJSONArr(str)) {
+                auto json = ofJson::parse(str);
+                vec3Expr[0] = json.at(0);
+                vec3Expr[1] = json.at(1);
+                vec3Expr[2] = json.at(2);
+            }
+            else if (isJSONObj(str)) {
+                auto json = ofJson::parse(str);
+                vec3Expr[0] = json.at("x");
+                vec3Expr[1] = json.at("y");
+                vec3Expr[2] = json.at("z");
+            }
+            else {
+                vec3Expr[0] = str;
+                vec3Expr[1] = str;
+                vec3Expr[2] = str;
+            }
+            break;
+        }
+        case OFXOSC_TYPE_BLOB:
+            // todo: implement
+            // m.getArgAsBlob(idx);
+            break;
+        default:
+            ofLogError() << "could not parse vec3: " << m << idx;
+            break;
+    }
+    return vec3Expr;
+}
+
 ofFloatColor Args::parseLerpColor(const ofxOscMessage &m, int firstArg) {
-    ofFloatColor fromColor = Args::get().parseColor(m, firstArg+2);
-    ofFloatColor toColor = Args::get().parseColor(m, firstArg+5);
+    ofFloatColor fromColor = Args::parseColor(m, firstArg+2);
+    ofFloatColor toColor = Args::parseColor(m, firstArg+5);
     float perc = m.getArgAsFloat(firstArg+1);
     return ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
 }

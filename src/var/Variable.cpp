@@ -25,6 +25,33 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
     }
 }
 
+template<>
+void Variable<ofFloatColor>::set(const ofxOscMessage& m, int idx) {
+    int count = m.getArgAsInt(idx);
+    values.resize(count);
+    for (int i=0; i<values.size(); i++) {
+        values[i].set(m, idx+1+i);
+    }
+}
+
+template<>
+void Variable<ofxExprNode>::set(const ofxOscMessage& m, int idx) {
+    int count = m.getArgAsInt(idx);
+    values.resize(count);
+    if ((m.getNumArgs()-idx-1)/3 == count) {
+        // every value has different expression
+        for (int i=0; i<values.size(); i++) {
+            values[i].set(m, idx+1+i*3);
+        }
+    }
+    else {
+        // all values have same expression
+        for (int i=0; i<values.size(); i++) {
+            values[i].set(m, idx+1);
+        }
+    }
+}
+
 //void Variable::setColor(const ofxOscMessage& m, int idx) {
 //    if (m.getNumArgs() > idx+3) { // args > 3
 //        if (m.getArgType(idx) == OFXOSC_TYPE_STRING && m.getArgAsString(idx) == "lerp") {
@@ -118,3 +145,4 @@ template class Variable<float>;
 template class Variable<glm::vec3>;
 template class Variable<glm::mat4>;
 template class Variable<ofFloatColor>;
+template class Variable<ofxExprNode>;
