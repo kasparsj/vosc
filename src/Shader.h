@@ -27,6 +27,9 @@ public:
         return shader != NULL && shader->isLoaded();
     }
     bool load(string path);
+    bool loadFromSource(const string& source);
+    bool loadShadertoy(const string& shadertoyId);
+    bool loadFromFile(const string& path);
     void reload();
     void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
     void begin(TexData& data, int delay = 0);

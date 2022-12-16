@@ -59,79 +59,98 @@ bool Shader::load(string path) {
     bool _isSource = isSource(path);
     string shadertoyId = parseShadertoy(path);
     bool _isFile = !_isSource && shadertoyId == "";
-    string fragPath = "";
     if (_isSource) {
-        ofShaderSettings settings;
-        settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
-        settings.shaderSources[GL_FRAGMENT_SHADER] = path;
-        shader = new ofShader();
-        success = shader->setup(settings);
+        success = loadFromSource(path);
+        if (!success) {
+            ofLogError() << ("could not load shader from source");
+        }
     }
     else if (shadertoyId != "") {
-        ofHttpResponse resp = ofLoadURL("https://www.shadertoy.com/api/v1/shaders/" + shadertoyId + "?key=ft8tMh");
-        if (resp.status == 200) {
-            try {
-                ofJson json = ofJson::parse(resp.data.getText());
-                string fragPath = "shaders/shadertoy/" + shadertoyId + ".frag";
-                ofFile shaderFile;
-                shaderFile.open(fragPath, ofFile::WriteOnly);
-                shaderFile << json["Shader"]["renderpass"][0]["code"].get<string>();
-                shaderFile.close();
-                shadertoy = new ofxShadertoy();
-                shadertoy->setUseAutoUpdate(true);
-                success = shadertoy->load(fragPath);
+        try {
+            success = loadShadertoy(shadertoyId);
+            if (!success) {
+                ofLogError() << ("could not load shadertoy: " + shadertoyId);
             }
-            catch (exception& ex) {
-                ofLogError() << ("could not load shadertoy: " + path + "(" + ex.what() + ")");
-            }
+        }
+        catch (exception& ex) {
+            ofLogError() << ("could not load shadertoy: " + path + "(" + ex.what() + ")");
         }
     }
-    else {
-        vector<string> fragPaths;
-        if (!ofFilePath::isAbsolute(path)) {
-            fragPaths.insert(fragPaths.end(), {
-                ofToDataPath(path),
-                ofToDataPath(path + ".frag"),
-                ofToDataPath("shaders/" + path),
-                ofToDataPath("shaders/" + path + ".frag"),
-            });
+    else if (path.empty() == false) {
+        success = loadFromFile(path);
+        if (!success) {
+            ofLogError() << ("could not load shader: " + path);
         }
-        else {
-            fragPaths.insert(fragPaths.end(), {
-                path,
-                path + ".frag",
-            });
-        }
-        for (int i=0; i<fragPaths.size(); i++) {
-            if (ofFile(fragPaths[i]).exists()) {
-                fragPath = fragPaths[i];
-                break;
-            }
-        }
-        if (fragPath != "") {
-            string vertPath = "shaders/passthru.vert";
-            string geomPath = "";
-            string pathNoExt = fragPath.substr(0, fragPath.find(".frag"));
-            string tmpVertPath = pathNoExt + ".vert";
-            if (ofFile(tmpVertPath).exists()) {
-                vertPath = tmpVertPath;
-            }
-            string tmpGeomPath = pathNoExt + ".geom";
-            if (ofFile(tmpGeomPath).exists()) {
-                geomPath = tmpGeomPath;
-            }
-            ofxAutoReloadedShader* autoShader = new ofxAutoReloadedShader();
-            success = autoShader->load(vertPath, fragPath, geomPath);
-            shader = autoShader;
-        }
-    }
-    if (!success) {
-        if (_isFile && fragPath == "") {
-            ofLogError() << ("could not find shader: " + path);
-        }
-        
     }
     return success;
+}
+
+bool Shader::loadFromSource(const string& source) {
+    ofShaderSettings settings;
+    settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
+    settings.shaderSources[GL_FRAGMENT_SHADER] = source;
+    shader = new ofShader();
+    return shader->setup(settings);
+}
+
+bool Shader::loadShadertoy(const string& shadertoyId) {
+    ofHttpResponse resp = ofLoadURL("https://www.shadertoy.com/api/v1/shaders/" + shadertoyId + "?key=ft8tMh");
+    if (resp.status == 200) {
+        ofJson json = ofJson::parse(resp.data.getText());
+        string fragPath = "shaders/shadertoy/" + shadertoyId + ".frag";
+        ofFile shaderFile;
+        shaderFile.open(fragPath, ofFile::WriteOnly);
+        shaderFile << json["Shader"]["renderpass"][0]["code"].get<string>();
+        shaderFile.close();
+        shadertoy = new ofxShadertoy();
+        shadertoy->setUseAutoUpdate(true);
+        return shadertoy->load(fragPath);
+    }
+    return false;
+}
+
+bool Shader::loadFromFile(const string& path) {
+    string fragPath = "";
+    vector<string> fragPaths;
+    if (!ofFilePath::isAbsolute(path)) {
+        fragPaths.insert(fragPaths.end(), {
+            ofToDataPath(path),
+            ofToDataPath(path + ".frag"),
+            ofToDataPath("shaders/" + path),
+            ofToDataPath("shaders/" + path + ".frag"),
+        });
+    }
+    else {
+        fragPaths.insert(fragPaths.end(), {
+            path,
+            path + ".frag",
+        });
+    }
+    for (int i=0; i<fragPaths.size(); i++) {
+        if (ofFile(fragPaths[i]).exists()) {
+            fragPath = fragPaths[i];
+            break;
+        }
+    }
+    if (fragPath != "") {
+        string vertPath = "shaders/passthru.vert";
+        string geomPath = "";
+        string pathNoExt = fragPath.substr(0, fragPath.find(".frag"));
+        string tmpVertPath = pathNoExt + ".vert";
+        if (ofFile(tmpVertPath).exists()) {
+            vertPath = tmpVertPath;
+        }
+        string tmpGeomPath = pathNoExt + ".geom";
+        if (ofFile(tmpGeomPath).exists()) {
+            geomPath = tmpGeomPath;
+        }
+        ofxAutoReloadedShader* autoShader = new ofxAutoReloadedShader();
+        if (autoShader->load(vertPath, fragPath, geomPath)) {
+            shader = autoShader;
+            return true;
+        }
+    }
+    return false;
 }
 
 void Shader::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
