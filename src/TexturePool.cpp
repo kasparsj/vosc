@@ -1,4 +1,5 @@
 #include "TexturePool.h"
+#include "Shader.h"
 
 map<string, shared_ptr<Texture>> TexturePool::sharedPool;
 map<int, map<string, shared_ptr<Texture>>> TexturePool::shaderPool;
@@ -14,16 +15,22 @@ shared_ptr<Texture>& TexturePool::getShared(string name, bool create) {
     return sharedPool.at(name);
 }
 
-shared_ptr<Texture>& TexturePool::getForShader(string name, int shaderId) {
-    map<string, shared_ptr<Texture>>& pool = getShaderPool(shaderId);
+shared_ptr<Texture>& TexturePool::getOrCreate(string name, const VarsHolder* holder) {
+    map<string, shared_ptr<Texture>>& pool = getPool(holder);
     if (pool.find(name) == pool.end()) {
         pool[name] = shared_ptr<Texture>(new Texture());
     }
     return pool.at(name);
 }
 
-map<string, shared_ptr<Texture>>& TexturePool::getShaderPool(int shaderId) {
-    return shaderPool[shaderId];
+map<string, shared_ptr<Texture>>& TexturePool::getPool(const VarsHolder* holder) {
+    if (holder == NULL) {
+        return sharedPool;
+    }
+    else if (dynamic_cast<const Shader*>(holder) != NULL) {
+        return shaderPool[holder->getId()];
+    }
+    throw "VariablePool::getPool incompatible holder: " + ofToString(holder);
 }
 
 void TexturePool::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {

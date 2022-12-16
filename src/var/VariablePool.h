@@ -7,11 +7,11 @@ class VarsHolder;
 
 class VariablePool {
 public:
-    static shared_ptr<BaseVar>& get(string name, VarsHolder* holder);
-    static shared_ptr<BaseVar>& createOrUpdate(string name, const ofxOscMessage& m, int idx, VarsHolder* holder);
+    static shared_ptr<BaseVar>& get(string name, const VarsHolder* holder);
+    static shared_ptr<BaseVar>& createOrUpdate(string name, const ofxOscMessage& m, int idx, const VarsHolder* holder);
     template<typename T>
-    static Variable<T>* getOrCreate(string name, VarsHolder* holder);
-    static map<string, shared_ptr<BaseVar>>& getPool(VarsHolder* holder = NULL);
+    static Variable<T>* getOrCreate(string name, const VarsHolder* holder);
+    static map<string, shared_ptr<BaseVar>>& getPool(const VarsHolder* holder);
     static bool hasShared(string name);
     static shared_ptr<BaseVar>& getShared(string name);
     static shared_ptr<BaseVar>& getOrCreateShared(string name, const ofxOscMessage& m, int idx = 1);
@@ -25,7 +25,7 @@ public:
     static void update(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx, size_t size);
     static void updateColorsScheme(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx);
     static void update(const vector<Mic>& mics, const vector<Sound>& sounds, const vector<TidalNote>& notes);
-    static void cleanup(VarsHolder* holder);
+    static void cleanup(const VarsHolder* holder);
     
 private:
     static map<string, shared_ptr<BaseVar>> sharedPool;

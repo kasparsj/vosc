@@ -1,18 +1,16 @@
 #version 150
 
+#define MAX_LIGHTS 8
+
 //uniform sampler2D u_particleImageTexture;
 
 uniform vec4 particleStartColor;
 uniform vec4 particleEndColor;
-
 uniform int numLights = 0;
 
 in vec3 v_normal;
 in vec3 v_eyeVec;
-
-#define MAX_LIGHTS 8
 in vec3 v_lightDir[MAX_LIGHTS];
-
 in vec4 v_particleColor;
 
 out vec4 fragColor;

@@ -9,6 +9,7 @@
 #include "ofxShadertoy.h"
 
 #define DEFAULT_TEX "tex"
+#define MAX_LIGHTS 8
 
 class Shader : public VarsHolder {
 public:
@@ -80,6 +81,8 @@ private:
     void setUniforms(const map<string, shared_ptr<BaseVar>>& vars);
     template<typename T>
     void setUniforms(T* shader, const map<string, shared_ptr<BaseVar>>& vars);
+    template<typename T>
+    void setLights(T* shader);
 
     map<string, shared_ptr<Texture>> textures;
     map<string, shared_ptr<Buffer>> buffers;

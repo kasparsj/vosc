@@ -34,7 +34,7 @@ public:
     void drawDebugLayer(int i);
     void debugGeoms();
     void debugGeom(int i);
-    void debugLayerTextures();
+    void debugGlobalTextures();
     void debugShaderTextures(int i);
     void debugShaderBuffers(int i);
     void debugTexture(ofTexture& tex);
@@ -93,7 +93,6 @@ public:
     Variable<glm::vec3>* camLook;
     float camOrbit = 0;
     float camOrbitPerSecond = 0;
-    Lights lights;
     ofxMidiIn midiIn;
     
     std::shared_ptr<Logger> console;

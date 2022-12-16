@@ -25,7 +25,7 @@ public:
     Variable<T>* setVar(string name, vector<T> value);
     Variable<float>* setVar(string name, bool value);
     void setVar(string name, const ofxOscMessage& value, int idx = 1);
-    int getId() {
+    int getId() const {
         return _id;
     }
 

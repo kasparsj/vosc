@@ -36,7 +36,7 @@ void Variable<T>::set(const vector<string>& expr) {
 
 template<typename T>
 void Variable<T>::addSharedVars() {
-    map<string, shared_ptr<BaseVar>>& pool = VariablePool::getPool();
+    map<string, shared_ptr<BaseVar>>& pool = VariablePool::getPool(NULL);
     for (map<string, shared_ptr<BaseVar>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
         Variable<float>* floatVar = dynamic_cast<Variable<float>*>(it->second.get());
         if (floatVar != NULL) {

@@ -1,29 +1,32 @@
 #version 150
 
-#pragma include "shaders/include/of_default_uniforms.glsl"
-#pragma include "shaders/include/of_default_vertex_in_attributes.glsl"
-#pragma include "shaders/include/ShaderHelpers.glsl"
+#pragma include "../include/ShaderHelpers.glsl"
+
+#define MAX_LIGHTS 8
+
+//these are passed in by openframeworks
+uniform mat4 projectionMatrix;
+uniform mat4 modelViewMatrix;
+uniform mat4 modelViewProjectionMatrix;
+
+in vec4 position;
+in vec4 color;
+in vec3 normal;
+in vec2 texcoord;
 
 uniform vec2 resolution;
-
 uniform float time;
-
 uniform sampler2D tex0;
 uniform sampler2D tex1;
-
 uniform float particleMaxAge;
-
 uniform vec4 particleStartColor;
 uniform vec4 particleEndColor;
-
 uniform int numLights = 0;
+uniform vec3 lights[MAX_LIGHTS];
 
 out vec3 v_normal;
 out vec3 v_eyeVec;
-
-#define MAX_LIGHTS 8
 out vec3 v_lightDir[MAX_LIGHTS];
-
 out vec4 v_particleColor;
 
 
@@ -60,10 +63,11 @@ void main ()
 	
 	// Light stuff
 	vec3 vertexNormal = normal;
+    mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix)));
 	
 	// Rotate the normal just as we did the vertex, then apply the canera transform
 	vertexNormal = (lookAt * vec4(vertexNormal, 0)).xyz;
-	v_normal = normalize(gl_NormalMatrix * vertexNormal).xyz;
+	v_normal = normalize(normalMatrix * vertexNormal).xyz;
 	
 	// We do lighting clculations in view (camera) space
 	vec4 viewSpaceVertex = modelViewMatrix * vec4(newVertexPos, 1.0);
@@ -71,7 +75,7 @@ void main ()
 	
 	for ( int i = 0; i < numLights; ++i )
 	{
-		v_lightDir[i] = vec3(gl_LightSource[i].position.xyz - viewSpaceVertex.xyz);
+		v_lightDir[i] = vec3(lights[i] - viewSpaceVertex.xyz);
 	}
 	
 }

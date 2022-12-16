@@ -31,6 +31,8 @@
 		28AFD6FA9B9C885AFD9FF1C7 /* HorizontalTiltShifPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */; };
 		29DD298E0609B82CFFD50620 /* VarsHolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */; };
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
+		2B0390F3294D1DBE003E6F39 /* Light.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B0390F1294D1DBE003E6F39 /* Light.cpp */; };
+		2B0390F4294D1DBE003E6F39 /* Light.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B0390F1294D1DBE003E6F39 /* Light.cpp */; };
 		2B065CF5294C949C0081989C /* Buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B065CF3294C949C0081989C /* Buffer.cpp */; };
 		2B065CF6294C949C0081989C /* Buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B065CF3294C949C0081989C /* Buffer.cpp */; };
 		2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
@@ -369,6 +371,8 @@
 		283FC0CCFA95CB3B45FE6893 /* Geometry.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Geometry.h; path = ../../../addons/ofxUltralight/libs/include/Ultralight/Geometry.h; sourceTree = SOURCE_ROOT; };
 		28A42A2103C59E7D30E9D245 /* Exporter.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Exporter.hpp; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Exporter.hpp; sourceTree = SOURCE_ROOT; };
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
+		2B0390F1294D1DBE003E6F39 /* Light.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Light.cpp; sourceTree = "<group>"; };
+		2B0390F2294D1DBE003E6F39 /* Light.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Light.hpp; sourceTree = "<group>"; };
 		2B065CF3294C949C0081989C /* Buffer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Buffer.cpp; sourceTree = "<group>"; };
 		2B065CF4294C949C0081989C /* Buffer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Buffer.hpp; sourceTree = "<group>"; };
 		2B629E4DB07A45391A420283 /* importerdesc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = importerdesc.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/importerdesc.h; sourceTree = SOURCE_ROOT; };
@@ -553,7 +557,7 @@
 		444657A12E59D0ED86981498 /* TimerListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = TimerListener.h; path = ../../../addons/ofxOsc/libs/oscpack/src/ip/TimerListener.h; sourceTree = SOURCE_ROOT; };
 		44B69661E6F31B5745084434 /* ofxShadertoy.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxShadertoy.h; path = ../../../addons/ofxShadertoy/src/ofxShadertoy.h; sourceTree = SOURCE_ROOT; };
 		450466BDE619E4EC9BF85C57 /* Gui.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Gui.h; path = ../../../addons/ofxImGui/src/Gui.h; sourceTree = SOURCE_ROOT; };
-		45858BC21D396ED266B2333D /* Lights.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Lights.cpp; path = src/Lights.cpp; sourceTree = SOURCE_ROOT; };
+		45858BC21D396ED266B2333D /* Lights.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Lights.cpp; path = src/light/Lights.cpp; sourceTree = SOURCE_ROOT; };
 		470CF04F1D4D1B38D5AA1797 /* ofxRtMidiOut.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxRtMidiOut.h; path = ../../../addons/ofxMidi/src/desktop/ofxRtMidiOut.h; sourceTree = SOURCE_ROOT; };
 		47190DF45B0452B28E3DFF3C /* DefaultTheme.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DefaultTheme.h; path = ../../../addons/ofxImGui/src/DefaultTheme.h; sourceTree = SOURCE_ROOT; };
 		476684E60F0DDA0792F989BB /* GeomPool.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GeomPool.h; path = src/GeomPool.h; sourceTree = SOURCE_ROOT; };
@@ -993,7 +997,7 @@
 		F171898BD12F77CCAD29B7C1 /* LUTPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LUTPass.cpp; path = ../../../addons/ofxPostProcessing/src/LUTPass.cpp; sourceTree = SOURCE_ROOT; };
 		F38BBAA2F93DED836503E450 /* pushpack1.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = pushpack1.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler/pushpack1.h; sourceTree = SOURCE_ROOT; };
 		F3CFD94F37ABC9182A320B79 /* ofxAutoReloadedShader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAutoReloadedShader.h; path = ../../../addons/ofxAutoReloadedShader/src/ofxAutoReloadedShader.h; sourceTree = SOURCE_ROOT; };
-		F47F42625EB721A54C0CDAB6 /* Lights.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Lights.h; path = src/Lights.h; sourceTree = SOURCE_ROOT; };
+		F47F42625EB721A54C0CDAB6 /* Lights.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Lights.h; path = src/light/Lights.h; sourceTree = SOURCE_ROOT; };
 		F4F5B6B8BA2BD52C646ED908 /* OscException.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscException.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscException.h; sourceTree = SOURCE_ROOT; };
 		F5DB1AC24B8010FC3C556AAC /* RenderPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RenderPass.h; path = ../../../addons/ofxPostProcessing/src/RenderPass.h; sourceTree = SOURCE_ROOT; };
 		F634AA6CA2E3C60F3B87B59A /* ofxRtMidiIn.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxRtMidiIn.cpp; path = ../../../addons/ofxMidi/src/desktop/ofxRtMidiIn.cpp; sourceTree = SOURCE_ROOT; };
@@ -1108,6 +1112,17 @@
 				36D7EC7EF50E326EAC88A0AD /* frameworks */,
 			);
 			name = ofxMidi;
+			sourceTree = "<group>";
+		};
+		2B0390F0294D1D9D003E6F39 /* light */ = {
+			isa = PBXGroup;
+			children = (
+				45858BC21D396ED266B2333D /* Lights.cpp */,
+				F47F42625EB721A54C0CDAB6 /* Lights.h */,
+				2B0390F1294D1DBE003E6F39 /* Light.cpp */,
+				2B0390F2294D1DBE003E6F39 /* Light.hpp */,
+			);
+			path = light;
 			sourceTree = "<group>";
 		};
 		2B6A0E9D294B1F1900B30C47 /* instanced */ = {
@@ -2443,6 +2458,7 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				2B0390F0294D1D9D003E6F39 /* light */,
 				DAF2AD43C2034AE2562BD805 /* Args.cpp */,
 				4D322C61E90215407772EFB1 /* Args.h */,
 				97AC5D82D06DAB2345FDB039 /* Config.h */,
@@ -2453,8 +2469,6 @@
 				553241ABDCDFB7E8685963FC /* GeomPool.cpp */,
 				476684E60F0DDA0792F989BB /* GeomPool.h */,
 				1BF4AF61A21BC0CB4D19CFDE /* layer */,
-				45858BC21D396ED266B2333D /* Lights.cpp */,
-				F47F42625EB721A54C0CDAB6 /* Lights.h */,
 				372124C2D4BE337F66C4B210 /* Logger.cpp */,
 				42EEF41412CD072D7A17504A /* Logger.h */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
@@ -2691,6 +2705,7 @@
 				2B997A5B294A59FF0041D31E /* FboPingPongTex.cpp in Sources */,
 				2B997A5C294A59FF0041D31E /* SketchTex.cpp in Sources */,
 				2B997A5D294A59FF0041D31E /* WebcamTex.cpp in Sources */,
+				2B0390F4294D1DBE003E6F39 /* Light.cpp in Sources */,
 				2B997A5E294A59FF0041D31E /* HPVideoTex.cpp in Sources */,
 				2B997A5F294A59FF0041D31E /* ImageTex.cpp in Sources */,
 				2B997A60294A59FF0041D31E /* ShaderTex.cpp in Sources */,
@@ -2823,6 +2838,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B0390F3294D1DBE003E6F39 /* Light.cpp in Sources */,
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
 				6D05523FAB0501580B1205C7 /* TexturePool.cpp in Sources */,

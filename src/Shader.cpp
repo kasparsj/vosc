@@ -1,6 +1,7 @@
 #include "Shader.h"
 #include "Layer.h"
 #include "VariablePool.h"
+#include "Lights.h"
 #include <regex>
 
 void loadShaders(string path, map<string, ofxAutoReloadedShader>& shaders) {
@@ -175,8 +176,13 @@ void Shader::begin(TexData& data, int delay) {
         }
         setUniformTextures(textures, delay);
         setUniforms(vars);
-        // todo: do we really need layer vars to override shader vars?
         setUniforms(data.getVars());
+        if (shadertoy == NULL) {
+            setLights(shader);
+        }
+        else {
+            setLights(shadertoy);
+        }
     }
 }
 
@@ -267,8 +273,17 @@ void Shader::setUniforms(T* shader, const map<string, shared_ptr<BaseVar>>& vars
     }
 }
 
-template void Shader::setUniforms(ofShader* shader, const map<string, shared_ptr<BaseVar>>& vars);
-template void Shader::setUniforms(ofxShadertoy* shader, const map<string, shared_ptr<BaseVar>>& vars);
+template<typename T>
+void Shader::setLights(T* shader) {
+    vector<glm::vec3> lightPos;
+    const map<string, shared_ptr<Light>>& lights = Lights::get().all();
+    for (map<string, shared_ptr<Light>>::const_iterator it=lights.begin(); it!=lights.end(); ++it) {
+        lightPos.push_back(it->second->getVarVec3("pos"));
+    }
+    int numLights = MIN(MAX_LIGHTS, lightPos.size());
+    shader->setUniform3fv("lights", &lightPos[0][0], numLights);
+    shader->setUniform1i("numLights", numLights);
+}
 
 void Shader::reset() {
     unload();
@@ -327,7 +342,7 @@ void Shader::setTexture(string name, const ofxOscMessage& m, int arg) {
         textures[name] = TexturePool::getShared(source);
     }
     else {
-        textures[name] = TexturePool::getForShader(name, _id);
+        textures[name] = TexturePool::getOrCreate(name, this);
         textures[name]->load(m, arg);
     }
 }
@@ -358,3 +373,8 @@ void Shader::set(const ofxOscMessage& m) {
         }
     }
 }
+
+template void Shader::setUniforms(ofShader* shader, const map<string, shared_ptr<BaseVar>>& vars);
+template void Shader::setUniforms(ofxShadertoy* shader, const map<string, shared_ptr<BaseVar>>& vars);
+template void Shader::setLights(ofShader* shader);
+template void Shader::setLights(ofxShadertoy* shader);

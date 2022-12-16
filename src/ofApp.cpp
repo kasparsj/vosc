@@ -325,10 +325,10 @@ void ofApp::cameraCommand(string command, const ofxOscMessage& m) {
 
 void ofApp::lightCommand(string command, const ofxOscMessage& m) {
     if (command == "/light") {
-        lights.create(m);
+        Lights::get().create(m);
     }
     else if (command == "/light/remove") {
-        lights.remove(m);
+        Lights::get().remove(m);
     }
 }
 
@@ -423,11 +423,11 @@ void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
                     isShared = true;
                 }
                 else {
-                    tex = TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId());
+                    tex = TexturePool::getOrCreate(DEFAULT_TEX, &layer->shader);
                 }
             }
             else {
-                tex = TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId());
+                tex = TexturePool::getOrCreate(DEFAULT_TEX, &layer->shader);
             }
             layer->shader.setDefaultTexture(tex);
             if (tex->data.size.x == 0 && tex->data.size.y == 0) {
@@ -952,7 +952,7 @@ void ofApp::draw(){
     ofPushMatrix();
     if (cam != NULL) {
         ofEnableDepthTest();
-        lights.enable();
+        ofEnableLighting();
         post.begin(*cam);
         ofTranslate(-ofGetWidth()/2.f, -ofGetHeight()/2);
     }
@@ -970,7 +970,7 @@ void ofApp::draw(){
         layers[i]->draw(totalVisible);
     }
     post.end();
-    lights.disable();
+    ofDisableLighting();
     ofDisableDepthTest();
     ofPopMatrix();
     
@@ -1008,7 +1008,7 @@ void ofApp::drawDebugGlobals() {
     ofTranslate(0, 140);
     ofDrawBitmapString("Textures", 0, -20);
     ofPushStyle();
-    debugLayerTextures();
+    debugGlobalTextures();
     ofPopStyle();
     
     ofTranslate(0, 140);
@@ -1067,14 +1067,10 @@ void ofApp::debugGeom(int i) {
     }
 }
 
-void ofApp::debugLayerTextures() {
-    for (int i=0; i<layers.size(); i++) {
-        if (layers[i]->shader.hasDefaultTexture()) {
-            debugTexture(layers[i]->shader.getDefaultTexture()->getTexture());
-        }
-        else {
-            debugEmpty("not loaded");
-        }
+void ofApp::debugGlobalTextures() {
+    map<string, shared_ptr<Texture>>& pool = TexturePool::getPool(NULL);
+    for (map<string, shared_ptr<Texture>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
+        debugTexture(it->second->getTexture());
         ofTranslate(120, 0);
     }
 }

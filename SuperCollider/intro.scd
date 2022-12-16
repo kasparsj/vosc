@@ -4,9 +4,8 @@
 // initialize 1 layer
 ~visuals.send('/layers', 1);
 
-~visuals.send('/shader', 0, "https://www.shadertoy.com/view/MdlXz8");
 ~visuals.send('/tex', 0, "shaders/color.frag");
-~visuals.send('/layer/color', 0, [1.0.rand, 1.0.rand, 1.0.rand]);
+~visuals.send('/tex/color', 0, [1.0.rand, 1.0.rand, 1.0.rand]);
 
 // load a random image in layer 1
 ~visuals.send('/tex/choose', 0, "image");
