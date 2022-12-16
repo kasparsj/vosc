@@ -27,7 +27,8 @@ bool Args::isJSONArr(const string& str) {
 }
 
 ofFloatColor Args::parseHexColor(const string& str) {
-    return ofFloatColor::fromHex(ofHexToInt(str));
+    string hex = str.size() == 7 ? str.substr(1) : str;
+    return ofFloatColor::fromHex(ofHexToInt(hex));
 }
 
 template<>
@@ -58,7 +59,7 @@ float Args::parse(const ofxOscMessage& m, int idx) {
 }
 
 template<>
-ofFloatColor Args::parse(const ofxOscMessage &m, int idx) {
+ofFloatColor Args::parse(const ofxOscMessage& m, int idx) {
     ofFloatColor color;
     switch (m.getArgType(idx)) {
         case OFXOSC_TYPE_STRING: {
@@ -197,7 +198,7 @@ template<typename T>
 vector<T> Args::parseConst(const ofxOscMessage &m, int idx) {
     vector<T> values;
     for (int i=idx; i<m.getNumArgs(); i++) {
-        values.push_back(parse<T>(m, idx+i));
+        values.push_back(parse<T>(m, i));
     }
     return values;
 }

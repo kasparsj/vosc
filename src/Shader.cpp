@@ -120,8 +120,9 @@ bool Shader::load(string path) {
             if (ofFile(tmpGeomPath).exists()) {
                 geomPath = tmpGeomPath;
             }
-            shader = new ofxAutoReloadedShader();
-            success = shader->load(vertPath, fragPath, geomPath);
+            ofxAutoReloadedShader* autoShader = new ofxAutoReloadedShader();
+            success = autoShader->load(vertPath, fragPath, geomPath);
+            shader = autoShader;
         }
     }
     if (!success) {
@@ -134,6 +135,9 @@ bool Shader::load(string path) {
 }
 
 void Shader::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
+    for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
+        it->second->update();
+    }
 }
 
 void Shader::begin(TexData& data, int delay) {
@@ -168,20 +172,26 @@ void Shader::end() {
     }
 }
 
-void Shader::setUniformTextures(const map<string, Texture*>& textures, int delay) {
+void Shader::setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay) {
     int texLoc = 0;
     if (shadertoy == NULL) {
-        for (map<string, Texture*>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
+        for (map<string, shared_ptr<Texture>>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
             if (it->second->hasTexture(delay)) {
                 shader->setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
             }
         }
+        for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
+            shader->setUniformTexture(it->first, it->second->getTexture(), texLoc++);
+        }
     }
     else {
-        for (map<string, Texture*>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
+        for (map<string, shared_ptr<Texture>>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
             if (it->second->hasTexture(delay)) {
                 shadertoy->setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
             }
+        }
+        for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
+            shadertoy->setUniformTexture(it->first, it->second->getTexture(), texLoc++);
         }
     }
 }
@@ -244,6 +254,7 @@ template void Shader::setUniforms(ofxShadertoy* shader, const map<string, BaseVa
 void Shader::reset() {
     unload();
     textures.clear();
+    buffers.clear();
     vars.clear();
     TexturePool::clean(_id);
     VariablePool::cleanup(this);
@@ -266,11 +277,11 @@ void Shader::unload() {
     }
 }
 
-Texture* Shader::getDefaultTexture() {
+shared_ptr<Texture>& Shader::getDefaultTexture() {
     return getTexture(DEFAULT_TEX);
 }
 
-void Shader::setDefaultTexture(Texture* tex) {
+void Shader::setDefaultTexture(shared_ptr<Texture>& tex) {
     textures[DEFAULT_TEX] = tex;
 }
 
@@ -281,15 +292,14 @@ void Shader::setTexture(const ofxOscMessage& m) {
 
 void Shader::setTexture(string name, const ofxOscMessage& m, int arg) {
     if (textures.find(name) != textures.end()) {
-        delete textures[name];
         textures.erase(name);
     }
     string source = m.getArgAsString(arg);
     if (TexturePool::hasShared(source)) {
-        textures[name] = TexturePool::getShared(source);
+        textures[name] = shared_ptr<Texture>(TexturePool::getShared(source));
     }
     else {
-        textures[name] = TexturePool::getForShader(name, _id);
+        textures[name] = shared_ptr<Texture>(TexturePool::getForShader(name, _id));
         textures[name]->load(m, arg);
     }
 }
@@ -301,16 +311,9 @@ void Shader::setBuffer(const ofxOscMessage& m) {
 
 void Shader::setBuffer(string name, const ofxOscMessage& m, int arg) {
     if (buffers.find(name) != buffers.end()) {
-        delete buffers[name];
         buffers.erase(name);
     }
-    string source = m.getArgAsString(arg);
-    if (VariablePool::hasShared(source)) {
-        buffers[name] = VariablePool::getShared(source);
-    }
-    else {
-        buffers[name] = VariablePool::getOrCreate(name, m, arg, this);
-    }
+    buffers[name] = make_shared<Buffer>(name, m, arg, this);
 }
 
 void Shader::set(const ofxOscMessage& m) {

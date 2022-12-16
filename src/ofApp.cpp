@@ -64,6 +64,11 @@ void ofApp::layoutLayers(Layout layout, const vector<Layer*> &layers) {
 
 //--------------------------------------------------------------
 void ofApp::update(){
+    ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+    if (easyCam != NULL) {
+        camPos->set(cam->getPosition());
+        camLook->set(cam->getLookAtDir());
+    }
     parseMessages();
     for (int i=0; i<mics.size(); i++) {
         mics[i].update();
@@ -84,7 +89,6 @@ void ofApp::update(){
     if (cam != NULL) {
         cam->setPosition(camPos->get());
         cam->lookAt(camLook->get());
-        ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
         if (camOrbitPerSecond != 0 && easyCam != NULL) {
             camOrbit += ofGetLastFrameTime() * camOrbitPerSecond;
             easyCam->orbitDeg(camOrbit, 0., easyCam->getDistance(), {0., 0., 0.});
@@ -412,21 +416,21 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
 
 void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
-        Texture* tex = layer->shader.getDefaultTexture();
+        shared_ptr<Texture>& tex = layer->shader.getDefaultTexture();
         bool isShared = false;
         if (command == "/tex" || command == "/tex/choose" || tex == NULL) {
             if (command == "/tex") {
                 string name = m.getArgAsString(1);
                 if (TexturePool::hasShared(name)) {
-                    tex = TexturePool::getShared(name);
+                    tex = shared_ptr<Texture>(TexturePool::getShared(name));
                     isShared = true;
                 }
                 else {
-                    tex = TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId());
+                    tex = shared_ptr<Texture>(TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId()));
                 }
             }
             else {
-                tex = TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId());
+                tex = shared_ptr<Texture>(TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId()));
             }
             layer->shader.setDefaultTexture(tex);
             if (tex->data.size.x == 0 && tex->data.size.y == 0) {
@@ -570,7 +574,7 @@ void ofApp::soundCommand(Sound& sound, string command, const ofxOscMessage &m) {
     }
 }
 
-void ofApp::textureCommand(Texture* tex, string command, const ofxOscMessage &m) {
+void ofApp::textureCommand(shared_ptr<Texture>& tex, string command, const ofxOscMessage &m) {
     if (command == "/tex") {
         tex->load(m);
     }
@@ -715,7 +719,7 @@ void ofApp::processQueue() {
                     allLayersCommand(command, m);
                 }
                 else if (command.substr(0, 4) == "/tex") {
-                    Texture* tex = TexturePool::getShared(which, true);
+                    shared_ptr<Texture> tex = shared_ptr<Texture>(TexturePool::getShared(which, true));
                     textureCommand(tex, command, m);
                     if (tex->data.size.x == 0 && tex->data.size.y == 0) {
                         tex->data.setSize(ofGetScreenWidth(), ofGetScreenHeight());
@@ -986,13 +990,28 @@ void ofApp::drawDebug() {
     
     ofPushMatrix();
     
+    if (debugLayer < 0) {
+        drawDebugGlobals();
+    }
+    else {
+        drawDebugLayer(debugLayer);
+    }
+    
+    ofPopMatrix();
+}
+
+void ofApp::drawDebugGlobals() {
     ofTranslate(20, 60);
     ofDrawBitmapString("Geometry", 0, -20);
-    drawGeoms();
+    ofPushStyle();
+    debugGeoms();
+    ofPopStyle();
     
     ofTranslate(0, 140);
     ofDrawBitmapString("Textures", 0, -20);
-    drawTextures();
+    ofPushStyle();
+    debugLayerTextures();
+    ofPopStyle();
     
     ofTranslate(0, 140);
     ofDrawBitmapString("Microphones", 0, -20);
@@ -1001,40 +1020,94 @@ void ofApp::drawDebug() {
     ofTranslate(0, 140);
     ofDrawBitmapString("Sounds", 0, -20);
     drawSounds();
-    
-    ofPopMatrix();
 }
 
-void ofApp::drawGeoms() {
+void ofApp::drawDebugLayer(int i) {
+    ofTranslate(20, 60);
+    ofDrawBitmapString("Geometry", 0, -20);
     ofPushStyle();
-    for (int i=0; i<layers.size(); i++) {
-        if (layers[i]->hasGeom()) {
-            ofSetColor(255);
-            ofPushMatrix();
-            ofTranslate(i*120+60, 0);
-            layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
-            ofPopMatrix();
-        }
+    debugGeom(i);
+    ofPopStyle();
+    
+    ofTranslate(0, 140);
+    ofDrawBitmapString("Default Texture", 0, -20);
+    ofPushStyle();
+    if (layers[i]->shader.hasDefaultTexture()) {
+        debugTexture(layers[i]->shader.getDefaultTexture()->getTexture());
     }
+    else {
+        debugEmpty("not loaded");
+    }
+    ofPopStyle();
+    
+    ofTranslate(0, 140);
+    ofDrawBitmapString("Shader Textures", 0, -20);
+    ofPushStyle();
+    debugShaderTextures(i);
+    ofPopStyle();
+    
+    ofTranslate(0, 140);
+    ofDrawBitmapString("Shader Buffers", 0, -20);
+    ofPushStyle();
+    debugShaderBuffers(i);
     ofPopStyle();
 }
 
-void ofApp::drawTextures() {
-    ofPushStyle();
+void ofApp::debugGeoms() {
+    for (int i=0; i<layers.size(); i++) {
+        debugGeom(i);
+    }
+}
+
+void ofApp::debugGeom(int i) {
+    if (layers[i]->hasGeom()) {
+        ofSetColor(255);
+        ofPushMatrix();
+        ofTranslate(i*120+60, 0);
+        layers[i]->geom->getMesh().draw(OF_MESH_WIREFRAME);
+        ofPopMatrix();
+    }
+}
+
+void ofApp::debugLayerTextures() {
     for (int i=0; i<layers.size(); i++) {
         if (layers[i]->shader.hasDefaultTexture()) {
-            ofSetColor(255);
-            layers[i]->shader.getDefaultTexture()->getTexture().draw(i*120, 0, 100, 100);
+            debugTexture(layers[i]->shader.getDefaultTexture()->getTexture());
         }
         else {
-            ofFill();
-            ofSetColor(0);
-            ofDrawRectangle(i*120, 0, 100, 100);
-            ofSetColor(255);
-            ofDrawBitmapString("not loaded", 8+i*120, 20);
+            debugEmpty("not loaded");
         }
+        ofTranslate(120, 0);
     }
-    ofPopStyle();
+}
+
+void ofApp::debugShaderTextures(int i) {
+    const map<string, shared_ptr<Texture>>& textures = layers[i]->shader.getTextures();
+    for (map<string, shared_ptr<Texture>>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
+        debugTexture(it->second->getTexture());
+        ofTranslate(120, 0);
+    }
+}
+
+void ofApp::debugShaderBuffers(int i) {
+    const map<string, shared_ptr<Buffer>>& buffers = layers[i]->shader.getBuffers();
+    for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
+        debugTexture(it->second->getTexture());
+        ofTranslate(120, 0);
+    }
+}
+
+void ofApp::debugTexture(ofTexture& tex) {
+    ofSetColor(255);
+    tex.draw(0, 0, 100, 100);
+}
+
+void ofApp::debugEmpty(string text) {
+    ofFill();
+    ofSetColor(0);
+    ofDrawRectangle(0, 0, 100, 100);
+    ofSetColor(255);
+    ofDrawBitmapString(text, 8, 20);
 }
 
 void ofApp::drawMics() {
@@ -1103,20 +1176,35 @@ void ofApp::keyPressed(int key){
         case 'f':
             ofToggleFullscreen();
             break;
-        case '0': {
-            ofxOscMessage m;
-            m.addIntArg(OF_BLENDMODE_DISABLED);
-            allLayersCommand("/blendmode", m);
-            break;
-        }
         case '1':
         case '2':
         case '3':
         case '4':
-        case '5': {
-            ofxOscMessage m;
-            m.addIntArg(static_cast<ofBlendMode>(key - '1' + 1));
-            allLayersCommand("/blendmode", m);
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case '0': {
+            if (showDebug) {
+                if (key == '0') {
+                    debugLayer = -1;
+                }
+                else {
+                    debugLayer = key - '1';
+                }
+            }
+            else {
+                ofxOscMessage m;
+                if (key == '0') {
+                    m.addIntArg(OF_BLENDMODE_DISABLED);
+                    allLayersCommand("/blendmode", m);
+                }
+                else {
+                    m.addIntArg(static_cast<ofBlendMode>(key - '1' + 1));
+                    allLayersCommand("/blendmode", m);
+                }
+            }
             break;
         }
         case 'c':

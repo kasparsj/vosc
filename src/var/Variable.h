@@ -31,6 +31,7 @@ public:
         }
         return vec;
     }
+    BufData asBufferData() override;
     virtual void afterDraw() override;
     size_t size() const {
         return values.size();
@@ -39,4 +40,6 @@ public:
     vector<T> values;
     string type = "";
     ofxExpr<T> expr;
+    
+    vector<glm::mat4> matrices;
 };

@@ -3,7 +3,6 @@
 uniform mat4 modelViewMatrix;
 uniform mat4 modelViewProjectionMatrix;
 uniform vec3 lightLocation;
-uniform vec3 lightIntensity;
 
 in vec2 texCoordVar;
 in vec3 vertNormal;

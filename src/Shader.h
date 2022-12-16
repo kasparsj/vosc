@@ -4,6 +4,7 @@
 #include "ofxAutoReloadedShader.h"
 #include "ofxOsc.h"
 #include "Texture.h"
+#include "Buffer.hpp"
 #include "TexturePool.h"
 #include "ofxShadertoy.h"
 
@@ -34,20 +35,23 @@ public:
     void end();
     void reset();
     void unload();
+    const map<string, shared_ptr<Texture>>& getTextures() const {
+        return textures;
+    }
+    const map<string, shared_ptr<Buffer>>& getBuffers() const {
+        return buffers;
+    }
     bool hasTexture(string name) {
         return textures.find(name) != textures.end();
     }
-    Texture* getTexture(string name) {
-        if (!hasTexture(name)) {
-            return NULL;
-        }
+    shared_ptr<Texture>& getTexture(string name) {
         return textures[name];
     }
     bool hasDefaultTexture() {
         return hasTexture(DEFAULT_TEX) && getDefaultTexture()->isLoaded();
     }
-    Texture* getDefaultTexture();
-    void setDefaultTexture(Texture* tex);
+    shared_ptr<Texture>& getDefaultTexture();
+    void setDefaultTexture(shared_ptr<Texture>& tex);
     void setTexture(const ofxOscMessage& m);
     void setTexture(string name, const ofxOscMessage& m, int arg = 1);
     void setBuffer(const ofxOscMessage& m);
@@ -71,13 +75,13 @@ public:
     void set(const ofxOscMessage& m);
     
 private:
-    void setUniformTextures(const map<string, Texture*>& textures, int delay = 0);
+    void setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay = 0);
     void setUniforms(const map<string, BaseVar*>& vars);
     template<typename T>
     void setUniforms(T* shader, const map<string, BaseVar*>& vars);
 
-    map<string, Texture*> textures;
-    map<string, BaseVar*> buffers;
+    map<string, shared_ptr<Texture>> textures;
+    map<string, shared_ptr<Buffer>> buffers;
     ofShader* shader = NULL;
     ofxShadertoy* shadertoy = NULL;
 };

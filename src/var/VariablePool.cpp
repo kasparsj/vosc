@@ -21,7 +21,10 @@ BaseVar* VariablePool::getShared(string name) {
 }
 
 BaseVar* VariablePool::getOrCreateShared(string name, const ofxOscMessage& m, int idx) {
-    if (!hasShared(name)) {
+    if (hasShared(name)) {
+        update(sharedPool[name], m, idx);
+    }
+    else {
         sharedPool[name] = create(m, idx);
     }
     return sharedPool.at(name);
@@ -76,17 +79,7 @@ BaseVar* VariablePool::create(const ofxOscMessage& m, int idx) {
     }
     else if (command.length() >= 18 && command.substr(command.length()-18) == "/var/colors/scheme") {
         Variable<ofFloatColor>* var = new Variable<ofFloatColor>();
-        string schemeName = m.getArgAsString(idx);
-        ofFloatColor primaryColor = Args::parse<ofFloatColor>(m, idx+1);
-        shared_ptr<ofxColorTheory::FloatColorWheelScheme> scheme = ofxColorTheory::FloatColorWheelSchemes::get(schemeName);
-        if (scheme != NULL) {
-            scheme->setPrimaryColor(primaryColor);
-            int numColors = m.getNumArgs() > (idx+2) ? m.getArgAsInt(idx+2) : 1;
-            var->set(scheme->interpolate(numColors));
-        }
-        else {
-            ofLogError() << "/var/colors/scheme invalid scheme name: " << schemeName;
-        }
+        updateColorsScheme(var, m, idx);
         return var;
     }
     else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/nodes") {
@@ -116,6 +109,36 @@ BaseVar* VariablePool::create(const ofxOscMessage& m, int idx, size_t size) {
     }
     ofLogError() << "VariablePool::create not implemented for size: " << size;
     return NULL;
+}
+
+void VariablePool::update(BaseVar* var, const ofxOscMessage& m, int idx) {
+    string command = m.getAddress();
+    if (command.length() >= 4 && command.substr(command.length()-4) == "/var") {
+    }
+    else if (command.length() >= 11 && command.substr(command.length()-11) == "/var/colors") {
+        static_cast<Variable<ofFloatColor>*>(var)->set(m, idx);
+    }
+    else if (command.length() >= 18 && command.substr(command.length()-18) == "/var/colors/scheme") {
+        updateColorsScheme(var, m, idx);
+    }
+    else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/nodes") {
+        static_cast<Variable<ofxExprNode>*>(var)->set(m, idx);
+    }
+}
+
+void VariablePool::updateColorsScheme(BaseVar* var, const ofxOscMessage& m, int idx) {
+    string schemeName = m.getArgAsString(idx);
+    ofFloatColor primaryColor = Args::parse<ofFloatColor>(m, idx+1);
+    shared_ptr<ofxColorTheory::FloatColorWheelScheme> scheme = ofxColorTheory::FloatColorWheelSchemes::get(schemeName);
+    if (scheme != NULL) {
+        scheme->setPrimaryColor(primaryColor);
+        int numColors = m.getNumArgs() > (idx+2) ? m.getArgAsInt(idx+2) : 1;
+        static_cast<Variable<ofFloatColor>*>(var)->set(scheme->interpolate(numColors));
+    }
+    else {
+        ofLogError() << "/var/colors/scheme invalid scheme name: " << schemeName;
+    }
+
 }
 
 BaseVar* VariablePool::get(VarsHolder* holder, string name) {

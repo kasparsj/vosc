@@ -30,8 +30,15 @@ public:
     void drawDebug();
     void drawGLVersion();
     void drawConsole();
-    void drawGeoms();
-    void drawTextures();
+    void drawDebugGlobals();
+    void drawDebugLayer(int i);
+    void debugGeoms();
+    void debugGeom(int i);
+    void debugLayerTextures();
+    void debugShaderTextures(int i);
+    void debugShaderBuffers(int i);
+    void debugTexture(ofTexture& tex);
+    void debugEmpty(string text);
     void drawMics();
     void drawSounds();
     void drawAmplitude(Mic& sound);
@@ -60,7 +67,7 @@ public:
     void midiCommand(string command, const ofxOscMessage& m);
     void soundsCommand(string command, const ofxOscMessage& m);
     void soundCommand(Sound& sound, string command, const ofxOscMessage& m);
-    void textureCommand(Texture* tex, string command, const ofxOscMessage& m);
+    void textureCommand(shared_ptr<Texture>& tex, string command, const ofxOscMessage& m);
     void texDataCommand(TexData& data, string command, const ofxOscMessage& m);
     void texDataColor(TexData& data, const ofxOscMessage &m);
     void shaderCommand(Shader& shader, string command, const ofxOscMessage& m);
@@ -93,5 +100,6 @@ public:
     ofxImGui::Gui gui;
     
     bool showDebug = false;
+    int debugLayer = -1;
     bool showConsole = false;
 };

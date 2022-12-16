@@ -29,13 +29,13 @@ void main()
     
     texCoordVar = texcoord;
     vertPosition = position;
-    vertColor = texelFetch(colors, gl_InstanceID);
-    vertNormal = normal * inverse(mat3(transformMatrix));
+    vertColor = texelFetch(colors, gl_InstanceID % textureSize(colors));
     
-//    mat3 normalMatrix = mat3(modelViewProjectionMatrix);
-//    normalMatrix = inverse(normalMatrix);
-//    normalMatrix = transpose(normalMatrix);
-//    vertNormal = normalize(normal * normalMatrix);
+//    vertNormal = normal * inverse(mat3(transformMatrix));
+    mat3 normalMatrix = mat3(modelViewProjectionMatrix);
+    normalMatrix = inverse(normalMatrix);
+    normalMatrix = transpose(normalMatrix);
+    vertNormal = normalize(normal * normalMatrix);
     
     gl_Position = projectionMatrix * modelViewMatrix * transformMatrix * position;
 }
