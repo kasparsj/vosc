@@ -4,7 +4,6 @@
 void Layer::setup(int index)
 {
     this->index = index;
-    setVar("pos", glm::vec3());
     reset();
 }
 
@@ -33,7 +32,7 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
 }
 
 void Layer::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes) {
-    for (map<string, BaseVar*>::iterator it=vars.begin(); it!=vars.end(); ++it) {
+    for (map<string, shared_ptr<BaseVar>>::iterator it=vars.begin(); it!=vars.end(); ++it) {
         it->second->update(mics, sounds, notes, &data);
     }
     if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
@@ -162,16 +161,16 @@ void Layer::doRotate() {
 void Layer::unload() {
     geom = NULL;
     GeomPool::clean(_id);
+    glm::vec3 pos = getVarVec3("pos", glm::vec3());
     vars.clear();
     VariablePool::cleanup(this);
+    setVar("pos", pos);
 }
 
 void Layer::reset() {
     unload();
     shader.reset();
-    setVar("speed", 1.f);
     setVar("visible", true);
-    setVar("color", ofFloatColor(1.f, 1.f));
     setVar("tint", ofFloatColor(1.f, 1.f));
     resetTransform();
     setVar("visibleThresh", 1.f);

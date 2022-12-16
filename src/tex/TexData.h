@@ -31,8 +31,8 @@ public:
     }
     void setFboSettings(const ofxOscMessage& m);
     void allocate(ofFbo& fbo);
-    void afterDraw(const map<string, BaseVar*>& vars);
-    const map<string, BaseVar*>& getVars() {
+    void afterDraw(const map<string, shared_ptr<BaseVar>>& vars);
+    const map<string, shared_ptr<BaseVar>>& getVars() {
         return parent->vars;
     }
     bool hasVar(string name) {

@@ -10,8 +10,6 @@
 
 #define DEFAULT_TEX "tex"
 
-class Layer;
-
 class Shader : public VarsHolder {
 public:
     static map<string, ofxAutoReloadedShader> cache;
@@ -76,9 +74,9 @@ public:
     
 private:
     void setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay = 0);
-    void setUniforms(const map<string, BaseVar*>& vars);
+    void setUniforms(const map<string, shared_ptr<BaseVar>>& vars);
     template<typename T>
-    void setUniforms(T* shader, const map<string, BaseVar*>& vars);
+    void setUniforms(T* shader, const map<string, shared_ptr<BaseVar>>& vars);
 
     map<string, shared_ptr<Texture>> textures;
     map<string, shared_ptr<Buffer>> buffers;

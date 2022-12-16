@@ -150,7 +150,7 @@ void Texture::draw(Layer* layer) {
         data.afterDraw(vars);
     }
     else if (hasTexture(layer->delay)) {
-        // todo: does not work
+        // todo: there is no way to multiply tints, therefore texture tint is disabled temporarily
         //ofPushStyle();
         //ofSetColor(getVarColor("tint"));
         const ofTexture& tex = getTexture(layer->delay);
@@ -170,7 +170,7 @@ void Texture::draw(Layer* layer) {
 }
 
 void Texture::texDraw(const glm::vec2& pos, const glm::vec2 size) {
-    // todo: does not work
+    // todo: there is no way to multiply tints, therefore texture tint is disabled temporarily
     //ofPushStyle();
     //ofSetColor(getVarColor("tint"));
     if (looper == NULL) {

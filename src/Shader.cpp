@@ -196,7 +196,7 @@ void Shader::setUniformTextures(const map<string, shared_ptr<Texture>>& textures
     }
 }
 
-void Shader::setUniforms(const map<string, BaseVar*>& vars) {
+void Shader::setUniforms(const map<string, shared_ptr<BaseVar>>& vars) {
     if (shadertoy == NULL) {
         setUniforms(shader, vars);
     }
@@ -206,9 +206,9 @@ void Shader::setUniforms(const map<string, BaseVar*>& vars) {
 }
 
 template<typename T>
-void Shader::setUniforms(T* shader, const map<string, BaseVar*>& vars) {
-    for (map<string, BaseVar*>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
-        const Variable<float>* floatVar = dynamic_cast<const Variable<float>*>(it->second);
+void Shader::setUniforms(T* shader, const map<string, shared_ptr<BaseVar>>& vars) {
+    for (map<string, shared_ptr<BaseVar>>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
+        const Variable<float>* floatVar = dynamic_cast<const Variable<float>*>(it->second.get());
         if (floatVar != NULL) {
             vector<float> values = floatVar->getVec();
             if (values.size() == 1) {
@@ -225,17 +225,17 @@ void Shader::setUniforms(T* shader, const map<string, BaseVar*>& vars) {
             }
         }
         else {
-            const Variable<glm::vec3>* vec3Var = dynamic_cast<const Variable<glm::vec3>*>(it->second);
+            const Variable<glm::vec3>* vec3Var = dynamic_cast<const Variable<glm::vec3>*>(it->second.get());
             if (vec3Var != NULL/* && vec3Var->size() == 1*/) {
                 shader->setUniform3f(it->first, vec3Var->get());
             }
             else {
-                const Variable<glm::mat4>* mat4Var = dynamic_cast<const Variable<glm::mat4>*>(it->second);
+                const Variable<glm::mat4>* mat4Var = dynamic_cast<const Variable<glm::mat4>*>(it->second.get());
                 if (mat4Var != NULL/* && mat4Var->size() == 1*/) {
                     shader->setUniformMatrix4f(it->first, mat4Var->get());
                 }
                 else {
-                    const Variable<ofFloatColor>* colorVar = dynamic_cast<const Variable<ofFloatColor>*>(it->second);
+                    const Variable<ofFloatColor>* colorVar = dynamic_cast<const Variable<ofFloatColor>*>(it->second.get());
                     if (colorVar != NULL/* && colorVar->size() == 1*/) {
                         shader->setUniform4f(it->first, colorVar->get());
                     }
@@ -248,8 +248,8 @@ void Shader::setUniforms(T* shader, const map<string, BaseVar*>& vars) {
     }
 }
 
-template void Shader::setUniforms(ofShader* shader, const map<string, BaseVar*>& vars);
-template void Shader::setUniforms(ofxShadertoy* shader, const map<string, BaseVar*>& vars);
+template void Shader::setUniforms(ofShader* shader, const map<string, shared_ptr<BaseVar>>& vars);
+template void Shader::setUniforms(ofxShadertoy* shader, const map<string, shared_ptr<BaseVar>>& vars);
 
 void Shader::reset() {
     unload();
@@ -262,10 +262,19 @@ void Shader::reset() {
 
 void Shader::unload() {
     if (shader != NULL) {
-        if (shader->isLoaded()) {
-            shader->unload();
+        try {
+            ofxAutoReloadedShader* autoShader = static_cast<ofxAutoReloadedShader*>(shader);
+            if (autoShader->isLoaded()) {
+                autoShader->unload();
+            }
+            delete autoShader;
         }
-        delete shader;
+        catch (...) {
+            if (shader->isLoaded()) {
+                shader->unload();
+            }
+            delete shader;
+        }
         shader = NULL;
     }
     else if (shadertoy != NULL) {
@@ -296,10 +305,10 @@ void Shader::setTexture(string name, const ofxOscMessage& m, int arg) {
     }
     string source = m.getArgAsString(arg);
     if (TexturePool::hasShared(source)) {
-        textures[name] = shared_ptr<Texture>(TexturePool::getShared(source));
+        textures[name] = TexturePool::getShared(source);
     }
     else {
-        textures[name] = shared_ptr<Texture>(TexturePool::getForShader(name, _id));
+        textures[name] = TexturePool::getForShader(name, _id);
         textures[name]->load(m, arg);
     }
 }

@@ -73,19 +73,37 @@ ofFloatColor Args::parse(const ofxOscMessage& m, int idx) {
 //            else if (str.substr(0, 4) == "rgb(") {
 //
 //            }
-            else if (isJSONObj(str)) {
+            else if (isJSON(str)) {
                 auto json = ofJson::parse(str);
-                color.r = json.at("r");
-                color.g = json.at("g");
-                color.b = json.at("b");
-                color.a = json.at("a");
-            }
-            else if (isJSONArr(str)) {
-                auto json = ofJson::parse(str);
-                color.r = json[0];
-                color.g = json[1];
-                color.b = json[2];
-                color.a = json[3];
+                size_t size = 3;
+                if (isJSONObj(str)) {
+                    color.r = json.at("r");
+                    color.g = json.at("g");
+                    color.b = json.at("b");
+                    color.a = 1.f;
+                    if (json.find("a") != json.end()) {
+                        color.a = json.at("a");
+                        size = 4;
+                    }
+                }
+                else if (isJSONArr(str)) {
+                    color.r = json[0];
+                    color.g = json[1];
+                    color.b = json[2];
+                    color.a = 1.f;
+                    if (json.size() > 3) {
+                        color.a = json[3];
+                        size = 4;
+                    }
+                }
+                if (color.r > 1.f || color.g > 1.f || color.b > 1.f || color.a > 1.f) {
+                    color.r = color.r / 255.f;
+                    color.g = color.g / 255.f;
+                    color.b = color.b / 255.f;
+                    if (size > 3) {
+                        color.a = color.a / 255.f;
+                    }
+                }
             }
             else {
                 throw ("string not color: " + str);
@@ -118,9 +136,9 @@ glm::vec3 Args::parse(const ofxOscMessage &m, int idx) {
             string str = m.getArgAsString(idx);
             if (isJSONObj(str)) {
                 auto json = ofJson::parse(str);
-                vec.x = json.at("r");
-                vec.y = json.at("g");
-                vec.z = json.at("b");
+                vec.x = json.at("x");
+                vec.y = json.at("y");
+                vec.z = json.at("z");
             }
             else if (isJSONArr(str)) {
                 auto json = ofJson::parse(str);

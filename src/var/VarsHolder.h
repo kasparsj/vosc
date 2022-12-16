@@ -9,7 +9,7 @@ public:
         _id = nextId++;
     }
     virtual ~VarsHolder() {}
-    const BaseVar* getVariable(string name) const;
+    const shared_ptr<BaseVar>& getVariable(string name) const;
     bool hasVar(string name) const;
     float getVar(string name, int idx = 0) const;
     bool getVarBool(string name, int idx = 0) const;
@@ -29,7 +29,7 @@ public:
         return _id;
     }
 
-    map<string, BaseVar*> vars;
+    map<string, shared_ptr<BaseVar>> vars;
 protected:
     unsigned int _id;
 };

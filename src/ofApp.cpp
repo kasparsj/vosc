@@ -339,9 +339,6 @@ void ofApp::layerCommand(Layer* layer, string command, const ofxOscMessage& m) {
     else if (command == "/layer/alpha") {
         layer->setVar("alpha", m);
     }
-    else if (command == "/layer/color") {
-        layer->setVar("color", m);
-    }
     else if (command == "/layer/tint") {
         layer->setVar("tint", m);
     }
@@ -422,15 +419,15 @@ void ofApp::indexCommand(Layer *layer, string command, const ofxOscMessage &m) {
             if (command == "/tex") {
                 string name = m.getArgAsString(1);
                 if (TexturePool::hasShared(name)) {
-                    tex = shared_ptr<Texture>(TexturePool::getShared(name));
+                    tex = TexturePool::getShared(name);
                     isShared = true;
                 }
                 else {
-                    tex = shared_ptr<Texture>(TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId()));
+                    tex = TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId());
                 }
             }
             else {
-                tex = shared_ptr<Texture>(TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId()));
+                tex = TexturePool::getForShader(DEFAULT_TEX, layer->shader.getId());
             }
             layer->shader.setDefaultTexture(tex);
             if (tex->data.size.x == 0 && tex->data.size.y == 0) {
@@ -608,9 +605,10 @@ void ofApp::textureCommand(shared_ptr<Texture>& tex, string command, const ofxOs
     else if (command == "/tex/color") {
         tex->setVar("color", m);
     }
-    else if (command == "/tex/tint") {
-        tex->setVar("tint", m);
-    }
+    // todo: there is no way to multiply tints, therefore texture tint is disabled temporarily
+//    else if (command == "/tex/tint") {
+//        tex->setVar("tint", m);
+//    }
     else if (command == "/tex/speed") {
         tex->setVar("speed", m);
     }
@@ -719,7 +717,7 @@ void ofApp::processQueue() {
                     allLayersCommand(command, m);
                 }
                 else if (command.substr(0, 4) == "/tex") {
-                    shared_ptr<Texture> tex = shared_ptr<Texture>(TexturePool::getShared(which, true));
+                    shared_ptr<Texture>& tex = TexturePool::getShared(which, true);
                     textureCommand(tex, command, m);
                     if (tex->data.size.x == 0 && tex->data.size.y == 0) {
                         tex->data.setSize(ofGetScreenWidth(), ofGetScreenHeight());

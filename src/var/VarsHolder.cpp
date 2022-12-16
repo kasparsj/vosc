@@ -1,53 +1,60 @@
 #include "VarsHolder.h"
 #include "VariablePool.h"
 
-const BaseVar* VarsHolder::getVariable(string name) const {
-    if (vars.find(name) != vars.end()) {
-        return vars.at(name);
-    }
-    return NULL;
+const shared_ptr<BaseVar>& VarsHolder::getVariable(string name) const {
+    return vars.at(name);
 }
 
 bool VarsHolder::hasVar(string name) const {
-    return getVariable(name) != NULL;
+    return vars.find(name) != vars.end();
 }
 
 float VarsHolder::getVar(string name, int idx) const {
-    const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name));
-    if (var != NULL) {
-        return var->get(idx);
+    if (hasVar(name)) {
+        const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
+        if (var != NULL) {
+            return var->get(idx);
+        }
     }
     return 0;
 }
 
 bool VarsHolder::getVarBool(string name, int idx) const {
-    const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name));
-    if (var != NULL) {
-        return var->get(idx);
+    if (hasVar(name)) {
+        const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
+        if (var != NULL) {
+            return var->get(idx);
+        }
     }
     return false;
 }
 
 vector<float> VarsHolder::getVarVec(string name) const {
-    const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name));
-    if (var != NULL) {
-        return var->getVec();
+    if (hasVar(name)) {
+        const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
+        if (var != NULL) {
+            return var->getVec();
+        }
     }
     return vector<float>();
 }
 
 glm::vec3 VarsHolder::getVarVec3(string name, glm::vec3 defVal) const {
-    const Variable<glm::vec3>* var = dynamic_cast<const Variable<glm::vec3>*>(getVariable(name));
-    if (var != NULL) {
-        return var->get();
+    if (hasVar(name)) {
+        const Variable<glm::vec3>* var = dynamic_cast<const Variable<glm::vec3>*>(getVariable(name).get());
+        if (var != NULL) {
+            return var->get();
+        }
     }
     return defVal;
 }
 
 ofFloatColor VarsHolder::getVarColor(string name) const {
-    const Variable<ofFloatColor>* var = dynamic_cast<const Variable<ofFloatColor>*>(getVariable(name));
-    if (var != NULL) {
-        return var->get();
+    if (hasVar(name)) {
+        const Variable<ofFloatColor>* var = dynamic_cast<const Variable<ofFloatColor>*>(getVariable(name).get());
+        if (var != NULL) {
+            return var->get();
+        }
     }
     return ofFloatColor();
 }
@@ -56,7 +63,7 @@ template <typename T>
 Variable<T>* VarsHolder::setVar(string name, T value) {
     Variable<T>* var = VariablePool::getOrCreate<T>(name, this);
     var->set(value);
-    vars[name] = var;
+    vars[name] = VariablePool::get(name, this);
     return var;
 }
 
@@ -68,12 +75,12 @@ template <typename T>
 Variable<T>* VarsHolder::setVar(string name, vector<T> value) {
     Variable<T>* var = VariablePool::getOrCreate<T>(name, this);
     var->set(value);
-    vars[name] = var;
+    vars[name] = VariablePool::get(name, this);
     return var;
 }
 
-void VarsHolder::setVar(string name, const ofxOscMessage& value, int idx) {
-    BaseVar* var = VariablePool::getOrCreate(name, value, idx, this);
+void VarsHolder::setVar(string name, const ofxOscMessage& m, int idx) {
+    shared_ptr<BaseVar>& var = VariablePool::createOrUpdate(name, m, idx, this);
     vars[name] = var;
     return var;
 }

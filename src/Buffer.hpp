@@ -15,7 +15,7 @@ public:
         return tex;
     }
     
-    BaseVar* var;
+    shared_ptr<BaseVar> var;
     ofBufferObject buf;
     ofTexture tex;
     BufData data;

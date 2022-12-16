@@ -7,7 +7,7 @@ Buffer::Buffer(string name, const ofxOscMessage& m, int arg, VarsHolder* parent)
         var = VariablePool::getShared(source);
     }
     else {
-        var = VariablePool::getOrCreate(name, m, arg, parent);
+        var = VariablePool::createOrUpdate(name, m, arg, parent);
     }
     buf.allocate();
     buf.bind(GL_TEXTURE_BUFFER);
