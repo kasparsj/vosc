@@ -52,7 +52,6 @@
 		2B997A67294A59FF0041D31E /* Lights.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45858BC21D396ED266B2333D /* Lights.cpp */; };
 		2B997A68294A59FF0041D31E /* Texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F701FBB2BC4E0BB2C068EA34 /* Texture.cpp */; };
 		2B997A69294A59FF0041D31E /* VarsHolder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5E32A5F82B1AD6D60C89B613 /* VarsHolder.cpp */; };
-		2B997A6A294A59FF0041D31E /* Value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D453A863C70334C3B77721C /* Value.cpp */; };
 		2B997A6B294A59FF0041D31E /* Variable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC95D6A4850BE0F8FFB7D5E5 /* Variable.cpp */; };
 		2B997A6C294A59FF0041D31E /* VariablePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE6A0B50D6798FC3BC6A087A /* VariablePool.cpp */; };
 		2B997A6D294A59FF0041D31E /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
@@ -181,7 +180,6 @@
 		3EBCD03048ED03CCB70D6972 /* LayerData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C23F79F9BFBAD0F41FB354FD /* LayerData.cpp */; };
 		4355FD81C3F9DDE40B10CE94 /* SSAOPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C127DCF305861E6D5D6332E6 /* SSAOPass.cpp */; };
 		462C212713EFFA5383B35DAB /* EngineGLFW.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1C686ADB50E8F79292BA80 /* EngineGLFW.cpp */; };
-		482FDBF65192DEE654B33E3D /* Value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D453A863C70334C3B77721C /* Value.cpp */; };
 		483FA4F6D5FA6422C559B1F5 /* ofxAssimpMeshHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F67FE68E327BEFBD4B777571 /* ofxAssimpMeshHelper.cpp */; };
 		48A20E676F10358589E99CE9 /* ofxExpr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5733619BC0960AF70EBA549B /* ofxExpr.cpp */; };
 		4A2B684DF41F7779B2947319 /* RimHighlightingPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74BDDD14F49833AD24862E87 /* RimHighlightingPass.cpp */; };
@@ -349,7 +347,6 @@
 		1E602E00039B91003AE973D9 /* Config.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Config.h; path = ../../../addons/ofxUltralight/libs/include/Ultralight/platform/Config.h; sourceTree = SOURCE_ROOT; };
 		1E952AF032B351FB32CCBD2B /* Split.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Split.cpp; path = ../../../addons/ofxPostProcessing/src/Split.cpp; sourceTree = SOURCE_ROOT; };
 		1F14BB101CDA8E3ECB95EFE9 /* Triad.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Triad.h; path = ../../../addons/ofxColorTheory/src/Rules/Triad.h; sourceTree = SOURCE_ROOT; };
-		1FAB6C574C03BF01577E4521 /* Value.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Value.h; path = src/var/Value.h; sourceTree = SOURCE_ROOT; };
 		1FB8AC908D6BDA59B5D4E76B /* Listener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Listener.h; path = ../../../addons/ofxUltralight/libs/include/Ultralight/Listener.h; sourceTree = SOURCE_ROOT; };
 		208298154B11456DCD0BE131 /* ofxRtMidiIn.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxRtMidiIn.h; path = ../../../addons/ofxMidi/src/desktop/ofxRtMidiIn.h; sourceTree = SOURCE_ROOT; };
 		20CE1E405861E6EFEDA0A144 /* Invert.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Invert.cpp; path = ../../../addons/ofxPostProcessing/src/Invert.cpp; sourceTree = SOURCE_ROOT; };
@@ -569,7 +566,6 @@
 		4C7C9A1A5D793B9AECBF3AF8 /* Matrix.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Matrix.h; path = ../../../addons/ofxUltralight/libs/include/Ultralight/Matrix.h; sourceTree = SOURCE_ROOT; };
 		4D322C61E90215407772EFB1 /* Args.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Args.h; path = src/Args.h; sourceTree = SOURCE_ROOT; };
 		4D41DE8AE39277B40E23386F /* RequestHandler.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RequestHandler.h; path = ../../../addons/ofxUltralight/libs/include/Ultralight/RequestHandler.h; sourceTree = SOURCE_ROOT; };
-		4D453A863C70334C3B77721C /* Value.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Value.cpp; path = src/var/Value.cpp; sourceTree = SOURCE_ROOT; };
 		4E2B4BC4A65212574815E669 /* SplitComplementary.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = SplitComplementary.cpp; path = ../../../addons/ofxColorTheory/src/Rules/SplitComplementary.cpp; sourceTree = SOURCE_ROOT; };
 		4E95FB446A9C9C6F0DE12D75 /* OscPrintReceivedElements.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscPrintReceivedElements.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscPrintReceivedElements.h; sourceTree = SOURCE_ROOT; };
 		4FAE4A0F69A8990513603BDF /* ofxAssimpUtils.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAssimpUtils.h; path = ../../../addons/ofxAssimpModelLoader/src/ofxAssimpUtils.h; sourceTree = SOURCE_ROOT; };
@@ -2046,8 +2042,6 @@
 			isa = PBXGroup;
 			children = (
 				2B997A51294A54580041D31E /* BaseVar.h */,
-				4D453A863C70334C3B77721C /* Value.cpp */,
-				1FAB6C574C03BF01577E4521 /* Value.h */,
 				CC95D6A4850BE0F8FFB7D5E5 /* Variable.cpp */,
 				04664096EB17620EF646AD96 /* Variable.h */,
 				FE6A0B50D6798FC3BC6A087A /* VariablePool.cpp */,
@@ -2703,7 +2697,6 @@
 				2B997A67294A59FF0041D31E /* Lights.cpp in Sources */,
 				2B997A68294A59FF0041D31E /* Texture.cpp in Sources */,
 				2B997A69294A59FF0041D31E /* VarsHolder.cpp in Sources */,
-				2B997A6A294A59FF0041D31E /* Value.cpp in Sources */,
 				2B997A6B294A59FF0041D31E /* Variable.cpp in Sources */,
 				2B997A6C294A59FF0041D31E /* VariablePool.cpp in Sources */,
 				2B997A6D294A59FF0041D31E /* Shader.cpp in Sources */,
@@ -2844,7 +2837,6 @@
 				ADFBA2C7351D4D54BF63EA07 /* Lights.cpp in Sources */,
 				B00B20920BA5CFE645984C49 /* Texture.cpp in Sources */,
 				29DD298E0609B82CFFD50620 /* VarsHolder.cpp in Sources */,
-				482FDBF65192DEE654B33E3D /* Value.cpp in Sources */,
 				84D1A2784D51C24C89402118 /* Variable.cpp in Sources */,
 				5D833E7A02CBA76EFDA2776E /* VariablePool.cpp in Sources */,
 				2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */,

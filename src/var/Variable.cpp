@@ -8,7 +8,7 @@ template <typename T>
 void Variable<T>::set(T value) {
     type = "const";
     this->values.resize(1);
-    this->values[0].set(value);
+    this->values[0] = value;
 }
 
 template <typename T>
@@ -16,7 +16,7 @@ void Variable<T>::set(vector<T> value) {
     type = "const";
     this->values.resize(value.size());
     for (int i=0; i<value.size(); i++) {
-        this->values[i].set(value[i]);
+        this->values[i] = value[i];
     }
 }
 
@@ -141,7 +141,7 @@ void Variable<T>::update(const vector<Mic> &mics, const vector<Sound> &sounds, c
         expr.addVar("total", total);
         // todo: add mics, sounds notes, data to expr vars
         for (i; i<values.size(); i++) {
-            values[i].set(expr.get());
+            values[i] = expr.get();
         }
     }
 }
@@ -154,11 +154,11 @@ template<>
 void Variable<float>::afterDraw() {
     if (type == "tidal") {
         for (int i=0; i<values.size(); i++) {
-            float val = values[i].get() - 1.f/8.f;
+            float val = values[i] - 1.f/8.f;
             if (val < 0.f) {
                 val = 0.f;
             }
-            values[i].set(val);
+            values[i] = val;
         }
     }
 }

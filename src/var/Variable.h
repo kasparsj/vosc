@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BaseVar.h"
-#include "Value.h"
 #include "ofxOsc.h"
 #include "ofxExpr.hpp"
 
@@ -19,16 +18,16 @@ public:
     void addSharedVars();
     void set(const ofxOscMessage& m, int idx = 1);
     T& get(int idx = 0) {
-        return values.at(idx).get();
+        return values.at(idx);
     }
     T get(int idx = 0) const {
-        return values.at(idx).get();
+        return values.at(idx);
     }
     virtual void update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data = NULL) override;
     vector<T> getVec() const {
         vector<T> vec;
         for (int i=0; i<values.size(); i++) {
-            vec.push_back(get(i));
+            vec.push_back(values.at(i));
         }
         return vec;
     }
@@ -37,7 +36,7 @@ public:
         return values.size();
     }
 
-    vector<Value<T>> values;
+    vector<T> values;
     string type = "";
     ofxExpr<T> expr;
 };
