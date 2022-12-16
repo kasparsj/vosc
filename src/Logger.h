@@ -50,7 +50,7 @@ private:
     }
     
     ofLogLevel consoleLogLevel = OF_LOG_VERBOSE;
-    ofLogLevel fileLogLevel = OF_LOG_VERBOSE;
+    ofLogLevel fileLogLevel = OF_LOG_SILENT;
     ofConsoleLoggerChannel consoleLogger;
     ofFileLoggerChannel fileLogger;
     
