@@ -178,15 +178,33 @@ vector<string> Args::parseVec3Expr(const ofxOscMessage &m, int idx) {
             string str = m.getArgAsString(idx);
             if (isJSONArr(str)) {
                 auto json = ofJson::parse(str);
-                vec3Expr[0] = ofToString(json.at(0));
-                vec3Expr[1] = ofToString(json.at(1));
-                vec3Expr[2] = ofToString(json.at(2));
+                if (json.at(0).is_string())
+                    vec3Expr[0] = json.at(0);
+                else
+                    vec3Expr[0] = ofToString(json.at(0));
+                if (json.at(1).is_string())
+                    vec3Expr[1] = json.at(1);
+                else
+                    vec3Expr[1] = ofToString(json.at(1));
+                if (json.at(2).is_string())
+                    vec3Expr[2] = json.at(2);
+                else
+                    vec3Expr[2] = ofToString(json.at(2));
             }
             else if (isJSONObj(str)) {
                 auto json = ofJson::parse(str);
-                vec3Expr[0] = ofToString(json.at("x"));
-                vec3Expr[1] = ofToString(json.at("y"));
-                vec3Expr[2] = ofToString(json.at("z"));
+                if (json.at("x").is_string())
+                    vec3Expr[0] = json.at("x");
+                else
+                    vec3Expr[0] = ofToString(json.at("x"));
+                if (json.at("y").is_string())
+                    vec3Expr[0] = json.at("y");
+                else
+                    vec3Expr[0] = ofToString(json.at("y"));
+                if (json.at("z").is_string())
+                    vec3Expr[0] = json.at("z");
+                else
+                    vec3Expr[0] = ofToString(json.at("z"));
             }
             else {
                 vec3Expr[0] = str;

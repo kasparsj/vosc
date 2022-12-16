@@ -140,7 +140,10 @@ Variable<T>* VariablePool::getOrCreate(string name, VarsHolder* holder) {
 }
 
 map<string, BaseVar*>& VariablePool::getPool(VarsHolder* holder) {
-    if (dynamic_cast<Texture*>(holder) != NULL) {
+    if (holder == NULL) {
+        return sharedPool;
+    }
+    else if (dynamic_cast<Texture*>(holder) != NULL) {
         return texturePool[holder->getId()];
     }
     else if (dynamic_cast<Shader*>(holder) != NULL) {
@@ -149,9 +152,7 @@ map<string, BaseVar*>& VariablePool::getPool(VarsHolder* holder) {
     else if (dynamic_cast<Layer*>(holder) != NULL) {
         return layerPool[holder->getId()];
     }
-    else {
-        return sharedPool;
-    }
+    throw "VariablePool::getPool incompatible holder: " + ofToString(holder);
 }
 
 void VariablePool::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes) {

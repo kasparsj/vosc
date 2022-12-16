@@ -9,6 +9,11 @@ Value<T>::Value() {
 }
 
 template<typename T>
+T& Value<T>::get() {
+    return value;
+}
+
+template<typename T>
 T Value<T>::get() const {
     return value;
 }
@@ -17,7 +22,7 @@ template<typename T>
 void Value<T>::set(const string& expr) {
     type = "expr";
     this->expr.set(expr);
-    // todo: shared variables should be added
+    addSharedVars();
     this->value = this->expr.get();
 }
 
@@ -25,8 +30,19 @@ template<typename T>
 void Value<T>::set(const vector<string>& expr, int i) {
     type = "expr";
     this->expr.set(expr, i);
-    // todo: shared variables should be added
-    this->value = this->expr.get();
+    addSharedVars();
+//    this->value = this->expr.get();
+}
+
+template<typename T>
+void Value<T>::addSharedVars() {
+    map<string, BaseVar*>& pool = VariablePool::getPool();
+    for (map<string, BaseVar*>::iterator it=pool.begin(); it!=pool.end(); ++it) {
+        Variable<float>* floatVar = dynamic_cast<Variable<float>*>(it->second);
+        if (floatVar != NULL) {
+            this->expr.addVar(it->first, floatVar->get());
+        }
+    }
 }
 
 // todo: fix

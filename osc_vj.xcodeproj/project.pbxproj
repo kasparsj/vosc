@@ -996,7 +996,6 @@
 		F47F42625EB721A54C0CDAB6 /* Lights.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Lights.h; path = src/Lights.h; sourceTree = SOURCE_ROOT; };
 		F4F5B6B8BA2BD52C646ED908 /* OscException.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscException.h; path = ../../../addons/ofxOsc/libs/oscpack/src/osc/OscException.h; sourceTree = SOURCE_ROOT; };
 		F5DB1AC24B8010FC3C556AAC /* RenderPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RenderPass.h; path = ../../../addons/ofxPostProcessing/src/RenderPass.h; sourceTree = SOURCE_ROOT; };
-		F60354E125292C13DADD7E7F /* muParserStack.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserStack.h; path = ../../../addons/ofxExpr/libs/muparser/include/muParserStack.h; sourceTree = SOURCE_ROOT; };
 		F634AA6CA2E3C60F3B87B59A /* ofxRtMidiIn.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxRtMidiIn.cpp; path = ../../../addons/ofxMidi/src/desktop/ofxRtMidiIn.cpp; sourceTree = SOURCE_ROOT; };
 		F67FE68E327BEFBD4B777571 /* ofxAssimpMeshHelper.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxAssimpMeshHelper.cpp; path = ../../../addons/ofxAssimpModelLoader/src/ofxAssimpMeshHelper.cpp; sourceTree = SOURCE_ROOT; };
 		F701FBB2BC4E0BB2C068EA34 /* Texture.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Texture.cpp; path = src/Texture.cpp; sourceTree = SOURCE_ROOT; };
@@ -1738,7 +1737,6 @@
 				A5CF8DC6B46CE6E879054B6D /* muParserError.h */,
 				D61DEE3651D29623D73222F6 /* muParserFixes.h */,
 				3270028C8CA1EE86617DEFE8 /* muParserInt.h */,
-				F60354E125292C13DADD7E7F /* muParserStack.h */,
 				2F62573620B9255773B1A774 /* muParserTemplateMagic.h */,
 				1CEE09A14FECFB1599AE2765 /* muParserTest.h */,
 				DC59FBD915CAD67F3EC1927E /* muParserToken.h */,

@@ -13,8 +13,11 @@ public:
     void set(T value);
     void set(vector<T> value);
     void set(const ofxOscMessage& m, int idx = 1);
+    T& get(int idx = 0) {
+        return values.at(idx).get();
+    }
     T get(int idx = 0) const {
-        return values[idx].get();
+        return values.at(idx).get();
     }
     virtual void update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data = NULL) override;
     vector<T> getVec() const {

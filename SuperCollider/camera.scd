@@ -22,10 +22,10 @@
 ~visuals.send('/var', "sine_osc", "200+(sin(t)*1000)");
 
 // map camera's z coordinate to sine_osc variable
-~visuals.send('/cam/pos', ["sine_osc", "sine_osc", "sine_osc"]);
+~visuals.send('/cam/pos', [0, 0, "sine_osc"]);
 
 // orbit camera around penguin (around scene center)
-~visuals.send('/cam/orbit', 0);
+~visuals.send('/cam/orbit', 20);
 
 ~visuals.send('/layer/bri', "*", 5000);
 
@@ -35,7 +35,7 @@ z = {
 	inf.do {
 		~visuals.send('/post', 32.rand);
 		36.do { |i|
-					~visuals.send('/layer/tint', i, 255.rand, 255.rand, 255.rand);
+					~visuals.send('/layer/tint', i, [255.rand, 255.rand, 255.rand]);
 		};
 		5.wait;
 	};

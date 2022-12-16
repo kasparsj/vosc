@@ -11,7 +11,7 @@ public:
     static BaseVar* getOrCreate(string name, const ofxOscMessage& m, int idx, VarsHolder* holder);
     template<typename T>
     static Variable<T>* getOrCreate(string name, VarsHolder* holder);
-    static map<string, BaseVar*>& getPool(VarsHolder* holder);
+    static map<string, BaseVar*>& getPool(VarsHolder* holder = NULL);
     static bool hasShared(string name);
     static BaseVar* getShared(string name);
     static BaseVar* getOrCreateShared(string name, const ofxOscMessage& m, int idx = 1);
