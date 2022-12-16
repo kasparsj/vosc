@@ -31,12 +31,13 @@ public:
     static bool isJSONObj(const string& str);
     static bool isJSONArr(const string& str);
     static ofFloatColor parseHexColor(const string& str);
-    static ofFloatColor parseColor(const ofxOscMessage& m, int idx = 0);
-    static vector<string> parseColorExpr(const ofxOscMessage& m, int idx);
-    static glm::vec3 parseVec3(const ofxOscMessage& m, int idx = 0);
-    static vector<string> parseVec3Expr(const ofxOscMessage& m, int idx = 1);
+    template<typename T>
+    static T parse(const ofxOscMessage& m, int idx = 0);
+    template<typename T>
+    static vector<T> parseConst(const ofxOscMessage& m, int idx = 0);
+    template<typename T>
+    static vector<string> parseExpr(const ofxOscMessage& m, int& idx);
     
-    float parseIntOrFloat(const ofxOscMessage &m, int i = 0);
     ofFloatColor parseLerpColor(const ofxOscMessage &m, int firstArg = 1);
     vector<float> parseAlign(const ofxOscMessage &m, int firstArg = 1);
     void handleFloat(float* value, const ofxOscMessage& m, int firstArg = 1);

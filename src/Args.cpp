@@ -1,5 +1,6 @@
 #include "Args.h"
 #include "ColorUtil.h"
+#include "ofxExpr.hpp"
 #include <regex>
 
 Args Args::instance;
@@ -29,16 +30,35 @@ ofFloatColor Args::parseHexColor(const string& str) {
     return ofFloatColor::fromHex(ofHexToInt(str));
 }
 
-float Args::parseIntOrFloat(const ofxOscMessage &m, int i) {
-    if (m.getArgType(i) == OFXOSC_TYPE_FLOAT) {
-        return m.getArgAsFloat(i);
+template<>
+float Args::parse(const ofxOscMessage& m, int idx) {
+    float value;
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            string str = m.getArgAsString(idx);
+            value = ofToFloat(str);
+            if (isnan(value)) {
+                throw "string not float: " + str;
+            }
+            break;
+        }
+        case OFXOSC_TYPE_INT32:
+        case OFXOSC_TYPE_INT64:
+        case OFXOSC_TYPE_CHAR:
+            value = (float) m.getArgAsInt(idx);
+            break;
+        case OFXOSC_TYPE_FLOAT:
+        case OFXOSC_TYPE_DOUBLE:
+            value = m.getArgAsFloat(idx);
+            break;
+        default:
+            throw "could not parse float at: " + ofToString(idx);
     }
-    else {
-        return m.getArgAsInt(i) / 255.f;
-    }
+    return value;
 }
 
-ofFloatColor Args::parseColor(const ofxOscMessage &m, int idx) {
+template<>
+ofFloatColor Args::parse(const ofxOscMessage &m, int idx) {
     ofFloatColor color;
     switch (m.getArgType(idx)) {
         case OFXOSC_TYPE_STRING: {
@@ -84,21 +104,124 @@ ofFloatColor Args::parseColor(const ofxOscMessage &m, int idx) {
             color = m.getArgAsRgbaColor(idx);
             break;
         default:
-            ofLogError() << "could not parse color: " << m << idx;
-            break;
+            throw "could not parse color at: " + ofToString(idx);
     }
-//    for (int i=idx; i<min(idx+3, (int) m.getNumArgs()); i++) {
-//        color[i-idx] = parseIntOrFloat(m, idx);
-//    }
     return color;
 }
 
-vector<string> Args::parseColorExpr(const ofxOscMessage& m, int idx) {
+template<>
+glm::vec3 Args::parse(const ofxOscMessage &m, int idx) {
+    glm::vec3 vec;
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            string str = m.getArgAsString(idx);
+            if (isJSONObj(str)) {
+                auto json = ofJson::parse(str);
+                vec.x = json.at("r");
+                vec.y = json.at("g");
+                vec.z = json.at("b");
+            }
+            else if (isJSONArr(str)) {
+                auto json = ofJson::parse(str);
+                vec.x = json[0];
+                vec.y = json[1];
+                vec.z = json[2];
+            }
+            else {
+                throw ("string not vec3: " + str);
+            }
+            break;
+        }
+        case OFXOSC_TYPE_INT32:
+        case OFXOSC_TYPE_INT64:
+        case OFXOSC_TYPE_CHAR:
+            vec = glm::vec3(m.getArgAsInt(idx));
+            break;
+        case OFXOSC_TYPE_FLOAT:
+        case OFXOSC_TYPE_DOUBLE:
+            vec = glm::vec3(m.getArgAsFloat(idx));
+            break;
+        default:
+            throw "could not parse vec3 at: " + ofToString(idx);
+    }
+    return vec;
+}
+
+template<>
+glm::mat4 Args::parse(const ofxOscMessage &m, int idx) {
+    glm::mat4 mat;
+    throw "Args::parse<glm::mat4> not implemented";
+    return mat;
+}
+
+template<>
+ofxExprNode Args::parse(const ofxOscMessage &m, int idx) {
+    ofxExprNode node;
+    throw "Args::parse<ofxNodeExpr> not implemented";
+//    switch (m.getArgType(idx)) {
+//        case OFXOSC_TYPE_STRING: {
+//            string str = m.getArgAsString(idx);
+//            if (isJSONObj(str)) {
+//                auto json = ofJson::parse(str);
+//                vec.x = json.at("r");
+//                vec.y = json.at("g");
+//                vec.z = json.at("b");
+//            }
+//            else if (isJSONArr(str)) {
+//                auto json = ofJson::parse(str);
+//                vec.x = json[0];
+//                vec.y = json[1];
+//                vec.z = json[2];
+//            }
+//            else {
+//                throw ("string not vec3: " + str);
+//            }
+//            break;
+//        }
+//        case OFXOSC_TYPE_INT32:
+//        case OFXOSC_TYPE_INT64:
+//        case OFXOSC_TYPE_CHAR:
+//            vec = glm::vec3(m.getArgAsInt(idx));
+//            break;
+//        case OFXOSC_TYPE_FLOAT:
+//        case OFXOSC_TYPE_DOUBLE:
+//            vec = glm::vec3(m.getArgAsFloat(idx));
+//            break;
+//        default:
+//            throw "could not parse vec3 at: " + ofToString(idx);
+//    }
+    return node;
+}
+
+template<typename T>
+vector<T> Args::parseConst(const ofxOscMessage &m, int idx) {
+    vector<T> values;
+    for (int i=idx; i<m.getNumArgs(); i++) {
+        values.push_back(parse<T>(m, idx+i));
+    }
+    return values;
+}
+
+template<>
+vector<string> Args::parseExpr<float>(const ofxOscMessage& m, int& idx) {
+    vector<string> floatExpr;
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            floatExpr.push_back(m.getArgAsString(idx++));
+        }
+        default:
+            throw "could not parse float expr: " + ofToString(idx);
+    }
+    return floatExpr;
+}
+
+template<>
+vector<string> Args::parseExpr<ofFloatColor>(const ofxOscMessage& m, int& idx) {
     vector<string> colorExpr;
     colorExpr.resize(4);
     switch (m.getArgType(idx)) {
         case OFXOSC_TYPE_STRING: {
-            string str = m.getArgAsString(idx);
+            string str = m.getArgAsString(idx++);
             if (isJSONArr(str)) {
                 auto json = ofJson::parse(str);
                 colorExpr[0] = json.at(0);
@@ -123,59 +246,21 @@ vector<string> Args::parseColorExpr(const ofxOscMessage& m, int idx) {
         }
         case OFXOSC_TYPE_BLOB:
             // todo: implement
-            // m.getArgAsBlob(idx);
+            // m.getArgAsBlob(idx++);
             break;
         default:
-            ofLogError() << "could not parse vec3: " << m << idx;
-            break;
+            throw "could not parse vec3 at: " + ofToString(idx);
     }
     return colorExpr;
 }
 
-glm::vec3 Args::parseVec3(const ofxOscMessage &m, int idx) {
-    glm::vec3 vec;
-    switch (m.getArgType(idx)) {
-        case OFXOSC_TYPE_STRING: {
-            string str = m.getArgAsString(idx);
-            if (isJSONObj(str)) {
-                auto json = ofJson::parse(str);
-                vec.x = json.at("r");
-                vec.y = json.at("g");
-                vec.z = json.at("b");
-            }
-            else if (isJSONArr(str)) {
-                auto json = ofJson::parse(str);
-                vec.x = json[0];
-                vec.y = json[1];
-                vec.z = json[2];
-            }
-            else {
-                // accept expressions?
-            }
-            break;
-        }
-        case OFXOSC_TYPE_INT32:
-        case OFXOSC_TYPE_INT64:
-        case OFXOSC_TYPE_CHAR:
-            vec = glm::vec3(m.getArgAsInt(idx));
-            break;
-        case OFXOSC_TYPE_FLOAT:
-        case OFXOSC_TYPE_DOUBLE:
-            vec = glm::vec3(m.getArgAsFloat(idx));
-            break;
-        default:
-            ofLogError() << "could not parse color: " << m << idx;
-            break;
-    }
-    return vec;
-}
-
-vector<string> Args::parseVec3Expr(const ofxOscMessage &m, int idx) {
+template<>
+vector<string> Args::parseExpr<glm::vec3>(const ofxOscMessage &m, int& idx) {
     vector<string> vec3Expr;
     vec3Expr.resize(3);
     switch (m.getArgType(idx)) {
         case OFXOSC_TYPE_STRING: {
-            string str = m.getArgAsString(idx);
+            string str = m.getArgAsString(idx++);
             if (isJSONArr(str)) {
                 auto json = ofJson::parse(str);
                 if (json.at(0).is_string())
@@ -215,18 +300,48 @@ vector<string> Args::parseVec3Expr(const ofxOscMessage &m, int idx) {
         }
         case OFXOSC_TYPE_BLOB:
             // todo: implement
-            // m.getArgAsBlob(idx);
+            // m.getArgAsBlob(idx++);
             break;
         default:
-            ofLogError() << "could not parse vec3: " << m << idx;
+            ofLogError() << "could not parse vec3 expr: " << m << idx;
             break;
     }
     return vec3Expr;
 }
 
+template<>
+vector<string> Args::parseExpr<glm::mat4>(const ofxOscMessage &m, int& idx) {
+    ofLogError() << "Args::parseExpr<glm::mat4> not implemented";
+}
+
+template<>
+vector<string> Args::parseExpr<ofxExprNode>(const ofxOscMessage &m, int& idx) {
+    vector<string> nodeExpr;
+    nodeExpr.resize(9);
+    vector<string> pos = Args::parseExpr<glm::vec3>(m, idx);
+    nodeExpr[0] = pos[0];
+    nodeExpr[1] = pos[1];
+    nodeExpr[2] = pos[2];
+    vector<string> rota = Args::parseExpr<glm::vec3>(m, idx);
+    nodeExpr[3] = rota[0];
+    nodeExpr[4] = rota[1];
+    nodeExpr[5] = rota[2];
+    vector<string> scale = Args::parseExpr<glm::vec3>(m, idx);
+    nodeExpr[6] = scale[0];
+    nodeExpr[7] = scale[1];
+    nodeExpr[8] = scale[2];
+    return nodeExpr;
+}
+
+template vector<float> Args::parseConst<float>(const ofxOscMessage& m, int idx);
+template vector<ofFloatColor> Args::parseConst<ofFloatColor>(const ofxOscMessage& m, int idx);
+template vector<glm::vec3> Args::parseConst<glm::vec3>(const ofxOscMessage& m, int idx);
+template vector<glm::mat4> Args::parseConst<glm::mat4>(const ofxOscMessage& m, int idx);
+template vector<ofxExprNode> Args::parseConst<ofxExprNode>(const ofxOscMessage& m, int idx);
+
 ofFloatColor Args::parseLerpColor(const ofxOscMessage &m, int firstArg) {
-    ofFloatColor fromColor = Args::parseColor(m, firstArg+2);
-    ofFloatColor toColor = Args::parseColor(m, firstArg+5);
+    ofFloatColor fromColor = Args::parse<ofFloatColor>(m, firstArg+2);
+    ofFloatColor toColor = Args::parse<ofFloatColor>(m, firstArg+5);
     float perc = m.getArgAsFloat(firstArg+1);
     return ofxColorTheory::ColorUtil::lerpLch(fromColor, toColor, perc);
 }
@@ -405,10 +520,10 @@ void Args::handleColor(ofFloatColor* value, const ofxOscMessage& m, int firstArg
         }
     }
     else if (m.getNumArgs() > firstArg+1) {
-        createTween(value, parseColor(m, firstArg), m.getArgAsFloat(firstArg+3));
+        createTween(value, parse<ofFloatColor>(m, firstArg), m.getArgAsFloat(firstArg+3));
     }
     else {
-        *value = parseColor(m, firstArg);
+        *value = parse<ofFloatColor>(m, firstArg);
     }
 }
 
@@ -425,12 +540,12 @@ void Args::handleColor(vector<float>* value, const ofxOscMessage& m, int firstAr
         }
     }
     else if (m.getNumArgs() > firstArg+3) {
-        ofFloatColor targetColor = parseColor(m, firstArg);
+        ofFloatColor targetColor = parse<ofFloatColor>(m, firstArg);
         vector<float> target = {targetColor.r, targetColor.g, targetColor.b};
         createTween(value, target, m.getArgAsFloat(4));
     }
     else {
-        ofFloatColor color = parseColor(m, firstArg);
+        ofFloatColor color = parse<ofFloatColor>(m, firstArg);
         (*value)[0] = color.r;
         (*value)[1] = color.g;
         (*value)[2] = color.b;

@@ -5,6 +5,7 @@
 #include "VarsHolder.h"
 #include "ColorWheelSchemes.h"
 #include "ofxExpr.hpp"
+#include "Args.h"
 
 map<string, BaseVar*> VariablePool::sharedPool;
 map<int, map<string, BaseVar*>> VariablePool::texturePool;
@@ -75,12 +76,12 @@ BaseVar* VariablePool::create(const ofxOscMessage& m, int idx) {
     }
     else if (command.length() >= 18 && command.substr(command.length()-18) == "/var/colors/scheme") {
         Variable<ofFloatColor>* var = new Variable<ofFloatColor>();
-        int numColors = m.getArgAsInt(idx);
-        string schemeName = m.getArgAsString(idx+1);
-        ofFloatColor primaryColor = Args::parseColor(m, idx+2);
+        string schemeName = m.getArgAsString(idx);
+        ofFloatColor primaryColor = Args::parse<ofFloatColor>(m, idx+1);
         shared_ptr<ofxColorTheory::FloatColorWheelScheme> scheme = ofxColorTheory::FloatColorWheelSchemes::get(schemeName);
         if (scheme != NULL) {
             scheme->setPrimaryColor(primaryColor);
+            int numColors = m.getNumArgs() > (idx+2) ? m.getArgAsInt(idx+2) : 1;
             var->set(scheme->interpolate(numColors));
         }
         else {

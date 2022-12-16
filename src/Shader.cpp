@@ -284,8 +284,9 @@ void Shader::setTexture(string name, const ofxOscMessage& m, int arg) {
         delete textures[name];
         textures.erase(name);
     }
-    if (TexturePool::hasShared(name)) {
-        textures[name] = TexturePool::getShared(name);
+    string source = m.getArgAsString(arg);
+    if (TexturePool::hasShared(source)) {
+        textures[name] = TexturePool::getShared(source);
     }
     else {
         textures[name] = TexturePool::getForShader(name, _id);
@@ -303,8 +304,9 @@ void Shader::setBuffer(string name, const ofxOscMessage& m, int arg) {
         delete buffers[name];
         buffers.erase(name);
     }
-    if (VariablePool::hasShared(name)) {
-        buffers[name] = VariablePool::getShared(name);
+    string source = m.getArgAsString(arg);
+    if (VariablePool::hasShared(source)) {
+        buffers[name] = VariablePool::getShared(source);
     }
     else {
         buffers[name] = VariablePool::getOrCreate(name, m, arg, this);

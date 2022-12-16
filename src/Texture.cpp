@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "Layer.h"
 #include "VariablePool.h"
+#include "Args.h"
 
 void Texture::load(string source, const vector<float>& args) {
     _unload();

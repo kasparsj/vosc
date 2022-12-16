@@ -2,53 +2,58 @@
 #include "Args.h"
 #include "ColorUtil.h"
 #include "TexData.h"
+#include "VariablePool.h"
 
 template <typename T>
 void Variable<T>::set(T value) {
+    type = "const";
     this->values.resize(1);
     this->values[0].set(value);
 }
 
 template <typename T>
 void Variable<T>::set(vector<T> value) {
+    type = "const";
     this->values.resize(value.size());
     for (int i=0; i<value.size(); i++) {
         this->values[i].set(value[i]);
     }
 }
 
-template <typename T>
+template<typename T>
+void Variable<T>::set(const string& expr) {
+    type = "expr";
+    this->expr.set(expr);
+    addSharedVars();
+}
+
+template<typename T>
+void Variable<T>::set(const vector<string>& expr) {
+    type = "expr";
+    this->expr.set(expr);
+    addSharedVars();
+}
+
+template<typename T>
+void Variable<T>::addSharedVars() {
+    map<string, BaseVar*>& pool = VariablePool::getPool();
+    for (map<string, BaseVar*>::iterator it=pool.begin(); it!=pool.end(); ++it) {
+        Variable<float>* floatVar = dynamic_cast<Variable<float>*>(it->second);
+        if (floatVar != NULL) {
+            expr.addVar(it->first, floatVar->get());
+        }
+    }
+}
+
+template<typename T>
 void Variable<T>::set(const ofxOscMessage& m, int idx) {
-    values.resize(m.getNumArgs()-idx);
-    for (int i=0; i<values.size(); i++) {
-        values[i].set(m, i+idx);
+    try {
+        set(Args::parseConst<T>(m, idx));
     }
-}
-
-template<>
-void Variable<ofFloatColor>::set(const ofxOscMessage& m, int idx) {
-    int count = m.getArgAsInt(idx);
-    values.resize(count);
-    for (int i=0; i<values.size(); i++) {
-        values[i].set(m, idx+1+i);
-    }
-}
-
-template<>
-void Variable<ofxExprNode>::set(const ofxOscMessage& m, int idx) {
-    int count = m.getArgAsInt(idx);
-    values.resize(count);
-    if ((m.getNumArgs()-idx-1)/3 == count) {
-        // every value has different expression
-        for (int i=0; i<values.size(); i++) {
-            values[i].set(m, idx+1+i*3);
-        }
-    }
-    else {
-        // all values have same expression
-        for (int i=0; i<values.size(); i++) {
-            values[i].set(m, idx+1);
-        }
+    catch (...) {
+        set(Args::parseExpr<T>(m, idx));
+        int count = m.getNumArgs() > (idx+1) ? m.getArgAsInt(idx+1) : 1;
+        values.resize(count);
     }
 }
 
@@ -129,15 +134,32 @@ void Variable<ofxExprNode>::set(const ofxOscMessage& m, int idx) {
 
 template <typename T>
 void Variable<T>::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data) {
-    for (int i=0; i<values.size(); i++) {
-        values[i].update(mics, sounds, notes, i, values.size(), data);
+    if (type == "expr") {
+        float i = 0;
+        float total = values.size();
+        expr.addVar("i", i);
+        expr.addVar("total", total);
+        // todo: add mics, sounds notes, data to expr vars
+        for (i; i<values.size(); i++) {
+            values[i].set(expr.get());
+        }
     }
 }
 
 template <typename T>
 void Variable<T>::afterDraw() {
-    for (int i=0; i<values.size(); i++) {
-        values[i].afterDraw();
+}
+
+template<>
+void Variable<float>::afterDraw() {
+    if (type == "tidal") {
+        for (int i=0; i<values.size(); i++) {
+            float val = values[i].get() - 1.f/8.f;
+            if (val < 0.f) {
+                val = 0.f;
+            }
+            values[i].set(val);
+        }
     }
 }
 

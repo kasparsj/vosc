@@ -6,7 +6,7 @@ ofLight& Lights::create(const ofxOscMessage& m) {
     lights[name] = ofLight();
     ofLight& light = lights.at(name);
     // todo: to allow expressions ofLight needs to be wrapped inside Light class that extends VarsHolder
-    light.setPosition(Args::parseVec3(m, 1));
+    light.setPosition(Args::parse<glm::vec3>(m, 1));
     return light;
 }
 

@@ -2,6 +2,8 @@
 
 #include "BaseVar.h"
 #include "Value.h"
+#include "ofxOsc.h"
+#include "ofxExpr.hpp"
 
 template <typename T>
 class Variable : public BaseVar {
@@ -12,6 +14,9 @@ public:
     }
     void set(T value);
     void set(vector<T> value);
+    void set(const string& expr);
+    void set(const vector<string>& expr);
+    void addSharedVars();
     void set(const ofxOscMessage& m, int idx = 1);
     T& get(int idx = 0) {
         return values.at(idx).get();
@@ -33,4 +38,6 @@ public:
     }
 
     vector<Value<T>> values;
+    string type = "";
+    ofxExpr<T> expr;
 };
