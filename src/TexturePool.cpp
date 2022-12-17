@@ -33,7 +33,7 @@ map<string, shared_ptr<Texture>>& TexturePool::getPool(const VarsHolder* holder)
     throw "VariablePool::getPool incompatible holder: " + ofToString(holder);
 }
 
-void TexturePool::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
+void TexturePool::update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes) {
     for (map<string, shared_ptr<Texture>>::iterator it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
         it->second->update(sounds, notes);
     }

@@ -31,7 +31,7 @@ void GVVideoTex::update(TexData& data) {
         }
         if (_gpuVideo.load(absPath, ofxExtremeGpuVideo::GPU_VIDEO_STREAMING_FROM_STORAGE)) {
             _gv.load(absPath, ofxGvTexture::GPU_VIDEO_STREAMING_FROM_STORAGE);
-            seek(data.timePct);
+            seek(data.getVarPercent("timePct"));
             isPlaying = true;
             prevPath = path;
             data.setSize(_gpuVideo.getWidth(), _gpuVideo.getHeight());
@@ -43,11 +43,11 @@ void GVVideoTex::update(TexData& data) {
         }
     }
     else if (data.getVar("onset")) {
-        seek(data.timePct);
+        seek(data.getVarPercent("timePct"));
     }
     else if (isPlaying) {
-        _gpuVideo.setTime(data.timePct * _gpuVideo.getDuration() + fmodf(ofGetElapsedTimef()-startTime, _gpuVideo.getDuration()));
-        _gv.setTime(data.timePct * _gpuVideo.getDuration() + fmodf(ofGetElapsedTimef()-startTime, _gv.getDuration()));
+        _gpuVideo.setTime(data.getVarPercent("timePct") * _gpuVideo.getDuration() + fmodf(ofGetElapsedTimef()-startTime, _gpuVideo.getDuration()));
+        _gv.setTime(data.getVarPercent("timePct") * _gpuVideo.getDuration() + fmodf(ofGetElapsedTimef()-startTime, _gv.getDuration()));
     }
     aspectRatio = data.aspectRatio;
     _gpuVideo.update();

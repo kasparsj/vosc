@@ -112,7 +112,7 @@ void Texture::clear() {
     }
 }
 
-void Texture::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
+void Texture::update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes) {
     if (isLoaded()) {
         data.update(sounds, notes);
         tex->update(data);
@@ -131,6 +131,59 @@ void Texture::update(const vector<Sound> &sounds, const vector<TidalNote> &notes
     }
 }
 
+void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
+    if (command == "/tex") {
+        load(m);
+    }
+    else if (command == "/tex/choose") {
+        choose(m);
+    }
+    else if (command == "/tex/reload") {
+        reload();
+    }
+    else if (command == "/tex/unload") {
+        unload();
+    }
+    else if (command == "/tex/clear") {
+        clear();
+    }
+    else if (command == "/tex/seek") {
+        setVar("timePct", m, 1);
+    }
+    else if (command == "/tex/set") {
+        string method = m.getArgAsString(1);
+        if (method == "textureWrap") {
+            getTexture().setTextureWrap(m.getArgAsInt(2), m.getArgAsInt(3));
+        }
+        else if (method == "numFrames") {
+            setNumFrames(m.getArgAsInt(2));
+        }
+        else {
+            data.oscCommand(command, m);
+        }
+    }
+    else if (command == "/tex/looper") {
+        setLooper(m);
+    }
+    else if (command == "/tex/color") {
+        setVar("color", m);
+    }
+    // todo: there is no way to multiply tints, therefore texture tint is disabled temporarily
+//    else if (command == "/tex/tint") {
+//        setVar("tint", m);
+//    }
+    else if (command == "/tex/speed") {
+        setVar("speed", m);
+    }
+    else if (command.substr(0, 8) == "/tex/var") {
+        string name = m.getArgAsString(1);
+        setVar(name, m, 2);
+    }
+    else {
+        data.oscCommand(command, m);
+    }
+}
+
 void Texture::drawFrame() {
     curFbo = (curFbo + 1) % frames.size();
     ofFbo& fbo = frames[curFbo];
@@ -140,13 +193,15 @@ void Texture::drawFrame() {
     }
     fbo.begin();
     ofClear(0, 0, 0, 0);
-    texDraw(glm::vec2(0, 0), data.size);
+    texDraw(glm::vec2(0, 0), data.getSize());
     fbo.end();
 }
 
 void Texture::draw(Layer* layer) {
+    const glm::vec3& pos = layer->getVarVec3("pos");
+    const glm::vec2& size = layer->data.getSize();
     if (isLoaded() && layer->delay == 0) {
-        texDraw(layer->getVarVec3("pos"), layer->data.size);
+        texDraw(pos, size);
         data.afterDraw(vars);
     }
     else if (hasTexture(layer->delay)) {
@@ -156,14 +211,14 @@ void Texture::draw(Layer* layer) {
         const ofTexture& tex = getTexture(layer->delay);
         if (data.aspectRatio) {
             if (tex.getWidth() > tex.getHeight()) {
-                tex.draw(layer->getVarVec3("pos"), layer->data.size.x, layer->data.size.x/tex.getWidth() * tex.getHeight());
+                tex.draw(pos, size.x, size.x/tex.getWidth() * tex.getHeight());
             }
             else {
-                tex.draw(layer->getVarVec3("pos"), layer->data.size.y/tex.getHeight() * tex.getWidth(), layer->data.size.y);
+                tex.draw(pos, size.y/tex.getHeight() * tex.getWidth(), size.y);
             }
         }
         else {
-            tex.draw(layer->getVarVec3("pos"), layer->data.size.x, layer->data.size.y);
+            tex.draw(pos, size.x, size.y);
         }
         //ofPopStyle();
     }
@@ -193,9 +248,11 @@ void Texture::reset() {
     }
     vars.clear();
     VariablePool::cleanup(this);
+    setVar("size", glm::vec3());
     setVar("speed", 1.f);
     setVar("color", ofFloatColor(1.f, 1.f));
     setVar("tint", ofFloatColor(1.f, 1.f));
+    setVar("timePct", 0.f);
 }
 
 const ofFbo& Texture::getFrame(int delay) const {

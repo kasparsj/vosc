@@ -21,7 +21,8 @@ public:
     void reload();
     void unload();
     void clear();
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
+    void update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes);
+    void oscCommand(const string& command, const ofxOscMessage &m);
     void draw(Layer* layer);
     void texDraw(const glm::vec2& pos, const glm::vec2 size);
     void reset();

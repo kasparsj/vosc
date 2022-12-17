@@ -8,9 +8,7 @@
 #include "Args.h"
 
 map<string, shared_ptr<BaseVar>> VariablePool::sharedPool;
-map<int, map<string, shared_ptr<BaseVar>>> VariablePool::texturePool;
-map<int, map<string, shared_ptr<BaseVar>>> VariablePool::shaderPool;
-map<int, map<string, shared_ptr<BaseVar>>> VariablePool::layerPool;
+map<int, map<string, shared_ptr<BaseVar>>> VariablePool::holderPool;
 
 bool VariablePool::hasShared(string name) {
     return sharedPool.find(name) != sharedPool.end();
@@ -20,22 +18,24 @@ shared_ptr<BaseVar>& VariablePool::getShared(string name) {
     return sharedPool.at(name);
 }
 
-shared_ptr<BaseVar>& VariablePool::getOrCreateShared(string name, const ofxOscMessage& m, int idx) {
+shared_ptr<BaseVar>& VariablePool::createOrUpdateShared(string name, const ofxOscMessage& m, int idx) {
     if (hasShared(name)) {
-        update(sharedPool[name], m, idx);
+        update(sharedPool.at(name), "/var", m, idx);
     }
     else {
-        sharedPool[name] = create(m, idx);
+        sharedPool[name] = create("/var", m, idx);
     }
     return sharedPool.at(name);
 }
 
 template<typename T>
-Variable<T>* VariablePool::getOrCreateShared(string name) {
+Variable<T>* VariablePool::createOrUpdateShared(string name, T value) {
     if (!hasShared(name)) {
         sharedPool[name] = shared_ptr<BaseVar>(new Variable<T>());
     }
-    return static_cast<Variable<T>*>(sharedPool.at(name).get());
+    Variable<T>* var = static_cast<Variable<T>*>(sharedPool.at(name).get());
+    var->set(value);
+    return var;
 }
 
 shared_ptr<BaseVar> VariablePool::create(const ofxOscMessage& m, int idx) {
@@ -235,30 +235,16 @@ map<string, shared_ptr<BaseVar>>& VariablePool::getPool(const VarsHolder* holder
     if (holder == NULL) {
         return sharedPool;
     }
-    else if (dynamic_cast<const Texture*>(holder) != NULL) {
-        return texturePool[holder->getId()];
-    }
-    else if (dynamic_cast<const Shader*>(holder) != NULL) {
-        return shaderPool[holder->getId()];
-    }
-    else if (dynamic_cast<const Layer*>(holder) != NULL) {
-        return layerPool[holder->getId()];
-    }
-    throw "VariablePool::getPool incompatible holder: " + ofToString(holder);
+    return holderPool[holder->getId()];
 }
 
-void VariablePool::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes) {
+void VariablePool::update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes) {
     for (map<string, shared_ptr<BaseVar>>::iterator it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
-        it->second->update(mics, sounds, notes);
+        it->second->update(inputs, notes);
     }
-    for (map<int, map<string, shared_ptr<BaseVar>>>::iterator it=texturePool.begin(); it!=texturePool.end(); ++it) {
+    for (map<int, map<string, shared_ptr<BaseVar>>>::iterator it=holderPool.begin(); it!=holderPool.end(); ++it) {
         for (map<string, shared_ptr<BaseVar>>::iterator it2=it->second.begin(); it2!=it->second.end(); ++it2) {
-            it2->second->update(mics, sounds, notes);
-        }
-    }
-    for (map<int, map<string, shared_ptr<BaseVar>>>::iterator it=shaderPool.begin(); it!=shaderPool.end(); ++it) {
-        for (map<string, shared_ptr<BaseVar>>::iterator it2=it->second.begin(); it2!=it->second.end(); ++it2) {
-            it2->second->update(mics, sounds, notes);
+            it2->second->update(inputs, notes);
         }
     }
 }
@@ -266,21 +252,13 @@ void VariablePool::update(const vector<Mic> &mics, const vector<Sound> &sounds, 
 void VariablePool::cleanup(const VarsHolder* holder) {
     map<string, shared_ptr<BaseVar>>& pool = getPool(holder);
     pool.clear();
-    if (dynamic_cast<const Texture*>(holder) != NULL) {
-        texturePool.erase(holder->getId());
-    }
-    else if (dynamic_cast<const Shader*>(holder) != NULL) {
-        shaderPool.erase(holder->getId());
-    }
-    else if (dynamic_cast<const Layer*>(holder) != NULL) {
-        layerPool.erase(holder->getId());
-    }
+    holderPool.erase(holder->getId());
 }
 
-template Variable<float>* VariablePool::getOrCreateShared(string name);
-template Variable<glm::vec3>* VariablePool::getOrCreateShared(string name);
-template Variable<glm::mat4>* VariablePool::getOrCreateShared(string name);
-template Variable<ofFloatColor>* VariablePool::getOrCreateShared(string name);
+template Variable<float>* VariablePool::createOrUpdateShared(string name, float value);
+template Variable<glm::vec3>* VariablePool::createOrUpdateShared(string name, glm::vec3 value);
+template Variable<glm::mat4>* VariablePool::createOrUpdateShared(string name, glm::mat4 value);
+template Variable<ofFloatColor>* VariablePool::createOrUpdateShared(string name, ofFloatColor value);
 
 template Variable<float>* VariablePool::getOrCreate(string name, const VarsHolder* holder);
 template Variable<glm::vec3>* VariablePool::getOrCreate(string name, const VarsHolder* holder);

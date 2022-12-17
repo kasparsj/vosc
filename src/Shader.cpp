@@ -154,24 +154,44 @@ bool Shader::loadFromFile(const string& path) {
     return false;
 }
 
-void Shader::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
+void Shader::update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes) {
     for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
         it->second->update();
     }
 }
 
+void Shader::oscCommand(const string& command, const ofxOscMessage& m) {
+    if (command == "/shader") {
+        load(m.getArgAsString(1));
+    }
+    else if (command == "/shader/set") {
+        set(m);
+    }
+    else if (command == "/shader/var") {
+        string name = m.getArgAsString(1);
+        setVar(name, m, 2);
+    }
+    else if (command == "/shader/texture") {
+        setTexture(m);
+    }
+    else if (command == "/shader/buffer") {
+        setBuffer(m);
+    }
+}
+
 void Shader::begin(TexData& data, int delay) {
     if (isLoaded()) {
+        glm::vec2 size = data.getSize();
         if (shadertoy == NULL) {
             shader->begin();
             shader->setUniform1f("time", data.time);
-            shader->setUniform2f("resolution", data.size.x, data.size.y);
+            shader->setUniform2f("resolution", size.x, size.y);
             shader->setUniform1i("random", data.randomSeed);
         }
         else {
             shadertoy->begin();
             shadertoy->setUniform1f("time", data.time);
-            shadertoy->setUniform2f("resolution", data.size.x, data.size.y);
+            shadertoy->setUniform2f("resolution", size.x, size.y);
             shadertoy->setUniform1i("random", data.randomSeed);
         }
         setUniformTextures(textures, delay);

@@ -21,8 +21,9 @@ class WaveClock : public Sketch {
     }
   
     void draw(TexData& data) override{
-        float _w = data.size.x;
-        float _h = data.size.y;
+        glm::vec2 size = data.getSize();
+        float _w = size.x;
+        float _h = size.y;
         float _r = min(_w, _h) - 150;
         _radiusNoise += 0.005;
         _radius = (ofNoise(_radiusNoise, data.randomSeed) * _r) +1;

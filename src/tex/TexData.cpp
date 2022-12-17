@@ -1,10 +1,22 @@
 #include "TexData.h"
 #include "Args.h"
 
-void TexData::update(const vector<Sound> &sounds, const vector<TidalNote> &notes) {
+void TexData::update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes) {
     const float timef = ofGetElapsedTimef();
     time += ((timef - prevTime) * parent->getVar("speed"));
     prevTime = timef;
+}
+
+void TexData::oscCommand(const string& command, const ofxOscMessage &m) {
+    if (command == "/tex/size") {
+        setSize(m);
+    }
+    else if (command == "/tex/set") {
+        set(m);
+    }
+    else if (command == "/tex/fbo") {
+        setFboSettings(m);
+    }
 }
 
 void TexData::set(const ofxOscMessage& m) {

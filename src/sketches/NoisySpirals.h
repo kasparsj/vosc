@@ -5,8 +5,9 @@
 class NoisySpirals : public Sketch {
 public:
     void draw(TexData& data) override {
-        float width = data.size.x;
-        float height = data.size.y;
+        glm::vec2 size = data.getSize();
+        float width = size.x;
+        float height = size.y;
         if (radius >= endAngle) {
             lastx = -999;
             lasty = -999;

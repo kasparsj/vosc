@@ -2,15 +2,20 @@
 
 #include "ofMain.h"
 #include "ofxOsc.h"
+#include "VarsHolder.h"
 
-class Mic {
+class Input : public VarsHolder {
 public:
-    Mic() {
-        maxAmp = 0.17;
+    Input() {
+    }
+    void initAsMic() {
+        setVar<float>("maxAmp", 0.17);
     }
     void setupStream(const ofxOscMessage &m);
     void audioIn(ofSoundBuffer& input);
     virtual void update();
+    virtual void set(const ofxOscMessage& m, int idx = 1) = 0;
+    virtual void oscCommand(const string& command, const ofxOscMessage& m) = 0;
     
     int instNum;
     ofSoundStream soundStream;
@@ -18,5 +23,4 @@ public:
     float ampSmooth;
     float ampScaled;
     vector<float> ampHist;
-    float maxAmp;
 };

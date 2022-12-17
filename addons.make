@@ -1,6 +1,7 @@
 ofxAssimpModelLoader
 ofxAutoReloadedShader
 ofxColorTheory
+ofxDeferredShading
 ofxEasing
 ofxExpr
 ofxHPVPlayer

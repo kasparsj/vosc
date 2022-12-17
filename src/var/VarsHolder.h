@@ -9,22 +9,24 @@ public:
         _id = nextId++;
     }
     virtual ~VarsHolder() {}
-    const shared_ptr<BaseVar>& getVariable(string name) const;
-    bool hasVar(string name) const;
-    float getVar(string name, int idx = 0) const;
-    bool getVarBool(string name, int idx = 0) const;
-    glm::vec3 getVarVec3(string name, glm::vec3 defVal) const;
-    glm::vec3 getVarVec3(string name) const {
+    const shared_ptr<BaseVar>& getVariable(const string& name) const;
+    bool hasVar(const string& name) const;
+    float getVar(const string& name, int idx = 0) const;
+    float getVarPercent(const string& name, int idx = 0) const;
+    bool getVarBool(const string& name, int idx = 0) const;
+    glm::vec3 getVarVec3(const string& name, glm::vec3 defVal) const;
+    glm::vec3 getVarVec3(const string& name) const {
         return getVarVec3(name, glm::vec3());
     }
-    vector<float> getVarVec(string name) const;
-    ofFloatColor getVarColor(string name) const;
+    vector<float> getVarVec(const string& name) const;
+    ofFloatColor getVarColor(const string& name) const;
+    
     template <typename T>
-    Variable<T>* setVar(string name, T value);
+    Variable<T>* setVar(const string& name, T value);
     template <typename T>
-    Variable<T>* setVar(string name, vector<T> value);
-    Variable<float>* setVar(string name, bool value);
-    void setVar(string name, const ofxOscMessage& value, int idx = 1);
+    Variable<T>* setVar(const string& name, vector<T> value);
+    Variable<float>* setVar(const string& name, bool value);
+    void setVar(const string& name, const ofxOscMessage& value, int idx = 1);
     int getId() const {
         return _id;
     }

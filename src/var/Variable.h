@@ -23,7 +23,7 @@ public:
     T get(int idx = 0) const {
         return values.at(idx);
     }
-    virtual void update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data = NULL) override;
+    virtual void update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes) override;
     vector<T> getVec() const {
         vector<T> vec;
         for (int i=0; i<values.size(); i++) {

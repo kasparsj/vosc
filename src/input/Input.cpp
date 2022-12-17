@@ -1,13 +1,13 @@
-#include "Mic.h"
+#include "Input.h"
 
-void Mic::update() {
+void Input::update() {
     ampHist.push_back( ampScaled );
     if( ampHist.size() >= 200 ){
         ampHist.erase(ampHist.begin(), ampHist.begin()+1);
     }
 }
 
-void Mic::setupStream(const ofxOscMessage& m) {
+void Input::setupStream(const ofxOscMessage& m) {
     string name = m.getArgAsString(1);
     int numInputChannels = m.getNumArgs() > 2 ? m.getArgAsInt(2) : 1;
     if (numInputChannels > 0) {
@@ -31,7 +31,7 @@ void Mic::setupStream(const ofxOscMessage& m) {
     }
 }
 
-void Mic::audioIn(ofSoundBuffer& input){
+void Input::audioIn(ofSoundBuffer& input){
     float curVol = 0.0;
     int numCounted = 0;
     int numChan = soundStream.getNumInputChannels();
@@ -47,5 +47,5 @@ void Mic::audioIn(ofSoundBuffer& input){
     
     ampSmooth *= 0.93;
     ampSmooth += 0.07 * amplitude;
-    ampScaled = ofMap(ampSmooth, 0.0, maxAmp, 0.0, 1.0, true);
+    ampScaled = ofMap(ampSmooth, 0.0, getVar("maxAmp"), 0.0, 1.0, true);
 }

@@ -11,16 +11,19 @@ public:
     void setup(VarsHolder* parent) {
         this->parent = parent;
     }
-    void update(const vector<Sound> &sounds, const vector<TidalNote> &notes);
+    void update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes);
+    void oscCommand(const string& command, const ofxOscMessage &m);
     
     glm::vec2 getSize() const {
-        return size;
+        return getVarVec3("size");
     }
     void setSize(float w, float h) {
-        size.x = w;
-        size.y = h;
-        fboSettings.width = size.x;
-        fboSettings.height = size.y;
+        parent->setVar("size", glm::vec3(w, h, 0));
+        fboSettings.width = w;
+        fboSettings.height = h;
+    }
+    void setSize(glm::vec2 size) {
+        setSize(size.x, size.y);
     }
     void setSize(const ofxOscMessage& m) {
         setSize(m.getArgAsFloat(1), m.getArgAsFloat(2));
@@ -32,29 +35,33 @@ public:
     void setFboSettings(const ofxOscMessage& m);
     void allocate(ofFbo& fbo);
     void afterDraw(const map<string, shared_ptr<BaseVar>>& vars);
-    const map<string, shared_ptr<BaseVar>>& getVars() {
+    const map<string, shared_ptr<BaseVar>>& getVars() const {
         return parent->vars;
     }
-    bool hasVar(string name) {
+    bool hasVar(const string& name) const {
         return parent->hasVar(name);
     }
-    float getVar(string name, int idx = 0) {
+    float getVar(const string& name, int idx = 0) const {
         return parent->getVar(name, idx);
     }
-    vector<float> getVarVec(string name) {
+    float getVarPercent(const string& name, int idx = 0) const {
+        return parent->getVarPercent(name, idx);
+    }
+    vector<float> getVarVec(const string& name) const {
         return parent->getVarVec(name);
     }
-    ofFloatColor getVarColor(string name) {
+    glm::vec3 getVarVec3(const string& name) const {
+        return parent->getVarVec3(name);
+    }
+    ofFloatColor getVarColor(const string& name) const {
         return parent->getVarColor(name);
     }
     
-    glm::vec3 size;
     float time = 0;
     float prevTime = 0;
     bool noClear;
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
     bool aspectRatio = true;
-    float timePct = 0;
     int randomSeed = 0;
     
 protected:

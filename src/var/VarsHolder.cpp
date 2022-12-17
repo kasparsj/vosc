@@ -1,15 +1,15 @@
 #include "VarsHolder.h"
 #include "VariablePool.h"
 
-const shared_ptr<BaseVar>& VarsHolder::getVariable(string name) const {
+const shared_ptr<BaseVar>& VarsHolder::getVariable(const string& name) const {
     return vars.at(name);
 }
 
-bool VarsHolder::hasVar(string name) const {
+bool VarsHolder::hasVar(const string& name) const {
     return vars.find(name) != vars.end();
 }
 
-float VarsHolder::getVar(string name, int idx) const {
+float VarsHolder::getVar(const string& name, int idx) const {
     if (hasVar(name)) {
         const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
         if (var != NULL) {
@@ -19,7 +19,18 @@ float VarsHolder::getVar(string name, int idx) const {
     return 0;
 }
 
-bool VarsHolder::getVarBool(string name, int idx) const {
+float VarsHolder::getVarPercent(const string& name, int idx) const {
+    if (hasVar(name)) {
+        const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
+        if (var != NULL) {
+            float val = var->get(idx);
+            return (val > 1.f ? val / 100.f : val);
+        }
+    }
+    return 0;
+}
+
+bool VarsHolder::getVarBool(const string& name, int idx) const {
     if (hasVar(name)) {
         const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
         if (var != NULL) {
@@ -29,7 +40,7 @@ bool VarsHolder::getVarBool(string name, int idx) const {
     return false;
 }
 
-vector<float> VarsHolder::getVarVec(string name) const {
+vector<float> VarsHolder::getVarVec(const string& name) const {
     if (hasVar(name)) {
         const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
         if (var != NULL) {
@@ -39,7 +50,7 @@ vector<float> VarsHolder::getVarVec(string name) const {
     return vector<float>();
 }
 
-glm::vec3 VarsHolder::getVarVec3(string name, glm::vec3 defVal) const {
+glm::vec3 VarsHolder::getVarVec3(const string& name, glm::vec3 defVal) const {
     if (hasVar(name)) {
         const Variable<glm::vec3>* var = dynamic_cast<const Variable<glm::vec3>*>(getVariable(name).get());
         if (var != NULL) {
@@ -49,7 +60,7 @@ glm::vec3 VarsHolder::getVarVec3(string name, glm::vec3 defVal) const {
     return defVal;
 }
 
-ofFloatColor VarsHolder::getVarColor(string name) const {
+ofFloatColor VarsHolder::getVarColor(const string& name) const {
     if (hasVar(name)) {
         const Variable<ofFloatColor>* var = dynamic_cast<const Variable<ofFloatColor>*>(getVariable(name).get());
         if (var != NULL) {
@@ -60,37 +71,37 @@ ofFloatColor VarsHolder::getVarColor(string name) const {
 }
 
 template <typename T>
-Variable<T>* VarsHolder::setVar(string name, T value) {
+Variable<T>* VarsHolder::setVar(const string& name, T value) {
     Variable<T>* var = VariablePool::getOrCreate<T>(name, this);
     var->set(value);
     vars[name] = VariablePool::get(name, this);
     return var;
 }
 
-Variable<float>* VarsHolder::setVar(string name, bool value) {
+Variable<float>* VarsHolder::setVar(const string& name, bool value) {
     return setVar(name, (float) value);
 }
 
 template <typename T>
-Variable<T>* VarsHolder::setVar(string name, vector<T> value) {
+Variable<T>* VarsHolder::setVar(const string& name, vector<T> value) {
     Variable<T>* var = VariablePool::getOrCreate<T>(name, this);
     var->set(value);
     vars[name] = VariablePool::get(name, this);
     return var;
 }
 
-void VarsHolder::setVar(string name, const ofxOscMessage& m, int idx) {
+void VarsHolder::setVar(const string& name, const ofxOscMessage& m, int idx) {
     shared_ptr<BaseVar>& var = VariablePool::createOrUpdate(name, m, idx, this);
     vars[name] = var;
     return var;
 }
 
-template Variable<float>* VarsHolder::setVar(string name, float value);
-template Variable<glm::vec3>* VarsHolder::setVar(string name, glm::vec3 value);
-template Variable<glm::mat4>* VarsHolder::setVar(string name, glm::mat4 value);
-template Variable<ofFloatColor>* VarsHolder::setVar(string name, ofFloatColor value);
+template Variable<float>* VarsHolder::setVar(const string& name, float value);
+template Variable<glm::vec3>* VarsHolder::setVar(const string& name, glm::vec3 value);
+template Variable<glm::mat4>* VarsHolder::setVar(const string& name, glm::mat4 value);
+template Variable<ofFloatColor>* VarsHolder::setVar(const string& name, ofFloatColor value);
 
-template Variable<float>* VarsHolder::setVar(string name, vector<float> value);
-template Variable<glm::vec3>* VarsHolder::setVar(string name, vector<glm::vec3> value);
-template Variable<glm::mat4>* VarsHolder::setVar(string name, vector<glm::mat4> value);
-template Variable<ofFloatColor>* VarsHolder::setVar(string name, vector<ofFloatColor> value);
+template Variable<float>* VarsHolder::setVar(const string& name, vector<float> value);
+template Variable<glm::vec3>* VarsHolder::setVar(const string& name, vector<glm::vec3> value);
+template Variable<glm::mat4>* VarsHolder::setVar(const string& name, vector<glm::mat4> value);
+template Variable<ofFloatColor>* VarsHolder::setVar(const string& name, vector<ofFloatColor> value);

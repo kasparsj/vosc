@@ -21,11 +21,12 @@ class Spiral : public Sketch {
         ofPushStyle();
         ofSetLineWidth(20);
         ofSetColor(data.getVarColor("color"), (int) (strokeAlpha * 0.6));
-        for(float ang = 0; radius <=data.size.x/2.5; ang +=step){
+        glm::vec2 size = data.getSize();
+        for(float ang = 0; radius <= size.x/2.5; ang +=step){
             radius +=radiusIncrement;
             float rad = ofDegToRad(ang);
-            x = data.size.x/2.f + (radius * cos(rad));
-            y = data.size.y/2.f + (radius * sin(rad));
+            x = size.x/2.f + (radius * cos(rad));
+            y = size.y/2.f + (radius * sin(rad));
 
             if (lastx > -999){
                 ofDrawLine(x,y,lastx,lasty);

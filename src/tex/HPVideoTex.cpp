@@ -34,7 +34,7 @@ void HPVideoTex::update(TexData& data) {
         if (hpvPlayer.load(absPath)) {
             //hpvPlayer.setVolume(0);
             hpvPlayer.setLoopState(OF_LOOP_NORMAL);
-            seek(data.timePct);
+            seek(data.getVarPercent("timePct"));
             hpvPlayer.play();
             prevPath = path;
             data.setSize(hpvPlayer.getWidth(), hpvPlayer.getHeight());
@@ -46,7 +46,7 @@ void HPVideoTex::update(TexData& data) {
         }
     }
     else if (data.getVar("onset")) {
-        seek(data.timePct);
+        seek(data.getVarPercent("timePct"));
     }
     aspectRatio = data.aspectRatio;
 }

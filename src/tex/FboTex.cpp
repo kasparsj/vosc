@@ -2,7 +2,8 @@
 #include "Layer.h"
 
 void FboTex::update(TexData& data) {
-    if (!fbo.isAllocated() || (fbo.getWidth() != data.size.x || fbo.getHeight() != data.size.y)) {
+    glm::vec2 size = data.getSize();
+    if (!fbo.isAllocated() || (fbo.getWidth() != size.x || fbo.getHeight() != size.y)) {
         fbo.clear();
         data.allocate(fbo);
     }

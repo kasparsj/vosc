@@ -14,9 +14,9 @@ public:
     static map<string, shared_ptr<BaseVar>>& getPool(const VarsHolder* holder);
     static bool hasShared(string name);
     static shared_ptr<BaseVar>& getShared(string name);
-    static shared_ptr<BaseVar>& getOrCreateShared(string name, const ofxOscMessage& m, int idx = 1);
+    static shared_ptr<BaseVar>& createOrUpdateShared(string name, const ofxOscMessage& m, int idx = 1);
     template<typename T>
-    static Variable<T>* getOrCreateShared(string name);
+    static Variable<T>* createOrUpdateShared(string name, T value);
     static shared_ptr<BaseVar> create(const ofxOscMessage& m, int idx = 1);
     static shared_ptr<BaseVar> create(const string& command, const ofxOscMessage& m, int idx);
     static shared_ptr<BaseVar> create(const ofxOscMessage& m, int idx, size_t size);
@@ -24,12 +24,10 @@ public:
     static void update(shared_ptr<BaseVar>& var, const string& command, const ofxOscMessage& m, int idx);
     static void update(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx, size_t size);
     static void updateColorsScheme(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx);
-    static void update(const vector<Mic>& mics, const vector<Sound>& sounds, const vector<TidalNote>& notes);
+    static void update(const vector<OSCInput>& inputs, const vector<TidalNote>& notes);
     static void cleanup(const VarsHolder* holder);
     
 private:
     static map<string, shared_ptr<BaseVar>> sharedPool;
-    static map<int, map<string, shared_ptr<BaseVar>>> texturePool;
-    static map<int, map<string, shared_ptr<BaseVar>>> shaderPool;
-    static map<int, map<string, shared_ptr<BaseVar>>> layerPool;
+    static map<int, map<string, shared_ptr<BaseVar>>> holderPool;
 };

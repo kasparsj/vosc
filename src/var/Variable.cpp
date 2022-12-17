@@ -170,7 +170,7 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
 //}
 
 //template<>
-//void Value<float>::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, int index, int total, TexData* data) {
+//void Value<float>::update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes, int index, int total, TexData* data) {
 //    if (type == "expr") {
 //        value = expr.get();
 //    }
@@ -245,8 +245,8 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
 //            }
 //        }
 //        else if (type == "mic") {
-//            if (mics.size() > chan) {
-//                value = mics[chan].amplitude;
+//            if (inputs.size() > chan) {
+//                value = inputs[chan].amplitude;
 //            }
 //            else {
 //                value = 0;
@@ -258,7 +258,7 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
 
 
 template <typename T>
-void Variable<T>::update(const vector<Mic> &mics, const vector<Sound> &sounds, const vector<TidalNote> &notes, TexData* data) {
+void Variable<T>::update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes) {
     if (type == "expr") {
         float i = 0;
         float total = values.size();

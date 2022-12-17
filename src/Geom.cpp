@@ -226,6 +226,18 @@ void Geom::choose(const ofxOscMessage& m) {
 void Geom::update() {
 }
 
+void Geom::oscCommand(const string& command, const ofxOscMessage& m) {
+    if (command == "/geom") {
+        load(m);
+    }
+    else if (command == "/geom/choose") {
+        choose(m);
+    }
+    else if (command == "/geom/set") {
+        set(m);
+    }
+}
+
 void Geom::updateBoundingBox() {
     if (usingModel) {
         boundingBox.max = model.getSceneMax() * model.getNormalizedScale();

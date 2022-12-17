@@ -22,7 +22,8 @@ void ShaderTex::update(TexData& data) {
         ofClear(0, 0, 0, 0);
     }
     begin(data);
-    ofDrawRectangle(0, 0, data.size.x, data.size.y);
+    glm::vec2 size = data.getSize();
+    ofDrawRectangle(0, 0, size.x, size.y);
     end();
     fbo.end();
     ofDisableBlendMode();
