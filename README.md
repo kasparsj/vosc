@@ -1,8 +1,8 @@
-# osc_vj
+# vosc
 
 **This is work in progress!**
 
-osc_vj is a visuals/vjing 2D/3D graphics engine that can be controlled via OSC commands.
+vosc is a visuals/vjing 2D/3D graphics engine that can be controlled via OSC commands.
 
 It is mainly used within live-coding scenarios sending OSC from SuperCollider / TidalCycles.
 
