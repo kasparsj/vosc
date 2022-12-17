@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "ofxImGui.h"
 #include "Logger.h"
-#include "OSCReceiver.hpp"
+#include "VOSC.hpp"
 
 class ofApp : public ofBaseApp {
 
@@ -26,7 +26,7 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
     
-    OSCReceiver receiver;
+    VOSC vosc;
     
     bool showConsole = false;
     std::shared_ptr<Logger> console;

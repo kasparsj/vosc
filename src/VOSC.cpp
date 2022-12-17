@@ -1,4 +1,4 @@
-#include "OSCReceiver.hpp"
+#include "VOSC.hpp"
 #include "Args.h"
 #include "VariablePool.h"
 #include "ofxHPVPlayer.h"
@@ -11,7 +11,7 @@
 #include "ofxUltralight.h"
 #endif
 
-void OSCReceiver::setup(unsigned int port) {
+void VOSC::setup(unsigned int port) {
     receiver.setup(port);
     camera.setup();
     setupLayers(INITIAL_VISUALS);
@@ -30,7 +30,7 @@ void OSCReceiver::setup(unsigned int port) {
     ofLog() << ("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 }
 
-void OSCReceiver::setupLayers(int numVisuals) {
+void VOSC::setupLayers(int numVisuals) {
     layers.resize(numVisuals);
     for (int i=0; i<layers.size(); i++) {
         if (layers[i] == NULL) {
@@ -40,7 +40,7 @@ void OSCReceiver::setupLayers(int numVisuals) {
     }
 }
 
-void OSCReceiver::layoutLayers(Layout layout) {
+void VOSC::layoutLayers(Layout layout) {
     this->layout = layout;
     for (int i=0; i<layers.size(); i++) {
         // todo: add support for animation
@@ -48,7 +48,7 @@ void OSCReceiver::layoutLayers(Layout layout) {
     }
 }
 
-void OSCReceiver::update() {
+void VOSC::update() {
     camera.preUpdate();
     parseMessages();
     for (int i=0; i<inputs.size(); i++) {
@@ -70,7 +70,7 @@ void OSCReceiver::update() {
 #endif
 }
 
-void OSCReceiver::draw() {
+void VOSC::draw() {
     beginDraw();
     
     int totalVisible = 0;
@@ -95,7 +95,7 @@ void OSCReceiver::draw() {
     }
 }
 
-void OSCReceiver::beginDraw() {
+void VOSC::beginDraw() {
     ofPushMatrix();
     if (camera.isEnabled()) {
         ofEnableDepthTest();
@@ -109,14 +109,14 @@ void OSCReceiver::beginDraw() {
     ofClear(0, 0, 0, 0);
 }
 
-void OSCReceiver::endDraw() {
+void VOSC::endDraw() {
     post.end();
     ofDisableLighting();
     ofDisableDepthTest();
     ofPopMatrix();
 }
 
-void OSCReceiver::parseMessages(){
+void VOSC::parseMessages(){
     while (receiver.hasWaitingMessages()) {
         ofxOscMessage m;
         receiver.getNextMessage(m);
@@ -128,7 +128,7 @@ void OSCReceiver::parseMessages(){
     }
 }
 
-bool OSCReceiver::checkOnset() {
+bool VOSC::checkOnset() {
     bool isOnset;
     if (tidal->notes.size()) {
         isOnset = true;
@@ -144,7 +144,7 @@ bool OSCReceiver::checkOnset() {
     return isOnset;
 }
 
-void OSCReceiver::parseMessage(const ofxOscMessage &m) {
+void VOSC::parseMessage(const ofxOscMessage &m) {
     string command = m.getAddress();
     if (command == "/inputs") {
         inputs.resize(m.getArgAsInt(0));
@@ -188,7 +188,7 @@ void OSCReceiver::parseMessage(const ofxOscMessage &m) {
     }
 }
 
-void OSCReceiver::processQueue() {
+void VOSC::processQueue() {
     while (messageQueue.size()) {
         ofxOscMessage &m = messageQueue[0];
         string command = m.getAddress();
@@ -247,7 +247,7 @@ void OSCReceiver::processQueue() {
     }
 }
 
-void OSCReceiver::invalidCommand(const ofxOscMessage& m) {
+void VOSC::invalidCommand(const ofxOscMessage& m) {
     ofLogError() << "command not recognized: " << m;
     for (int i=0; i<m.getNumArgs(); i++) {
         if (m.getArgType(i) == OFXOSC_TYPE_BLOB) {
@@ -271,7 +271,7 @@ Layout parseLayout(const ofxOscMessage &m, int idx)
     return layout;
 }
 
-void OSCReceiver::layersCommand(string command, const ofxOscMessage& m) {
+void VOSC::layersCommand(string command, const ofxOscMessage& m) {
     if (command == "/layers") {
         setupLayers(m.getArgAsInt(0));
         if (m.getNumArgs() > 1) {
@@ -293,7 +293,7 @@ void OSCReceiver::layersCommand(string command, const ofxOscMessage& m) {
     }
 }
 
-void OSCReceiver::lightCommand(string command, const ofxOscMessage& m) {
+void VOSC::lightCommand(string command, const ofxOscMessage& m) {
     if (command == "/light") {
         Lights::get().create(m);
     }
@@ -302,7 +302,7 @@ void OSCReceiver::lightCommand(string command, const ofxOscMessage& m) {
     }
 }
 
-void OSCReceiver::allLayersCommand(string command, const ofxOscMessage &m) {
+void VOSC::allLayersCommand(string command, const ofxOscMessage &m) {
     for (int i=0; i<layers.size(); i++) {
         layers[i]->oscCommand(command, m);
     }
@@ -330,7 +330,7 @@ retVals parseIndex(const ofxOscMessage &m) {
     return retVals { all, idx };
 }
 
-void OSCReceiver::inputsCommand(string command, const ofxOscMessage &m) {
+void VOSC::inputsCommand(string command, const ofxOscMessage &m) {
     auto [all, idx] = parseIndex(m);
     if (all) {
         for (int i=0; i<inputs.size(); i++) {
@@ -354,7 +354,7 @@ void OSCReceiver::inputsCommand(string command, const ofxOscMessage &m) {
     }
 }
 
-void OSCReceiver::midiCommand(string command, const ofxOscMessage &m) {
+void VOSC::midiCommand(string command, const ofxOscMessage &m) {
     if (command == "/midi") {
         
     }
@@ -367,7 +367,7 @@ void OSCReceiver::midiCommand(string command, const ofxOscMessage &m) {
     }
 }
 
-void OSCReceiver::createPostPass(string passName) {
+void VOSC::createPostPass(string passName) {
     if (passName == "bloom") {
         post.createPass<itg::BloomPass>();
     }
@@ -460,7 +460,7 @@ void OSCReceiver::createPostPass(string passName) {
 //    }
 }
 
-void OSCReceiver::createPostPass(int passId) {
+void VOSC::createPostPass(int passId) {
     switch (static_cast<PostPass>(passId)) {
         case PostPass::BLOOM:
             post.createPass<itg::BloomPass>();
@@ -555,7 +555,7 @@ void OSCReceiver::createPostPass(int passId) {
     }
 }
 
-void OSCReceiver::keyPressed(int key) {
+void VOSC::keyPressed(int key) {
     switch (key) {
         case 'f':
             ofToggleFullscreen();
@@ -612,13 +612,13 @@ void OSCReceiver::keyPressed(int key) {
     }
 }
 
-void OSCReceiver::windowResized(int w, int h) {
+void VOSC::windowResized(int w, int h) {
     if (w > 0 && h > 0) {
         post.init(ofGetWidth(), ofGetHeight());
     }
     layoutLayers(layout);
 }
 
-void OSCReceiver::exit() {
+void VOSC::exit() {
     HPV::DestroyHPVEngine();
 }

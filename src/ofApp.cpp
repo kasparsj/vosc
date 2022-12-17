@@ -9,7 +9,7 @@ void ofApp::setup(){
     gui.setup();
     ofDisableArbTex();
 
-    receiver.setup(33333);
+    vosc.setup(33333);
     
     console = std::make_shared<Logger>();
     ofSetLoggerChannel(console);
@@ -17,12 +17,12 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    receiver.update();
+    vosc.update();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    receiver.draw();
+    vosc.draw();
     drawConsole();
 }
 
@@ -30,7 +30,7 @@ void ofApp::drawConsole() {
     if (console->hasNewErrors()) {
         showConsole = true;
     }
-    if (receiver.showDebug || showConsole) {
+    if (vosc.showDebug || showConsole) {
         gui.begin();
         
         console->draw(&showConsole);
@@ -40,7 +40,7 @@ void ofApp::drawConsole() {
 }
 
 void ofApp::exit() {
-    receiver.exit();
+    vosc.exit();
 }
 
 //--------------------------------------------------------------
@@ -50,7 +50,7 @@ void ofApp::keyPressed(int key){
             showConsole = !showConsole;
             break;
         default:
-            receiver.keyPressed(key);
+            vosc.keyPressed(key);
             break;
     }
 }
@@ -92,7 +92,7 @@ void ofApp::mouseExited(int x, int y){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
-    receiver.windowResized(w, h);
+    vosc.windowResized(w, h);
 }
 
 //--------------------------------------------------------------

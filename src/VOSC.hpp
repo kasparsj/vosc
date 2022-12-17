@@ -10,7 +10,7 @@
 #include "ofxMidi.h"
 #include "Inspector.hpp"
 
-class OSCReceiver {
+class VOSC {
 public:
     void setup(unsigned int port);
     void update();
