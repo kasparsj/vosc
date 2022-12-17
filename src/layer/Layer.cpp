@@ -308,6 +308,7 @@ void Layer::reset() {
     unload();
     shader.reset();
     setVar("visible", true);
+    setVar("speed", 1.f);
     setVar("tint", ofFloatColor(1.f, 1.f));
     resetTransform();
     setVar("visibleThresh", 1.f);

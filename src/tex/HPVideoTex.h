@@ -23,9 +23,6 @@ public:
     ofTexture & getTexture() override {
         return *hpvPlayer.getTexturePtr();
     }
-    const ofTexture & getTexture() const override {
-        return ofTexture();
-    }
     bool isUsingTexture() const override {
         return true;
     }

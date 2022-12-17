@@ -56,26 +56,19 @@ public:
     shared_ptr<Texture>& getDefaultTexture();
     void setDefaultTexture(shared_ptr<Texture>& tex);
     void setTexture(const ofxOscMessage& m);
-    void setTexture(string name, const ofxOscMessage& m, int arg = 1);
+    void setTexture(const string& name, const ofxOscMessage& m, int arg = 1);
     void setBuffer(const ofxOscMessage& m);
-    void setBuffer(string name, const ofxOscMessage& m, int arg = 1);
-    void setUniform1i(string name, int v1) {
-        if (shadertoy == NULL) {
-            shader->setUniform1i(name, v1);
-        }
-        else {
-            shadertoy->setUniform1i(name, v1);
-        }
-    }
-    void setUniform2f(string name, float v1, float v2) {
-        if (shadertoy == NULL) {
-            shader->setUniform2f(name, v1, v2);
-        }
-        else {
-            shadertoy->setUniform2f(name, v1, v2);
-        }
-    }
+    void setBuffer(const string& name, const ofxOscMessage& m, int arg = 1);
+    void setUniform1i(const string& name, int v1);
+    void setUniform2f(const string& name, float v1, float v2);
+    void setUniformTexture(const string& name, ofTexture& tex, int loc = 0);
     void set(const ofxOscMessage& m);
+    ofShader& getShader() {
+        return *shader;
+    }
+    ofxShadertoy& getShadertoy() {
+        return *shadertoy;
+    }
     
 private:
     void setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay = 0);

@@ -16,21 +16,20 @@
 ~visuals.send('/tex/fbo', "particlesData", "maxFilter", 0x2600);
 ~visuals.send('/tex/set', "particlesData", "blendMode", 0);
 ~visuals.send('/tex', "particlesData", "shader_pp:particles/Update");
-~visuals.send('/tex/uniform', "particlesData", "timeStep", 1.0 / 60.0);
-~visuals.send('/tex/uniform', "particlesData", "particleMaxAge", 10);
-~visuals.send('/tex/uniform', "particlesData", "noisePositionScale", 1.5);
-~visuals.send('/tex/uniform', "particlesData", "noiseTimeScale", 1.0 / 4000.0);
-~visuals.send('/tex/uniform', "particlesData", "noisePersistence", 0.2);
-~visuals.send('/tex/uniform', "particlesData", "noiseMagnitude", 0.075);
-~visuals.send('/tex/uniform', "particlesData", "baseSpeed", 0.5, 0, 0);
+~visuals.send('/tex/var', "particlesData", "timeStep", 1.0 / 60.0);
+~visuals.send('/tex/var', "particlesData", "particleMaxAge", 10);
+~visuals.send('/tex/var', "particlesData", "noisePositionScale", 1.5);
+~visuals.send('/tex/var', "particlesData", "noiseTimeScale", 1.0 / 4000.0);
+~visuals.send('/tex/var', "particlesData", "noisePersistence", 0.2);
+~visuals.send('/tex/var', "particlesData", "noiseMagnitude", 0.075);
+~visuals.send('/tex/var', "particlesData", "baseSpeed", 0.5, 0, 0);
 
 ~visuals.send('/shader', 0, "particles/DrawInstancedGeometry");
 ~visuals.send('/tex', 0, "particlesData");
-//~visuals.send('', "u_resolution", particleDataFbo.source()->getWidth(), particleDataFbo.source()->getHeight() );
-~visuals.send('/shader/uniform', 0, "particleMaxAge", 10);
-//~visuals.send('', "numLights", 1 );
-~visuals.send('/shader/uniform', 0, "particleStartColor", 255, 255, 255);
-~visuals.send('/shader/uniform', 0, "particleEndColor", 0, 0, 0);
+~visuals.send('/shader/var', 0, "particleMaxAge", 10);
+~visuals.send('/shader/var', 0, "particleStartColor", 1.0, 1.0, 1.0, 1.0);
+~visuals.send('/shader/var', 0, "particleEndColor", 0, 0, 0, 0);
+~visuals.send('/shader/var', 0, "texSize", 128, 128);
 
 ~visuals.send('/cam', "easy");
 )

@@ -17,6 +17,8 @@ public:
     void draw();
     void exit();
     
+    void mousePressed(int x, int y, int button);
+    void mouseReleased(int x, int y, int button);
     void keyPressed(int key);
     void windowResized(int w, int h);
     

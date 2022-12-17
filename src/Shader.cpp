@@ -167,7 +167,7 @@ void Shader::oscCommand(const string& command, const ofxOscMessage& m) {
     else if (command == "/shader/set") {
         set(m);
     }
-    else if (command == "/shader/var") {
+    else if (command == "/shader/var" || command == "/shader/uniform") {
         string name = m.getArgAsString(1);
         setVar(name, m, 2);
     }
@@ -221,8 +221,12 @@ void Shader::setUniformTextures(const map<string, shared_ptr<Texture>>& textures
     int texLoc = 0;
     if (shadertoy == NULL) {
         for (map<string, shared_ptr<Texture>>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
-            if (it->second->hasTexture(delay)) {
-                shader->setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
+            shared_ptr<Texture> tex = it->second;
+            if (tex->hasTexture(delay)) {
+                for (int i=0; i<tex->getNumTextures(); i++) {
+                    string name = i == 0 ? it->first : it->first + ofToString(i);
+                    shader->setUniformTexture(name, tex->getTexture(delay, i), texLoc++);
+                }
             }
         }
         for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
@@ -231,8 +235,12 @@ void Shader::setUniformTextures(const map<string, shared_ptr<Texture>>& textures
     }
     else {
         for (map<string, shared_ptr<Texture>>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
-            if (it->second->hasTexture(delay)) {
-                shadertoy->setUniformTexture(it->first, it->second->getTexture(delay), texLoc++);
+            shared_ptr<Texture> tex = it->second;
+            if (tex->hasTexture(delay)) {
+                for (int i=0; i<tex->getNumTextures(); i++) {
+                    string name = i == 0 ? it->first : it->first + ofToString(i);
+                    shader->setUniformTexture(name, tex->getTexture(delay), texLoc++);
+                }
             }
         }
         for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
@@ -353,7 +361,7 @@ void Shader::setTexture(const ofxOscMessage& m) {
     setTexture(name, m, 2);
 }
 
-void Shader::setTexture(string name, const ofxOscMessage& m, int arg) {
+void Shader::setTexture(const string& name, const ofxOscMessage& m, int arg) {
     if (textures.find(name) != textures.end()) {
         textures.erase(name);
     }
@@ -372,11 +380,38 @@ void Shader::setBuffer(const ofxOscMessage& m) {
     setBuffer(name, m, 2);
 }
 
-void Shader::setBuffer(string name, const ofxOscMessage& m, int arg) {
+void Shader::setBuffer(const string& name, const ofxOscMessage& m, int arg) {
     if (buffers.find(name) != buffers.end()) {
         buffers.erase(name);
     }
     buffers[name] = make_shared<Buffer>(name, m, arg, this);
+}
+
+void Shader::setUniform1i(const string& name, int v1) {
+    if (shadertoy == NULL) {
+        shader->setUniform1i(name, v1);
+    }
+    else {
+        shadertoy->setUniform1i(name, v1);
+    }
+}
+
+void Shader::setUniform2f(const string& name, float v1, float v2) {
+    if (shadertoy == NULL) {
+        shader->setUniform2f(name, v1, v2);
+    }
+    else {
+        shadertoy->setUniform2f(name, v1, v2);
+    }
+}
+
+void Shader::setUniformTexture(const string& name, ofTexture& tex, int loc) {
+    if (shadertoy == NULL) {
+        shader->setUniformTexture(name, tex, loc);
+    }
+    else {
+        shadertoy->setUniformTexture(name, tex, loc);
+    }
 }
 
 void Shader::set(const ofxOscMessage& m) {

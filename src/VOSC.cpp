@@ -555,6 +555,18 @@ void VOSC::createPostPass(int passId) {
     }
 }
 
+void VOSC::mousePressed(int x, int y, int button) {
+    if (showDebug) {
+        inspector.mousePressed(x, y, button);
+    }
+}
+
+void VOSC::mouseReleased(int x, int y, int button) {
+    if (showDebug) {
+        inspector.mouseReleased(x, y, button);
+    }
+}
+
 void VOSC::keyPressed(int key) {
     switch (key) {
         case 'f':

@@ -175,7 +175,7 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
     else if (command == "/tex/speed") {
         setVar("speed", m);
     }
-    else if (command.substr(0, 8) == "/tex/var") {
+    else if (command == "/tex/var" || command == "/tex/uniform") {
         string name = m.getArgAsString(1);
         setVar(name, m, 2);
     }
@@ -276,28 +276,40 @@ bool Texture::hasTexture(int delay) const {
     return fbo.isAllocated() && fbo.getTexture().isAllocated();
 }
 
-const ofTexture& Texture::getTexture(int delay) const {
+const ofTexture& Texture::getTexture(int delay, int att) const {
     if (numFrames <= 1) {
         if (looper == NULL) {
-            return tex->getTexture();
+            return tex->getTexture(att);
         }
         else {
-            return looper->getFbo().getTexture();
+            return looper->getFbo().getTexture(att);
         }
     }
-    return getFrame(delay).getTexture();
+    return getFrame(delay).getTexture(att);
 }
 
-ofTexture& Texture::getTexture(int delay) {
+int Texture::getNumTextures(int delay) const {
     if (numFrames <= 1) {
         if (looper == NULL) {
-            return tex->getTexture();
+            return tex->getNumTextures();
         }
         else {
-            return looper->getFbo().getTexture();
+            return looper->getFbo().getNumTextures();
         }
     }
-    return getFrame(delay).getTexture();
+    return getFrame(delay).getNumTextures();
+}
+
+ofTexture& Texture::getTexture(int delay, int att) {
+    if (numFrames <= 1) {
+        if (looper == NULL) {
+            return tex->getTexture(att);
+        }
+        else {
+            return looper->getFbo().getTexture(att);
+        }
+    }
+    return getFrame(delay).getTexture(att);
 }
 
 ofPixels& Texture::getPixels() const {

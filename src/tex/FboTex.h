@@ -20,6 +20,9 @@ public:
     bool isUsingTexture() const override {
         return fbo.isUsingTexture();
     }
+    virtual int getNumTextures() override {
+        return fbo.getNumTextures();
+    }
     ofPixels& getPixels() override {
         fbo.readToPixels(pixels);
         return pixels;

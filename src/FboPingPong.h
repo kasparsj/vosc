@@ -21,6 +21,7 @@ class FboPingPong
 		void allocate( ofFbo::Settings _settings, ofColor _clearColor = ofColor(255,255,255) );
 	
 		ofFbo* source() { return sourceBuffer;	}
+        const ofFbo* source() const { return sourceBuffer;    }
 		ofFbo* dest()	{ return destBuffer;	}
 	
 		void draw( glm::vec2 _pos, float _width, bool _drawBack = false );

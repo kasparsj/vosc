@@ -16,8 +16,9 @@ in vec2 texcoord;
 
 uniform vec2 resolution;
 uniform float time;
-uniform sampler2D tex0;
+uniform sampler2D tex;
 uniform sampler2D tex1;
+uniform vec2 texSize;
 uniform float particleMaxAge;
 uniform vec4 particleStartColor;
 uniform vec4 particleEndColor;
@@ -35,11 +36,11 @@ void main ()
 {
 	// Figure out the texture coordinate our data is on from the instance ID
 	vec2 texCoord;
-	texCoord.x = mod(gl_InstanceID, resolution.x) / resolution.x;
-	texCoord.y = floor(gl_InstanceID / resolution.x) / resolution.y;
+	texCoord.x = mod(gl_InstanceID, texSize.x) / texSize.x;
+	texCoord.y = floor(gl_InstanceID / texSize.x) / texSize.y;
 	
 	// Grab our data
-	vec4 particleData = texture( tex0, texCoord );
+	vec4 particleData = texture( tex, texCoord );
 	vec3 particleVel = texture( tex1, texCoord ).xyz;
 
 	float ageFrac = particleData.w / particleMaxAge;

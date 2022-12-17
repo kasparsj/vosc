@@ -9,10 +9,10 @@ void ofApp::setup(){
     gui.setup();
     ofDisableArbTex();
 
-    vosc.setup(33333);
-    
     console = std::make_shared<Logger>();
     ofSetLoggerChannel(console);
+    
+    vosc.setup(33333);
 }
 
 //--------------------------------------------------------------
@@ -72,12 +72,12 @@ void ofApp::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
-
+    vosc.mousePressed(x, y, button);
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
-
+    vosc.mouseReleased(x, y, button);
 }
 
 //--------------------------------------------------------------

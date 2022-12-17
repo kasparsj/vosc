@@ -30,8 +30,9 @@ public:
         return tex->isFrameNew();
     }
     void setNumFrames(int value);
-    const ofTexture& getTexture(int delay = 0) const;
-    ofTexture& getTexture(int delay = 0);
+    int getNumTextures(int delay = 0) const;
+    const ofTexture& getTexture(int delay = 0, int att = 0) const;
+    ofTexture& getTexture(int delay = 0, int att = 0);
     bool hasTexture(int delay = 0) const;
     ofPixels& getPixels() const;
     bool isLoaded() const {

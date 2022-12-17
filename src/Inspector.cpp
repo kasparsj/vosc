@@ -42,8 +42,8 @@ void Inspector::drawDebugLayer(int i) {
     ofPushStyle();
     debugGeom(i);
     ofPopStyle();
-    
     ofTranslate(0, 140);
+    
     ofDrawBitmapString("Default Texture", 0, -20);
     ofPushStyle();
     if (layers->at(i)->shader.hasDefaultTexture()) {
@@ -53,8 +53,15 @@ void Inspector::drawDebugLayer(int i) {
         debugEmpty("not loaded");
     }
     ofPopStyle();
-    
     ofTranslate(0, 140);
+    
+    ofPushStyle();
+    ofNoFill();
+    ofDrawRectangle(-10, -35, 190, 25);
+    ofDrawBitmapString("Print Shader Uniforms", 0, -20);
+    ofPopStyle();
+    ofTranslate(0, 30);
+    
     ofDrawBitmapString("Shader Textures", 0, -20);
     ofPushStyle();
     debugShaderTextures(i);
@@ -84,27 +91,33 @@ void Inspector::debugGeom(int i) {
 }
 
 void Inspector::debugGlobalTextures() {
+    ofPushMatrix();
     map<string, shared_ptr<Texture>>& pool = TexturePool::getPool(NULL);
     for (map<string, shared_ptr<Texture>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
         debugTexture(it->second->getTexture());
         ofTranslate(120, 0);
     }
+    ofPopMatrix();
 }
 
 void Inspector::debugShaderTextures(int i) {
+    ofPushMatrix();
     const map<string, shared_ptr<Texture>>& textures = layers->at(i)->shader.getTextures();
     for (map<string, shared_ptr<Texture>>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
         debugTexture(it->second->getTexture());
         ofTranslate(120, 0);
     }
+    ofPopMatrix();
 }
 
 void Inspector::debugShaderBuffers(int i) {
+    ofPushMatrix();
     const map<string, shared_ptr<Buffer>>& buffers = layers->at(i)->shader.getBuffers();
     for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
         debugTexture(it->second->getTexture());
         ofTranslate(120, 0);
     }
+    ofPopMatrix();
 }
 
 void Inspector::debugTexture(const ofTexture& tex) {
@@ -150,4 +163,22 @@ void Inspector::drawAmplitude(const OSCInput& input) {
     }
     ofEndShape(false);
     ofPopStyle();
+}
+
+void Inspector::mousePressed(int x, int y, int button) {
+}
+
+void Inspector::mouseReleased(int x, int y, int button) {
+    if (x > 10 && x < 200 && y > 305 && y < 330) {
+        layers->at(debugLayer)->shader.getShader().printActiveUniforms();
+    }
+}
+
+void Inspector::keyPressed(int key) {
+    if (key == '0') {
+        debugLayer = -1;
+    }
+    else {
+        debugLayer = key - '1';
+    }
 }

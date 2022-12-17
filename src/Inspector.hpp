@@ -8,14 +8,9 @@ class Inspector {
 public:
     void inspect(const vector<Layer*>& layers, const vector<OSCInput>& inputs);
     
-    void keyPressed(int key) {
-        if (key == '0') {
-            debugLayer = -1;
-        }
-        else {
-            debugLayer = key - '1';
-        }
-    }
+    void mousePressed(int x, int y, int button);
+    void mouseReleased(int x, int y, int button);
+    void keyPressed(int key);
 
 private:
     void drawGLVersion();

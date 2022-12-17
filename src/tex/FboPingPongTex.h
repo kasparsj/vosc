@@ -13,13 +13,22 @@ public:
         return fbo.source()->getTexture();
     }
     virtual const ofTexture & getTexture() const override {
-        return ofTexture();
+        return fbo.source()->getTexture();
     }
     void setUseTexture(bool bUseTex) override {
         /*irrevelant*/
     }
     bool isUsingTexture() const override {
         return true;
+    }
+    virtual int getNumTextures() override {
+        return fbo.source()->getNumTextures();
+    }
+    virtual ofTexture & getTexture(int att) override {
+        return fbo.source()->getTexture(att);
+    }
+    virtual const ofTexture & getTexture(int att) const override {
+        return fbo.source()->getTexture(att);
     }
     ofPixels& getPixels() override {
         fbo.source()->readToPixels(pixels);

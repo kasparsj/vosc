@@ -28,6 +28,21 @@ public:
     bool isUsingTexture() const override {
         return false;
     }
+    virtual int getNumTextures() {
+        return isUsingTexture() ? 1 : 0;
+    }
+    virtual ofTexture& getTexture() override {
+        throw "abstract function Tex::getTexture called";
+    }
+    virtual const ofTexture& getTexture() const override {
+        throw "abstract function Tex::getTexture called";
+    }
+    virtual ofTexture& getTexture(int att) {
+        return this->getTexture();
+    }
+    virtual const ofTexture& getTexture(int att) const {
+        return this->getTexture();
+    }
     virtual ofPixels& getPixels() override {
         return pixels;
     }

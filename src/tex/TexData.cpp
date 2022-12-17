@@ -44,7 +44,7 @@ void TexData::setFboSettings(const ofxOscMessage &m) {
     mapping["maxFilter"] = [](int v, ofFbo::Settings& a) { a.maxFilter = v; };
     string key = m.getArgAsString(1);
     int value = m.getArgAsInt(2);
-    if (mapping.find(key) == mapping.end()) {
+    if (mapping.find(key) != mapping.end()) {
         mapping[key](value, fboSettings);
     }
 }

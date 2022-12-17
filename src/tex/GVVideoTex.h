@@ -21,7 +21,7 @@ public:
         return _gv.getTexture();
     }
     const ofTexture & getTexture() const override {
-        // todo: throw error
+        throw "GVVideoTex::getTexture const not implemented";
     }
     bool isUsingTexture() const override {
         return true;

@@ -1,11 +1,18 @@
 #version 150
 
 // Hmm, do we really need to give the path to the shader if it's in the same folder?
-#pragma include "../include/ShaderHelpers.glslinc"
-#pragma include "../include/SimplexNoiseDerivatives4D.glslinc"
+#pragma include "../include/ShaderHelpers.glsl"
+#pragma include "../include/SimplexNoiseDerivatives4D.glsl"
 
-uniform sampler2D tex0;
-uniform sampler2D tex1;
+in VertexAttrib {
+    vec4 position;
+    vec4 color;
+    vec3 normal;
+    vec2 texcoord;
+} vertex;
+
+uniform sampler2D srctex;
+uniform sampler2D srctex1;
 
 uniform float time;
 uniform float timeStep;
@@ -20,12 +27,14 @@ uniform vec3 baseSpeed = vec3( 0.5, 0.0, 0.0 );
 
 const int OCTAVES = 3;
 
+out vec4 outData[gl_MaxDrawBuffers];
+
 // -----------------------------------------------------------
 void main (void)
 {
-	vec2 texCoord = gl_TexCoord[0].st;
+	vec2 texCoord = vertex.texcoord;
 	
-	vec4 posAndAge = texture( tex0, texCoord );
+	vec4 posAndAge = texture( srctex, texCoord );
 	
 	vec3 pos = posAndAge.xyz;
 	float age = posAndAge.w;
@@ -51,8 +60,8 @@ void main (void)
 	
 	pos = newPos;
 	
-	gl_FragData[0] = vec4( pos, age );
-	gl_FragData[1] = vec4( vel, 1.0 );
+    outData[0] = vec4( pos, age );
+    outData[1] = vec4( vel, 1.0 );
 	
 }
 

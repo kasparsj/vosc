@@ -4,7 +4,7 @@
 #include "ofxTidalCycles.h"
 #include "OSCInput.h"
 #include "Config.h"
-#include "LayerData.h"
+#include "TexData.h"
 #include "Geom.h"
 #include "LayerShader.h"
 #include "GeomPool.h"
@@ -44,7 +44,7 @@ public:
     
     int index;
     Geom* geom = NULL;
-    LayerData data;
+    TexData data;
     LayerShader shader;
     ofAlignHorz alignH;
     ofAlignVert alignV;

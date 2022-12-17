@@ -26,7 +26,10 @@ void ShaderPingPongTex::update(TexData& data) {
     }
     
     begin(data);
-    //glm::vec2 size = tex->getSize();
+    for (int i=0; i<fbo.source()->getNumTextures(); i++) {
+        string name = i == 0 ? "srctex" : "srctex" + ofToString(i);
+        setUniformTexture(name, fbo.source()->getTexture(i), i);
+    }
     fbo.source()->draw(0,0);
     end();
         
