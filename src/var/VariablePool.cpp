@@ -240,11 +240,11 @@ map<string, shared_ptr<BaseVar>>& VariablePool::getPool(const VarsHolder* holder
 
 void VariablePool::update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes) {
     for (map<string, shared_ptr<BaseVar>>::iterator it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
-        it->second->update(inputs, notes);
+        it->second->update();
     }
     for (map<int, map<string, shared_ptr<BaseVar>>>::iterator it=holderPool.begin(); it!=holderPool.end(); ++it) {
         for (map<string, shared_ptr<BaseVar>>::iterator it2=it->second.begin(); it2!=it->second.end(); ++it2) {
-            it2->second->update(inputs, notes);
+            it2->second->update();
         }
     }
 }

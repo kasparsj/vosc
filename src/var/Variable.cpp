@@ -258,7 +258,7 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
 
 
 template <typename T>
-void Variable<T>::update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes) {
+void Variable<T>::update() {
     if (type == "expr") {
         float i = 0;
         float total = values.size();
@@ -302,6 +302,14 @@ BufData Variable<ofxExprNode>::asBufferData() {
         matrices[i] = values[i].getLocalTransformMatrix();
     }
     return {size, &matrices[0]};
+}
+
+template<typename T>
+ofBufferObject Variable<T>::asBufferObject() {
+    ofBufferObject buf;
+    BufData bufData = asBufferData();
+    buf.allocate(bufData.bytes, bufData.data, GL_STREAM_DRAW);
+    return buf;
 }
 
 template class Variable<float>;

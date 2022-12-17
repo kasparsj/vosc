@@ -5,7 +5,8 @@
 ~visuals.send('/geom/set', 0, "meshMode", 0);
 ~visuals.send('/geom/set', 0, "drawInstanced", 128 * 128);
 
-~visuals.send('/tex/size', "particlesData", 128, 128, 2);
+~visuals.send('/tex', "particlesData", "shader_pp:particles/Update");
+~visuals.send('/tex/size', "particlesData", 128, 128);
 ~visuals.send('/tex/fbo', "particlesData", "numColorbuffers", 2);
 ~visuals.send('/tex/fbo', "particlesData", "useDepth", 0);
 ~visuals.send('/tex/fbo', "particlesData", "internalformat", 0x8814); // GL_RGBA32F
@@ -15,7 +16,6 @@
 ~visuals.send('/tex/fbo', "particlesData", "minFilter", 0x2600); // GL_NEAREST
 ~visuals.send('/tex/fbo', "particlesData", "maxFilter", 0x2600);
 ~visuals.send('/tex/set', "particlesData", "blendMode", 0);
-~visuals.send('/tex', "particlesData", "shader_pp:particles/Update");
 ~visuals.send('/tex/var', "particlesData", "timeStep", 1.0 / 60.0);
 ~visuals.send('/tex/var', "particlesData", "particleMaxAge", 10);
 ~visuals.send('/tex/var', "particlesData", "noisePositionScale", 1.5);
@@ -23,6 +23,7 @@
 ~visuals.send('/tex/var', "particlesData", "noisePersistence", 0.2);
 ~visuals.send('/tex/var', "particlesData", "noiseMagnitude", 0.075);
 ~visuals.send('/tex/var', "particlesData", "baseSpeed", 0.5, 0, 0);
+~visuals.send('/tex/data', "particlesData", [0, 0, 0, "rand(10)"], 128 * 128);
 
 ~visuals.send('/shader', 0, "particles/DrawInstancedGeometry");
 ~visuals.send('/tex', 0, "particlesData");

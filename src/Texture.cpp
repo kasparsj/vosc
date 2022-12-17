@@ -57,6 +57,22 @@ void Texture::load(const ofxOscMessage &m, int arg) {
     load(newPath, args);
 }
 
+void Texture::loadData(const ofxOscMessage &m, int arg) {
+    // todo: allow to load data into uninitialized
+    if (tex != NULL) {
+        Variable<ofFloatColor>* var = new Variable<ofFloatColor>();
+        var->set(m, arg);
+        var->update();
+        // todo: hack to make sure it's allocated
+        tex->update(data);
+        tex->getTexture().loadData(var->asBufferObject(), GL_RGBA, GL_FLOAT);
+        delete var;
+    }
+    else {
+        ofLogError() << "cannot load texture data because texture not loaded";
+    }
+}
+
 void Texture::choose(const ofxOscMessage& m) {
     _unload();
     string type = m.getNumArgs() > 1 ? m.getArgAsString(1) : "";
@@ -134,6 +150,9 @@ void Texture::update(const vector<OSCInput> &sounds, const vector<TidalNote> &no
 void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
     if (command == "/tex") {
         load(m);
+    }
+    else if (command == "/tex/data") {
+        loadData(m);
     }
     else if (command == "/tex/choose") {
         choose(m);

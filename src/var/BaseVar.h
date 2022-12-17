@@ -13,7 +13,7 @@ struct BufData {
 
 class BaseVar {
 public:
-    virtual void update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes) = 0;
+    virtual void update() = 0;
     virtual void afterDraw() = 0;
     virtual BufData asBufferData() = 0;
 };

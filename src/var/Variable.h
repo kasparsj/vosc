@@ -23,7 +23,7 @@ public:
     T get(int idx = 0) const {
         return values.at(idx);
     }
-    virtual void update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes) override;
+    virtual void update() override;
     vector<T> getVec() const {
         vector<T> vec;
         for (int i=0; i<values.size(); i++) {
@@ -32,6 +32,7 @@ public:
         return vec;
     }
     BufData asBufferData() override;
+    ofBufferObject asBufferObject();
     virtual void afterDraw() override;
     size_t size() const {
         return values.size();

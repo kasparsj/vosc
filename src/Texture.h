@@ -17,6 +17,7 @@ public:
     }
     void load(string source, const vector<float>& args);
     void load(const ofxOscMessage& m, int arg = 1);
+    void loadData(const ofxOscMessage& m, int arg = 1);
     void choose(const ofxOscMessage& m);
     void reload();
     void unload();
