@@ -14,9 +14,10 @@ public:
     static map<string, shared_ptr<BaseVar>>& getPool(const VarsHolder* holder);
     static bool hasShared(string name);
     static shared_ptr<BaseVar>& getShared(string name);
-    static shared_ptr<BaseVar>& createOrUpdateShared(string name, const ofxOscMessage& m, int idx = 1);
+    static shared_ptr<BaseVar>& createOrUpdateShared(const string& name, const ofxOscMessage& m, int idx);
+    static shared_ptr<BaseVar>& createOrUpdateShared(const string& command, const string& name, const ofxOscMessage& m, int idx = 1);
     template<typename T>
-    static Variable<T>* createOrUpdateShared(string name, T value);
+    static Variable<T>* createOrUpdateShared(const string& name, T value);
     static shared_ptr<BaseVar> create(const ofxOscMessage& m, int idx = 1);
     static shared_ptr<BaseVar> create(const string& command, const ofxOscMessage& m, int idx);
     static shared_ptr<BaseVar> create(const ofxOscMessage& m, int idx, size_t size);

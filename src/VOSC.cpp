@@ -598,7 +598,7 @@ void VOSC::keyPressed(int key) {
             }
             break;
         }
-        case 'd':
+        case OF_KEY_TAB:
             showDebug = !showDebug;
             break;
         case 'r': {

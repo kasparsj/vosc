@@ -1,18 +1,10 @@
-#version 150
+#version 330
 
+#pragma include "../include/of_default_uniforms.glsl"
+#pragma include "../include/of_default_vertex_in_attributes.glsl"
 #pragma include "../include/ShaderHelpers.glsl"
 
 #define MAX_LIGHTS 8
-
-//these are passed in by openframeworks
-uniform mat4 projectionMatrix;
-uniform mat4 modelViewMatrix;
-uniform mat4 modelViewProjectionMatrix;
-
-in vec4 position;
-in vec4 color;
-in vec3 normal;
-in vec2 texcoord;
 
 uniform vec2 resolution;
 uniform float time;
@@ -24,6 +16,10 @@ uniform vec4 particleStartColor;
 uniform vec4 particleEndColor;
 uniform int numLights = 0;
 uniform vec3 lights[MAX_LIGHTS];
+
+uniform mat4 camModelViewMatrix;
+uniform mat4 camProjectionMatrix;
+uniform mat4 camModelViewProjectionMatrix;
 
 out vec3 v_normal;
 out vec3 v_eyeVec;
@@ -60,18 +56,18 @@ void main ()
 	// We add the rotated model space vertex pos to the particle pos to get the final position in space
 	vec3 newVertexPos = particlePos + vertexPos.xyz;
 	
-	gl_Position = modelViewProjectionMatrix * vec4(newVertexPos, 1.0);
+	gl_Position = camModelViewProjectionMatrix * vec4(newVertexPos, 1.0);
 	
 	// Light stuff
 	vec3 vertexNormal = normal;
-    mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix)));
+    mat3 normalMatrix = transpose(inverse(mat3(camModelViewMatrix)));
 	
 	// Rotate the normal just as we did the vertex, then apply the canera transform
 	vertexNormal = (lookAt * vec4(vertexNormal, 0)).xyz;
 	v_normal = normalize(normalMatrix * vertexNormal).xyz;
 	
 	// We do lighting clculations in view (camera) space
-	vec4 viewSpaceVertex = modelViewMatrix * vec4(newVertexPos, 1.0);
+	vec4 viewSpaceVertex = camModelViewMatrix * vec4(newVertexPos, 1.0);
 	v_eyeVec = -viewSpaceVertex.xyz;
 	
 	for ( int i = 0; i < numLights; ++i )

@@ -16,10 +16,11 @@ void Camera::setup() {
 void Camera::update() {
     if (cam != NULL) {
         ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
-        if (easyCam == NULL || !camPos->isConst()) {
+        ofxFirstPersonCamera* fpCam = dynamic_cast<ofxFirstPersonCamera*>(cam);
+        if ((easyCam == NULL && fpCam == NULL) || !camPos->isConst()) {
             cam->setPosition(camPos->get());
         }
-        if (easyCam == NULL || !camLook->isConst()) {
+        if ((easyCam == NULL && fpCam == NULL) || !camLook->isConst()) {
             cam->lookAt(camLook->get());
         }
         if (camOrbit->get() != 0 && easyCam != NULL) {
@@ -39,7 +40,7 @@ void Camera::oscCommand(const string& command, const ofxOscMessage& m) {
         }
         else if (command == "/cam/pos") {
 //            if (Args::get().isTweenVec3(m, 0)) {
-                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+//                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
 //                if (easyCam != NULL) {
 //                    easyCam->disableMouseInput();
 //                }
@@ -50,15 +51,14 @@ void Camera::oscCommand(const string& command, const ofxOscMessage& m) {
 //            }
 //            else {)
                 camPos->set(m, 0);
-            if (easyCam != NULL && camPos->isConst()) {
-                camPos->update();
+            if (camPos->isConst()) {
                 cam->setPosition(camPos->get());
             }
 //            }
         }
         else if (command == "/cam/look") {
 //            if (Args::get().isTweenVec3(m, 0)) {
-                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+//                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
 //                if (easyCam != NULL) {
 //                    easyCam->disableMouseInput();
 //                }
@@ -69,14 +69,13 @@ void Camera::oscCommand(const string& command, const ofxOscMessage& m) {
 //            }
 //            else {
                 camLook->set(m, 0);
-            if (easyCam != NULL && camLook->isConst()) {
-                camLook->update();
+            if (camLook->isConst()) {
                 cam->lookAt(camLook->get());
             }
 //            }
         }
         else if (command == "/cam/orbit") {
-            VariablePool::createOrUpdateShared("camOrbit", m, 0);
+            VariablePool::createOrUpdateShared("camOrbit", "/var", m, 0);
             if (dynamic_cast<ofEasyCam*>(cam) == NULL) {
                 ofLogError() << ("/cam/orbit supported only for 'easy' cam");
             }

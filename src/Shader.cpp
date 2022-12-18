@@ -3,6 +3,7 @@
 #include "VariablePool.h"
 #include "Lights.h"
 #include <regex>
+#include "Camera.hpp"
 
 void loadShaders(string path, map<string, ofxAutoReloadedShader>& shaders) {
     ofDirectory dir(path);
@@ -194,6 +195,12 @@ void Shader::begin(TexData& data, int delay) {
             shadertoy->setUniform2f("resolution", size.x, size.y);
             shadertoy->setUniform1i("random", data.randomSeed);
         }
+        Camera& cam = Camera::get();
+        if (cam.isEnabled()) {
+            shader->setUniformMatrix4f("camModelViewMatrix", cam.getCamera().getModelViewMatrix() );
+            shader->setUniformMatrix4f("camProjectionMatrix", cam.getCamera().getProjectionMatrix() );
+            shader->setUniformMatrix4f("camModelViewProjectionMatrix", cam.getCamera().getModelViewProjectionMatrix() );
+        }
         setUniformTextures(textures, delay);
         setUniforms(vars);
         setUniforms(data.getVars());
@@ -239,7 +246,7 @@ void Shader::setUniformTextures(const map<string, shared_ptr<Texture>>& textures
             if (tex->hasTexture(delay)) {
                 for (int i=0; i<tex->getNumTextures(); i++) {
                     string name = i == 0 ? it->first : it->first + ofToString(i);
-                    shader->setUniformTexture(name, tex->getTexture(delay), texLoc++);
+                    shader->setUniformTexture(name, tex->getTexture(delay, i), texLoc++);
                 }
             }
         }
