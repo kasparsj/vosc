@@ -43,7 +43,7 @@ public:
     }
     
     int index;
-    shared_ptr<Geom> geom = NULL;
+    shared_ptr<Geom> geom;
     TexData data;
     LayerShader shader;
     ofAlignHorz alignH;

@@ -57,9 +57,9 @@ private:
     
     string path = "";
     string prevPath = "";
-    shared_ptr<of3dPrimitive> primitive = NULL;
+    shared_ptr<of3dPrimitive> primitive;
     ofxAssimpModelLoader model;
-    shared_ptr<ofMesh> mesh = NULL;
+    shared_ptr<ofMesh> mesh;
     BoundingBox boundingBox;
     bool usingModel;
 };

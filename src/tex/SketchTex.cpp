@@ -4,16 +4,16 @@
 #include "WaveClock.h"
 #include "Spiral.h"
 
-map<string, Sketch*> createSketches()
+map<string, shared_ptr<Sketch>> createSketches()
 {
-    map<string, Sketch*> sketches;
-    sketches["NoisySpirals"] = new NoisySpirals();
-    sketches["WaveClock"] = new WaveClock();
-    sketches["Spiral"] = new Spiral();
+    map<string, shared_ptr<Sketch>> sketches;
+    sketches["NoisySpirals"] = make_shared<NoisySpirals>();
+    sketches["WaveClock"] = make_shared<WaveClock>();
+    sketches["Spiral"] = make_shared<Spiral>();
     return sketches;
 }
 
-map<string, Sketch*> SketchTex::sketches = createSketches();
+map<string, shared_ptr<Sketch>> SketchTex::sketches = createSketches();
 
 bool SketchTex::exists(string path) {
     return sketches.find(path) != sketches.end();

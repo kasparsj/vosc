@@ -84,7 +84,7 @@ private:
 
     map<string, shared_ptr<Texture>> textures;
     map<string, shared_ptr<Buffer>> buffers;
-    shared_ptr<ofShader> shader = NULL;
-    shared_ptr<ofxShadertoy> shadertoy = NULL;
+    shared_ptr<ofShader> shader;
+    shared_ptr<ofxShadertoy> shadertoy;
 };
 
