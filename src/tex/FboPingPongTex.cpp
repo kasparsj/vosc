@@ -4,8 +4,9 @@
 void FboPingPongTex::update(TexData& data) {
     glm::vec2 size = data.getSize();
     if (!fbo.isAllocated() || (fbo.source()->getWidth() != size.x || fbo.source()->getHeight() != size.y)) {
-        //fbo.clear();
+        ofDisableTextureEdgeHack();
         fbo.allocate(data.getFboSettings());
+        ofEnableTextureEdgeHack();
     }
 }
 

@@ -37,6 +37,9 @@ public:
     size_t size() const {
         return values.size();
     }
+    bool isConst() const {
+        return type == "const";
+    }
 
     vector<T> values;
     string type = "";

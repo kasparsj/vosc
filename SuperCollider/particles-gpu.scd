@@ -32,5 +32,9 @@
 ~visuals.send('/shader/var', 0, "particleEndColor", 0, 0, 0, 0);
 ~visuals.send('/shader/var', 0, "texSize", 128, 128);
 
+// ~visuals.send('/cam', "fp");
 ~visuals.send('/cam', "easy");
+~visuals.send('/cam/set', "nearClip", 0.01);
+// ~visuals.send('/cam/set', "movementMaxSpeed", 0.01);
+~visuals.send('/cam/pos', [0, 0.5, 1.1]);
 )

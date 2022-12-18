@@ -1,5 +1,6 @@
 #include "Camera.hpp"
 #include "Args.h"
+#include "ofxFirstPersonCamera.h"
 
 Camera* Camera::instance = NULL;
 
@@ -14,9 +15,13 @@ void Camera::setup() {
 
 void Camera::update() {
     if (cam != NULL) {
-        cam->setPosition(camPos->get());
-        cam->lookAt(camLook->get());
         ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+        if (easyCam == NULL || !camPos->isConst()) {
+            cam->setPosition(camPos->get());
+        }
+        if (easyCam == NULL || !camLook->isConst()) {
+            cam->lookAt(camLook->get());
+        }
         if (camOrbit->get() != 0 && easyCam != NULL) {
             orbit += ofGetLastFrameTime() * camOrbit->get();
             easyCam->orbitDeg(orbit, 0., easyCam->getDistance(), {0., 0., 0.});
@@ -34,7 +39,7 @@ void Camera::oscCommand(const string& command, const ofxOscMessage& m) {
         }
         else if (command == "/cam/pos") {
 //            if (Args::get().isTweenVec3(m, 0)) {
-//                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
 //                if (easyCam != NULL) {
 //                    easyCam->disableMouseInput();
 //                }
@@ -43,13 +48,17 @@ void Camera::oscCommand(const string& command, const ofxOscMessage& m) {
 //                };
 //                camPos->tween(m, 0, onComplete);
 //            }
-//            else {
+//            else {)
                 camPos->set(m, 0);
+            if (easyCam != NULL && camPos->isConst()) {
+                camPos->update();
+                cam->setPosition(camPos->get());
+            }
 //            }
         }
         else if (command == "/cam/look") {
 //            if (Args::get().isTweenVec3(m, 0)) {
-//                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
+                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
 //                if (easyCam != NULL) {
 //                    easyCam->disableMouseInput();
 //                }
@@ -60,6 +69,10 @@ void Camera::oscCommand(const string& command, const ofxOscMessage& m) {
 //            }
 //            else {
                 camLook->set(m, 0);
+            if (easyCam != NULL && camLook->isConst()) {
+                camLook->update();
+                cam->lookAt(camLook->get());
+            }
 //            }
         }
         else if (command == "/cam/orbit") {
@@ -97,12 +110,12 @@ void Camera::oscCommand(const string& command, const ofxOscMessage& m) {
                         }
                     }
                 }
-    //            ofxFirstPersonCamera* firstPersonCam = dynamic_cast<ofxFirstPersonCamera*>(cam);
-    //            if (firstPersonCam != NULL) {
-    //                if (method == "movementMaxSpeed") {
-    //                    firstPersonCam->setMovementMaxSpeed(m.getArgAsFloat(1));
-    //                }
-    //            }
+                ofxFirstPersonCamera* fpCam = dynamic_cast<ofxFirstPersonCamera*>(cam);
+                if (fpCam != NULL) {
+                    if (method == "movementMaxSpeed") {
+                        fpCam->setMovementMaxSpeed(m.getArgAsFloat(1));
+                    }
+                }
             }
         }
     }
@@ -112,6 +125,9 @@ void Camera::oscInit(const ofxOscMessage &m) {
     string name = m.getArgAsString(0);
     if (name == "easy") {
         cam = new ofEasyCam();
+    }
+    else if (name == "fp") {
+        cam = new ofxFirstPersonCamera();
     }
     else if (name != "") {
         cam = new ofCamera();
