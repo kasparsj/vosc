@@ -188,18 +188,17 @@ void Shader::begin(TexData& data, int delay) {
             shader->setUniform1f("time", data.time);
             shader->setUniform2f("resolution", size.x, size.y);
             shader->setUniform1i("random", data.randomSeed);
+            // todo: maybe set only for Layer shaders?
+            Camera& cam = Camera::get();
+            if (cam.isEnabled()) {
+                setUniformCameraMatrices(shader, cam.getCamera());
+            }
         }
         else {
             shadertoy->begin();
             shadertoy->setUniform1f("time", data.time);
             shadertoy->setUniform2f("resolution", size.x, size.y);
             shadertoy->setUniform1i("random", data.randomSeed);
-        }
-        Camera& cam = Camera::get();
-        if (cam.isEnabled()) {
-            shader->setUniformMatrix4f("camModelViewMatrix", cam.getCamera().getModelViewMatrix() );
-            shader->setUniformMatrix4f("camProjectionMatrix", cam.getCamera().getProjectionMatrix() );
-            shader->setUniformMatrix4f("camModelViewProjectionMatrix", cam.getCamera().getModelViewProjectionMatrix() );
         }
         setUniformTextures(textures, delay);
         setUniforms(vars);
@@ -318,6 +317,31 @@ void Shader::setLights(T* shader) {
     int numLights = MIN(MAX_LIGHTS, lightPos.size());
     shader->setUniform3fv("lights", &lightPos[0][0], numLights);
     shader->setUniform1i("numLights", numLights);
+}
+
+template<typename T>
+void Shader::setUniformCameraMatrices(T* shader, ofCamera& cam, const string& prefix) {
+    shader->setUniformMatrix4f(prefix + "ModelViewMatrix", cam.getModelViewMatrix() );
+    shader->setUniformMatrix4f(prefix + "ProjectionMatrix", cam.getProjectionMatrix() );
+    shader->setUniformMatrix4f(prefix + "ModelViewProjectionMatrix", cam.getModelViewProjectionMatrix() );
+}
+
+void Shader::setUniformMaterial(ofMaterial& mat, const string& prefix) {
+    if (shadertoy == NULL) {
+        setUniformMaterial(shader, mat, prefix);
+    }
+    else {
+        setUniformMaterial(shadertoy, mat, prefix);
+    }
+}
+
+template<typename T>
+void Shader::setUniformMaterial(T* shader, ofMaterial& mat, const string& prefix) {
+    shader->setUniform4f(prefix + "Emission", mat.getEmissiveColor());
+    shader->setUniform4f(prefix + "Ambient", mat.getAmbientColor());
+    shader->setUniform4f(prefix + "Diffuse", mat.getDiffuseColor());
+    shader->setUniform4f(prefix + "Specular", mat.getSpecularColor());
+    shader->setUniform1f(prefix + "Shininess", mat.getShininess());
 }
 
 void Shader::reset() {

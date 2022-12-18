@@ -74,16 +74,16 @@ void Layer::oscCommand(const string& command, const ofxOscMessage &m) {
     }
     else if (command.substr(0, 5) == "/geom") {
         if (command == "/geom" || command == "/geom/choose") {
-            Geom* geom;
             if (command == "/geom") {
                 string source = m.getArgAsString(1);
-                geom = GeomPool::getForLayer(source, getId());
+                shared_ptr<Geom>& newGeom = GeomPool::getOrCreate(source, getId());
+                setGeom(newGeom);
             }
             else {
-                geom = GeomPool::getForLayer(getId());
-                geom->choose(m);
+                shared_ptr<Geom>& newGeom = GeomPool::getOrCreate(getId());
+                newGeom->choose(m);
+                setGeom(newGeom);
             }
-            setGeom(geom);
             if (geom->isLoaded()) {
                 return;
             }
@@ -186,7 +186,7 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
     
     if (hasGeom() || shader.isLoaded()) {
         if (geom == NULL) {
-            geom = GeomPool::getForLayer(getId());
+            geom = GeomPool::getOrCreate(getId());
         }
         if (!geom->isLoaded()) {
             geom->load("quad");
@@ -204,9 +204,9 @@ void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
         
         if (shader.isLoaded()) {
             shader.begin(data, delay);
-            shader.setUniform1i("index", index);
+            shader.setUniform1i("layer", index);
             shader.setUniform2f("offset", pos.x, pos.y);
-            // todo: fix material
+            //shader.setUniformMaterial(material.get());
             //material.begin();
             geom->draw();
             //material.end();

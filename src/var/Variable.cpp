@@ -6,14 +6,14 @@
 
 template <typename T>
 void Variable<T>::set(T value) {
-    type = "const";
+    _isExpr = false;
     this->values.resize(1);
     this->values[0] = value;
 }
 
 template <typename T>
 void Variable<T>::set(vector<T> value) {
-    type = "const";
+    _isExpr = false;
     this->values.resize(value.size());
     for (int i=0; i<value.size(); i++) {
         this->values[i] = value[i];
@@ -22,14 +22,14 @@ void Variable<T>::set(vector<T> value) {
 
 template<typename T>
 void Variable<T>::set(const string& expr) {
-    type = "expr";
+    _isExpr = true;
     this->expr.set(expr);
     addSharedVars();
 }
 
 template<typename T>
 void Variable<T>::set(const vector<string>& expr) {
-    type = "expr";
+    _isExpr = true;
     this->expr.set(expr);
     addSharedVars();
 }
@@ -259,7 +259,7 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
 
 template <typename T>
 void Variable<T>::update() {
-    if (type == "expr") {
+    if (_isExpr) {
         float i = 0;
         float total = values.size();
         expr.addVar("i", i);
@@ -277,15 +277,15 @@ void Variable<T>::afterDraw() {
 
 template<>
 void Variable<float>::afterDraw() {
-    if (type == "tidal") {
-        for (int i=0; i<values.size(); i++) {
-            float val = values[i] - 1.f/8.f;
-            if (val < 0.f) {
-                val = 0.f;
-            }
-            values[i] = val;
-        }
-    }
+//    if (type == "tidal") {
+//        for (int i=0; i<values.size(); i++) {
+//            float val = values[i] - 1.f/8.f;
+//            if (val < 0.f) {
+//                val = 0.f;
+//            }
+//            values[i] = val;
+//        }
+//    }
 }
 
 template<typename T>

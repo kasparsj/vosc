@@ -5,7 +5,7 @@ const vec3 DEFAULT_COLOR = vec3(1.0);
 uniform float time;
 uniform vec2 resolution;
 uniform vec2 offset;
-uniform int index;
+uniform int layer;
 uniform vec4 color;
 uniform int random;
 

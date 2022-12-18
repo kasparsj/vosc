@@ -5,7 +5,7 @@ const vec3 DEFAULT_COLOR = vec3(0.15, 0.75, 1.0);
 uniform float time;
 uniform vec2 resolution;
 uniform vec2 offset;
-uniform int index;
+uniform int layer;
 uniform vec4 color;
 uniform int random;
 
@@ -38,6 +38,6 @@ void main (void){
     float t = smoothstep(radius + border, radius - border, dist);
     vec4 col = color;
     if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
-    //fragColor = vec4(col.rgb * 1.5 * t * noise(vec2(random, index)), t);
-    fragColor = vec4(col.rgb * 2.0 * t * noise(vec2(random, index)), t);
+    //fragColor = vec4(col.rgb * 1.5 * t * noise(vec2(random, layer)), t);
+    fragColor = vec4(col.rgb * 2.0 * t * noise(vec2(random, layer)), t);
 }

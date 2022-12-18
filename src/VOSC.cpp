@@ -190,7 +190,7 @@ void VOSC::parseMessage(const ofxOscMessage &m) {
 
 void VOSC::processQueue() {
     while (messageQueue.size()) {
-        ofxOscMessage &m = messageQueue[0];
+        const ofxOscMessage &m = messageQueue[0];
         string command = m.getAddress();
         if (command.substr(0, 5) == "/post") {
             post.getPasses().clear();

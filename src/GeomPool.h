@@ -5,14 +5,13 @@
 class GeomPool {
 public:
     static bool hasShared(string name);
-    static Geom* getShared(string name, bool create = false);
-    static Geom* getForLayer(string name, int layerId);
-    static Geom* getForLayer(int layerId);
+    static shared_ptr<Geom>& getShared(string name, bool create = false);
+    static shared_ptr<Geom>& getOrCreate(string name, int layerId);
+    static shared_ptr<Geom>& getOrCreate(int layerId);
     static void update();
     static void clean(int layerId);
-    static map<int, Geom*>& getLayerPool();
     
 private:
-    static map<string, Geom*> sharedPool;
-    static map<int, Geom*> layerPool;
+    static map<string, shared_ptr<Geom>> sharedPool;
+    static map<int, shared_ptr<Geom>> layerPool;
 };

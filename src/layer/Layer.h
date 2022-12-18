@@ -38,12 +38,12 @@ public:
     bool hasGeom() {
         return geom != NULL && geom->isLoaded();
     }
-    void setGeom(Geom* value) {
+    void setGeom(shared_ptr<Geom>& value) {
         geom = value;
     }
     
     int index;
-    Geom* geom = NULL;
+    shared_ptr<Geom> geom = NULL;
     TexData data;
     LayerShader shader;
     ofAlignHorz alignH;

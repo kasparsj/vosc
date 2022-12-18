@@ -62,6 +62,7 @@ public:
     void setUniform1i(const string& name, int v1);
     void setUniform2f(const string& name, float v1, float v2);
     void setUniformTexture(const string& name, ofTexture& tex, int loc = 0);
+    void setUniformMaterial(ofMaterial& mat, const string& prefix = "mat");
     void set(const ofxOscMessage& m);
     ofShader& getShader() {
         return *shader;
@@ -77,6 +78,10 @@ private:
     void setUniforms(T* shader, const map<string, shared_ptr<BaseVar>>& vars);
     template<typename T>
     void setLights(T* shader);
+    template<typename T>
+    void setUniformCameraMatrices(T* shader, ofCamera& cam, const string& prefix = "cam");
+    template<typename T>
+    void setUniformMaterial(T* shader, ofMaterial& mat, const string& prefix = "mat");
 
     map<string, shared_ptr<Texture>> textures;
     map<string, shared_ptr<Buffer>> buffers;

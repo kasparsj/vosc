@@ -34,3 +34,11 @@ void Material::oscCommand(const string& command, const ofxOscMessage& m) {
         setVar("shininess", m);
     }
 }
+
+void Material::begin() {
+    material.begin();
+}
+
+void Material::end() {
+    material.end();
+}

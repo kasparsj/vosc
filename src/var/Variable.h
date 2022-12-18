@@ -38,12 +38,13 @@ public:
         return values.size();
     }
     bool isConst() const {
-        return type == "const";
+        return !_isExpr;
     }
 
+private:
     vector<T> values;
-    string type = "";
+    bool _isExpr = true;
     ofxExpr<T> expr;
-    
+    // todo: needed only for Variable<ofxExprNode>
     vector<glm::mat4> matrices;
 };
