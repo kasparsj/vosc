@@ -306,7 +306,7 @@ void Layer::unload() {
 
 void Layer::reset() {
     unload();
-    shader.reset();
+    shader.unload();
     setVar("visible", true);
     setVar("speed", 1.f);
     setVar("tint", ofFloatColor(1.f, 1.f));

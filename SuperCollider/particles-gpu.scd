@@ -23,8 +23,7 @@
 ~visuals.send('/tex/var', "particlesData", "noisePersistence", 0.55);
 ~visuals.send('/tex/var', "particlesData", "noiseMagnitude", 0.05);
 ~visuals.send('/tex/var', "particlesData", "baseSpeed", 0.017, 0.19, 0.017);
-//~visuals.send('/tex/speed', "particlesData", 1.0 / 4000.0);
-~visuals.send('/tex/data', "particlesData", [0, 0, 0, "rand(10)"], 128 * 128);
+~visuals.send('/tex/data', "particlesData", [0, 0, 0, "rand(10.0)"], 128 * 128);
 
 ~visuals.send('/shader', 0, "particles/DrawInstancedGeometry");
 ~visuals.send('/tex', 0, "particlesData");
@@ -32,10 +31,8 @@
 ~visuals.send('/shader/var', 0, "particleStartColor", [13, 255, 220, 255] / 255);
 ~visuals.send('/shader/var', 0, "particleEndColor", [240, 51, 154, 255] / 255);
 ~visuals.send('/shader/var', 0, "texSize", 128, 128);
-//~visuals.send('/layer/rot', 0, [0, 0, -90]);
 
  ~visuals.send('/cam', "fp");
-// ~visuals.send('/cam', "easy");
 ~visuals.send('/cam/set', "nearClip", 0.01);
 ~visuals.send('/cam/set', "movementMaxSpeed", 0.01);
 ~visuals.send('/cam/pos', [0, 0.5, 1.1]);

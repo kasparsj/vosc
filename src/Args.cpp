@@ -65,7 +65,7 @@ ofFloatColor Args::parse(const ofxOscMessage& m, int idx) {
     ofFloatColor color;
     switch (m.getArgType(idx)) {
         case OFXOSC_TYPE_STRING: {
-            string str = m.getArgAsString(idx);
+            const string str = m.getArgAsString(idx);
             if (isHexColor(str)) {
                 color = parseHexColor(str);
             }
@@ -76,7 +76,7 @@ ofFloatColor Args::parse(const ofxOscMessage& m, int idx) {
 //
 //            }
             else if (isJSON(str)) {
-                auto json = ofJson::parse(str);
+                const auto json = ofJson::parse(str);
                 size_t size = 3;
                 if (isJSONObj(str)) {
                     color.r = json.at("r");

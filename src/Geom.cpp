@@ -3,7 +3,7 @@
 
 vector<string> Geom::primitives = {"box", "sphere", "icosphere", "cylinder", "plane", "cone"};
 
-bool Geom::isPrimitive(string path) {
+bool Geom::isPrimitive(const string& path) {
     return find(primitives.begin(), primitives.end(), path) != primitives.end();
 }
 
@@ -11,14 +11,10 @@ string Geom::random() {
     return primitives[int(ofRandom(primitives.size()))];
 }
 
-void Geom::load(string newPath, const vector<float>& args) {
+void Geom::load(const string& newPath, const vector<float>& args) {
     string newPrevPath = path;
     path = newPath;
     if (isPrimitive(newPath)) {
-        if (primitive != NULL) {
-            delete primitive;
-            primitive = NULL;
-        }
         if (loadPrimitive(args)) {
             usingModel = false;
             prevPath = newPrevPath;
@@ -89,7 +85,9 @@ bool Geom::loadModel(const vector<float>& args) {
     }
     if (modelPath.find(".ply") != string::npos) {
         usingModel = false;
-        mesh.load(modelPath);
+        mesh = NULL;
+        mesh = make_shared<ofVboMesh>();
+        mesh->load(modelPath);
         return true;
     }
     else {
@@ -111,38 +109,40 @@ bool Geom::loadModel(const vector<float>& args) {
 
 bool Geom::loadPrimitive(const vector<float>& args) {
     if (path == "plane") {
-        primitive = new ofPlanePrimitive(args.size() > 0 ? args[0] : 100,
-                                         args.size() > 1 ? args[1] : 100,
-                                         args.size() > 2 ? args[2] : 2,
-                                         args.size() > 3 ? args[3] : 2);
+        primitive = make_shared<ofPlanePrimitive>(args.size() > 0 ? args[0] : 100,
+                                                  args.size() > 1 ? args[1] : 100,
+                                                  args.size() > 2 ? args[2] : 2,
+                                                  args.size() > 3 ? args[3] : 2);
     }
     else if (path == "box") {
-        primitive = new ofBoxPrimitive(args.size() > 0 ? args[0] : 100,
-                                       args.size() > 1 ? args[1] : 100,
-                                       args.size() > 2 ? args[2] : 100);
+        primitive = make_shared<ofBoxPrimitive>(args.size() > 0 ? args[0] : 100,
+                                                args.size() > 1 ? args[1] : 100,
+                                                args.size() > 2 ? args[2] : 100);
     }
     else if (path == "sphere") {
-        primitive = new ofSpherePrimitive(50, 16);
+        primitive = make_shared<ofSpherePrimitive>(50, 16);
     }
     else if (path == "icosphere") {
-        primitive = new ofIcoSpherePrimitive(50, 2);
+        primitive = make_shared<ofIcoSpherePrimitive>(50, 2);
     }
     else if (path == "cylinder") {
-        primitive = new ofCylinderPrimitive();
+        primitive = make_shared<ofCylinderPrimitive>();
     }
     else if (path == "cone") {
-        primitive = new ofConePrimitive();
+        primitive = make_shared<ofConePrimitive>();
     }
     if (primitive != NULL) {
         primitive->mapTexCoords(1.f, 1.f, 0.f, 0.f);
-        mesh = primitive->getMesh();
+        mesh = NULL;
+        mesh = shared_ptr<ofMesh>(primitive->getMeshPtr());
         return true;
     }
     return false;
 }
 
 bool Geom::loadQuad(const vector<float>& args) {
-    mesh.clear();
+    mesh = NULL;
+    mesh = make_shared<ofVboMesh>();
     
     // -1.0 to +1.0 is the full viewport (screen) if you use these as vertices in your vertex shader
     // (without multiplying by model, view, and projection matrices)    
@@ -171,9 +171,9 @@ bool Geom::loadQuad(const vector<float>& args) {
         ofVec2f( 0.0f, 0.0f )
     };
     
-    mesh.addVertices( vertices, 4 );
-    mesh.addTexCoords( texCoords, 4 );
-    mesh.addIndices( indices, 6 );
+    mesh->addVertices( vertices, 4 );
+    mesh->addTexCoords( texCoords, 4 );
+    mesh->addIndices( indices, 6 );
 }
 
 bool Geom::loadGrass(const vector<float>& args) {
@@ -184,8 +184,9 @@ bool Geom::loadGrass(const vector<float>& args) {
     ofVec3f placeStart = size * -0.5f;
     ofVec3f placeEnd   = size *  0.5f;
     
-    mesh.clear();
-    mesh.setMode( OF_PRIMITIVE_LINES );
+    mesh = NULL;
+    mesh = make_shared<ofVboMesh>();
+    mesh->setMode( OF_PRIMITIVE_LINES );
     
     for( int y = 0; y < resY; y++ )
     {
@@ -206,8 +207,8 @@ bool Geom::loadGrass(const vector<float>& args) {
             
             if( perlinVal > 0 )
             {
-                mesh.addVertex( tmpPos );
-                mesh.addVertex( tmpPos + ofVec3f(0,perlinVal,0) );
+                mesh->addVertex( tmpPos );
+                mesh->addVertex( tmpPos + ofVec3f(0,perlinVal,0) );
             }
         }
     }
@@ -244,7 +245,7 @@ void Geom::updateBoundingBox() {
         boundingBox.min = model.getSceneMin() * model.getNormalizedScale();
     }
     else {
-        const vector<glm::vec3>& vertices  = mesh.getVertices();
+        const vector<glm::vec3>& vertices  = mesh->getVertices();
         for(auto v : vertices){
             if (v.x < boundingBox.min.x) boundingBox.min.x = v.x;
             if (v.y < boundingBox.min.y) boundingBox.min.y = v.y;
@@ -263,18 +264,18 @@ void Geom::draw() const {
     else {
         if (drawInstanced > 1) {
             if (drawWireframe) {
-                mesh.drawInstanced(OF_MESH_WIREFRAME, drawInstanced);
+                dynamic_pointer_cast<ofVboMesh>(mesh)->drawInstanced(OF_MESH_WIREFRAME, drawInstanced);
             }
             else {
-                mesh.drawInstanced(OF_MESH_FILL, drawInstanced);
+                dynamic_pointer_cast<ofVboMesh>(mesh)->drawInstanced(OF_MESH_FILL, drawInstanced);
             }
         }
         else {
             if (drawWireframe) {
-                mesh.drawWireframe();
+                mesh->drawWireframe();
             }
             else {
-                mesh.draw();
+                mesh->draw();
             }
         }
     }

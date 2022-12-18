@@ -5,7 +5,7 @@
 #include <regex>
 #include "Camera.hpp"
 
-void loadShaders(string path, map<string, ofxAutoReloadedShader>& shaders) {
+void loadShaders(const string& path, map<string, ofxAutoReloadedShader>& shaders) {
     ofDirectory dir(path);
     for (int i = 0; i < dir.getFiles().size(); i++) {
         ofFile file = dir.getFile(i);
@@ -36,11 +36,11 @@ string Shader::random() {
     return it->first;
 }
 
-bool isSource(string path) {
+bool isSource(const string& path) {
     return path.find("void main(") != string::npos;
 }
 
-string parseShadertoy(string path) {
+string parseShadertoy(const string& path) {
     std::regex re_view("^https?://(www\\.)?shadertoy\\.com/view/(.+)(/|\\?.*)?");
     std::regex re_api("^https?://(www\\.)?shadertoy\\.com/api/v1/shaders/(.+)(/|\\?.*)");
     std::smatch m;
@@ -91,7 +91,7 @@ bool Shader::loadFromSource(const string& source) {
     ofShaderSettings settings;
     settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
     settings.shaderSources[GL_FRAGMENT_SHADER] = source;
-    shader = new ofShader();
+    shader = make_shared<ofShader>();
     return shader->setup(settings);
 }
 
@@ -104,7 +104,7 @@ bool Shader::loadShadertoy(const string& shadertoyId) {
         shaderFile.open(fragPath, ofFile::WriteOnly);
         shaderFile << json["Shader"]["renderpass"][0]["code"].get<string>();
         shaderFile.close();
-        shadertoy = new ofxShadertoy();
+        shadertoy = make_shared<ofxShadertoy>();
         shadertoy->setUseAutoUpdate(true);
         return shadertoy->load(fragPath);
     }
@@ -148,7 +148,7 @@ bool Shader::loadFromFile(const string& path) {
         }
         ofxAutoReloadedShader* autoShader = new ofxAutoReloadedShader();
         if (autoShader->load(vertPath, fragPath, geomPath)) {
-            shader = autoShader;
+            shader = shared_ptr<ofShader>(autoShader);
             return true;
         }
     }
@@ -265,9 +265,9 @@ void Shader::setUniforms(const map<string, shared_ptr<BaseVar>>& vars) {
 }
 
 template<typename T>
-void Shader::setUniforms(T* shader, const map<string, shared_ptr<BaseVar>>& vars) {
+void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<BaseVar>>& vars) {
     for (map<string, shared_ptr<BaseVar>>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
-        const Variable<float>* floatVar = dynamic_cast<const Variable<float>*>(it->second.get());
+        const shared_ptr<const Variable<float>> floatVar = dynamic_pointer_cast<const Variable<float>>(it->second);
         if (floatVar != NULL) {
             vector<float> values = floatVar->getVec();
             if (values.size() == 1) {
@@ -284,17 +284,17 @@ void Shader::setUniforms(T* shader, const map<string, shared_ptr<BaseVar>>& vars
             }
         }
         else {
-            const Variable<glm::vec3>* vec3Var = dynamic_cast<const Variable<glm::vec3>*>(it->second.get());
+            const shared_ptr<const Variable<glm::vec3>> vec3Var = dynamic_pointer_cast<const Variable<glm::vec3>>(it->second);
             if (vec3Var != NULL/* && vec3Var->size() == 1*/) {
                 shader->setUniform3f(it->first, vec3Var->get());
             }
             else {
-                const Variable<glm::mat4>* mat4Var = dynamic_cast<const Variable<glm::mat4>*>(it->second.get());
+                const shared_ptr<const Variable<glm::mat4>> mat4Var = dynamic_pointer_cast<const Variable<glm::mat4>>(it->second);
                 if (mat4Var != NULL/* && mat4Var->size() == 1*/) {
                     shader->setUniformMatrix4f(it->first, mat4Var->get());
                 }
                 else {
-                    const Variable<ofFloatColor>* colorVar = dynamic_cast<const Variable<ofFloatColor>*>(it->second.get());
+                    const shared_ptr<const Variable<ofFloatColor>> colorVar = dynamic_pointer_cast<const Variable<ofFloatColor>>(it->second);
                     if (colorVar != NULL/* && colorVar->size() == 1*/) {
                         shader->setUniform4f(it->first, colorVar->get());
                     }
@@ -308,7 +308,7 @@ void Shader::setUniforms(T* shader, const map<string, shared_ptr<BaseVar>>& vars
 }
 
 template<typename T>
-void Shader::setLights(T* shader) {
+void Shader::setLights(shared_ptr<T>& shader) {
     vector<glm::vec3> lightPos;
     const map<string, shared_ptr<Light>>& lights = Lights::get().all();
     for (map<string, shared_ptr<Light>>::const_iterator it=lights.begin(); it!=lights.end(); ++it) {
@@ -320,7 +320,7 @@ void Shader::setLights(T* shader) {
 }
 
 template<typename T>
-void Shader::setUniformCameraMatrices(T* shader, ofCamera& cam, const string& prefix) {
+void Shader::setUniformCameraMatrices(shared_ptr<T>& shader, ofCamera& cam, const string& prefix) {
     shader->setUniformMatrix4f(prefix + "ModelViewMatrix", cam.getModelViewMatrix() );
     shader->setUniformMatrix4f(prefix + "ProjectionMatrix", cam.getProjectionMatrix() );
     shader->setUniformMatrix4f(prefix + "ModelViewProjectionMatrix", cam.getModelViewProjectionMatrix() );
@@ -336,7 +336,7 @@ void Shader::setUniformMaterial(ofMaterial& mat, const string& prefix) {
 }
 
 template<typename T>
-void Shader::setUniformMaterial(T* shader, ofMaterial& mat, const string& prefix) {
+void Shader::setUniformMaterial(shared_ptr<T>& shader, ofMaterial& mat, const string& prefix) {
     shader->setUniform4f(prefix + "Emission", mat.getEmissiveColor());
     shader->setUniform4f(prefix + "Ambient", mat.getAmbientColor());
     shader->setUniform4f(prefix + "Diffuse", mat.getDiffuseColor());
@@ -344,29 +344,18 @@ void Shader::setUniformMaterial(T* shader, ofMaterial& mat, const string& prefix
     shader->setUniform1f(prefix + "Shininess", mat.getShininess());
 }
 
-void Shader::reset() {
-    unload();
-    textures.clear();
-    buffers.clear();
-    vars.clear();
-    TexturePool::clean(_id);
-    VariablePool::cleanup(this);
-}
-
 void Shader::unload() {
     if (shader != NULL) {
         try {
-            ofxAutoReloadedShader* autoShader = static_cast<ofxAutoReloadedShader*>(shader);
+            shared_ptr<ofxAutoReloadedShader> autoShader = static_pointer_cast<ofxAutoReloadedShader>(shader);
             if (autoShader->isLoaded()) {
                 autoShader->unload();
             }
-            delete autoShader;
         }
         catch (...) {
             if (shader->isLoaded()) {
                 shader->unload();
             }
-            delete shader;
         }
         shader = NULL;
     }
@@ -374,9 +363,13 @@ void Shader::unload() {
 //        if (shadertoy->isLoaded()) {
 //            shadertoy->unload();
 //        }
-        delete shadertoy;
         shadertoy = NULL;
     }
+    TexturePool::clean(_id);
+    textures.clear();
+    buffers.clear();
+    VariablePool::cleanup(this);
+    vars.clear();
 }
 
 shared_ptr<Texture>& Shader::getDefaultTexture() {
@@ -460,7 +453,7 @@ void Shader::set(const ofxOscMessage& m) {
     }
 }
 
-template void Shader::setUniforms(ofShader* shader, const map<string, shared_ptr<BaseVar>>& vars);
-template void Shader::setUniforms(ofxShadertoy* shader, const map<string, shared_ptr<BaseVar>>& vars);
-template void Shader::setLights(ofShader* shader);
-template void Shader::setLights(ofxShadertoy* shader);
+template void Shader::setUniforms(shared_ptr<ofShader>& shader, const map<string, shared_ptr<BaseVar>>& vars);
+template void Shader::setUniforms(shared_ptr<ofxShadertoy>& shader, const map<string, shared_ptr<BaseVar>>& vars);
+template void Shader::setLights(shared_ptr<ofShader>& shader);
+template void Shader::setLights(shared_ptr<ofxShadertoy>& shader);

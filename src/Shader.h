@@ -19,7 +19,7 @@ public:
     Shader() : VarsHolder() {
     }
     ~Shader() {
-        reset();
+        unload();
     }
     bool isLoaded() const {
         return isShaderLoaded() || shadertoy != NULL;
@@ -36,7 +36,6 @@ public:
     void oscCommand(const string& command, const ofxOscMessage& m);
     void begin(TexData& data, int delay = 0);
     void end();
-    void reset();
     void unload();
     const map<string, shared_ptr<Texture>>& getTextures() const {
         return textures;
@@ -75,17 +74,17 @@ private:
     void setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay = 0);
     void setUniforms(const map<string, shared_ptr<BaseVar>>& vars);
     template<typename T>
-    void setUniforms(T* shader, const map<string, shared_ptr<BaseVar>>& vars);
+    void setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<BaseVar>>& vars);
     template<typename T>
-    void setLights(T* shader);
+    void setLights(shared_ptr<T>& shader);
     template<typename T>
-    void setUniformCameraMatrices(T* shader, ofCamera& cam, const string& prefix = "cam");
+    void setUniformCameraMatrices(shared_ptr<T>& shader, ofCamera& cam, const string& prefix = "cam");
     template<typename T>
-    void setUniformMaterial(T* shader, ofMaterial& mat, const string& prefix = "mat");
+    void setUniformMaterial(shared_ptr<T>& shader, ofMaterial& mat, const string& prefix = "mat");
 
     map<string, shared_ptr<Texture>> textures;
     map<string, shared_ptr<Buffer>> buffers;
-    ofShader* shader = NULL;
-    ofxShadertoy* shadertoy = NULL;
+    shared_ptr<ofShader> shader = NULL;
+    shared_ptr<ofxShadertoy> shadertoy = NULL;
 };
 

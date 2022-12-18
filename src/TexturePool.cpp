@@ -10,7 +10,7 @@ bool TexturePool::hasShared(string name) {
 
 shared_ptr<Texture>& TexturePool::getShared(string name, bool create) {
     if (create && !hasShared(name)) {
-        sharedPool[name] = shared_ptr<Texture>(new Texture());
+        sharedPool[name] = make_shared<Texture>();
     }
     return sharedPool.at(name);
 }
@@ -18,7 +18,7 @@ shared_ptr<Texture>& TexturePool::getShared(string name, bool create) {
 shared_ptr<Texture>& TexturePool::getOrCreate(string name, const VarsHolder* holder) {
     map<string, shared_ptr<Texture>>& pool = getPool(holder);
     if (pool.find(name) == pool.end()) {
-        pool[name] = shared_ptr<Texture>(new Texture());
+        pool[name] = make_shared<Texture>();
     }
     return pool.at(name);
 }

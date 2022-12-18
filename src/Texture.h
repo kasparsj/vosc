@@ -7,7 +7,7 @@
 
 class Texture : public VarsHolder {
 public:
-    Texture(Tex* tex) : VarsHolder(), tex(tex) {
+    Texture(shared_ptr<Tex> tex) : VarsHolder(), tex(tex) {
         data.setup(this);
         reset();
     }
@@ -41,16 +41,16 @@ public:
     }
     void setLooper(const ofxOscMessage& m);
 
-    Tex* tex;
+    shared_ptr<Tex> tex = NULL;
     TexData data;
     int numFrames = 1;
     vector<ofFbo> frames;
     int curFbo = -1;
     
 private:
-    static Tex* chooseTex(const ofxOscMessage& m);
-    static Tex* chooseTex(string type, const vector<float>& args);
-    static Tex* chooseTex() {
+    static shared_ptr<Tex> chooseTex(const ofxOscMessage& m);
+    static shared_ptr<Tex> chooseTex(string type, const vector<float>& args);
+    static shared_ptr<Tex> chooseTex() {
         vector<float> args;
         return chooseTex("", args);
     }

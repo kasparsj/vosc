@@ -8,8 +8,8 @@ class TexData;
 
 class Tex : public ofBaseHasTexture, public ofBaseHasPixels {
 public:
-    static Tex* factory(string type, string name, const vector<float>& args);
-    static Tex* factory(string source, const vector<float>& args);
+    static shared_ptr<Tex> factory(string type, string name, const vector<float>& args);
+    static shared_ptr<Tex> factory(string source, const vector<float>& args);
 
     Tex(string path, const vector<float>& args) : path(path), args(args) {}
     virtual ~Tex() = default;

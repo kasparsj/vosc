@@ -15,46 +15,46 @@
 #include "UltralightTex.h"
 #endif
 
-Tex* Tex::factory(string type, string path, const vector<float>& args) {
-    Tex *tex = NULL;
+shared_ptr<Tex> Tex::factory(string type, string path, const vector<float>& args) {
+    shared_ptr<Tex> tex = NULL;
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
 #ifndef TARGET_CPU_UNIVERSAL
             case Source::HTML:
-                tex = new UltralightTex(path, args);
+                tex = make_shared<UltralightTex>(path, args);
                 break;
 #endif
             case Source::VIDEO:
-                tex = new VideoTex(path, args);
+                tex = make_shared<VideoTex>(path, args);
                 break;
             case Source::HPV:
-                tex = new HPVideoTex(path, args);
+                tex = make_shared<HPVideoTex>(path, args);
                 break;
 //            case Source::GV:
-//                tex = new GVVideoTex(path, args);
+//                tex = make_shared<GVVideoTex>(path, args);
 //                break;
             case Source::SHADER:
-                tex = new ShaderTex(path, args);
+                tex = make_shared<ShaderTex>(path, args);
                 break;
             case Source::SHADER_PP:
-                tex = new ShaderPingPongTex(path, args);
+                tex = make_shared<ShaderPingPongTex>(path, args);
                 break;
             case Source::SKETCH:
-                tex = new SketchTex(path, args);
+                tex = make_shared<SketchTex>(path, args);
                 break;
             case Source::IMAGE:
-                tex = new ImageTex(path, args);
+                tex = make_shared<ImageTex>(path, args);
                 break;
             case Source::WEBCAM:
-                tex = new WebcamTex(path, args);
+                tex = make_shared<WebcamTex>(path, args);
                 break;
             case Source::DRAW:
-                tex = new DrawTex(path, args);
+                tex = make_shared<DrawTex>(path, args);
                 break;
             case Source::COLOR:
-                tex = new ShaderTex(path, args);
-                ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex);
+                tex = make_shared<ShaderTex>(path, args);
+                shared_ptr<ShaderTex> shaderTex = dynamic_pointer_cast<ShaderTex>(tex);
                 shaderTex->setVar("color", ofFloatColor(args[0], args[1], args[2], args[3]));
                 break;
         }
@@ -62,7 +62,7 @@ Tex* Tex::factory(string type, string path, const vector<float>& args) {
     return tex;
 }
 
-Tex* Tex::factory(string source, const vector<float>& args) {
+shared_ptr<Tex> Tex::factory(string source, const vector<float>& args) {
     string type = source;
     string path = "";
     bool explicitType = source.find(":") != string::npos;
@@ -103,8 +103,8 @@ Tex* Tex::factory(string source, const vector<float>& args) {
                     path = DrawTex::random();
                     break;
                 case Source::COLOR: {
-                    Tex* tex = factory("shader", "color", args);
-                    ShaderTex* shaderTex = dynamic_cast<ShaderTex*>(tex);
+                    shared_ptr<Tex> tex = factory("shader", "color", args);
+                    shared_ptr<ShaderTex> shaderTex = dynamic_pointer_cast<ShaderTex>(tex);
                     shaderTex->setVar("color", ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f), ofRandom(1.f)));
                     return tex;
                 }

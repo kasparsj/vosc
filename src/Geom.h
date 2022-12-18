@@ -14,15 +14,11 @@ struct BoundingBox {
 class Geom {
 public:
     static vector<string> primitives;
-    static bool isPrimitive(string path);
+    static bool isPrimitive(const string& path);
     static string random();
 
-    ~Geom() {
-        if (primitive != NULL) {
-            delete primitive;
-        }
-    }
-    void load(string newPath, const vector<float>& args);
+    ~Geom() {}
+    void load(const string& newPath, const vector<float>& args);
     void load(const ofxOscMessage &m);
     void load(string newPath) {
         vector<float> args;
@@ -32,7 +28,7 @@ public:
     void update();
     void oscCommand(const string& command, const ofxOscMessage& m);
     void draw() const;
-    ofVboMesh& getMesh() { return mesh; }
+    ofMesh& getMesh() { return *mesh; }
     glm::vec3 getSize() {
         return boundingBox.max - boundingBox.min;
     }
@@ -61,9 +57,9 @@ private:
     
     string path = "";
     string prevPath = "";
-    of3dPrimitive *primitive = NULL;
+    shared_ptr<of3dPrimitive> primitive = NULL;
     ofxAssimpModelLoader model;
-    ofVboMesh mesh;
+    shared_ptr<ofMesh> mesh = NULL;
     BoundingBox boundingBox;
     bool usingModel;
 };

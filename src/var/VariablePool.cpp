@@ -10,11 +10,11 @@
 map<string, shared_ptr<BaseVar>> VariablePool::sharedPool;
 map<int, map<string, shared_ptr<BaseVar>>> VariablePool::holderPool;
 
-bool VariablePool::hasShared(string name) {
+bool VariablePool::hasShared(const string& name) {
     return sharedPool.find(name) != sharedPool.end();
 }
 
-shared_ptr<BaseVar>& VariablePool::getShared(string name) {
+shared_ptr<BaseVar>& VariablePool::getShared(const string& name) {
     return sharedPool.at(name);
 }
 
@@ -35,11 +35,11 @@ shared_ptr<BaseVar>& VariablePool::createOrUpdateShared(const string& name, cons
 template<typename T>
 Variable<T>* VariablePool::createOrUpdateShared(const string& name, T value) {
     if (!hasShared(name)) {
-        sharedPool[name] = shared_ptr<BaseVar>(new Variable<T>());
+        sharedPool[name] = make_shared<Variable<T>>();
     }
-    Variable<T>* var = static_cast<Variable<T>*>(sharedPool.at(name).get());
+    const shared_ptr<Variable<T>> var = static_pointer_cast<Variable<T>>(sharedPool.at(name));
     var->set(value);
-    return var;
+    return var.get();
 }
 
 shared_ptr<BaseVar> VariablePool::create(const ofxOscMessage& m, int idx) {
@@ -58,18 +58,18 @@ shared_ptr<BaseVar> VariablePool::create(const string& command, const ofxOscMess
                     return create(m, idx, json.size());
                 }
                 else {
-                    Variable<float>* var = new Variable<float>();
+                    shared_ptr<Variable<float>> var = make_shared<Variable<float>>();
                     var->set(m, idx);
-                    return shared_ptr<BaseVar>(var);
+                    return var;
                 }
             }
             case OFXOSC_TYPE_FLOAT:
             case OFXOSC_TYPE_INT32:
             case OFXOSC_TYPE_TRUE:
             case OFXOSC_TYPE_FALSE: {
-                Variable<float>* var = new Variable<float>();
+                shared_ptr<Variable<float>> var = make_shared<Variable<float>>();
                 var->set(m, idx);
-                return shared_ptr<BaseVar>(var);
+                return var;
             }
             case OFXOSC_TYPE_BLOB: {
                 ofBuffer buf = m.getArgAsBlob(idx);
@@ -81,20 +81,19 @@ shared_ptr<BaseVar> VariablePool::create(const string& command, const ofxOscMess
         }
     }
     else if (command.length() >= 11 && command.substr(command.length()-11) == "/var/colors") {
-        Variable<ofFloatColor>* var = new Variable<ofFloatColor>();
+        shared_ptr<Variable<ofFloatColor>> var = make_shared<Variable<ofFloatColor>>();
         var->set(m, idx);
-        return shared_ptr<BaseVar>(var);
+        return var;
     }
     else if (command.length() >= 18 && command.substr(command.length()-18) == "/var/colors/scheme") {
-        Variable<ofFloatColor>* var = new Variable<ofFloatColor>();
-        shared_ptr<BaseVar> ptr = shared_ptr<BaseVar>(var);
-        updateColorsScheme(ptr, m, idx);
-        return ptr;
+        shared_ptr<Variable<ofFloatColor>> var = make_shared<Variable<ofFloatColor>>();
+        updateColorsScheme(var, m, idx);
+        return var;
     }
     else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/nodes") {
-        Variable<ofxExprNode>* var = new Variable<ofxExprNode>();
+        shared_ptr<Variable<ofxExprNode>> var = make_shared<Variable<ofxExprNode>>();
         var->set(m, idx);
-        return shared_ptr<BaseVar>(var);
+        return var;
     }
     ofLogError() << "VariablePool::create command not recognized: " << m;
     return NULL;
@@ -169,33 +168,35 @@ void VariablePool::update(shared_ptr<BaseVar>& var, const string& command, const
 
 void VariablePool::update(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx, size_t size) {
     if (size == 3) {
-        Variable<glm::vec3>* var1 = dynamic_cast<Variable<glm::vec3>*>(var.get());
+        shared_ptr<Variable<glm::vec3>> var1 = dynamic_pointer_cast<Variable<glm::vec3>>(var);
         if (var1 != NULL) {
             var1->set(m, idx);
             return;
         }
-        Variable<ofFloatColor>* var2 = dynamic_cast<Variable<ofFloatColor>*>(var.get());
+        shared_ptr<Variable<ofFloatColor>> var2 = dynamic_pointer_cast<Variable<ofFloatColor>>(var);
         if (var2 != NULL) {
             var2->set(m, idx);
             return;
         }
     }
     else if (size == 4) {
-        Variable<ofFloatColor>* var = static_cast<Variable<ofFloatColor>*>(var);
+        shared_ptr<Variable<ofFloatColor>> var = dynamic_pointer_cast<Variable<ofFloatColor>>(var);
         if (var != NULL) {
             var->set(m, idx);
             return;
         }
     }
     else if (size == 16) {
-        Variable<glm::mat4>* var = static_cast<Variable<glm::mat4>*>(var);
-        var->set(m, idx);
-        return;
+        shared_ptr<Variable<glm::mat4>> var = static_pointer_cast<Variable<glm::mat4>>(var);
+        if (var != NULL) {
+            var->set(m, idx);
+            return;
+        }
     }
     ofLogError() << "VariablePool::create not implemented for size: " << size;
 }
 
-void VariablePool::updateColorsScheme(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx) {
+void VariablePool::updateColorsScheme(const shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx) {
     string schemeName = m.getArgAsString(idx);
     ofFloatColor primaryColor = Args::parse<ofFloatColor>(m, idx+1);
     shared_ptr<ofxColorTheory::FloatColorWheelScheme> scheme = ofxColorTheory::FloatColorWheelSchemes::get(schemeName);
@@ -210,12 +211,12 @@ void VariablePool::updateColorsScheme(shared_ptr<BaseVar>& var, const ofxOscMess
 
 }
 
-shared_ptr<BaseVar>& VariablePool::get(string name, const VarsHolder* holder) {
+shared_ptr<BaseVar>& VariablePool::get(const string& name, const VarsHolder* holder) {
     map<string, shared_ptr<BaseVar>>& pool = getPool(holder);
     return pool.at(name);
 }
 
-shared_ptr<BaseVar>& VariablePool::createOrUpdate(string name, const ofxOscMessage& m, int idx, const VarsHolder* holder) {
+shared_ptr<BaseVar>& VariablePool::createOrUpdate(const string& name, const ofxOscMessage& m, int idx, const VarsHolder* holder) {
     map<string, shared_ptr<BaseVar>>& pool = getPool(holder);
     if (pool.find(name) == pool.end()) {
         pool[name] = create("/var", m, idx);
@@ -227,10 +228,10 @@ shared_ptr<BaseVar>& VariablePool::createOrUpdate(string name, const ofxOscMessa
 }
 
 template <typename T>
-Variable<T>* VariablePool::getOrCreate(string name, const VarsHolder* holder) {
+Variable<T>* VariablePool::getOrCreate(const string& name, const VarsHolder* holder) {
     map<string, shared_ptr<BaseVar>>& pool = getPool(holder);
     if (pool.find(name) == pool.end()) {
-        pool[name] = shared_ptr<BaseVar>(new Variable<T>());
+        pool[name] = make_shared<Variable<T>>();
     }
     return static_cast<Variable<T>*>(pool.at(name).get());
 }
@@ -264,7 +265,7 @@ template Variable<glm::vec3>* VariablePool::createOrUpdateShared(const string& n
 template Variable<glm::mat4>* VariablePool::createOrUpdateShared(const string& name, glm::mat4 value);
 template Variable<ofFloatColor>* VariablePool::createOrUpdateShared(const string& name, ofFloatColor value);
 
-template Variable<float>* VariablePool::getOrCreate(string name, const VarsHolder* holder);
-template Variable<glm::vec3>* VariablePool::getOrCreate(string name, const VarsHolder* holder);
-template Variable<glm::mat4>* VariablePool::getOrCreate(string name, const VarsHolder* holder);
-template Variable<ofFloatColor>* VariablePool::getOrCreate(string name, const VarsHolder* holder);
+template Variable<float>* VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
+template Variable<glm::vec3>* VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
+template Variable<glm::mat4>* VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
+template Variable<ofFloatColor>* VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
