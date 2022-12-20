@@ -72,17 +72,7 @@ void VOSC::update() {
 
 void VOSC::draw() {
     beginDraw();
-    
-    int totalVisible = 0;
-    for (int i=0; i<layers.size(); i++) {
-        if (layers[i]->getVarBool("visible")) {
-            totalVisible++;
-        }
-    }
-    for (int i=0; i<layers.size(); i++) {
-        layers[i]->draw(totalVisible);
-    }
-    
+    doDraw();
     endDraw();
     
     if (showDebug) {
@@ -98,9 +88,29 @@ void VOSC::draw() {
 void VOSC::beginDraw() {
     ofPushMatrix();
     if (camera.isEnabled()) {
-        ofEnableDepthTest();
-        ofEnableLighting();
-        post.begin(camera.getCamera());
+        if (deferredShading) {
+            if (shadowLightPass != NULL) {
+                shadowLightPass->beginShadowMap(camera.getCamera());
+            }
+            doDraw();
+            if (pointLightPass != NULL) {
+                pointLightPass->drawLights();
+            }
+            if (shadowLightPass != NULL) {
+                shadowLightPass->endShadowMap();
+            }
+            
+            deferred.begin(camera.getCamera());
+            
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+        }
+        else {
+            ofEnableDepthTest();
+            ofEnableLighting();
+
+            post.begin(camera.getCamera());
+        }
         ofTranslate(-ofGetWidth()/2.f, -ofGetHeight()/2);
     }
     else {
@@ -109,8 +119,31 @@ void VOSC::beginDraw() {
     ofClear(0, 0, 0, 0);
 }
 
+void VOSC::doDraw() {
+    int totalVisible = 0;
+    for (int i=0; i<layers.size(); i++) {
+        if (layers[i]->getVarBool("visible")) {
+            totalVisible++;
+        }
+    }
+    for (int i=0; i<layers.size(); i++) {
+        layers[i]->draw(totalVisible);
+    }
+
+}
+
 void VOSC::endDraw() {
-    post.end();
+    if (deferredShading) {
+        if (pointLightPass != NULL) {
+            pointLightPass->drawLights();
+        }
+        glDisable(GL_CULL_FACE);
+
+        deferred.end();
+    }
+    else {
+        post.end();
+    }
     ofDisableLighting();
     ofDisableDepthTest();
     ofPopMatrix();
@@ -192,18 +225,8 @@ void VOSC::processQueue() {
     while (messageQueue.size()) {
         const ofxOscMessage &m = messageQueue[0];
         string command = m.getAddress();
-        if (command.substr(0, 5) == "/post") {
-            post.getPasses().clear();
-            for (int i=0; i<m.getNumArgs(); i++) {
-                if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-                    string passName = m.getArgAsString(i);
-                    createPostPass(passName);
-                }
-                else {
-                    int passId = m.getArgAsInt(i);
-                    createPostPass(passId);
-                }
-            }
+        if (command.substr(0, 8) == "/shading") {
+            shadingCommand(command, m);
         }
         else {
             if (m.getArgType(0) == OFXOSC_TYPE_STRING) {
@@ -244,6 +267,40 @@ void VOSC::processQueue() {
             }
         }
         messageQueue.erase(messageQueue.begin());
+    }
+}
+
+void VOSC::shadingCommand(const string& command, const ofxOscMessage& m) {
+    if (command == "/shading") {
+        deferredShading = (m.getArgAsString(0) == "deferred");
+    }
+    else if (command == "/shading/forward") {
+        post.getPasses().clear();
+        for (int i=0; i<m.getNumArgs(); i++) {
+            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+                string passName = m.getArgAsString(i);
+                createPostPass(passName);
+            }
+            else {
+                int passId = m.getArgAsInt(i);
+                createPostPass(passId);
+            }
+        }
+    }
+    else if (command == "/shading/deferred") {
+        deferred.getPasses().clear();
+        shadowLightPass = NULL;
+        pointLightPass = NULL;
+        for (int i=0; i<m.getNumArgs(); i++) {
+            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+                string passName = m.getArgAsString(i);
+                createDeferredPass(passName);
+            }
+            else {
+                int passId = m.getArgAsInt(i);
+                createDeferredPass(passId);
+            }
+        }
     }
 }
 
@@ -367,101 +424,56 @@ void VOSC::midiCommand(string command, const ofxOscMessage &m) {
     }
 }
 
+void VOSC::createDeferredPass(string passName) {
+    createDeferredPass(PostPassMap.at(passName));
+}
+
+void VOSC::createDeferredPass(int passId) {
+    createDeferredPass(static_cast<PostPass>(passId));
+}
+
+void VOSC::createDeferredPass(PostPass passId) {
+    switch (passId) {
+        case PostPass::BG:
+            deferred.createPass<ofxDeferred::BgPass>();
+            break;
+        case PostPass::EDGE:
+            deferred.createPass<ofxDeferred::EdgePass>();
+            break;
+        case PostPass::SSAO:
+            deferred.createPass<ofxDeferred::SsaoPass>();
+            break;
+        case PostPass::SHADOWLIGHT:
+            shadowLightPass = deferred.createPass<ofxDeferred::ShadowLightPass>();
+            break;
+        case PostPass::POINTLIGHT:
+            pointLightPass = deferred.createPass<ofxDeferred::PointLightPass>();
+            break;
+        case PostPass::FXAA:
+            deferred.createPass<ofxDeferred::FxaaPass>();
+            break;
+        case PostPass::FOG:
+            deferred.createPass<ofxDeferred::FogPass>();
+            break;
+        case PostPass::DOF:
+            deferred.createPass<ofxDeferred::DofPass>();
+            break;
+        case PostPass::BLOOM:
+            deferred.createPass<ofxDeferred::BloomPass>();;
+            break;
+    }
+}
+
 void VOSC::createPostPass(string passName) {
-    if (passName == "bloom") {
-        post.createPass<itg::BloomPass>();
-    }
-    else if (passName == "convolution") {
-        post.createPass<itg::ConvolutionPass>();
-    }
-    else if (passName == "dof") {
-        post.createPass<itg::DofPass>();
-    }
-    else if (passName == "dofalt") {
-        post.createPass<itg::DofAltPass>();
-    }
-    else if (passName == "edge") {
-        post.createPass<itg::EdgePass>();
-    }
-    else if (passName == "fxaa") {
-        post.createPass<itg::FxaaPass>();
-    }
-    else if (passName == "kaleidoscope") {
-        post.createPass<itg::KaleidoscopePass>();
-    }
-    else if (passName == "noisewarp") {
-        post.createPass<itg::NoiseWarpPass>();
-    }
-    else if (passName == "pixelate") {
-        post.createPass<itg::PixelatePass>();
-    }
-    else if (passName == "lut") {
-        post.createPass<itg::LUTPass>();
-    }
-    else if (passName == "contrast") {
-        post.createPass<itg::ContrastPass>();
-    }
-    else if (passName == "ssao") {
-        post.createPass<itg::SSAOPass>();
-    }
-    else if (passName == "htiltshift") {
-        post.createPass<itg::HorizontalTiltShifPass>();
-    }
-    else if (passName == "vtiltshift") {
-        post.createPass<itg::VerticalTiltShifPass>();
-    }
-    else if (passName == "rgbshift") {
-        post.createPass<itg::RGBShiftPass>();
-    }
-    else if (passName == "fakesss") {
-        post.createPass<itg::FakeSSSPass>();
-    }
-    else if (passName == "zoomblur") {
-        post.createPass<itg::ZoomBlurPass>();
-    }
-    else if (passName == "bleachbypass") {
-        post.createPass<itg::BleachBypassPass>();
-    }
-    else if (passName == "toon") {
-        post.createPass<itg::ToonPass>();
-    }
-    else if (passName == "godrays") {
-        post.createPass<itg::GodRaysPass>();
-    }
-    else if (passName == "rimhighlighting") {
-        post.createPass<itg::RimHighlightingPass>();
-    }
-    else if (passName == "limbdarkening") {
-        post.createPass<itg::LimbDarkeningPass>();
-    }
-//    else if (passName == "invert") {
-//        post.createPass<itg::Invert>();
-//    }
-//    else if (passName == "glitch") {
-//        post.createPass<itg::Glitch>();
-//    }
-//    else if (passName == "rotate") {
-//        post.createPass<itg::Rotate>();
-//    }
-//    else if (passName == "pixelsort") {
-//        post.createPass<itg::Pixelsort>();
-//    }
-//    else if (passName == "beyoon") {
-//        post.createPass<itg::Beyoon>();
-//    }
-//    else if (passName == "reflectx") {
-//        post.createPass<itg::ReflectX>();
-//    }
-//    else if (passName == "reflecty") {
-//        post.createPass<itg::ReflectY>();
-//    }
-//    else if (passName == "split") {
-//        post.createPass<itg::Split>();
-//    }
+    createPostPass(PostPassMap.at(passName));
 }
 
 void VOSC::createPostPass(int passId) {
-    switch (static_cast<PostPass>(passId)) {
+    createPostPass(static_cast<PostPass>(passId));
+}
+
+void VOSC::createPostPass(PostPass passId) {
+    switch (passId) {
         case PostPass::BLOOM:
             post.createPass<itg::BloomPass>();
             break;
@@ -626,6 +638,7 @@ void VOSC::keyPressed(int key) {
 
 void VOSC::windowResized(int w, int h) {
     if (w > 0 && h > 0) {
+        deferred.init(ofGetWidth(), ofGetHeight());
         post.init(ofGetWidth(), ofGetHeight());
     }
     layoutLayers(layout);

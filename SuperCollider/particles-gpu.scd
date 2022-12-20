@@ -37,3 +37,9 @@
 ~visuals.send('/cam/set', "movementMaxSpeed", 0.01);
 ~visuals.send('/cam/pos', [0, 0.5, 1.1]);
 )
+
+~visuals.send('/shading', "deferred");
+~visuals.send('/shading/deferred', "bg", "bloom");
+
+~visuals.send('/shading', "forward");
+~visuals.send('/shading/forward', "bloom", "dof");

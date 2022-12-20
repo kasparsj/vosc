@@ -9,6 +9,7 @@
 #include "ofxPostProcessing.h"
 #include "ofxMidi.h"
 #include "Inspector.hpp"
+#include "ofxDeferredShading.h"
 
 class VOSC {
 public:
@@ -29,6 +30,7 @@ private:
     void layoutLayers(Layout layout);
     
     void beginDraw();
+    void doDraw();
     void endDraw();
     
     void parseMessages();
@@ -37,13 +39,18 @@ private:
     void processQueue();
     void invalidCommand(const ofxOscMessage& m);
 
+    void shadingCommand(const string& command, const ofxOscMessage& m);
     void allLayersCommand(string command, const ofxOscMessage& m);
     void layersCommand(string command, const ofxOscMessage& m);
     void lightCommand(string command, const ofxOscMessage& m);
     void inputsCommand(string command, const ofxOscMessage& m);
     void midiCommand(string command, const ofxOscMessage& m);
+    void createDeferredPass(string passName);
+    void createDeferredPass(int passId);
+    void createDeferredPass(PostPass passId);
     void createPostPass(string passName);
     void createPostPass(int passId);
+    void createPostPass(PostPass passId);
     
     ofxOscReceiver receiver;
     vector<ofxOscMessage> messageQueue;
@@ -53,9 +60,14 @@ private:
     Layout layout = Layout::STACK;
     vector<OSCInput> inputs;
     ofxTidalCycles* tidal;
-    ofxPostProcessing post;
     ofxMidiIn midiIn;
     Inspector inspector;
+    
+    ofxPostProcessing post;
+    ofxDeferredProcessing deferred;
+    bool deferredShading = false;
+    ofxDeferred::PointLightPass::Ptr pointLightPass;
+    ofxDeferred::ShadowLightPass::Ptr shadowLightPass;
     
     int waitOnset = -1;
     bool forceOnset;
