@@ -38,8 +38,9 @@
 ~visuals.send('/cam/pos', [0, 0.5, 1.1]);
 )
 
-~visuals.send('/shading', "deferred");
-~visuals.send('/shading/deferred', "bg", "bloom");
+~visuals.send('/geom', 0, "box");
+~visuals.send('/cam', "easy");
 
+~visuals.send('/shading', "deferred");
 ~visuals.send('/shading', "forward");
-~visuals.send('/shading/forward', "bloom", "dof");
+~visuals.send('/shading/passes', "bg", "edge", "ssao", "shadowlight", "pointlight", "fxaa", "bloom");

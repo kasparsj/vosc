@@ -45,12 +45,12 @@ private:
     void lightCommand(string command, const ofxOscMessage& m);
     void inputsCommand(string command, const ofxOscMessage& m);
     void midiCommand(string command, const ofxOscMessage& m);
-    void createDeferredPass(string passName);
-    void createDeferredPass(int passId);
-    void createDeferredPass(PostPass passId);
-    void createPostPass(string passName);
-    void createPostPass(int passId);
-    void createPostPass(PostPass passId);
+    template<typename T>
+    void createShadingPass(T& processor, string passName);
+    template<typename T>
+    void createShadingPass(T& processor, int passId);
+    template<typename T>
+    void createShadingPass(T& processor, PostPass passId);
     
     ofxOscReceiver receiver;
     vector<ofxOscMessage> messageQueue;

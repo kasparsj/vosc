@@ -270,40 +270,6 @@ void VOSC::processQueue() {
     }
 }
 
-void VOSC::shadingCommand(const string& command, const ofxOscMessage& m) {
-    if (command == "/shading") {
-        deferredShading = (m.getArgAsString(0) == "deferred");
-    }
-    else if (command == "/shading/forward") {
-        post.getPasses().clear();
-        for (int i=0; i<m.getNumArgs(); i++) {
-            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-                string passName = m.getArgAsString(i);
-                createPostPass(passName);
-            }
-            else {
-                int passId = m.getArgAsInt(i);
-                createPostPass(passId);
-            }
-        }
-    }
-    else if (command == "/shading/deferred") {
-        deferred.getPasses().clear();
-        shadowLightPass = NULL;
-        pointLightPass = NULL;
-        for (int i=0; i<m.getNumArgs(); i++) {
-            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-                string passName = m.getArgAsString(i);
-                createDeferredPass(passName);
-            }
-            else {
-                int passId = m.getArgAsInt(i);
-                createDeferredPass(passId);
-            }
-        }
-    }
-}
-
 void VOSC::invalidCommand(const ofxOscMessage& m) {
     ofLogError() << "command not recognized: " << m;
     for (int i=0; i<m.getNumArgs(); i++) {
@@ -424,15 +390,8 @@ void VOSC::midiCommand(string command, const ofxOscMessage &m) {
     }
 }
 
-void VOSC::createDeferredPass(string passName) {
-    createDeferredPass(PostPassMap.at(passName));
-}
-
-void VOSC::createDeferredPass(int passId) {
-    createDeferredPass(static_cast<PostPass>(passId));
-}
-
-void VOSC::createDeferredPass(PostPass passId) {
+template<>
+void VOSC::createShadingPass(ofxDeferredProcessing& deferred, PostPass passId) {
     switch (passId) {
         case PostPass::BG:
             deferred.createPass<ofxDeferred::BgPass>();
@@ -464,15 +423,18 @@ void VOSC::createDeferredPass(PostPass passId) {
     }
 }
 
-void VOSC::createPostPass(string passName) {
-    createPostPass(PostPassMap.at(passName));
+template<>
+void VOSC::createShadingPass(ofxDeferredProcessing& deferred, string passName) {
+    createShadingPass(deferred, PostPassMap.at(passName));
 }
 
-void VOSC::createPostPass(int passId) {
-    createPostPass(static_cast<PostPass>(passId));
+template<>
+void VOSC::createShadingPass(ofxDeferredProcessing& deferred, int passId) {
+    createShadingPass(deferred, static_cast<PostPass>(passId));
 }
 
-void VOSC::createPostPass(PostPass passId) {
+template<>
+void VOSC::createShadingPass(ofxPostProcessing& post, PostPass passId) {
     switch (passId) {
         case PostPass::BLOOM:
             post.createPass<itg::BloomPass>();
@@ -564,6 +526,43 @@ void VOSC::createPostPass(PostPass passId) {
 //        case PostPass::SPLIT:
 //            post.createPass<itg::Split>();
 //            break;
+    }
+}
+
+template<>
+void VOSC::createShadingPass(ofxPostProcessing& post, string passName) {
+    createShadingPass(post, PostPassMap.at(passName));
+}
+
+template<>
+void VOSC::createShadingPass(ofxPostProcessing& post, int passId) {
+    createShadingPass(post, static_cast<PostPass>(passId));
+}
+
+void VOSC::shadingCommand(const string& command, const ofxOscMessage& m) {
+    if (command == "/shading") {
+        deferredShading = (m.getArgAsString(0) == "deferred");
+    }
+    else if (command == "/shading/passes") {
+        post.getPasses().clear();
+        deferred.getPasses().clear();
+        shadowLightPass = NULL;
+        pointLightPass = NULL;
+        for (int i=0; i<m.getNumArgs(); i++) {
+            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
+                string passName = m.getArgAsString(i);
+                createShadingPass(post, passName);
+                createShadingPass(deferred, passName);
+            }
+            else {
+                int passId = m.getArgAsInt(i);
+                createShadingPass(post, passId);
+                createShadingPass(deferred, passId);
+            }
+        }
+    }
+    else {
+        // todo: set pass properties
     }
 }
 
