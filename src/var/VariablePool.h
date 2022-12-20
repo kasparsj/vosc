@@ -18,13 +18,6 @@ public:
     static shared_ptr<BaseVar>& createOrUpdateShared(const string& command, const string& name, const ofxOscMessage& m, int idx = 1);
     template<typename T>
     static Variable<T>* createOrUpdateShared(const string& name, T value);
-    static shared_ptr<BaseVar> create(const ofxOscMessage& m, int idx = 1);
-    static shared_ptr<BaseVar> create(const string& command, const ofxOscMessage& m, int idx);
-    static shared_ptr<BaseVar> create(const ofxOscMessage& m, int idx, size_t size);
-    static void update(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx);
-    static void update(shared_ptr<BaseVar>& var, const string& command, const ofxOscMessage& m, int idx);
-    static void update(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx, size_t size);
-    static void updateColorsScheme(const shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx);
     static void update(const vector<OSCInput>& inputs, const vector<TidalNote>& notes);
     static void cleanup(const VarsHolder* holder);
     

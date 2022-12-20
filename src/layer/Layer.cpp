@@ -78,14 +78,14 @@ void Layer::oscCommand(const string& command, const ofxOscMessage &m) {
                 string source = m.getArgAsString(1);
                 shared_ptr<Geom>& newGeom = GeomPool::getOrCreate(source, getId());
                 setGeom(newGeom);
+                if (GeomPool::hasShared(source)) {
+                    return;
+                }
             }
             else {
                 shared_ptr<Geom>& newGeom = GeomPool::getOrCreate(getId());
                 newGeom->choose(m);
                 setGeom(newGeom);
-            }
-            if (geom->isLoaded()) {
-                return;
             }
         }
         geom->oscCommand(command, m);

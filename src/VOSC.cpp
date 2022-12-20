@@ -68,6 +68,16 @@ void VOSC::update() {
 #ifndef TARGET_CPU_UNIVERSAL
     ofxUltralight::update();
 #endif
+    if (pointLightPass != NULL) {
+        pointLightPass->clear();
+        const map<string, shared_ptr<Light>>& lights = Lights::get().all();
+        for (map<string, shared_ptr<Light>>::const_iterator it=lights.begin(); it!=lights.end(); ++it) {
+            // todo: fix
+            //pointLightPass->addLight(it->second->getVarVec3("pos"));
+            //pointLightPass->addLight();
+        }
+        pointLightPass->addLight();
+    }
 }
 
 void VOSC::draw() {

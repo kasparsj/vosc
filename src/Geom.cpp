@@ -11,11 +11,11 @@ string Geom::random() {
     return primitives[int(ofRandom(primitives.size()))];
 }
 
-void Geom::load(const string& newPath, const vector<float>& args) {
+void Geom::load(const string& newPath, const ofxOscMessage& m, int idx) {
     string newPrevPath = path;
     path = newPath;
     if (isPrimitive(newPath)) {
-        if (loadPrimitive(args)) {
+        if (loadPrimitive(m, idx)) {
             usingModel = false;
             prevPath = newPrevPath;
             updateBoundingBox();
@@ -26,13 +26,13 @@ void Geom::load(const string& newPath, const vector<float>& args) {
         }
     }
     else if (newPath == "quad") {
-        loadQuad(args);
+        loadQuad(m, idx);
         usingModel = false;
         prevPath = newPrevPath;
         updateBoundingBox();
     }
     else if (newPath == "grass") {
-        if (loadGrass(args)) {
+        if (loadGrass(m, idx)) {
             usingModel = false;
             prevPath = newPrevPath;
             updateBoundingBox();
@@ -43,7 +43,7 @@ void Geom::load(const string& newPath, const vector<float>& args) {
         }
     }
     else {
-        if (loadModel(args)) {
+        if (loadModel(m, idx)) {
             prevPath = newPrevPath;
             updateBoundingBox();
         }
@@ -54,16 +54,12 @@ void Geom::load(const string& newPath, const vector<float>& args) {
     }
 }
 
-void Geom::load(const ofxOscMessage &m) {
-    string newPath = m.getArgAsString(1);
-    vector<float> args;
-    for (int i=2; i<m.getNumArgs(); i++) {
-        args.push_back(m.getArgAsFloat(i));
-    }
-    load(newPath, args);
+void Geom::load(const ofxOscMessage &m, int idx) {
+    string newPath = m.getArgAsString(idx);
+    load(newPath, m, idx+1);
 }
 
-bool Geom::loadModel(const vector<float>& args) {
+bool Geom::loadModel(const ofxOscMessage& m, int idx) {
     vector<string> modelPaths;
     if (!ofFilePath::isAbsolute(path)) {
         modelPaths.insert(modelPaths.end(), {
@@ -107,40 +103,117 @@ bool Geom::loadModel(const vector<float>& args) {
     }
 }
 
-bool Geom::loadPrimitive(const vector<float>& args) {
-    if (path == "plane") {
-        primitive = make_shared<ofPlanePrimitive>(args.size() > 0 ? args[0] : 100,
-                                                  args.size() > 1 ? args[1] : 100,
-                                                  args.size() > 2 ? args[2] : 2,
-                                                  args.size() > 3 ? args[3] : 2);
+void Geom::appendMesh(ofMesh mesh_, const glm::mat4 mat) {
+    glm::mat4 normMat = glm::inverse(glm::transpose(mat));
+    for (int i = 0; i < mesh_.getNumVertices(); i++) {
+        mesh_.setVertex(i, mat * glm::vec4(mesh_.getVertex(i), 1.f));
+        glm::vec3 n = normMat * glm::vec4(mesh_.getNormal(i), 0.f);
+        mesh_.setNormal(i, glm::normalize(n));
     }
-    else if (path == "box") {
-        primitive = make_shared<ofBoxPrimitive>(args.size() > 0 ? args[0] : 100,
-                                                args.size() > 1 ? args[1] : 100,
-                                                args.size() > 2 ? args[2] : 100);
+    mesh->append(mesh_);
+}
+
+bool Geom::loadPrimitive(const ofxOscMessage& m, int idx) {
+    int num = 1;
+    if (m.getArgType(idx) == OFXOSC_TYPE_STRING) {
+        shared_ptr<BaseVar> var = BaseVar::createVar2(m, idx);
+        var->update();
+        num = var->size();
+        mesh = NULL;
+        bool retVal = true;
+        for (int i=0; i<num; i++) {
+            retVal &= appendPrimitive(var, i);
+        }
+        var = NULL;
+        return retVal;
     }
-    else if (path == "sphere") {
-        primitive = make_shared<ofSpherePrimitive>(50, 16);
+    else {
+        vector<float> args;
+        for (int i=idx; i<m.getNumArgs(); i++) {
+            args.push_back(m.getArgAsFloat(i));
+        }
+        mesh = NULL;
+        bool retVal = true;
+        for (int i=0; i<num; i++) {
+            retVal &= appendPrimitive(createPrimitive(args));
+        }
+        return retVal;
     }
-    else if (path == "icosphere") {
-        primitive = make_shared<ofIcoSpherePrimitive>(50, 2);
+}
+
+bool Geom::appendPrimitive(const shared_ptr<BaseVar>& var, int i) {
+    shared_ptr<Variable<glm::vec3>> vec3 = dynamic_pointer_cast<Variable<glm::vec3>>(var);
+    if (vec3 != NULL) {
+        const shared_ptr<of3dPrimitive> primitive = createPrimitive();
+        primitive->setScale(vec3->get(i));
+        return appendPrimitive(primitive);
     }
-    else if (path == "cylinder") {
-        primitive = make_shared<ofCylinderPrimitive>();
+    else {
+        shared_ptr<Variable<ofxExprNode>> node = dynamic_pointer_cast<Variable<ofxExprNode>>(var);
+        if (node != NULL) {
+            const shared_ptr<of3dPrimitive> primitive = createPrimitive();
+            primitive->setPosition(node->get(i).getPosition());
+            primitive->setOrientation(node->get(i).getOrientation());
+            primitive->setScale(node->get(i).getScale());
+            return appendPrimitive(primitive);
+        }
+        else {
+            shared_ptr<Variable<glm::mat4>> mat4 = dynamic_pointer_cast<Variable<glm::mat4>>(var);
+            if (mat4 != NULL) {
+                const shared_ptr<of3dPrimitive> primitive = createPrimitive();
+                // todo: how can I update matrix directly?
+                return appendPrimitive(primitive);
+            }
+        }
     }
-    else if (path == "cone") {
-        primitive = make_shared<ofConePrimitive>();
-    }
+    return false;
+}
+
+bool Geom::appendPrimitive(const shared_ptr<of3dPrimitive>& primitive) {
     if (primitive != NULL) {
         primitive->mapTexCoords(1.f, 1.f, 0.f, 0.f);
-        mesh = NULL;
-        mesh = shared_ptr<ofMesh>(primitive->getMeshPtr());
+        if (mesh == NULL) {
+            mesh = make_shared<ofVboMesh>();
+        }
+        appendMesh(primitive->getMesh(), primitive->getGlobalTransformMatrix());
         return true;
     }
     return false;
 }
 
-bool Geom::loadQuad(const vector<float>& args) {
+shared_ptr<of3dPrimitive> Geom::createPrimitive() {
+    vector<float> args;
+    return createPrimitive(args);
+}
+
+shared_ptr<of3dPrimitive> Geom::createPrimitive(const vector<float>& args) {
+    if (path == "plane") {
+        return make_shared<ofPlanePrimitive>(args.size() > 0 ? args[0] : 100,
+                                                  args.size() > 1 ? args[1] : 100,
+                                                  args.size() > 2 ? args[2] : 2,
+                                                  args.size() > 3 ? args[3] : 2);
+    }
+    else if (path == "box") {
+        return make_shared<ofBoxPrimitive>(args.size() > 0 ? args[0] : 100,
+                                                args.size() > 1 ? args[1] : 100,
+                                                args.size() > 2 ? args[2] : 100);
+    }
+    else if (path == "sphere") {
+        return make_shared<ofSpherePrimitive>(50, 16);
+    }
+    else if (path == "icosphere") {
+        return make_shared<ofIcoSpherePrimitive>(50, 2);
+    }
+    else if (path == "cylinder") {
+        return make_shared<ofCylinderPrimitive>();
+    }
+    else if (path == "cone") {
+        return make_shared<ofConePrimitive>();
+    }
+    return NULL;
+}
+
+bool Geom::loadQuad(const ofxOscMessage& m, int idx) {
     mesh = NULL;
     mesh = make_shared<ofVboMesh>();
     
@@ -176,7 +249,12 @@ bool Geom::loadQuad(const vector<float>& args) {
     mesh->addIndices( indices, 6 );
 }
 
-bool Geom::loadGrass(const vector<float>& args) {
+bool Geom::loadGrass(const ofxOscMessage& m, int idx) {
+    vector<float> args;
+    for (int i=idx; i<m.getNumArgs(); i++) {
+        args.push_back(m.getArgAsFloat(i));
+    }
+
     int resX = args[0];
     int resY = args[0];
     
@@ -217,14 +295,11 @@ bool Geom::loadGrass(const vector<float>& args) {
 
 void Geom::choose(const ofxOscMessage& m) {
     string newPath = random();
-    vector<float> args;
-    for (int i=1; i<m.getNumArgs(); i++) {
-        args.push_back(m.getArgAsFloat(i));
-    }
-    load(newPath, args);
+    load(newPath, m, 0);
 }
 
 void Geom::update() {
+    // todo: check if matrix is time dependant
 }
 
 void Geom::oscCommand(const string& command, const ofxOscMessage& m) {
@@ -236,6 +311,22 @@ void Geom::oscCommand(const string& command, const ofxOscMessage& m) {
     }
     else if (command == "/geom/set") {
         set(m);
+    }
+    else if (command == "/geom/pos") {
+        // todo: translate mesh
+    }
+    else if (command == "/geom/rot") {
+        // todo: rotate mesh
+    }
+    else if (command == "/geom/scale") {
+        // todo: scale mesh
+    }
+    else if (command == "/geom/color") {
+        // todo: set mesh colors
+    }
+    else if (command == "/geom/boxes") {
+        // matrices mat4
+        // colors ofFloatColor
     }
 }
 

@@ -35,17 +35,6 @@ void Variable<T>::set(const vector<string>& expr) {
 }
 
 template<typename T>
-void Variable<T>::addSharedVars() {
-    map<string, shared_ptr<BaseVar>>& pool = VariablePool::getPool(NULL);
-    for (map<string, shared_ptr<BaseVar>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
-        Variable<float>* floatVar = dynamic_cast<Variable<float>*>(it->second.get());
-        if (floatVar != NULL) {
-            expr.addVar(it->first, floatVar->get());
-        }
-    }
-}
-
-template<typename T>
 void Variable<T>::set(const ofxOscMessage& m, int idx) {
     try {
         set(Args::parseConst<T>(m, idx));
@@ -54,6 +43,17 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
         set(Args::parseExpr<T>(m, idx));
         int count = m.getNumArgs() > idx ? m.getArgAsInt(idx) : 1;
         values.resize(count);
+    }
+}
+
+template<typename T>
+void Variable<T>::addSharedVars() {
+    map<string, shared_ptr<BaseVar>>& pool = VariablePool::getPool(NULL);
+    for (map<string, shared_ptr<BaseVar>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
+        Variable<float>* floatVar = dynamic_cast<Variable<float>*>(it->second.get());
+        if (floatVar != NULL) {
+            expr.addVar(it->first, floatVar->get());
+        }
     }
 }
 

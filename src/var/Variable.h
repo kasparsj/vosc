@@ -34,7 +34,7 @@ public:
     BufData asBufferData() override;
     ofBufferObject asBufferObject();
     virtual void afterDraw() override;
-    size_t size() const {
+    size_t size() const override {
         return values.size();
     }
     bool isConst() const {

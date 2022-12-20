@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxOsc.h"
 #include "ofxAssimpModelLoader.h"
+#include "VarsHolder.h"
 
 class Layer;
 
@@ -11,18 +12,18 @@ struct BoundingBox {
     glm::vec3 max = glm::vec3(0,0,0);
 };
 
-class Geom {
+class Geom : public VarsHolder {
 public:
     static vector<string> primitives;
     static bool isPrimitive(const string& path);
     static string random();
 
     ~Geom() {}
-    void load(const string& newPath, const vector<float>& args);
-    void load(const ofxOscMessage &m);
+    void load(const string& newPath, const ofxOscMessage& m, int idx = 1);
+    void load(const ofxOscMessage &m, int idx = 1);
     void load(string newPath) {
-        vector<float> args;
-        load(newPath, args);
+        ofxOscMessage m;
+        load(newPath, m, 1);
     }
     void choose(const ofxOscMessage& m);
     void update();
@@ -50,14 +51,18 @@ public:
 private:
     void updateBoundingBox();
     
-    bool loadModel(const vector<float> &args);
-    bool loadPrimitive(const vector<float>& args);
-    bool loadQuad(const vector<float>& args);
-    bool loadGrass(const vector<float>& args);
+    bool loadModel(const ofxOscMessage& m, int idx = 1);
+    bool loadPrimitive(const ofxOscMessage& m, int idx = 1);
+    bool loadQuad(const ofxOscMessage& m, int idx = 1);
+    bool loadGrass(const ofxOscMessage& m, int idx = 1);
+    void appendMesh(ofMesh mesh, const glm::mat4 mat);
+    bool appendPrimitive(const shared_ptr<of3dPrimitive>& primitive);
+    bool appendPrimitive(const shared_ptr<BaseVar>& var, int i);
+    shared_ptr<of3dPrimitive> createPrimitive();
+    shared_ptr<of3dPrimitive> createPrimitive(const vector<float>& args);
     
     string path = "";
     string prevPath = "";
-    shared_ptr<of3dPrimitive> primitive;
     ofxAssimpModelLoader model;
     shared_ptr<ofMesh> mesh;
     BoundingBox boundingBox;
