@@ -43,4 +43,4 @@
 
 ~visuals.send('/shading', "deferred");
 ~visuals.send('/shading', "forward");
-~visuals.send('/shading/passes', "bg", "edge", "ssao", "shadowlight", "pointlight", "fxaa", "bloom");
+~visuals.send('/shading/passes', "bg", "edge", "ssao", "shadowlight", "pointlight", "bloom");
