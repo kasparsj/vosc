@@ -69,14 +69,13 @@ void VOSC::update() {
     ofxUltralight::update();
 #endif
     if (pointLightPass != NULL) {
-        pointLightPass->clear();
-        const map<string, shared_ptr<Light>>& lights = Lights::get().all();
-        for (map<string, shared_ptr<Light>>::const_iterator it=lights.begin(); it!=lights.end(); ++it) {
-            // todo: fix
-            //pointLightPass->addLight(it->second->getVarVec3("pos"));
-            //pointLightPass->addLight();
-        }
-        pointLightPass->addLight();
+        // todo: fix
+//        pointLightPass->clear();
+//        const map<string, shared_ptr<Light>>& lights = Lights::get().all();
+//        for (map<string, shared_ptr<Light>>::const_iterator it=lights.begin(); it!=lights.end(); ++it) {
+//            //pointLightPass->addLight(it->second->getVarVec3("pos"));
+//            //pointLightPass->addLight();
+//        }
     }
 }
 
@@ -99,6 +98,8 @@ void VOSC::beginDraw() {
     ofPushMatrix();
     if (camera.isEnabled()) {
         if (deferredShading) {
+            //ofEnableArbTex();
+            
             if (shadowLightPass != NULL) {
                 shadowLightPass->beginShadowMap(camera.getCamera());
             }
@@ -121,7 +122,6 @@ void VOSC::beginDraw() {
 
             post.begin(camera.getCamera());
         }
-        ofTranslate(-ofGetWidth()/2.f, -ofGetHeight()/2);
     }
     else {
         post.begin();
@@ -130,6 +130,9 @@ void VOSC::beginDraw() {
 }
 
 void VOSC::doDraw() {
+    if (camera.isEnabled()) {
+        ofTranslate(-ofGetWidth()/2.f, -ofGetHeight()/2);
+    }
     int totalVisible = 0;
     for (int i=0; i<layers.size(); i++) {
         if (layers[i]->getVarBool("visible")) {
@@ -150,6 +153,8 @@ void VOSC::endDraw() {
         glDisable(GL_CULL_FACE);
 
         deferred.end();
+        
+        //ofDisableArbTex();
     }
     else {
         post.end();
@@ -402,6 +407,7 @@ void VOSC::midiCommand(string command, const ofxOscMessage &m) {
 
 template<>
 void VOSC::createShadingPass(ofxDeferredProcessing& deferred, PostPass passId) {
+    ofEnableArbTex();
     switch (passId) {
         case PostPass::BG:
             deferred.createPass<ofxDeferred::BgPass>();
@@ -417,6 +423,7 @@ void VOSC::createShadingPass(ofxDeferredProcessing& deferred, PostPass passId) {
             break;
         case PostPass::POINTLIGHT:
             pointLightPass = deferred.createPass<ofxDeferred::PointLightPass>();
+            pointLightPass->addLight();
             break;
         case PostPass::FXAA:
             deferred.createPass<ofxDeferred::FxaaPass>();
@@ -431,6 +438,7 @@ void VOSC::createShadingPass(ofxDeferredProcessing& deferred, PostPass passId) {
             deferred.createPass<ofxDeferred::BloomPass>();;
             break;
     }
+    ofDisableArbTex();
 }
 
 template<>
@@ -647,7 +655,10 @@ void VOSC::keyPressed(int key) {
 
 void VOSC::windowResized(int w, int h) {
     if (w > 0 && h > 0) {
+        ofEnableArbTex();
         deferred.init(ofGetWidth(), ofGetHeight());
+        ofDisableArbTex();
+        
         post.init(ofGetWidth(), ofGetHeight());
     }
     layoutLayers(layout);

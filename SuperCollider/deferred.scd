@@ -1,0 +1,11 @@
+(
+~visuals = OSCVisuals("127.0.0.1", 33333);
+~visuals.send('/geom', 0, "box", ["rand(-50, 50)", "rand(-50, 50)", "rand(-50, 50)"], [0, 0, 0], [0.1, 0.1, 0.1], 10);
+~visuals.send('/cam', "easy");
+
+~visuals.send('/shading', "deferred");
+//~visuals.send('/shading', "forward");
+~visuals.send('/shading/passes', "bg", "edge", "ssao", "shadowlight", "pointlight", "bloom");
+
+~visuals.send('/light', 0, [-50, -20, 200]);
+)
