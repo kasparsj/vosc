@@ -184,10 +184,11 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
     else if (command == "/tex/color") {
         setVar("color", m);
     }
-    // todo: there is no way to multiply tints, therefore texture tint is disabled temporarily
-//    else if (command == "/tex/tint") {
+    else if (command == "/tex/tint") {
+//        // todo: there is no way to multiply tints, therefore texture tint is disabled temporarily
 //        setVar("tint", m);
-//    }
+        ofLogError() << "/tex/tint is disabled. Use /layer/tint.";
+    }
     else if (command == "/tex/speed") {
         setVar("speed", m);
     }
