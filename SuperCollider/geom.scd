@@ -1,4 +1,5 @@
 (
+// Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 // create visuals sender
 ~visuals = OSCVisuals("127.0.0.1", 33333);
 
