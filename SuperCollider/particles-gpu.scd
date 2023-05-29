@@ -1,4 +1,5 @@
 (
+// Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 ~visuals = OSCVisuals("127.0.0.1", 33333);
 
 ~visuals.send('/geom', 0, "box", 0.0015, 0.0015, 0.01);
