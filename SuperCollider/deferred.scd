@@ -1,4 +1,5 @@
 (
+// Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 ~visuals = OSCVisuals("127.0.0.1", 33333);
 ~visuals.send('/geom', 0, "box", ["rand(-50, 50)", "rand(-50, 50)", "rand(-50, 50)"], [0, 0, 0], [0.1, 0.1, 0.1], 10);
 ~visuals.send('/cam', "easy");
