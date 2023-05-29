@@ -57,45 +57,6 @@ void Variable<T>::addSharedVars() {
     }
 }
 
-//void Variable::setColor(const ofxOscMessage& m, int idx) {
-//    if (m.getNumArgs() > idx+3) { // args > 3
-//        if (m.getArgType(idx) == OFXOSC_TYPE_STRING && m.getArgAsString(idx) == "lerp") {
-//            ofFloatColor color = Args::get().parseLerpColor(m, idx);
-//            values[0].set(color.r);
-//            values[1].set(color.r);
-//            values[2].set(color.r);
-//        }
-//        else {
-//            ofFloatColor targetColor = Args::get().parseColor(m, idx);
-//            vector<float> target = {targetColor.r, targetColor.g, targetColor.b};
-//            tween(target, m.getArgAsFloat(4));
-//        }
-//    }
-//    else if (m.getNumArgs() == idx + 3) { // args == 3
-//        for (int i=(idx+1); i<m.getNumArgs(); i++) {
-//            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-//                values[i-(idx+1)].set(m.getArgAsString(i));
-//            }
-//            else {
-//                values[i-(idx+1)].set(Args::get().parseIntOrFloat(m, i));
-//            }
-//        }
-//    }
-//    else if (m.getNumArgs() == idx + 1) { // args == 1
-//        for (int i=0; i<3; i++) {
-//            if (m.getArgType(idx) == OFXOSC_TYPE_STRING) {
-//                values[i].set(m.getArgAsString(idx));
-//            }
-//            else {
-//                values[i].set(Args::get().parseIntOrFloat(m, idx));
-//            }
-//        }
-//    }
-//    else {
-//        ofLogError() << (m.getAddress() + " : invalid color format");
-//    }
-//}
-//
 //void Variable::setVec3(const ofxOscMessage &m, int idx) {
 //    values.resize(3);
 //    if (m.getNumArgs() == idx + 3) { // 3 args
@@ -262,8 +223,9 @@ void Variable<T>::update() {
     if (_isExpr) {
         float i = 0;
         float total = values.size();
-        expr.addVar("i", i);
-        expr.addVar("total", total);
+        // addVar recompiles the expr, and sets setTimef, which is needed for line
+        //expr.addVar("i", i);
+        //expr.addVar("total", total);
         // todo: add mics, sounds notes, data to expr vars
         for (i; i<values.size(); i++) {
             values[i] = expr.get();

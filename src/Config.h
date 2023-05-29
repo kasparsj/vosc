@@ -2,6 +2,8 @@
 
 #include "ofMain.h"
 
+//#define USE_ULTRALIGHT !defined TARGET_CPU_UNIVERSAL
+#define USE_ULTRALIGHT 0
 #define INITIAL_VISUALS 9
 #define MAX_NOTES 10
 

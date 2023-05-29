@@ -40,7 +40,7 @@ float Args::parse(const ofxOscMessage& m, int idx) {
         case OFXOSC_TYPE_STRING: {
             string str = m.getArgAsString(idx);
             value = ofToFloat(str);
-            if (isnan(value)) {
+            if (isnan(value) || strspn(str.c_str(), "-.0123456789") != str.size()) {
                 throw "string not float: " + str;
             }
             break;
@@ -229,6 +229,7 @@ vector<string> Args::parseExpr<float>(const ofxOscMessage& m, int& idx) {
     switch (m.getArgType(idx)) {
         case OFXOSC_TYPE_STRING: {
             floatExpr.push_back(m.getArgAsString(idx++));
+            break;
         }
         default:
             throw "could not parse float expr: " + ofToString(idx);

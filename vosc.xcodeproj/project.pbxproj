@@ -240,6 +240,8 @@
 		283FC0CCFA95CB3B45FE6893 /* Geometry.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Geometry.h; path = ../../../addons/ofxUltralight/libs/include/Ultralight/Geometry.h; sourceTree = SOURCE_ROOT; };
 		28A42A2103C59E7D30E9D245 /* Exporter.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Exporter.hpp; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/Exporter.hpp; sourceTree = SOURCE_ROOT; };
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
+		2B33C2D7297FBA42003E3292 /* scope.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = scope.frag; sourceTree = "<group>"; };
+		2B33C2D8297FCD21003E3292 /* scope2.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = scope2.frag; sourceTree = "<group>"; };
 		2B56C43E294E45940094681D /* 21.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 21.frag; sourceTree = "<group>"; };
 		2B56C43F294E45940094681D /* 76.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 76.frag; sourceTree = "<group>"; };
 		2B56C440294E45940094681D /* 99.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = 99.frag; sourceTree = "<group>"; };
@@ -1155,6 +1157,8 @@
 				2B56C4CC294E45940094681D /* todo */,
 				2B56C4D1294E45940094681D /* passthru.vert */,
 				2B56C4D2294E45940094681D /* texture.frag */,
+				2B33C2D7297FBA42003E3292 /* scope.frag */,
+				2B33C2D8297FCD21003E3292 /* scope2.frag */,
 			);
 			path = shaders;
 			sourceTree = "<group>";

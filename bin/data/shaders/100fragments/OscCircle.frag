@@ -8,6 +8,10 @@ uniform vec2 offset;
 uniform int layer;
 uniform vec4 color;
 uniform int random;
+uniform float minRadius = 0.2;
+uniform float radius = 0.1;
+uniform float minBorder = 0.05;
+uniform float border = 0.2;
 
 out vec4 fragColor;
 
@@ -33,9 +37,9 @@ void main (void){
     vec2 fragCoord = offset + gl_FragCoord.xy;
     vec2 uv = vec2(0.5, 0.5 * (resolution.y / resolution.x)) - fragCoord.xy / resolution.x;
     float dist = sqrt(dot(uv, uv));
-    float radius = cos(time) * 0.1 + 0.2;
-    float border = sin(time) * 0.2 + 0.05;
-    float t = smoothstep(radius + border, radius - border, dist);
+    float r = cos(time) * radius + minRadius;
+    float b = sin(time) * border + minBorder;
+    float t = smoothstep(r + b, r - b, dist);
     vec4 col = color;
     if (col == vec4(0)) col = vec4(DEFAULT_COLOR, 1.0);
     //fragColor = vec4(col.rgb * 1.5 * t * noise(vec2(random, layer)), t);

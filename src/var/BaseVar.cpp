@@ -105,9 +105,6 @@ void BaseVar::update(shared_ptr<BaseVar>& var, const string& command, const ofxO
     else if (command.length() >= 18 && command.substr(command.length()-18) == "/var/colors/scheme") {
         updateColorsScheme(var, m, idx);
     }
-    else if (command.length() >= 10 && command.substr(command.length()-10) == "/var/nodes") {
-        static_cast<Variable<ofxExprNode>*>(var.get())->set(m, idx);
-    }
 }
 
 void BaseVar::updateVar(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx, size_t size) {

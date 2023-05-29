@@ -282,6 +282,9 @@ void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<Bas
             else if (values.size() == 4) {
                 shader->setUniform4f(it->first, values[0], values[1], values[2], values[3]);
             }
+            else {
+                shader->setUniform1fv(it->first, &values[0], values.size());
+            }
         }
         else {
             const shared_ptr<const Variable<glm::vec3>> vec3Var = dynamic_pointer_cast<const Variable<glm::vec3>>(it->second);

@@ -24,7 +24,7 @@
 ~visuals = NetAddr("127.0.0.1", 33333);
 
 // initialize a grid of 9 layers
-~visuals.sendMsg('/layers', 9, "grid");
+~visuals.sendMsg('/layers', 36, "grid");
 
 // load first webcam into a shared/global texture
 ~visuals.sendMsg('/tex', "t_webcam", "webcam:0");
@@ -38,7 +38,7 @@
 // for each layer do
 9.do { |i|
 	// load the shared texture into the layer
-	~visuals.sendMsg('/tex', i, "t_webcam");
+	~visuals.sendMsg('/tex', "*", "t_webcam");
 
 	// set layer texture delay incrementally to 13 seconds
 	~visuals.sendMsg('/layer/delay', i, i*13);

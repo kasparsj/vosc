@@ -43,7 +43,7 @@ private:
     void allLayersCommand(string command, const ofxOscMessage& m);
     void layersCommand(string command, const ofxOscMessage& m);
     void lightCommand(string command, const ofxOscMessage& m);
-    void inputsCommand(string command, const ofxOscMessage& m);
+    void inputCommand(string command, const ofxOscMessage& m);
     void midiCommand(string command, const ofxOscMessage& m);
     template<typename T>
     void createShadingPass(T& processor, string passName);

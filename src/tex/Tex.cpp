@@ -11,7 +11,7 @@
 #include "Config.h"
 #include "VariablePool.h"
 
-#ifndef TARGET_CPU_UNIVERSAL
+#if USE_ULTRALIGHT
 #include "UltralightTex.h"
 #endif
 
@@ -20,7 +20,7 @@ shared_ptr<Tex> Tex::factory(string type, string path, const vector<float>& args
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
-#ifndef TARGET_CPU_UNIVERSAL
+#if USE_ULTRALIGHT
             case Source::HTML:
                 tex = make_shared<UltralightTex>(path, args);
                 break;

@@ -7,7 +7,7 @@
 #include "ShaderTex.h"
 #include "Lights.h"
 
-#ifndef TARGET_CPU_UNIVERSAL
+#if USE_ULTRALIGHT
 #include "ofxUltralight.h"
 #endif
 
@@ -65,7 +65,7 @@ void VOSC::update() {
     }
     camera.update();
     HPV::Update();
-#ifndef TARGET_CPU_UNIVERSAL
+#if USE_ULTRALIGHT
     ofxUltralight::update();
 #endif
     if (pointLightPass != NULL) {
@@ -194,18 +194,8 @@ bool VOSC::checkOnset() {
 
 void VOSC::parseMessage(const ofxOscMessage &m) {
     string command = m.getAddress();
-    if (command == "/inputs") {
-        inputs.resize(m.getArgAsInt(0));
-    }
-    if (command == "/inputs/list") {
-        vector<ofSoundDevice> devices = ofSoundStreamListDevices();
-        ofLog() << ("ofSoundStreamListDevices:");
-        for (int i=0; i<devices.size(); i++) {
-            ofLog() << (ofToString(i) + ": " + devices[i].name);
-        }
-    }
-    else if (command.substr(0, 6) == "/input") {
-        inputsCommand(command, m);
+    if (command.substr(0, 6) == "/input") {
+        inputCommand(command, m);
     }
     else if (command.substr(0, 5) == "/midi") {
         midiCommand(command, m);
@@ -368,27 +358,36 @@ retVals parseIndex(const ofxOscMessage &m) {
     return retVals { all, idx };
 }
 
-void VOSC::inputsCommand(string command, const ofxOscMessage &m) {
-    auto [all, idx] = parseIndex(m);
-    if (all) {
-        for (int i=0; i<inputs.size(); i++) {
-            inputs[i].oscCommand(command, m);
-        }
-    }
-    else if (idx >= 0) {
-        if (!all && (idx+1) > inputs.size()) {
-            inputs.resize(idx+1);
-        }
-        OSCInput& input = inputs[idx];
-        input.oscCommand(command, m);
-        if (command == "/input/data") {
-            if (waitOnset == -1) {
-                waitOnset = 1;
-            }
+void VOSC::inputCommand(string command, const ofxOscMessage &m) {
+    if (command == "/input/list") {
+        vector<ofSoundDevice> devices = ofSoundStreamListDevices();
+        ofLog() << ("ofSoundStreamListDevices:");
+        for (int i=0; i<devices.size(); i++) {
+            ofLog() << (ofToString(i) + ": " + devices[i].name);
         }
     }
     else {
-        ofLogError() << ("invalid input index: " + ofToString(idx));
+        auto [all, idx] = parseIndex(m);
+        if (all) {
+            for (int i=0; i<inputs.size(); i++) {
+                inputs[i].oscCommand(command, m);
+            }
+        }
+        else if (idx >= 0) {
+            if (!all && (idx+1) > inputs.size()) {
+                inputs.resize(idx+1);
+            }
+            OSCInput& input = inputs[idx];
+            input.oscCommand(command, m);
+            if (command == "/input/data") {
+                if (waitOnset == -1) {
+                    waitOnset = 1;
+                }
+            }
+        }
+        else {
+            ofLogError() << ("invalid input index: " + ofToString(idx));
+        }
     }
 }
 
@@ -520,9 +519,9 @@ void VOSC::createShadingPass(ofxPostProcessing& post, PostPass passId) {
         case PostPass::LIMBDARKENING:
             post.createPass<itg::LimbDarkeningPass>();
             break;
-//        case PostPass::INVERT:
-//            post.createPass<itg::Invert>();
-//            break;
+        case PostPass::INVERT:
+            post.createPass<itg::Invert>();
+            break;
 //        case PostPass::GLITCH:
 //            post.createPass<itg::Glitch>();
 //            break;
@@ -549,7 +548,12 @@ void VOSC::createShadingPass(ofxPostProcessing& post, PostPass passId) {
 
 template<>
 void VOSC::createShadingPass(ofxPostProcessing& post, string passName) {
-    createShadingPass(post, PostPassMap.at(passName));
+    if (PostPassMap.find(passName) != PostPassMap.end()) {
+        createShadingPass(post, PostPassMap.at(passName));
+    }
+    else {
+        ofLogError("shading pass: " + passName + " does not exist");
+    }
 }
 
 template<>
