@@ -10,6 +10,7 @@ bool VarsHolder::hasVar(const string& name) const {
 }
 
 float VarsHolder::getVar(const string& name, int idx) const {
+    // todo: should check existance and type before
     if (hasVar(name)) {
         const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
         if (var != NULL) {
@@ -20,6 +21,7 @@ float VarsHolder::getVar(const string& name, int idx) const {
 }
 
 float VarsHolder::getVarPercent(const string& name, int idx) const {
+    // todo: should check existance and type before
     if (hasVar(name)) {
         const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
         if (var != NULL) {
@@ -31,6 +33,7 @@ float VarsHolder::getVarPercent(const string& name, int idx) const {
 }
 
 bool VarsHolder::getVarBool(const string& name, int idx) const {
+    // todo: should check existance and type before
     if (hasVar(name)) {
         const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
         if (var != NULL) {
@@ -40,17 +43,16 @@ bool VarsHolder::getVarBool(const string& name, int idx) const {
     return false;
 }
 
-vector<float> VarsHolder::getVarVec(const string& name) const {
-    if (hasVar(name)) {
-        const Variable<float>* var = dynamic_cast<const Variable<float>*>(getVariable(name).get());
-        if (var != NULL) {
-            return var->getVec();
-        }
-    }
-    return vector<float>();
+const vector<float>& VarsHolder::getVarVec(const string& name) const {
+    return static_cast<const Variable<float>*>(getVariable(name).get())->getVec();
+}
+
+vector<float>& VarsHolder::getVarVec(const string& name) {
+    return static_cast<Variable<float>*>(getVariable(name).get())->getVec();
 }
 
 glm::vec3 VarsHolder::getVarVec3(const string& name, glm::vec3 defVal) const {
+    // todo: should check existance and type before
     if (hasVar(name)) {
         const Variable<glm::vec3>* var = dynamic_cast<const Variable<glm::vec3>*>(getVariable(name).get());
         if (var != NULL) {
@@ -61,6 +63,7 @@ glm::vec3 VarsHolder::getVarVec3(const string& name, glm::vec3 defVal) const {
 }
 
 ofFloatColor VarsHolder::getVarColor(const string& name) const {
+    // todo: should check existance and type before
     if (hasVar(name)) {
         const Variable<ofFloatColor>* var = dynamic_cast<const Variable<ofFloatColor>*>(getVariable(name).get());
         if (var != NULL) {

@@ -216,9 +216,9 @@ ofxExprNode Args::parse(const ofxOscMessage &m, int idx) {
 
 template<typename T>
 vector<T> Args::parseConst(const ofxOscMessage &m, int idx) {
-    vector<T> values;
+    vector<T> values(m.getNumArgs()-idx);
     for (int i=idx; i<m.getNumArgs(); i++) {
-        values.push_back(parse<T>(m, i));
+        values[i-idx] = parse<T>(m, i);
     }
     return values;
 }

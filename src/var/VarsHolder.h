@@ -18,7 +18,8 @@ public:
     glm::vec3 getVarVec3(const string& name) const {
         return getVarVec3(name, glm::vec3());
     }
-    vector<float> getVarVec(const string& name) const;
+    const vector<float>& getVarVec(const string& name) const;
+    vector<float>& getVarVec(const string& name);
     ofFloatColor getVarColor(const string& name) const;
     
     template <typename T>

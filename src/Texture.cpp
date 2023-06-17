@@ -196,6 +196,22 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
         string name = m.getArgAsString(1);
         setVar(name, m, 2);
     }
+    else if (command == "/tex/var/lifo") {
+        string name = m.getArgAsString(1);
+        float value = m.getArgAsFloat(2);
+        // todo: should check type is float
+        if (hasVar(name)) {
+            int maxLen = m.getArgAsInt(3);
+            vector<float>& values = getVarVec(name);
+            values.push_back(value);
+            if (values.size() > maxLen) {
+                values.erase(values.begin());
+            }
+        }
+        else {
+            setVar(name, value);
+        }
+    }
     else {
         data.oscCommand(command, m);
     }

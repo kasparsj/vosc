@@ -269,7 +269,7 @@ void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<Bas
     for (map<string, shared_ptr<BaseVar>>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
         const shared_ptr<const Variable<float>> floatVar = dynamic_pointer_cast<const Variable<float>>(it->second);
         if (floatVar != NULL) {
-            vector<float> values = floatVar->getVec();
+            const vector<float>& values = floatVar->getVec();
             if (values.size() == 1) {
                 shader->setUniform1f(it->first, values[0]);
             }

@@ -24,12 +24,11 @@ public:
         return values.at(idx);
     }
     virtual void update() override;
-    vector<T> getVec() const {
-        vector<T> vec;
-        for (int i=0; i<values.size(); i++) {
-            vec.push_back(values.at(i));
-        }
-        return vec;
+    const vector<T>& getVec() const {
+        return values;
+    }
+    vector<T>& getVec() {
+        return values;
     }
     BufData asBufferData() override;
     ofBufferObject asBufferObject();

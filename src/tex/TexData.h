@@ -47,7 +47,7 @@ public:
     float getVarPercent(const string& name, int idx = 0) const {
         return parent->getVarPercent(name, idx);
     }
-    vector<float> getVarVec(const string& name) const {
+    const vector<float>& getVarVec(const string& name) const {
         return parent->getVarVec(name);
     }
     glm::vec3 getVarVec3(const string& name) const {
