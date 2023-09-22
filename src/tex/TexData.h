@@ -59,7 +59,7 @@ public:
     
     float time = 0;
     float prevTime = 0;
-    bool noClear;
+    bool noClear = false;
     ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
     bool aspectRatio = true;
     int randomSeed = 0;
