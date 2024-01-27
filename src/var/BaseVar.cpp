@@ -42,6 +42,7 @@ shared_ptr<BaseVar> BaseVar::createVar(const ofxOscMessage& m, int idx, size_t s
         var->set(m, idx);
         return shared_ptr<BaseVar>(var);
     }
+    // todo: support vector<float>
     ofLogError() << "VariablePool::create not implemented for size: " << size;
     return NULL;
 }
@@ -134,6 +135,7 @@ void BaseVar::updateVar(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int id
             return;
         }
     }
+    // todo: support vector<float>
     ofLogError() << "VariablePool::create not implemented for size: " << size;
 }
 
@@ -163,6 +165,11 @@ void BaseVar::updateVar(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int id
     Variable<ofFloatColor>* var2 = dynamic_cast<Variable<ofFloatColor>*>(var.get());
     if (var2 != NULL) {
         var2->set(m, idx);
+        return;
+    }
+    Variable<glm::vec3>* var3 = dynamic_cast<Variable<glm::vec3>*>(var.get());
+    if (var3 != NULL) {
+        var3->set(m, idx);
         return;
     }
     ofLogError() << "VariablePool::update type not implemented: " << type << m << idx;
