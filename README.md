@@ -1,6 +1,6 @@
 # vosc
 
-**This is work in progress! Get in touch if you want to use it.**
+**This is work in progress! Better get in touch if you want to use it.**
 
 vosc is a visuals/vjing 2D/3D graphics engine that can be controlled via OSC commands.
 
