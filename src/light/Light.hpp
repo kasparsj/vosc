@@ -8,7 +8,8 @@ class Light : public VarsHolder {
 public:
     Light();
     void set(const ofxOscMessage& m, int idx);
+    void update();
     
-//private:
-//    ofLight light;
+private:
+    ofLight light;
 };

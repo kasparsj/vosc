@@ -5,6 +5,9 @@
 #include "Logger.h"
 #include "VOSC.hpp"
 
+#define PORT 33333
+#define FRAME_RATE 30
+
 class ofApp : public ofBaseApp {
 
 public:

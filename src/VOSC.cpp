@@ -117,6 +117,8 @@ void VOSC::beginDraw() {
             glCullFace(GL_BACK);
         }
         else {
+            Lights::get().update();
+            
             ofEnableDepthTest();
             ofEnableLighting();
 
@@ -619,6 +621,7 @@ void VOSC::keyPressed(int key) {
                 inspector.keyPressed(key);
             }
             else {
+                // todo: not working
                 ofxOscMessage m;
                 if (key == '0') {
                     m.addIntArg(OF_BLENDMODE_DISABLED);

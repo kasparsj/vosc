@@ -115,7 +115,7 @@ void Geom::appendMesh(ofMesh mesh_, const glm::mat4 mat) {
 
 bool Geom::loadPrimitive(const ofxOscMessage& m, int idx) {
     int num = 1;
-    if (m.getArgType(idx) == OFXOSC_TYPE_STRING) {
+    if (m.getNumArgs() > idx && m.getArgType(idx) == OFXOSC_TYPE_STRING) {
         shared_ptr<BaseVar> var = BaseVar::createVar2(m, idx);
         var->update();
         num = var->size();

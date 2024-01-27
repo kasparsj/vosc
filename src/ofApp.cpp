@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-	ofSetFrameRate(60);
+	ofSetFrameRate(FRAME_RATE);
 	ofSetVerticalSync(true);
 	ofBackground(0);
     
@@ -12,7 +12,7 @@ void ofApp::setup(){
     console = std::make_shared<Logger>();
     ofSetLoggerChannel(console);
     
-    vosc.setup(33333);
+    vosc.setup(PORT);
 }
 
 //--------------------------------------------------------------

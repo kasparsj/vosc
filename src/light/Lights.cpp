@@ -15,3 +15,9 @@ void Lights::remove(const ofxOscMessage& m) {
     string name = m.getArgType(0) == OFXOSC_TYPE_STRING ? m.getArgAsString(0) : ofToString(m.getArgAsInt(0));
     lights.erase(name);
 }
+
+void Lights::update() {
+    for (map<string, shared_ptr<Light>>::iterator it=lights.begin(); it!=lights.end(); ++it) {
+        it->second->update();
+    }
+}
