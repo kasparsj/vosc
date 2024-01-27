@@ -28,4 +28,4 @@ The engine is built on openFrameworks and uses the following addons:
 - ofxPostProcessing
 - ofxShadertoy
 - ofxTidalCycles
-- ofxUltralight
+- ofxUltralight (optional)
