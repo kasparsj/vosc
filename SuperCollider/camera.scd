@@ -28,16 +28,16 @@
 // orbit camera around penguin (around scene center)
 ~visuals.send('/cam/orbit', 20);
 
-~visuals.send('/layer/bri', "*", 5000);
+// todo: fix does not change the 3d model
+//~visuals.send('/layer/bri', "*", 0);
 
 (
 z.stop;
 z = {
 	inf.do {
-		~visuals.send('/post', 32.rand);
-		36.do { |i|
-					~visuals.send('/layer/tint', i, [255.rand, 255.rand, 255.rand]);
-		};
+		~visuals.send('/shading/passes', 32.rand);
+		// todo: fix does not change the model
+		//~visuals.send('/layer/tint', "*", [255.rand, 255.rand, 255.rand]);
 		5.wait;
 	};
 }.fork;
