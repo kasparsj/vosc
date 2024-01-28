@@ -14,7 +14,6 @@
 void VOSC::setup(unsigned int port) {
     receiver.setup(port);
     camera.setup();
-    setupLayers(INITIAL_VISUALS);
     tidal = new ofxTidalCycles(1);
     
     windowResized(ofGetWidth(), ofGetHeight());
@@ -307,6 +306,11 @@ void VOSC::layersCommand(string command, const ofxOscMessage& m) {
         if (m.getNumArgs() > 1) {
             layoutLayers(parseLayout(m, 1));
         }
+    }
+    else if (command == "/layers/reset") {
+        setupLayers(0);
+        layersCommand("/layers", m);
+        // todo: reset deferredShading
     }
     else if (command == "/layers/layout") {
         vector<Layer*> layers;

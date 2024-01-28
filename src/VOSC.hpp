@@ -56,7 +56,7 @@ private:
     vector<ofxOscMessage> messageQueue;
     
     Camera camera;
-    vector<Layer*> layers = {0};
+    vector<Layer*> layers = {};
     Layout layout = Layout::STACK;
     vector<OSCInput> inputs;
     ofxTidalCycles* tidal;
