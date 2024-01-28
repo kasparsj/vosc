@@ -19,7 +19,7 @@ public:
     Shader() : VarsHolder() {
     }
     ~Shader() {
-        unload();
+        reset();
     }
     bool isLoaded() const {
         return isShaderLoaded() || shadertoy != NULL;
@@ -36,6 +36,7 @@ public:
     void oscCommand(const string& command, const ofxOscMessage& m);
     void begin(TexData& data, int delay = 0);
     void end();
+    void reset();
     void unload();
     const map<string, shared_ptr<Texture>>& getTextures() const {
         return textures;

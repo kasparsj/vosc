@@ -103,7 +103,42 @@ bool Geom::loadModel(const ofxOscMessage& m, int idx) {
     }
 }
 
+ofMesh stripToTriangles(const ofMesh &stripMesh) {
+    ofMesh triangleMesh;
+    triangleMesh.setMode(OF_PRIMITIVE_TRIANGLES);
+    for (int i = 0; i < stripMesh.getNumVertices() - 2; i++) {
+        triangleMesh.addVertex(stripMesh.getVertex(i));
+        triangleMesh.addVertex(stripMesh.getVertex(i + 1));
+        triangleMesh.addVertex(stripMesh.getVertex(i + 2));
+        if (stripMesh.hasNormals()) {
+            triangleMesh.addNormal(stripMesh.getNormal(i));
+            triangleMesh.addNormal(stripMesh.getNormal(i + 1));
+            triangleMesh.addNormal(stripMesh.getNormal(i + 2));
+        }
+        if (stripMesh.hasColors()) {
+            triangleMesh.addColor(stripMesh.getColor(i));
+            triangleMesh.addColor(stripMesh.getColor(i + 1));
+            triangleMesh.addColor(stripMesh.getColor(i + 2));
+        }
+        if (stripMesh.hasTexCoords()) {
+            triangleMesh.addTexCoord(stripMesh.getTexCoord(i));
+            triangleMesh.addTexCoord(stripMesh.getTexCoord(i + 1));
+            triangleMesh.addTexCoord(stripMesh.getTexCoord(i + 2));
+        }
+        if (stripMesh.hasIndices()) {
+            int numIndices = triangleMesh.getNumIndices();
+            triangleMesh.addIndex(numIndices);
+            triangleMesh.addIndex(numIndices + 1);
+            triangleMesh.addIndex(numIndices + 2);
+        }
+    }
+    return triangleMesh;
+}
+
 void Geom::appendMesh(ofMesh mesh_, const glm::mat4 mat) {
+    if (mesh_.getMode() == OF_PRIMITIVE_TRIANGLE_STRIP) {
+        mesh_ = stripToTriangles(mesh_);
+    }
     glm::mat4 normMat = glm::inverse(glm::transpose(mat));
     for (int i = 0; i < mesh_.getNumVertices(); i++) {
         mesh_.setVertex(i, mat * glm::vec4(mesh_.getVertex(i), 1.f));
@@ -112,6 +147,7 @@ void Geom::appendMesh(ofMesh mesh_, const glm::mat4 mat) {
     }
     mesh->append(mesh_);
 }
+
 
 bool Geom::loadPrimitive(const ofxOscMessage& m, int idx) {
     int num = 1;

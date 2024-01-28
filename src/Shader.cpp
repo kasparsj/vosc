@@ -178,6 +178,9 @@ void Shader::oscCommand(const string& command, const ofxOscMessage& m) {
     else if (command == "/shader/buffer") {
         setBuffer(m);
     }
+    else if (command == "/shader/reset") {
+        reset();
+    }
 }
 
 void Shader::begin(TexData& data, int delay) {
@@ -347,6 +350,15 @@ void Shader::setUniformMaterial(shared_ptr<T>& shader, ofMaterial& mat, const st
     shader->setUniform1f(prefix + "Shininess", mat.getShininess());
 }
 
+void Shader::reset() {
+    unload();
+    TexturePool::clean(_id);
+    textures.clear();
+    buffers.clear();
+    VariablePool::cleanup(this);
+    vars.clear();
+}
+
 void Shader::unload() {
     if (shader != NULL) {
         try {
@@ -368,11 +380,6 @@ void Shader::unload() {
 //        }
         shadertoy = NULL;
     }
-    TexturePool::clean(_id);
-    textures.clear();
-    buffers.clear();
-    VariablePool::cleanup(this);
-    vars.clear();
 }
 
 shared_ptr<Texture>& Shader::getDefaultTexture() {

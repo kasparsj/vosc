@@ -230,7 +230,7 @@ void Layer::draw(int totalVisible) {
         if (getVarBool("visible")) {
             switch (data.blendMode) {
                 case OF_BLENDMODE_ALPHA:
-                    ofSetColor(255, 255, 255, 255 / totalVisible);
+                    //ofSetColor(255, 255, 255, 255 / totalVisible);
                     break;
                 default:
                     ofSetColor(255);
@@ -306,7 +306,7 @@ void Layer::unload() {
 
 void Layer::reset() {
     unload();
-    shader.unload();
+    shader.reset();
     setVar("visible", true);
     setVar("speed", 1.f);
     setVar("tint", ofFloatColor(1.f, 1.f));
