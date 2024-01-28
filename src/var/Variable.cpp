@@ -223,9 +223,8 @@ void Variable<T>::update() {
     if (_isExpr) {
         float i = 0;
         float total = values.size();
-        // addVar recompiles the expr, and sets setTimef, which is needed for line
-        //expr.addVar("i", i);
-        //expr.addVar("total", total);
+        expr.addVar("i", i, true, false);
+        expr.addVar("total", total, true, false);
         // todo: add mics, sounds notes, data to expr vars
         for (i; i<values.size(); i++) {
             values[i] = expr.get();
