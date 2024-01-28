@@ -79,7 +79,7 @@ void main() {
 ~visuals.send('/layers', 1);
 
 // initialize Microphone
-~visuals.send('/mic', 0, "Microphone");
+~visuals.send('/input', 0, "Microphone");
 
 // run Spiral sketch with stroke alpha mapped to mic's amplitude
 ~visuals.send('/geom', 0, "");

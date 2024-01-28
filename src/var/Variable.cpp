@@ -3,6 +3,7 @@
 #include "ColorUtil.h"
 #include "TexData.h"
 #include "VariablePool.h"
+#include "Inputs.hpp"
 
 template <typename T>
 void Variable<T>::set(T value) {
@@ -48,12 +49,16 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
 
 template<typename T>
 void Variable<T>::addSharedVars() {
-    map<string, shared_ptr<BaseVar>>& pool = VariablePool::getPool(NULL);
-    for (map<string, shared_ptr<BaseVar>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
-        Variable<float>* floatVar = dynamic_cast<Variable<float>*>(it->second.get());
+    auto& pool = VariablePool::getPool(NULL);
+    for (auto& kv : pool) {
+        Variable<float>* floatVar = dynamic_cast<Variable<float>*>(kv.second.get());
         if (floatVar != NULL) {
-            expr.addVar(it->first, floatVar->get());
+            expr.addVar(kv.first, floatVar->get());
         }
+    }
+    const auto& inputs = Inputs::get().all();
+    for (const auto& kv : inputs) {
+        expr.addVar("in_" + kv.first, kv.second->get());
     }
 }
 
@@ -131,7 +136,7 @@ void Variable<T>::addSharedVars() {
 //}
 
 //template<>
-//void Value<float>::update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes, int index, int total, TexData* data) {
+//void Value<float>::update(const vector<TidalNote> &notes, int index, int total, TexData* data) {
 //    if (type == "expr") {
 //        value = expr.get();
 //    }
@@ -166,18 +171,6 @@ void Variable<T>::addSharedVars() {
 //        float time = (data != NULL ? data->time : ofGetElapsedTimef()) * speed;
 //        if (type == "time") {
 //            value = fmod(time, 1.f);
-//        }
-//        else if (type == "noise") {
-//            value = ofNoise((int)(size_t)this, time);
-//        }
-//        else if (type == "rand") {
-//            value = ofRandom(1.f);
-//        }
-//        else if (type == "sin") {
-//            value = (sin(time)+1)/2.f;
-//        }
-//        else if (type == "cos") {
-//            value = (cos(time)+1)/2.f;
 //        }
 //        else if (type == "amp" || type == "loud" || type == "onset" || type == "mfcc") {
 //            if (sounds.size() > chan) {

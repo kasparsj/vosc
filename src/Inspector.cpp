@@ -1,10 +1,10 @@
 #include "Inspector.hpp"
 #include "TexturePool.h"
 #include "Buffer.hpp"
+#include "Inputs.hpp"
 
-void Inspector::inspect(const vector<Layer*>& layers, const vector<OSCInput>& inputs) {
+void Inspector::inspect(const vector<Layer*>& layers) {
     this->layers = &layers;
-    this->inputs = &inputs;
     
     ofPushMatrix();
     
@@ -134,32 +134,33 @@ void Inspector::debugEmpty(string text) {
 }
 
 void Inspector::drawInputs() {
-    if (inputs->size() > 0) {
-        for (int i=0; i<inputs->size(); i++) {
-            ofPushMatrix();
-            ofTranslate((i+1)*20 + i*200, 0);
-            drawAmplitude(inputs->at(i));
-            ofPopMatrix();
-        }
+    const map<string, shared_ptr<OSCInput>>& inputs = Inputs::get().all();
+    int i=0;
+    for (const auto& kv : inputs) {
+        ofPushMatrix();
+        ofTranslate((i+1)*20 + i*200, 0);
+        drawAmplitude(kv.second);
+        ofPopMatrix();
+        i++;
     }
     // draw mfcc
 }
 
-void Inspector::drawAmplitude(const OSCInput& input) {
+void Inspector::drawAmplitude(const shared_ptr<OSCInput> input) {
     ofPushStyle();
     ofNoFill();
     ofSetColor(225);
-    ofDrawBitmapString(ofToString(input.ampScaled * 100.0, 0), 4, 18);
+    ofDrawBitmapString(ofToString(input->ampScaled * 100.0, 0), 4, 18);
     ofDrawRectangle(0, 0, 100, 100);
     ofFill();
-    ofDrawCircle(50, 50, input.ampScaled * 100.0f);
+    ofDrawCircle(50, 50, input->ampScaled * 100.0f);
     ofBeginShape();
     ofSetColor(245, 58, 135);
-    for (unsigned int i = 0; i < input.ampHist.size(); i++){
+    for (unsigned int i = 0; i < input->ampHist.size(); i++){
         float x = (float)i/2.f;
         if( i == 0 ) ofVertex(x, 100);
-        ofVertex(x, 100 - input.ampHist[i] * 100.f);
-        if( i == input.ampHist.size() -1 ) ofVertex(x, 100);
+        ofVertex(x, 100 - input->ampHist[i] * 100.f);
+        if( i == input->ampHist.size() -1 ) ofVertex(x, 100);
     }
     ofEndShape(false);
     ofPopStyle();

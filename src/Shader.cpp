@@ -155,7 +155,7 @@ bool Shader::loadFromFile(const string& path) {
     return false;
 }
 
-void Shader::update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes) {
+void Shader::update(const vector<TidalNote> &notes) {
     for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
         it->second->update();
     }

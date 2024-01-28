@@ -32,7 +32,7 @@ public:
     bool loadShadertoy(const string& shadertoyId);
     bool loadFromFile(const string& path);
     void reload();
-    void update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes);
+    void update(const vector<TidalNote> &notes);
     void oscCommand(const string& command, const ofxOscMessage& m);
     void begin(TexData& data, int delay = 0);
     void end();

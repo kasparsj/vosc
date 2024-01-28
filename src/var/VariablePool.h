@@ -18,7 +18,7 @@ public:
     static shared_ptr<BaseVar>& createOrUpdateShared(const string& command, const string& name, const ofxOscMessage& m, int idx = 1);
     template<typename T>
     static Variable<T>* createOrUpdateShared(const string& name, T value);
-    static void update(const vector<OSCInput>& inputs, const vector<TidalNote>& notes);
+    static void update(const vector<TidalNote>& notes);
     static void cleanup(const VarsHolder* holder);
     
 private:

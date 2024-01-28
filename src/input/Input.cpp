@@ -13,11 +13,12 @@ void Input::setupStream(const ofxOscMessage& m) {
     if (numInputChannels > 0) {
         //instNum = m.getArgAsInt(0);
         auto devices = soundStream.getMatchingDevices(name);
-        ofSoundStreamSettings settings;
-        if (!devices.empty()) {
-            settings.setInDevice(devices[0]);
+        if (devices.empty()) {
+            ofLog() << "found no matching devices for: " << name;
+            return;
         }
-
+        ofSoundStreamSettings settings;
+        settings.setInDevice(devices[0]);
         settings.setInListener(this);
         settings.sampleRate = 44100;
         settings.numOutputChannels = 0;

@@ -12,10 +12,11 @@
 ~visuals.send('/tex/var', 0, "glow", "sin(t)");
 
 // initialize Microphone
-~visuals.send('/mic', 0, "Microphone");
+~visuals.send('/input', 0, "Microphone");
+~visuals.send('/input/set', 0, "maxAmp", 0.17);
 
 // map glow shader var (uniform) to mic 1 amplitude
-~visuals.send('/tex/var', 0, "glow", "mic:0");
+~visuals.send('/tex/var', 0, "glow", "in_0");
 ~visuals.send('/tex/var/range', 0, "glow", 10);
 
 // load Ether shader (from shadertoy)
@@ -25,7 +26,7 @@
 ~visuals.send('/tex/color', 0, [0, 0, 255], 10);
 
 // map shader color blue channel to mic 1 amplitude
-~visuals.send('/tex/color', 0, [255, 255, "mic:0"]);
+~visuals.send('/tex/color', 0, [255, 255, "in_0"]);
 
 // map shader color red channel to tidal
 ~visuals.send('/tex/color', 0, ["tidal:0", 255, 255]);
@@ -38,3 +39,5 @@
 
 // load random shaders into all 9 layers
 ~visuals.send('/tex/choose', "*", "shader");
+
+~visuals.send('/input/list');

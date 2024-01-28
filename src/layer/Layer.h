@@ -21,7 +21,7 @@ public:
     }
     void setup(int index);
     void layout(Layout layout, int layoutIndex, int layoutTotal);
-    void update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes);
+    void update(const vector<TidalNote> &notes);
     void oscCommand(const string& command, const ofxOscMessage &m);
     void layerCommand(const string& command, const ofxOscMessage& m);
     void materialCommand(const string& command, const ofxOscMessage& m);

@@ -6,7 +6,7 @@
 
 class Inspector {
 public:
-    void inspect(const vector<Layer*>& layers, const vector<OSCInput>& inputs);
+    void inspect(const vector<Layer*>& layers);
     
     void mousePressed(int x, int y, int button);
     void mouseReleased(int x, int y, int button);
@@ -25,10 +25,9 @@ private:
     void debugTexture(const ofTexture& tex);
     void debugEmpty(string text);
     void drawInputs();
-    void drawAmplitude(const OSCInput& input);
+    void drawAmplitude(const shared_ptr<OSCInput> input);
     
     const vector<Layer*>* layers;
-    const vector<OSCInput>* inputs;
     int debugLayer = -1;
     
 };

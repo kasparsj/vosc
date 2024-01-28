@@ -125,10 +125,13 @@ void Texture::clear() {
     }
 }
 
-void Texture::update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes) {
+void Texture::update(const vector<TidalNote> &notes) {
     if (isLoaded()) {
-        data.update(sounds, notes);
+        data.update(notes);
         tex->update(data);
+        
+        // if var->size() > 1
+        // make a loop to draw the tex into a parent
         
         if (looper != NULL) {
             looper->swapBuffers(/*forceSwap*/);

@@ -6,6 +6,7 @@
 #include "GeomPool.h"
 #include "ShaderTex.h"
 #include "Lights.h"
+#include "Inputs.hpp"
 
 #if USE_ULTRALIGHT
 #include "ofxUltralight.h"
@@ -50,17 +51,15 @@ void VOSC::layoutLayers(Layout layout) {
 void VOSC::update() {
     camera.preUpdate();
     parseMessages();
-    for (int i=0; i<inputs.size(); i++) {
-        inputs[i].update();
-    }
+    Inputs::get().update();
     while (tidal->notes.size() > MAX_NOTES) {
         tidal->notes.erase(tidal->notes.begin());
     }
-    VariablePool::update(inputs, tidal->notes);
-    TexturePool::update(inputs, tidal->notes);
+    VariablePool::update(tidal->notes);
+    TexturePool::update(tidal->notes);
     GeomPool::update();
     for (int i = 0; i < layers.size(); i++) {
-        layers[i]->update(inputs, tidal->notes);
+        layers[i]->update(tidal->notes);
     }
     camera.update();
     HPV::Update();
@@ -89,7 +88,7 @@ void VOSC::draw() {
         }
         ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
 
-        inspector.inspect(layers, inputs);
+        inspector.inspect(layers);
     }
 }
 
@@ -183,12 +182,7 @@ bool VOSC::checkOnset() {
         isOnset = true;
     }
     else {
-        for (int i=0; i<inputs.size(); i++) {
-            if (inputs[i].onset) {
-                isOnset = true;
-                break;
-            }
-        }
+        isOnset = Inputs::get().checkOnset();
     }
     return isOnset;
 }
@@ -196,7 +190,12 @@ bool VOSC::checkOnset() {
 void VOSC::parseMessage(const ofxOscMessage &m) {
     string command = m.getAddress();
     if (command.substr(0, 6) == "/input") {
-        inputCommand(command, m);
+        Inputs::get().oscCommand(command, m);
+        if (command == "/input/data") {
+            if (waitOnset == -1) {
+                waitOnset = 1;
+            }
+        }
     }
     else if (command.substr(0, 5) == "/midi") {
         midiCommand(command, m);
@@ -360,39 +359,6 @@ retVals parseIndex(const ofxOscMessage &m) {
         idx = m.getArgAsInt(0);
     }
     return retVals { all, idx };
-}
-
-void VOSC::inputCommand(string command, const ofxOscMessage &m) {
-    if (command == "/input/list") {
-        vector<ofSoundDevice> devices = ofSoundStreamListDevices();
-        ofLog() << ("ofSoundStreamListDevices:");
-        for (int i=0; i<devices.size(); i++) {
-            ofLog() << (ofToString(i) + ": " + devices[i].name);
-        }
-    }
-    else {
-        auto [all, idx] = parseIndex(m);
-        if (all) {
-            for (int i=0; i<inputs.size(); i++) {
-                inputs[i].oscCommand(command, m);
-            }
-        }
-        else if (idx >= 0) {
-            if (!all && (idx+1) > inputs.size()) {
-                inputs.resize(idx+1);
-            }
-            OSCInput& input = inputs[idx];
-            input.oscCommand(command, m);
-            if (command == "/input/data") {
-                if (waitOnset == -1) {
-                    waitOnset = 1;
-                }
-            }
-        }
-        else {
-            ofLogError() << ("invalid input index: " + ofToString(idx));
-        }
-    }
 }
 
 void VOSC::midiCommand(string command, const ofxOscMessage &m) {

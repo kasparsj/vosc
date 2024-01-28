@@ -36,6 +36,7 @@
 		2A19EEB7672D387FB0CD814E /* Complementary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F760FDAF16D2BDDE808B9400 /* Complementary.cpp */; };
 		2B07F43624EA8DFA7937A5A1 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0D89BE3AA93DB4811A6135A4 /* Shader.cpp */; };
 		2B56EC0A2951C6AF00808AC5 /* BaseVar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B56EC092951C6AF00808AC5 /* BaseVar.cpp */; };
+		2B6C21052B66FA87004C7B00 /* Inputs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B6C21032B66FA87004C7B00 /* Inputs.cpp */; };
 		2D7732D4AC34CDDBDCFE9699 /* Tex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 23AB9B54C418735665B1EBA6 /* Tex.cpp */; };
 		32EF91807603A7F5DC31EF6D /* OSCInput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AC1BD60E9290CC1DCAF65749 /* OSCInput.cpp */; };
 		33DB731E964056D7E35604A7 /* FakeSSSPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C64B88209AF231B4FC8B4056 /* FakeSSSPass.cpp */; };
@@ -378,6 +379,8 @@
 		2B56C4D3294E8E560094681D /* ofxFirstPersonCamera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ofxFirstPersonCamera.h; sourceTree = "<group>"; };
 		2B56EC092951C6AF00808AC5 /* BaseVar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = BaseVar.cpp; path = var/BaseVar.cpp; sourceTree = "<group>"; };
 		2B629E4DB07A45391A420283 /* importerdesc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = importerdesc.h; path = ../../../addons/ofxAssimpModelLoader/libs/assimp/include/assimp/importerdesc.h; sourceTree = SOURCE_ROOT; };
+		2B6C21032B66FA87004C7B00 /* Inputs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Inputs.cpp; path = input/Inputs.cpp; sourceTree = "<group>"; };
+		2B6C21042B66FA87004C7B00 /* Inputs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Inputs.hpp; path = input/Inputs.hpp; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.h; sourceTree = SOURCE_ROOT; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = ../../../addons/ofxHPVPlayer/src/lz4hc.c; sourceTree = SOURCE_ROOT; };
 		2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VerticalTiltShifPass.cpp; path = ../../../addons/ofxPostProcessing/src/VerticalTiltShifPass.cpp; sourceTree = SOURCE_ROOT; };
@@ -1984,10 +1987,12 @@
 		C8F905A850B56EB1DCC856BB /* input */ = {
 			isa = PBXGroup;
 			children = (
-				2588B1403B37A447F9955E93 /* Input.h */,
 				B416EA211A13C1B5FA51418B /* Input.cpp */,
+				2588B1403B37A447F9955E93 /* Input.h */,
 				AC1BD60E9290CC1DCAF65749 /* OSCInput.cpp */,
 				6AFBBAD2E967FBCC6CFC98E4 /* OSCInput.h */,
+				2B6C21032B66FA87004C7B00 /* Inputs.cpp */,
+				2B6C21042B66FA87004C7B00 /* Inputs.hpp */,
 			);
 			name = input;
 			sourceTree = "<group>";
@@ -2703,6 +2708,7 @@
 				63F9FE1D90234FA6DE6F509E /* ofxMidi.cpp in Sources */,
 				881AF887EC2124F4105DE9E1 /* ofxMidiClock.cpp in Sources */,
 				0BFC9C20FD7E3C8D5873AA97 /* ofxMidiIn.cpp in Sources */,
+				2B6C21052B66FA87004C7B00 /* Inputs.cpp in Sources */,
 				C6FE64F74F1EA1D98C8F9847 /* ofxMidiMessage.cpp in Sources */,
 				83D9F930112E0944444124EE /* ofxMidiOut.cpp in Sources */,
 				1030C647FD06E4D3E054F65D /* ofxMidiTimecode.cpp in Sources */,

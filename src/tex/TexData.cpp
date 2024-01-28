@@ -1,7 +1,7 @@
 #include "TexData.h"
 #include "Args.h"
 
-void TexData::update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes) {
+void TexData::update(const vector<TidalNote> &notes) {
     const float timef = ofGetElapsedTimef();
     time += ((timef - prevTime) * parent->getVar("speed"));
     prevTime = timef;

@@ -11,7 +11,7 @@ public:
     void setup(VarsHolder* parent) {
         this->parent = parent;
     }
-    void update(const vector<OSCInput> &sounds, const vector<TidalNote> &notes);
+    void update(const vector<TidalNote> &notes);
     void oscCommand(const string& command, const ofxOscMessage &m);
     
     glm::vec2 getSize() const {

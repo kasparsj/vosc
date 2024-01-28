@@ -31,11 +31,11 @@ void Layer::layout(Layout layout, int layoutIndex, int layoutTotal)
     }
 }
 
-void Layer::update(const vector<OSCInput> &inputs, const vector<TidalNote> &notes) {
+void Layer::update(const vector<TidalNote> &notes) {
     if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
-        data.update(inputs, notes);
+        data.update(notes);
     }
-    shader.update(inputs, notes);
+    shader.update(notes);
     material.update();
 }
 

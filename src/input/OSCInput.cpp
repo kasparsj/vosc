@@ -26,10 +26,10 @@ void OSCInput::oscCommand(const string& command, const ofxOscMessage &m) {
     else if (command == "/input/set") {
         string prop = m.getArgAsString(1);
         if (prop == "maxAmp") {
-            setVar("mapAmp", m, 2);
+            setVar("maxAmp", m, 2);
         }
         else if (prop == "maxLoud") {
-            setVar("maxLout", m, 2);
+            setVar("maxLoud", m, 2);
         }
     }
 }

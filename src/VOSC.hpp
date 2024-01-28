@@ -4,7 +4,6 @@
 #include "ofxOsc.h"
 #include "ofxTidalCycles.h"
 #include "Layer.h"
-#include "OSCInput.h"
 #include "Camera.hpp"
 #include "ofxPostProcessing.h"
 #include "ofxMidi.h"
@@ -43,7 +42,6 @@ private:
     void allLayersCommand(string command, const ofxOscMessage& m);
     void layersCommand(string command, const ofxOscMessage& m);
     void lightCommand(string command, const ofxOscMessage& m);
-    void inputCommand(string command, const ofxOscMessage& m);
     void midiCommand(string command, const ofxOscMessage& m);
     template<typename T>
     void createShadingPass(T& processor, string passName);
@@ -58,7 +56,6 @@ private:
     Camera camera;
     vector<Layer*> layers = {};
     Layout layout = Layout::STACK;
-    vector<OSCInput> inputs;
     ofxTidalCycles* tidal;
     ofxMidiIn midiIn;
     Inspector inspector;
