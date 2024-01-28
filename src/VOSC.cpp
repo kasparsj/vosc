@@ -303,9 +303,7 @@ Layout parseLayout(const ofxOscMessage &m, int idx)
 void VOSC::layersCommand(string command, const ofxOscMessage& m) {
     if (command == "/layers") {
         setupLayers(m.getArgAsInt(0));
-        if (m.getNumArgs() > 1) {
-            layoutLayers(parseLayout(m, 1));
-        }
+        layoutLayers(m.getNumArgs() > 1 ? parseLayout(m, 1) : layout);
     }
     else if (command == "/layers/reset") {
         setupLayers(0);
