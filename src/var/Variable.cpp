@@ -58,45 +58,15 @@ void Variable<T>::addSharedVars() {
     }
     const auto& inputs = Inputs::get().all();
     for (const auto& kv : inputs) {
+        // todo: support other properties (e.g. loudness, raw amplitude)
         expr.addVar("in_" + kv.first, kv.second->get());
     }
+    expr.addConst("left", 0.f);
+    expr.addConst("right", 1.f);
+    expr.addConst("top", 0.f);
+    expr.addConst("bottom", 1.f);
+    expr.addConst("center", 0.5f);
 }
-
-//void Variable::setVec3(const ofxOscMessage &m, int idx) {
-//    values.resize(3);
-//    if (m.getNumArgs() == idx + 3) { // 3 args
-//        for (int i=idx; i<m.getNumArgs(); i++) {
-//            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-//                values[i-idx].set(m.getArgAsString(i));
-//            }
-//            else {
-//                values[i-idx].set(m.getArgAsFloat(i));
-//            }
-//        }
-//    }
-//    else if (m.getNumArgs() == idx + 2 && m.getArgType(idx) == OFXOSC_TYPE_STRING) { // 2 args
-//        string type = m.getArgAsString(idx);
-//        if (type == "center" || type == "left" || type == "right" || type == "top" || type == "bottom") {
-//            vector<float> align = Args::get().parseAlign(m, idx);
-//            for (int i=0; i<align.size(); i++) {
-//                values[i].set(align[i]);
-//            }
-//        }
-//    }
-//    else if (m.getNumArgs() == idx + 1) { // 1 arg
-//        for (int i=0; i<m.getNumArgs(); i++) {
-//            if (m.getArgType(idx) == OFXOSC_TYPE_STRING) {
-//                values[i].set(m.getArgAsString(idx));
-//            }
-//            else {
-//                values[i].set(m.getArgAsFloat(idx));
-//            }
-//        }
-//    }
-//    else {
-//        ofLogError() << ("setVec3 unsupported format");
-//    }
-//}
 
 // todo: fix
 //template<>

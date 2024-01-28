@@ -12,8 +12,8 @@
 ~visuals.send('/tex/choose', 0, "image");
 
 // rotate layer 1
-~visuals.send('/layer/pivot', "*", "center", "center");
-~visuals.send('/layer/rot', "*", [0, 0, "time"]);
+~visuals.send('/layer/pivot', "*", ["center", "center", 0]);
+~visuals.send('/layer/rot', "*", [0, 0, "t*20"]);
 
 // initialize a grid of 4 layers
 ~visuals.send('/layers', 4, "grid");

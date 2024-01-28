@@ -1,6 +1,6 @@
 (
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
-~visuals = OSCVisuals("127.0.0.1", 33333);
+~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
 ~visuals.send('/geom', 0, "box", 0.0015, 0.0015, 0.01);
 ~visuals.send('/geom/set', 0, "meshMode", 0);
