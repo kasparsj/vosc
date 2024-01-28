@@ -17,7 +17,10 @@ vector<string> loadLocalVideos()
 vector<string> VideoTex::cache = loadLocalVideos();
 
 string VideoTex::random() {
-    return cache[int(ofRandom(cache.size()))];
+    if (cache.size() > 0) {
+        return cache[int(ofRandom(cache.size()))];
+    }
+    return "";
 }
 
 void VideoTex::update(TexData& data) {

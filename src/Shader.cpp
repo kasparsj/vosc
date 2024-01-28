@@ -270,9 +270,9 @@ void Shader::setUniforms(const map<string, shared_ptr<BaseVar>>& vars) {
 template<typename T>
 void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<BaseVar>>& vars) {
     for (map<string, shared_ptr<BaseVar>>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
-        const shared_ptr<const Variable<float>> floatVar = dynamic_pointer_cast<const Variable<float>>(it->second);
+        const auto floatVar = dynamic_pointer_cast<const Variable<float>>(it->second);
         if (floatVar != NULL) {
-            const vector<float>& values = floatVar->getVec();
+            const auto& values = floatVar->getVec();
             if (values.size() == 1) {
                 shader->setUniform1f(it->first, values[0]);
             }
@@ -290,17 +290,17 @@ void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<Bas
             }
         }
         else {
-            const shared_ptr<const Variable<glm::vec3>> vec3Var = dynamic_pointer_cast<const Variable<glm::vec3>>(it->second);
+            const auto vec3Var = dynamic_pointer_cast<const Variable<glm::vec3>>(it->second);
             if (vec3Var != NULL/* && vec3Var->size() == 1*/) {
                 shader->setUniform3f(it->first, vec3Var->get());
             }
             else {
-                const shared_ptr<const Variable<glm::mat4>> mat4Var = dynamic_pointer_cast<const Variable<glm::mat4>>(it->second);
+                const auto mat4Var = dynamic_pointer_cast<const Variable<glm::mat4>>(it->second);
                 if (mat4Var != NULL/* && mat4Var->size() == 1*/) {
                     shader->setUniformMatrix4f(it->first, mat4Var->get());
                 }
                 else {
-                    const shared_ptr<const Variable<ofFloatColor>> colorVar = dynamic_pointer_cast<const Variable<ofFloatColor>>(it->second);
+                    const auto colorVar = dynamic_pointer_cast<const Variable<ofFloatColor>>(it->second);
                     if (colorVar != NULL/* && colorVar->size() == 1*/) {
                         shader->setUniform4f(it->first, colorVar->get());
                     }

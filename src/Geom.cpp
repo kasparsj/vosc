@@ -178,14 +178,14 @@ bool Geom::loadPrimitive(const ofxOscMessage& m, int idx) {
 }
 
 bool Geom::appendPrimitive(const shared_ptr<BaseVar>& var, int i) {
-    shared_ptr<Variable<glm::vec3>> vec3 = dynamic_pointer_cast<Variable<glm::vec3>>(var);
+    auto vec3 = dynamic_pointer_cast<Variable<glm::vec3>>(var);
     if (vec3 != NULL) {
         const shared_ptr<of3dPrimitive> primitive = createPrimitive();
         primitive->setScale(vec3->get(i));
         return appendPrimitive(primitive);
     }
     else {
-        shared_ptr<Variable<ofxExprNode>> node = dynamic_pointer_cast<Variable<ofxExprNode>>(var);
+        auto node = dynamic_pointer_cast<Variable<ofxExprNode>>(var);
         if (node != NULL) {
             const shared_ptr<of3dPrimitive> primitive = createPrimitive();
             primitive->setPosition(node->get(i).getPosition());
@@ -194,7 +194,7 @@ bool Geom::appendPrimitive(const shared_ptr<BaseVar>& var, int i) {
             return appendPrimitive(primitive);
         }
         else {
-            shared_ptr<Variable<glm::mat4>> mat4 = dynamic_pointer_cast<Variable<glm::mat4>>(var);
+            auto mat4 = dynamic_pointer_cast<Variable<glm::mat4>>(var);
             if (mat4 != NULL) {
                 const shared_ptr<of3dPrimitive> primitive = createPrimitive();
                 // todo: how can I update matrix directly?

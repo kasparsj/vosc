@@ -46,7 +46,7 @@ shared_ptr<BaseVar>& VariablePool::get(const string& name, const VarsHolder* hol
 }
 
 shared_ptr<BaseVar>& VariablePool::createOrUpdate(const string& name, const ofxOscMessage& m, int idx, const VarsHolder* holder) {
-    map<string, shared_ptr<BaseVar>>& pool = getPool(holder);
+    auto& pool = getPool(holder);
     if (pool.find(name) == pool.end()) {
         pool[name] = BaseVar::createVar(m, idx);
     }

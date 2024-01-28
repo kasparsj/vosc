@@ -1,6 +1,6 @@
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 // create visuals sender
-~visuals = OSCVisuals("127.0.0.1", 33333);
+~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
 // initialize 1 layer
 ~visuals.send('/layers', 1);
@@ -13,7 +13,7 @@
 
 // rotate layer 1
 ~visuals.send('/layer/pivot', "*", ["center", "center", 0]);
-~visuals.send('/layer/rot', "*", [0, 0, "t*20"]);
+~visuals.send('/layer/rot', "*", [0, 0, "t*200"]);
 
 // initialize a grid of 4 layers
 ~visuals.send('/layers', 4, "grid");
@@ -37,7 +37,9 @@ z = {
 }.fork;
 )
 
-~visuals.send('/layer/tint', 0, [0, 255, 0]);
+~visuals.send('/layer/scale', "*", 1);
+
+~visuals.send('/layer/tint', "*", [0, 255, 0]);
 
 // load a random sketch in layer 4
 ~visuals.send('/tex/choose', 3, "sketch");

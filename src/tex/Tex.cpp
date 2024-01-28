@@ -54,7 +54,7 @@ shared_ptr<Tex> Tex::factory(string type, string path, const vector<float>& args
                 break;
             case Source::COLOR:
                 tex = make_shared<ShaderTex>(path, args);
-                shared_ptr<ShaderTex> shaderTex = dynamic_pointer_cast<ShaderTex>(tex);
+                auto shaderTex = dynamic_pointer_cast<ShaderTex>(tex);
                 shaderTex->setVar("color", ofFloatColor(args[0], args[1], args[2], args[3]));
                 break;
         }
@@ -103,13 +103,16 @@ shared_ptr<Tex> Tex::factory(string source, const vector<float>& args) {
                     path = DrawTex::random();
                     break;
                 case Source::COLOR: {
-                    shared_ptr<Tex> tex = factory("shader", "color", args);
-                    shared_ptr<ShaderTex> shaderTex = dynamic_pointer_cast<ShaderTex>(tex);
+                    auto tex = factory("shader", "color", args);
+                    auto shaderTex = dynamic_pointer_cast<ShaderTex>(tex);
                     shaderTex->setVar("color", ofFloatColor(ofRandom(1.f), ofRandom(1.f), ofRandom(1.f), ofRandom(1.f)));
                     return tex;
                 }
             }
         }
     }
-    return factory(type, path, args);
+    if (path != "") {
+        return factory(type, path, args);
+    }
+    return NULL;
 }

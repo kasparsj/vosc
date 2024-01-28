@@ -94,7 +94,7 @@ Variable<T>* VarsHolder::setVar(const string& name, vector<T> value) {
 }
 
 void VarsHolder::setVar(const string& name, const ofxOscMessage& m, int idx) {
-    shared_ptr<BaseVar>& var = VariablePool::createOrUpdate(name, m, idx, this);
+    auto& var = VariablePool::createOrUpdate(name, m, idx, this);
     vars[name] = var;
     return var;
 }

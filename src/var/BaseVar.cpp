@@ -110,28 +110,28 @@ void BaseVar::update(shared_ptr<BaseVar>& var, const string& command, const ofxO
 
 void BaseVar::updateVar(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx, size_t size) {
     if (size == 3) {
-        shared_ptr<Variable<glm::vec3>> var1 = dynamic_pointer_cast<Variable<glm::vec3>>(var);
-        if (var1 != NULL) {
+        auto var1 = dynamic_pointer_cast<Variable<glm::vec3>>(var);
+        if (var1) {
             var1->set(m, idx);
             return;
         }
-        shared_ptr<Variable<ofFloatColor>> var2 = dynamic_pointer_cast<Variable<ofFloatColor>>(var);
-        if (var2 != NULL) {
+        auto var2 = dynamic_pointer_cast<Variable<ofFloatColor>>(var);
+        if (var2) {
             var2->set(m, idx);
             return;
         }
     }
     else if (size == 4) {
-        shared_ptr<Variable<ofFloatColor>> var = dynamic_pointer_cast<Variable<ofFloatColor>>(var);
-        if (var != NULL) {
-            var->set(m, idx);
+        auto var3 = dynamic_pointer_cast<Variable<ofFloatColor>>(var);
+        if (var3) {
+            var3->set(m, idx);
             return;
         }
     }
     else if (size == 16) {
-        shared_ptr<Variable<glm::mat4>> var = static_pointer_cast<Variable<glm::mat4>>(var);
-        if (var != NULL) {
-            var->set(m, idx);
+        auto var4 = dynamic_pointer_cast<Variable<glm::mat4>>(var);
+        if (var4) {
+            var4->set(m, idx);
             return;
         }
     }
@@ -157,17 +157,17 @@ void BaseVar::updateVar(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int id
             return;
         }
     }
-    Variable<float>* var1 = dynamic_cast<Variable<float>*>(var.get());
+    auto var1 = dynamic_cast<Variable<float>*>(var.get());
     if (var1 != NULL) {
         var1->set(m, idx);
         return;
     }
-    Variable<ofFloatColor>* var2 = dynamic_cast<Variable<ofFloatColor>*>(var.get());
+    auto var2 = dynamic_cast<Variable<ofFloatColor>*>(var.get());
     if (var2 != NULL) {
         var2->set(m, idx);
         return;
     }
-    Variable<glm::vec3>* var3 = dynamic_cast<Variable<glm::vec3>*>(var.get());
+    auto var3 = dynamic_cast<Variable<glm::vec3>*>(var.get());
     if (var3 != NULL) {
         var3->set(m, idx);
         return;
