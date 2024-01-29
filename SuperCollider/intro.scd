@@ -70,10 +70,10 @@ void main() {
 
 // load shaders from shadertoy
 ~visuals.send('/shader', 2, "https://www.shadertoy.com/api/v1/shaders/XsyXzw?key=ft8tMh");
-~visuals.send('/shader', 0, "https://www.shadertoy.com/view/MtSBDc");
+~visuals.send('/shader', 2, "https://www.shadertoy.com/view/MtSBDc");
 
 // solo layer 2
-~visuals.send('/layer/solo', 1);
+~visuals.send('/layer/solo', 3);
 
 // show all layers
 ~visuals.send('/layer/visible', "*", true);
@@ -90,5 +90,5 @@ void main() {
 // run Spiral sketch with stroke alpha mapped to mic's amplitude
 ~visuals.send('/geom', 0, "");
 ~visuals.send('/tex/choose', 0, "shader");
-~visuals.send('/tex/alpha', 0, "mic");
+~visuals.send('/tex/alpha', 0, "in_0");
 ~visuals.send('/tex/var/range', 0, "strokeAlpha", 50);

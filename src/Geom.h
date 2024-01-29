@@ -36,7 +36,7 @@ public:
     }
     glm::vec3 getScale(const glm::vec2& target) {
         if (path == "quad") {
-            return glm::vec3(target, 1.f);
+            return glm::vec3(target / 2.0, 1.f);
         }
         glm::vec3 size = getSize();
         return glm::vec3(MIN(target.x / size.x, target.y / size.y) * 0.9);
