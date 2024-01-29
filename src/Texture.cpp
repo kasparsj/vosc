@@ -43,7 +43,7 @@ void Texture::load(string source, const vector<float>& args) {
             }
         }
     }
-    if (tex == NULL) {
+    if (tex == NULL && source != "") {
         ofLogError() << ("invalid source: " + source);
     }
 }

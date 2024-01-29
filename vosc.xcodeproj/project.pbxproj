@@ -370,7 +370,6 @@
 		2B56C4CD294E45940094681D /* Grid.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grid.vert; sourceTree = "<group>"; };
 		2B56C4CE294E45940094681D /* Grid.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grid.frag; sourceTree = "<group>"; };
 		2B56C4CF294E45940094681D /* AudioEclipse.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = AudioEclipse.frag; sourceTree = "<group>"; };
-		2B56C4D0294E45940094681D /* Star.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Star.frag; sourceTree = "<group>"; };
 		2B56C4D1294E45940094681D /* passthru.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = passthru.vert; sourceTree = "<group>"; };
 		2B56C4D2294E45940094681D /* texture.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = texture.frag; sourceTree = "<group>"; };
 		2B56C4D3294E8E560094681D /* ofxFirstPersonCamera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ofxFirstPersonCamera.h; sourceTree = "<group>"; };
@@ -1255,7 +1254,6 @@
 				2B56C4CD294E45940094681D /* Grid.vert */,
 				2B56C4CE294E45940094681D /* Grid.frag */,
 				2B56C4CF294E45940094681D /* AudioEclipse.frag */,
-				2B56C4D0294E45940094681D /* Star.frag */,
 			);
 			path = todo;
 			sourceTree = "<group>";

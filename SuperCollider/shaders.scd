@@ -7,6 +7,7 @@
 
 // load RotStringsH shader into layer 1
 ~visuals.send('/tex', 0, "shaders/100fragments/RotStringsV.frag");
+~visuals.send('/tex/var', 0, "glow", 1);
 
 // map glow shader var (uniform) to sine function
 ~visuals.send('/tex/var', 0, "glow", "sin(t)");
@@ -25,7 +26,7 @@
 
 // todo: not working
 // map shader color blue channel to mic 1 amplitude
-// ~visuals.send('/tex/color', 0, [1.0, 1.0, "in_0"]);
+~visuals.send('/tex/color', 0, [1.0, 1.0, "in_0"]);
 
 // todo: tidal not working
 // map shader color red channel to tidal
