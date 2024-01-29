@@ -47,40 +47,16 @@ void Camera::oscCommand(const string& command, const ofxOscMessage& m) {
             ofLog() << (command + " failed: camera not enabled (run /cam)");
         }
         else if (command == "/cam/pos") {
-//            if (Args::get().isTweenVec3(m, 0)) {
-//                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
-//                if (easyCam != NULL) {
-//                    easyCam->disableMouseInput();
-//                }
-//                function<void()> onComplete = [easyCam]() {
-//                    easyCam->enableMouseInput();
-//                };
-//                camPos->tween(m, 0, onComplete);
-//            }
-//            else {)
-                camPos->set(m, 0);
+            camPos->set(m, 0);
             if (camPos->isConst()) {
                 cam->setPosition(camPos->get());
             }
-//            }
         }
         else if (command == "/cam/look") {
-//            if (Args::get().isTweenVec3(m, 0)) {
-//                ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
-//                if (easyCam != NULL) {
-//                    easyCam->disableMouseInput();
-//                }
-//                function<void()> onComplete = [easyCam]() {
-//                    easyCam->enableMouseInput();
-//                };
-//                camLook->tween(m, 0, onComplete);
-//            }
-//            else {
-                camLook->set(m, 0);
+            camLook->set(m, 0);
             if (camLook->isConst()) {
                 cam->lookAt(camLook->get());
             }
-//            }
         }
         else if (command == "/cam/orbit") {
             VariablePool::createOrUpdateShared("camOrbit", "/var", m, 0);
