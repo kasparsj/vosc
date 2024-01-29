@@ -35,7 +35,7 @@ void VOSC::setupLayers(int numVisuals) {
     layers.resize(numVisuals);
     for (int i=0; i<layers.size(); i++) {
         if (layers[i] == NULL) {
-            layers[i] = new Layer();
+            layers[i] = make_shared<Layer>();
         }
         layers[i]->setup(i);
     }
@@ -329,16 +329,16 @@ void VOSC::layersCommand(string command, const ofxOscMessage& m) {
         resetLayers(m);
     }
     else if (command == "/layers/layout") {
-        vector<Layer*> layers;
-        if (m.getNumArgs() > 1) {
-            layers.resize(m.getNumArgs()-1);
-            for (int i=0; i<m.getNumArgs()-1; i++) {
-                layers[i] = this->layers[m.getArgAsInt(1+i)];
-            }
-        }
-        else {
-            layers = this->layers;
-        }
+//        vector<shared_ptr<Layer>> layers;
+//        if (m.getNumArgs() > 1) {
+//            layers.resize(m.getNumArgs()-1);
+//            for (int i=0; i<m.getNumArgs()-1; i++) {
+//                layers[i] = this->layers[m.getArgAsInt(1+i)];
+//            }
+//        }
+//        else {
+//            layers = this->layers;
+//        }
         layoutLayers(parseLayout(m, 0));
     }
 }

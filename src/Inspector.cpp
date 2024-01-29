@@ -3,7 +3,7 @@
 #include "Buffer.hpp"
 #include "Inputs.hpp"
 
-void Inspector::inspect(const vector<Layer*>& layers) {
+void Inspector::inspect(const vector<shared_ptr<Layer>>& layers) {
     this->layers = &layers;
     
     ofPushMatrix();
