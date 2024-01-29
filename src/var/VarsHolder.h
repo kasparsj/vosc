@@ -23,10 +23,10 @@ public:
     ofFloatColor getVarColor(const string& name) const;
     
     template <typename T>
-    Variable<T>* setVar(const string& name, T value);
+    const shared_ptr<Variable<T>>& setVar(const string& name, T value);
     template <typename T>
-    Variable<T>* setVar(const string& name, vector<T> value);
-    Variable<float>* setVar(const string& name, bool value);
+    const shared_ptr<Variable<T>>& setVar(const string& name, vector<T> value);
+    const shared_ptr<Variable<float>>& setVar(const string& name, bool value);
     void setVar(const string& name, const ofxOscMessage& value, int idx = 1);
     int getId() const {
         return _id;

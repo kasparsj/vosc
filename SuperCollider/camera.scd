@@ -8,8 +8,10 @@
 // enable "default" 3D camera
 ~visuals.send('/cam', "default");
 
+~visuals.send('/geom', "penguin", "penguin/penguin.dae");
+
 // load penguin 3D model
-~visuals.send('/geom', "*", "penguin/penguin.dae");
+~visuals.send('/geom', "*", "penguin");
 ~visuals.send('/light', 2, [500.rand, 0, 500]);
 ~visuals.send('/light/remove', 2);
 
@@ -40,8 +42,10 @@ z = {
 	inf.do {
 		~visuals.send('/shading/passes', 32.rand);
 		// todo: fix does not change the model
-		//~visuals.send('/layer/tint', "*", [255.rand, 255.rand, 255.rand]);
+		// ~visuals.send('/layer/tint', "*", [255.rand, 255.rand, 255.rand]);
 		5.wait;
 	};
 }.fork;
 )
+
+~visuals.send('/shading/passes');

@@ -15,6 +15,7 @@ public:
     }
     
     void setup();
+    void reset();
     void preUpdate() {
         ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
         if (easyCam != NULL) {
@@ -41,7 +42,7 @@ private:
     ofCamera* cam;
     float orbit;
     
-    Variable<glm::vec3>* camPos;
-    Variable<glm::vec3>* camLook;
-    Variable<float>* camOrbit;
+    shared_ptr<Variable<glm::vec3>> camPos;
+    shared_ptr<Variable<glm::vec3>> camLook;
+    shared_ptr<Variable<float>> camOrbit;
 };

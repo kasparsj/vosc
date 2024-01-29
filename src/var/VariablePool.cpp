@@ -31,13 +31,13 @@ shared_ptr<BaseVar>& VariablePool::createOrUpdateShared(const string& name, cons
 }
 
 template<typename T>
-Variable<T>* VariablePool::createOrUpdateShared(const string& name, T value) {
+const shared_ptr<Variable<T>> VariablePool::createOrUpdateShared(const string& name, T value) {
     if (!hasShared(name)) {
         sharedPool[name] = make_shared<Variable<T>>();
     }
-    const shared_ptr<Variable<T>> var = static_pointer_cast<Variable<T>>(sharedPool.at(name));
+    const auto var = static_pointer_cast<Variable<T>>(sharedPool.at(name));
     var->set(value);
-    return var.get();
+    return var;
 }
 
 shared_ptr<BaseVar>& VariablePool::get(const string& name, const VarsHolder* holder) {
@@ -57,12 +57,12 @@ shared_ptr<BaseVar>& VariablePool::createOrUpdate(const string& name, const ofxO
 }
 
 template <typename T>
-Variable<T>* VariablePool::getOrCreate(const string& name, const VarsHolder* holder) {
+const shared_ptr<Variable<T>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder) {
     map<string, shared_ptr<BaseVar>>& pool = getPool(holder);
     if (pool.find(name) == pool.end()) {
         pool[name] = make_shared<Variable<T>>();
     }
-    return static_cast<Variable<T>*>(pool.at(name).get());
+    return static_pointer_cast<Variable<T>>(pool.at(name));
 }
 
 map<string, shared_ptr<BaseVar>>& VariablePool::getPool(const VarsHolder* holder) {
@@ -89,12 +89,12 @@ void VariablePool::cleanup(const VarsHolder* holder) {
     holderPool.erase(holder->getId());
 }
 
-template Variable<float>* VariablePool::createOrUpdateShared(const string& name, float value);
-template Variable<glm::vec3>* VariablePool::createOrUpdateShared(const string& name, glm::vec3 value);
-template Variable<glm::mat4>* VariablePool::createOrUpdateShared(const string& name, glm::mat4 value);
-template Variable<ofFloatColor>* VariablePool::createOrUpdateShared(const string& name, ofFloatColor value);
+template const shared_ptr<Variable<float>> VariablePool::createOrUpdateShared(const string& name, float value);
+template const shared_ptr<Variable<glm::vec3>> VariablePool::createOrUpdateShared(const string& name, glm::vec3 value);
+template const shared_ptr<Variable<glm::mat4>> VariablePool::createOrUpdateShared(const string& name, glm::mat4 value);
+template const shared_ptr<Variable<ofFloatColor>> VariablePool::createOrUpdateShared(const string& name, ofFloatColor value);
 
-template Variable<float>* VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
-template Variable<glm::vec3>* VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
-template Variable<glm::mat4>* VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
-template Variable<ofFloatColor>* VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
+template const shared_ptr<Variable<float>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
+template const shared_ptr<Variable<glm::vec3>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
+template const shared_ptr<Variable<glm::mat4>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
+template const shared_ptr<Variable<ofFloatColor>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder);

@@ -24,7 +24,6 @@
 
 ~visuals.send('/tex/color', 0, [1.0, 1.0, 0.0]);
 
-// todo: not working
 // map shader color blue channel to mic 1 amplitude
 ~visuals.send('/tex/color', 0, [1.0, 1.0, "in_0"]);
 

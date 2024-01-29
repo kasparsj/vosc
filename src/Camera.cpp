@@ -6,11 +6,16 @@ Camera* Camera::instance = NULL;
 
 void Camera::setup() {
     if (instance == NULL) {
-        camPos = VariablePool::createOrUpdateShared<glm::vec3>("camPos", glm::vec3(0, 0, -870));
-        camLook = VariablePool::createOrUpdateShared<glm::vec3>("camLook", glm::vec3(0));
-        camOrbit = VariablePool::createOrUpdateShared<float>("camOrbit", 0.f);
+        reset();
         instance = this;
     }
+}
+
+void Camera::reset() {
+    camPos = VariablePool::createOrUpdateShared<glm::vec3>("camPos", glm::vec3(0, 0, -870));
+    camLook = VariablePool::createOrUpdateShared<glm::vec3>("camLook", glm::vec3(0));
+    camOrbit = VariablePool::createOrUpdateShared<float>("camOrbit", 0.f);
+    // todo: reset camera object
 }
 
 void Camera::update() {
@@ -33,6 +38,9 @@ void Camera::update() {
 void Camera::oscCommand(const string& command, const ofxOscMessage& m) {
     if (command == "/cam") {
         oscInit(m);
+    }
+    else if (command == "/cam/reset") {
+        reset();
     }
     else {
         if (cam == NULL) {

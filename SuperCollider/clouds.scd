@@ -1,6 +1,6 @@
 (
 // create visuals sender
-~visuals = NetAddr("127.0.0.1", 33333);
+~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
 // initialize 1 layer
 ~visuals.sendMsg('/layers', 1, "stack");
