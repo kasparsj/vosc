@@ -1,8 +1,8 @@
 #version 150
 
-#pragma include "shaders/include/of_default_uniforms.glsl"
-#pragma include "shaders/include/ShaderHelpers.glsl"
-#pragma include "shaders/include/Noise2D.glsl"
+#pragma include "../include/of_default_uniforms.glsl"
+#pragma include "../include/ShaderHelpers.glsl"
+#pragma include "../include/Noise2D.glsl"
 
 layout (lines) in;
 layout (triangle_strip, max_vertices = 14) out;

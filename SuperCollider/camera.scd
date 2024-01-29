@@ -2,6 +2,9 @@
 // create visuals sender
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
+~visuals.send('/layers', 36);
+~visuals.send('/layers/layout', "grid");
+
 // enable "default" 3D camera
 ~visuals.send('/cam', "default");
 
