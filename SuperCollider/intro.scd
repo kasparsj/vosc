@@ -11,29 +11,29 @@
 ~visuals.send('/tex/color', 0, [1.0.rand, 1.0.rand, 1.0.rand]);
 
 // load a random image in layer 1
-~visuals.send('/tex/choose', 0, "image");
+~visuals.send('/tex/choose', 1, "image");
 
 // rotate layer 1
 ~visuals.send('/layer/pivot', "*", ["center", "center", 0]);
-~visuals.send('/layer/rot', "*", [0, 0, "t*200"]);
+~visuals.send('/layer/rot', "*", [0, 0, 0]);
 
 // initialize a grid of 4 layers
-~visuals.send('/layers', 4, "grid");
+~visuals.send('/layers/layout', "grid");
 
 // load a random image in layer 1
 ~visuals.send('/tex/choose', 0, "image");
 
 // load a random video in layer 2
-~visuals.send('/tex/choose', 1, "video");
+~visuals.send('/tex/choose', 2, "video");
 
 // load a random video in layer 3
-~visuals.send('/layer/unload', 2);
+~visuals.send('/layer/reset', 2);
 
 (
 z.stop;
 z = {
 	inf.do { |i|
-		~visuals.send('/layer/scale', "*", 10.rand);
+		~visuals.send('/layer/scale', "*", 2.0.rand);
 		1.wait;
 	}
 }.fork;
@@ -49,13 +49,13 @@ z = {
 ~visuals.send('/tex/choose', 3, "sketch");
 
 // hide layer 1
-~visuals.send('/layer/visible', 0, false);
+~visuals.send('/layer/visible', 3, false);
 
 // show layer 1
 ~visuals.send('/layer/visible', 0, true);
 
 (
-~visuals.send('/shader', 0, "
+~visuals.send('/shader', 3, "
 #version 150
 uniform float time;
 uniform vec2 resolution;
@@ -69,7 +69,7 @@ void main() {
 )
 
 // load shaders from shadertoy
-~visuals.send('/shader', 1, "https://www.shadertoy.com/api/v1/shaders/XsyXzw?key=ft8tMh");
+~visuals.send('/shader', 2, "https://www.shadertoy.com/api/v1/shaders/XsyXzw?key=ft8tMh");
 ~visuals.send('/shader', 0, "https://www.shadertoy.com/view/MtSBDc");
 
 // solo layer 2

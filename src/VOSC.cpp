@@ -269,7 +269,19 @@ void VOSC::processQueue() {
             else if (m.getArgType(0) == OFXOSC_TYPE_INT32) {
                 int idx = m.getArgAsInt(0);
                 if (idx > -1 && layers.size() > idx) {
-                    layers[idx]->oscCommand(command, m);
+                    if (command == "/layer/solo") {
+                        for (int i=0; i<layers.size(); i++) {
+                            if (i == idx) {
+                                layers[i]->setVar("visible", true);
+                            }
+                            else {
+                                layers[i]->setVar("visible", false);
+                            }
+                        }
+                    }
+                    else {
+                        layers[idx]->oscCommand(command, m);
+                    }
                 }
                 else {
                     ofLog() << "layer index out of bounds: " << m;
