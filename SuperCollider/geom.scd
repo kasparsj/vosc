@@ -1,4 +1,4 @@
-(
+//(
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 // create visuals sender
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
@@ -7,7 +7,7 @@
 ~visuals.send('/layers', 9, "grid");
 
 // load plane geometry (optional, because plane is default)
-~visuals.send('/geom', "*", "plane");
+~visuals.send('/geom', "*", "box");
 
 // load first webcam in all layers textures
 ~visuals.send('/tex', "webcam", "webcam:0");
@@ -17,11 +17,11 @@
 ~visuals.send('/light', "*", [0, 0, 500]);
 
 ~visuals.send('/cam', "easy");
-~visuals.send('/cam/set', "distance", 870);
+~visuals.send('/cam/set', "distance", 1000);
 ~visuals.send('/cam/orbit', 20);
-)
+//)
 
-(
+//(
 // create visuals sender
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
@@ -33,15 +33,16 @@
 100.do { |i|
 	// load (and scale) penguin model in all layers
 	~visuals.send('/geom', i, "penguin");
-	~visuals.send('/layer/scale', i, 0.7);
+	~visuals.send('/layer/scale', i, 2.0.rand);
 
 	// set random rotation
 	~visuals.send('/layer/rot', i, [360.rand, 360.rand, 360.rand]);
 };
 
 ~visuals.send('/light', 0, [500.rand, 0, 500]);
+~visuals.send('/light/remove', 0);
 
 ~visuals.send('/cam', "easy");
-~visuals.send('/cam/set', "distance", 870);
+~visuals.send('/cam/set', "distance", 10);
 ~visuals.send('/cam/orbit', 20);
-)
+//)

@@ -27,7 +27,7 @@
 ~visuals.send('/tex/choose', 2, "video");
 
 // load a random video in layer 3
-~visuals.send('/layer/reset', 2);
+~visuals.send('/layer/reset', 3);
 
 (
 z.stop;
@@ -52,7 +52,7 @@ z = {
 ~visuals.send('/layer/visible', 3, false);
 
 // show layer 1
-~visuals.send('/layer/visible', 0, true);
+~visuals.send('/layer/visible', 3, true);
 
 (
 ~visuals.send('/shader', 3, "
@@ -73,7 +73,7 @@ void main() {
 ~visuals.send('/shader', 2, "https://www.shadertoy.com/view/MtSBDc");
 
 // solo layer 2
-~visuals.send('/layer/solo', 0);
+~visuals.send('/layer/solo', 1);
 
 // show all layers
 ~visuals.send('/layer/visible', "*", true);
@@ -82,7 +82,7 @@ void main() {
 ~visuals.send('/tex', "*", "");
 
 // intialize 1 layer
-~visuals.send('/layers', 1);
+~visuals.send('/layers/reset');
 
 // initialize Microphone
 ~visuals.send('/input', 0, "Microphone");

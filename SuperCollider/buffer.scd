@@ -16,3 +16,6 @@
 ~visuals.send('/shader/var', 0, "lightLocation", [-50, -20, 200]);
 ~visuals.send('/light', 0, [-50, -20, 200]);
 )
+
+~visuals.send('/cam/set', "farClip", 15000);
+~visuals.send('/shading/passes', 0);

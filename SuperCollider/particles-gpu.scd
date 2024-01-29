@@ -38,3 +38,6 @@
 ~visuals.send('/cam/set', "movementMaxSpeed", 0.01);
 ~visuals.send('/cam/pos', [0, 0.5, 1.1]);
 )
+
+~visuals.send('/cam/set', "nearClip", 0.01);
+ ~visuals.send('/cam', "easy");

@@ -35,7 +35,7 @@ const shared_ptr<Variable<T>> VariablePool::createOrUpdateShared(const string& n
     if (!hasShared(name)) {
         sharedPool[name] = make_shared<Variable<T>>();
     }
-    const auto var = static_pointer_cast<Variable<T>>(sharedPool.at(name));
+    auto var = static_pointer_cast<Variable<T>>(sharedPool.at(name));
     var->set(value);
     return var;
 }
@@ -58,7 +58,7 @@ shared_ptr<BaseVar>& VariablePool::createOrUpdate(const string& name, const ofxO
 
 template <typename T>
 const shared_ptr<Variable<T>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder) {
-    map<string, shared_ptr<BaseVar>>& pool = getPool(holder);
+    auto& pool = getPool(holder);
     if (pool.find(name) == pool.end()) {
         pool[name] = make_shared<Variable<T>>();
     }
@@ -73,11 +73,11 @@ map<string, shared_ptr<BaseVar>>& VariablePool::getPool(const VarsHolder* holder
 }
 
 void VariablePool::update(const vector<TidalNote> &notes) {
-    for (map<string, shared_ptr<BaseVar>>::iterator it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
+    for (auto it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
         it->second->update();
     }
-    for (map<int, map<string, shared_ptr<BaseVar>>>::iterator it=holderPool.begin(); it!=holderPool.end(); ++it) {
-        for (map<string, shared_ptr<BaseVar>>::iterator it2=it->second.begin(); it2!=it->second.end(); ++it2) {
+    for (auto it=holderPool.begin(); it!=holderPool.end(); ++it) {
+        for (auto it2=it->second.begin(); it2!=it->second.end(); ++it2) {
             it2->second->update();
         }
     }

@@ -11,6 +11,7 @@
 ~visuals.send('/geom', "penguin", "penguin/penguin.dae");
 
 // load penguin 3D model
+// ~visuals.send('/geom', "*", "penguin/penguin.dae");
 ~visuals.send('/geom', "*", "penguin");
 ~visuals.send('/light', 2, [500.rand, 0, 500]);
 ~visuals.send('/light/remove', 2);
@@ -47,5 +48,7 @@ z = {
 	};
 }.fork;
 )
+
+~visuals.send('/shading/passes', 14);
 
 ~visuals.send('/shading/passes');

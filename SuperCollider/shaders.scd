@@ -10,7 +10,7 @@
 ~visuals.send('/tex/var', 0, "glow", 1);
 
 // map glow shader var (uniform) to sine function
-~visuals.send('/tex/var', 0, "glow", "sin(t)");
+~visuals.send('/tex/var', 0, "glow", "sin(t*10)");
 
 // initialize Microphone
 ~visuals.send('/input', 0, "Microphone");
@@ -20,12 +20,12 @@
 ~visuals.send('/tex/var', 0, "glow", "in_0");
 
 // animate shader color to blue in 10 seconds
-~visuals.send('/tex/color', 0, [0, 0, 1.0], 10);
+~visuals.send('/tex/color', 0, [0, 0, 1.0]);
 
 ~visuals.send('/tex/color', 0, [1.0, 1.0, 0.0]);
 
 // map shader color blue channel to mic 1 amplitude
-~visuals.send('/tex/color', 0, [1.0, 1.0, "in_0"]);
+~visuals.send('/tex/color', 0, [0.0, 1.0, "in_0"]);
 
 // todo: tidal not working
 // map shader color red channel to tidal
