@@ -17,7 +17,6 @@
 
 // map glow shader var (uniform) to mic 1 amplitude
 ~visuals.send('/tex/var', 0, "glow", "in_0");
-~visuals.send('/tex/var/range', 0, "glow", 10);
 
 // animate shader color to blue in 10 seconds
 ~visuals.send('/tex/color', 0, [0, 0, 1.0], 10);

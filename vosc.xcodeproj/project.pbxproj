@@ -353,9 +353,6 @@
 		2B56C4B1294E45940094681D /* color.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = color.frag; sourceTree = "<group>"; };
 		2B56C4B3294E45940094681D /* Grass.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grass.frag; sourceTree = "<group>"; };
 		2B56C4B4294E45940094681D /* Grass.geom */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Grass.geom; sourceTree = "<group>"; };
-		2B56C4B6294E45940094681D /* MtSBDc.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = MtSBDc.frag; sourceTree = "<group>"; };
-		2B56C4B7294E45940094681D /* XsyXzw.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = XsyXzw.frag; sourceTree = "<group>"; };
-		2B56C4B8294E45940094681D /* MdlXz8.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = MdlXz8.frag; sourceTree = "<group>"; };
 		2B56C4BA294E45940094681D /* Noise2D.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = Noise2D.glsl; sourceTree = "<group>"; };
 		2B56C4BB294E45940094681D /* Noise4D.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = Noise4D.glsl; sourceTree = "<group>"; };
 		2B56C4BC294E45940094681D /* ShaderHelpers.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = ShaderHelpers.glsl; sourceTree = "<group>"; };
@@ -1152,7 +1149,6 @@
 				2B56C4AD294E45940094681D /* layers */,
 				2B56C4B1294E45940094681D /* color.frag */,
 				2B56C4B2294E45940094681D /* grass */,
-				2B56C4B5294E45940094681D /* shadertoy */,
 				2B56C4B9294E45940094681D /* include */,
 				2B56C4C1294E45940094681D /* instanced */,
 				2B56C4C4294E45940094681D /* particles */,
@@ -1209,16 +1205,6 @@
 				2B56C4B4294E45940094681D /* Grass.geom */,
 			);
 			path = grass;
-			sourceTree = "<group>";
-		};
-		2B56C4B5294E45940094681D /* shadertoy */ = {
-			isa = PBXGroup;
-			children = (
-				2B56C4B6294E45940094681D /* MtSBDc.frag */,
-				2B56C4B7294E45940094681D /* XsyXzw.frag */,
-				2B56C4B8294E45940094681D /* MdlXz8.frag */,
-			);
-			path = shadertoy;
 			sourceTree = "<group>";
 		};
 		2B56C4B9294E45940094681D /* include */ = {

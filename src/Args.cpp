@@ -264,6 +264,7 @@ vector<string> Args::parseExpr<ofFloatColor>(const ofxOscMessage& m, int& idx) {
                     else
                         colorExpr[2] = ofToString(json.at(2));
                 }
+                colorExpr[3] = "1.0";
                 if (json.size() > 3) {
                     if (json.at(3).is_string())
                         colorExpr[3] = json.at(3);
