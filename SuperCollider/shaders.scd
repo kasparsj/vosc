@@ -12,24 +12,27 @@
 ~visuals.send('/tex/var', 0, "glow", "sin(t)");
 
 // initialize Microphone
-~visuals.send('/input', 0, "Microphone");
-~visuals.send('/input/set', 0, "maxAmp", 0.17);
+~visuals.send('/input', "mic", "Microphone");
+~visuals.send('/input/set', "mic", "maxAmp", 0.17);
 
 // map glow shader var (uniform) to mic 1 amplitude
-~visuals.send('/tex/var', 0, "glow", "in_0");
+~visuals.send('/tex/var', 0, "glow", "in_mic");
 ~visuals.send('/tex/var/range', 0, "glow", 10);
 
 // load Ether shader (from shadertoy)
 ~visuals.send('/tex', 0, "shadertoy/Ether.frag");
 
 // animate shader color to blue in 10 seconds
-~visuals.send('/tex/color', 0, [0, 0, 255], 10);
+~visuals.send('/tex/color', 0, [0, 0, 1.0], 10);
 
+~visuals.send('/tex/color', 0, [1.0, 1.0, 1.0]);
+
+// todo: not working
 // map shader color blue channel to mic 1 amplitude
-~visuals.send('/tex/color', 0, [255, 255, "in_0"]);
+// ~visuals.send('/tex/color', 0, [1.0, 1.0, "in_mic"]);
 
 // map shader color red channel to tidal
-~visuals.send('/tex/color', 0, ["tidal:0", 255, 255]);
+~visuals.send('/tex/color', 0, ["tidal:0", 1.0, 1.0]);
 
 // unload shader
 ~visuals.send('/tex', "*", "");

@@ -20,7 +20,7 @@
 ~visuals.send('/cam/pos', [0, 0, "line(870, 10)"]);
 
 // oscilate camera distance using sine function
-~visuals.send('/var', "sine_osc", "200+(sin(t)*1000)");
+~visuals.send('/var', "sine_osc", "200+(sin(t)*2000)");
 
 // map camera's z coordinate to sine_osc variable
 ~visuals.send('/cam/pos', [0, 0, "sine_osc"]);

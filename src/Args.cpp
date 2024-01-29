@@ -246,22 +246,30 @@ vector<string> Args::parseExpr<ofFloatColor>(const ofxOscMessage& m, int& idx) {
             string str = m.getArgAsString(idx++);
             if (isJSONArr(str)) {
                 auto json = ofJson::parse(str);
-                if (json.at(0).is_string())
-                    colorExpr[0] = json.at(0);
-                else
-                    colorExpr[0] = ofToString(json.at(0));
-                if (json.at(1).is_string())
-                    colorExpr[1] = json.at(1);
-                else
-                    colorExpr[1] = ofToString(json.at(1));
-                if (json.at(2).is_string())
-                    colorExpr[2] = json.at(2);
-                else
-                    colorExpr[2] = ofToString(json.at(2));
-                if (json.at(3).is_string())
-                    colorExpr[3] = json.at(3);
-                else
-                    colorExpr[3] = ofToString(json.at(3));
+                if (json.size() > 0) {
+                    if (json.at(0).is_string())
+                        colorExpr[0] = json.at(0);
+                    else
+                        colorExpr[0] = ofToString(json.at(0));
+                }
+                if (json.size() > 1) {
+                    if (json.at(1).is_string())
+                        colorExpr[1] = json.at(1);
+                    else
+                        colorExpr[1] = ofToString(json.at(1));
+                }
+                if (json.size() > 2) {
+                    if (json.at(2).is_string())
+                        colorExpr[2] = json.at(2);
+                    else
+                        colorExpr[2] = ofToString(json.at(2));
+                }
+                if (json.size() > 3) {
+                    if (json.at(3).is_string())
+                        colorExpr[3] = json.at(3);
+                    else
+                        colorExpr[3] = ofToString(json.at(3));
+                }
             }
             else if (isJSONObj(str)) {
                 auto json = ofJson::parse(str);
