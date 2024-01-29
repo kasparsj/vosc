@@ -49,6 +49,13 @@ void VOSC::layoutLayers(Layout layout) {
     }
 }
 
+void VOSC::resetLayers(const ofxOscMessage& m) {
+    setupLayers(0);
+    layersCommand("/layers", m);
+    // todo: reset layout?
+    // todo: reset deferredShading
+}
+
 void VOSC::update() {
     camera.preUpdate();
     parseMessages();
@@ -307,9 +314,7 @@ void VOSC::layersCommand(string command, const ofxOscMessage& m) {
         layoutLayers(m.getNumArgs() > 1 ? parseLayout(m, 1) : layout);
     }
     else if (command == "/layers/reset") {
-        setupLayers(0);
-        layersCommand("/layers", m);
-        // todo: reset deferredShading
+        resetLayers(m);
     }
     else if (command == "/layers/layout") {
         vector<Layer*> layers;

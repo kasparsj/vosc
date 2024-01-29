@@ -27,6 +27,7 @@ public:
 private:
     void setupLayers(int numLayers);
     void layoutLayers(Layout layout);
+    void resetLayers(const ofxOscMessage& m);
     
     void beginDraw();
     void doDraw();
