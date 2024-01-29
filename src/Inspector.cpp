@@ -81,10 +81,11 @@ void Inspector::debugGeoms() {
 }
 
 void Inspector::debugGeom(int i) {
-    if (layers->at(i)->hasGeom()) {
+    if (layers->at(i)->hasGeom() && layers->at(i)->geom->hasMesh()) {
         ofSetColor(255);
         ofPushMatrix();
         ofTranslate(i*120+60, 0);
+        // todo: scale geom
         layers->at(i)->geom->getMesh().draw(OF_MESH_WIREFRAME);
         ofPopMatrix();
     }

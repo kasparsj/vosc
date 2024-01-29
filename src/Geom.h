@@ -29,6 +29,7 @@ public:
     void update();
     void oscCommand(const string& command, const ofxOscMessage& m);
     void draw() const;
+    bool hasMesh() { return mesh != NULL; }
     ofMesh& getMesh() { return *mesh; }
     glm::vec3 getSize() {
         return boundingBox.max - boundingBox.min;
