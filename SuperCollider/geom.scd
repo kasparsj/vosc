@@ -10,7 +10,8 @@
 ~visuals.send('/geom', "*", "plane");
 
 // load first webcam in all layers textures
-~visuals.send('/tex', "*", "webcam:0");
+~visuals.send('/tex', "webcam", "webcam:0");
+~visuals.send('/tex', "*", "webcam");
 
 // add a light
 ~visuals.send('/light', "*", [0, 0, 500]);
@@ -22,14 +23,16 @@
 
 (
 // create visuals sender
-~visuals = OSCVisuals("127.0.0.1", 33333);
+~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
 // initialize a grid of 9 layers
-~visuals.send('/layers', 9, "grid");
+~visuals.send('/layers', 100, "grid");
 
-9.do { |i|
+~visuals.send('/geom', "penguin", "penguin/penguin.dae");
+
+100.do { |i|
 	// load (and scale) penguin model in all layers
-	~visuals.send('/geom', i, "penguin/penguin.dae");
+	~visuals.send('/geom', i, "penguin");
 	~visuals.send('/layer/scale', i, 0.7);
 
 	// set random rotation
