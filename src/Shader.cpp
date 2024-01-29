@@ -248,7 +248,7 @@ void Shader::setUniformTextures(const map<string, shared_ptr<Texture>>& textures
             if (tex->hasTexture(delay)) {
                 for (int i=0; i<tex->getNumTextures(); i++) {
                     string name = i == 0 ? it->first : it->first + ofToString(i);
-                    shader->setUniformTexture(name, tex->getTexture(delay, i), texLoc++);
+                    shadertoy->setUniformTexture(name, tex->getTexture(delay, i), texLoc++);
                 }
             }
         }
