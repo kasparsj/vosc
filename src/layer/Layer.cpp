@@ -175,12 +175,12 @@ void Layer::layerCommand(const string& command, const ofxOscMessage& m) {
     }
 }
 
-void Layer::draw(const glm::vec3 &pos, const glm::vec2 &size) {
+void Layer::draw(const glm::vec3& pos, const glm::vec2& size) {
     //ofSetGlobalAmbientColor(ofFloatColor(1.0, 1.0, 1.0, 1.0));
     
     ofPushMatrix();
     doAlign();
-    doRotate();
+    doRotate(pos);
     ofPushStyle();
     ofSetColor(getVarColor("tint") * getVar("bri"), getVar("alpha") * 255);
     
@@ -279,7 +279,7 @@ void Layer::doAlign() {
     }
 }
 
-void Layer::doRotate() {
+void Layer::doRotate(const glm::vec3& pos) {
     glm::vec3 rotation = getVarVec3("rotation");
     glm::vec3 scale = getVarVec3("scale");
     float degrees = glm::length(rotation);
@@ -287,9 +287,9 @@ void Layer::doRotate() {
         glm::vec3 axis = glm::normalize(rotation);
         glm::vec3 pivot = getVarVec3("pivot");
         glm::vec2 size = data.getSize();
-        ofTranslate(pivot.x * size.x * abs(scale.x), pivot.y * size.y * abs(scale.y));
+        ofTranslate(pos.x + pivot.x * size.x * abs(scale.x), pos.y + pivot.y * size.y * abs(scale.y));
         ofRotateDeg(degrees, axis.x, axis.y, axis.z);
-        ofTranslate(-pivot.x * size.x * abs(scale.x), -pivot.y * size.y * abs(scale.y));
+        ofTranslate(-(pos.x + pivot.x * size.x * abs(scale.x)), -(pos.y + pivot.y * size.y * abs(scale.y)));
     }
 }
 

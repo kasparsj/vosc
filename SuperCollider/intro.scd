@@ -3,7 +3,9 @@
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
 // initialize 1 layer
-~visuals.send('/layers', 1);
+~visuals.send('/layers', 4);
+~visuals.send('/layers/layout', "stack");
+~visuals.send('/layers/layout', "grid");
 
 ~visuals.send('/tex', 0, "shaders/color.frag");
 ~visuals.send('/tex/color', 0, [1.0.rand, 1.0.rand, 1.0.rand]);

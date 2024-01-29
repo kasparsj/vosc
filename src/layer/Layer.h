@@ -29,7 +29,7 @@ public:
     void draw(const glm::vec3 &pos, const glm::vec2 &size);
     void draw(int totalVisible);
     void doAlign();
-    void doRotate();
+    void doRotate(const glm::vec3& pos);
     void doScale();
     void unload();
     void reset();
