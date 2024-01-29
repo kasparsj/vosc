@@ -108,12 +108,10 @@ void VOSC::beginDraw() {
             
             if (shadowLightPass != NULL) {
                 shadowLightPass->beginShadowMap(camera.getCamera());
-            }
-            doDraw();
-            if (pointLightPass != NULL) {
-                pointLightPass->drawLights();
-            }
-            if (shadowLightPass != NULL) {
+                doDraw();
+                if (pointLightPass != NULL) {
+                    pointLightPass->drawLights();
+                }
                 shadowLightPass->endShadowMap();
             }
             
