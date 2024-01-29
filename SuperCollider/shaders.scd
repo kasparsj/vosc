@@ -19,13 +19,10 @@
 ~visuals.send('/tex/var', 0, "glow", "in_0");
 ~visuals.send('/tex/var/range', 0, "glow", 10);
 
-// load Ether shader (from shadertoy)
-~visuals.send('/tex', 0, "shadertoy/Ether.frag");
-
 // animate shader color to blue in 10 seconds
 ~visuals.send('/tex/color', 0, [0, 0, 1.0], 10);
 
-~visuals.send('/tex/color', 0, [1.0, 1.0, 1.0]);
+~visuals.send('/tex/color', 0, [1.0, 1.0, 0.0]);
 
 // todo: not working
 // map shader color blue channel to mic 1 amplitude

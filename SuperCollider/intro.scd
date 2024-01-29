@@ -66,8 +66,8 @@ void main() {
 ");
 )
 
+// load shaders from shadertoy
 ~visuals.send('/shader', 1, "https://www.shadertoy.com/api/v1/shaders/XsyXzw?key=ft8tMh");
-
 ~visuals.send('/shader', 0, "https://www.shadertoy.com/view/MtSBDc");
 
 // solo layer 2
