@@ -21,7 +21,7 @@
 ~visuals.send('/layers/layout', "grid");
 
 // load a random image in layer 1
-~visuals.send('/tex/choose', 0, "image");
+~visuals.send('/tex/choose', 3, "image");
 
 // load a random video in layer 2
 ~visuals.send('/tex/choose', 2, "video");
@@ -69,11 +69,11 @@ void main() {
 )
 
 // load shaders from shadertoy
-~visuals.send('/shader', 2, "https://www.shadertoy.com/api/v1/shaders/XsyXzw?key=ft8tMh");
+~visuals.send('/shader', 0, "https://www.shadertoy.com/api/v1/shaders/XsyXzw?key=ft8tMh");
 ~visuals.send('/shader', 2, "https://www.shadertoy.com/view/MtSBDc");
 
 // solo layer 2
-~visuals.send('/layer/solo', 1);
+~visuals.send('/layer/solo', 2);
 
 // show all layers
 ~visuals.send('/layer/visible', "*", true);

@@ -36,13 +36,15 @@
 	~visuals.send('/layer/scale', i, 2.0.rand);
 
 	// set random rotation
-	~visuals.send('/layer/rot', i, [360.rand, 360.rand, 360.rand]);
+	~visuals.send('/layer/rot', i, ["t", "t*2", "t*" ++ 20.rand]);
 };
 
 ~visuals.send('/light', 0, [500.rand, 0, 500]);
 ~visuals.send('/light/remove', 0);
 
 ~visuals.send('/cam', "easy");
-~visuals.send('/cam/set', "distance", 10);
+~visuals.send('/cam/set', "distance", 300);
 ~visuals.send('/cam/orbit', 20);
 //)
+
+~visuals.send('/shading/passes', 1);

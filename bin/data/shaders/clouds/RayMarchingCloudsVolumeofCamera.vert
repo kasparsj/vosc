@@ -1,7 +1,7 @@
 #version 330
 
-#pragma include "shaders/include/of_default_uniforms.glsl"
-#pragma include "shaders/include/of_default_vertex_in_attributes.glsl"
+#pragma include "../include/of_default_uniforms.glsl"
+#pragma include "../include/of_default_vertex_in_attributes.glsl"
 
 uniform vec2 resolution;
 uniform float fovYScale;
