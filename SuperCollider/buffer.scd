@@ -1,7 +1,7 @@
 (
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 // create visuals sender
-~visuals = OSCVisuals("127.0.0.1", 33333);
+~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
 ~visuals.send('/cam', "easy");
 ~visuals.send('/cam/set', "nearClip", 0.1);

@@ -41,6 +41,8 @@ z = {
 
 ~visuals.send('/layer/tint', "*", [0, 255, 0]);
 
+~visuals.send('/layer/tint', "*", 1);
+
 // load a random sketch in layer 4
 ~visuals.send('/tex/choose', 3, "sketch");
 

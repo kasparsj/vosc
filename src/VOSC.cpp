@@ -15,6 +15,7 @@
 void VOSC::setup(unsigned int port) {
     receiver.setup(port);
     camera.setup();
+    setupLayers(INITIAL_VISUALS);
     tidal = new ofxTidalCycles(1);
     
     windowResized(ofGetWidth(), ofGetHeight());
@@ -301,7 +302,8 @@ Layout parseLayout(const ofxOscMessage &m, int idx)
 
 void VOSC::layersCommand(string command, const ofxOscMessage& m) {
     if (command == "/layers") {
-        setupLayers(m.getArgAsInt(0));
+        auto numLayers = m.getNumArgs() > 0 ? m.getArgAsInt(0) : INITIAL_VISUALS;
+        setupLayers(numLayers);
         layoutLayers(m.getNumArgs() > 1 ? parseLayout(m, 1) : layout);
     }
     else if (command == "/layers/reset") {
