@@ -172,7 +172,9 @@ void Inspector::mousePressed(int x, int y, int button) {
 
 void Inspector::mouseReleased(int x, int y, int button) {
     if (x > 10 && x < 200 && y > 305 && y < 330) {
-        layers->at(debugLayer)->shader.getShader().printActiveUniforms();
+        if (layers->at(debugLayer)->shader.isLoaded()) {
+            layers->at(debugLayer)->shader.getShader().printActiveUniforms();
+        }
     }
 }
 
