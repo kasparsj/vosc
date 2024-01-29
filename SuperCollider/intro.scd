@@ -73,7 +73,7 @@ void main() {
 ~visuals.send('/shader', 2, "https://www.shadertoy.com/view/MtSBDc");
 
 // solo layer 2
-~visuals.send('/layer/solo', 3);
+~visuals.send('/layer/solo', 0);
 
 // show all layers
 ~visuals.send('/layer/visible', "*", true);
@@ -86,9 +86,8 @@ void main() {
 
 // initialize Microphone
 ~visuals.send('/input', 0, "Microphone");
+~visuals.send('/input/set', 0, "maxAmp", 0.17);
 
 // run Spiral sketch with stroke alpha mapped to mic's amplitude
-~visuals.send('/geom', 0, "");
 ~visuals.send('/tex/choose', 0, "shader");
-~visuals.send('/tex/alpha', 0, "in_0");
-~visuals.send('/tex/var/range', 0, "strokeAlpha", 50);
+~visuals.send('/layer/alpha', 0, "in_0");
