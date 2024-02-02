@@ -36,7 +36,6 @@ void VideoTex::update(TexData& data) {
         if (videoPlayer.load(absPath)) {
             videoPlayer.setVolume(0);
             videoPlayer.setLoopState(OF_LOOP_NORMAL);
-            videoPlayer.setSpeed(data.getVar("speed"));
             seek(data.getVarPercent("timePct"));
             videoPlayer.play();
             prevPath = path;
@@ -52,6 +51,7 @@ void VideoTex::update(TexData& data) {
         seek(data.getVarPercent("timePct"));
     }
     aspectRatio = data.aspectRatio;
+    videoPlayer.setSpeed(data.getVar("speed"));
     videoPlayer.update();
 }
 

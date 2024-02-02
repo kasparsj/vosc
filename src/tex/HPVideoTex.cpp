@@ -35,6 +35,7 @@ void HPVideoTex::update(TexData& data) {
             //hpvPlayer.setVolume(0);
             hpvPlayer.setLoopState(OF_LOOP_NORMAL);
             seek(data.getVarPercent("timePct"));
+            hpvPlayer.setSpeed(data.getVar("speed"));
             hpvPlayer.play();
             prevPath = path;
             data.setSize(hpvPlayer.getWidth(), hpvPlayer.getHeight());

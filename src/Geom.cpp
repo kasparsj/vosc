@@ -331,7 +331,7 @@ bool Geom::loadGrass(const ofxOscMessage& m, int idx) {
 
 void Geom::choose(const ofxOscMessage& m) {
     string newPath = random();
-    load(newPath, m, 0);
+    load(newPath, m, 1);
 }
 
 void Geom::update() {
