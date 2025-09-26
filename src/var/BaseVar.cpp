@@ -3,6 +3,14 @@
 #include "Args.h"
 #include "ColorWheelSchemes.h"
 
+using namespace ofxColorTheory;
+
+typedef ColorWheelScheme_<ofFloatColor> FloatColorWheelScheme;
+typedef ColorWheelSchemes_<ofFloatColor> FloatColorWheelSchemes;
+
+template<>
+const std::vector<std::shared_ptr<ColorWheelScheme_<ofFloatColor>>> ColorWheelSchemes_<ofFloatColor>::SCHEMES = ColorWheelSchemes_<ofFloatColor>::createColorSchemes();
+
 shared_ptr<BaseVar> BaseVar::create(const ofxOscMessage& m, int idx) {
     string command = m.getAddress();
     return create(command, m, idx);
@@ -178,7 +186,7 @@ void BaseVar::updateVar(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int id
 void BaseVar::updateColorsScheme(const shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx) {
     string schemeName = m.getArgAsString(idx);
     ofFloatColor primaryColor = Args::parse<ofFloatColor>(m, idx+1);
-    shared_ptr<ofxColorTheory::FloatColorWheelScheme> scheme = ofxColorTheory::FloatColorWheelSchemes::get(schemeName);
+    shared_ptr<FloatColorWheelScheme> scheme = FloatColorWheelSchemes::get(schemeName);
     if (scheme != NULL) {
         scheme->setPrimaryColor(primaryColor);
         int numColors = m.getNumArgs() > (idx+2) ? m.getArgAsInt(idx+2) : 1;
