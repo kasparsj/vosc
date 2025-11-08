@@ -657,5 +657,6 @@ void VOSC::windowResized(int w, int h) {
 }
 
 void VOSC::exit() {
+    VariablePool::setShuttingDown(true);
     HPV::DestroyHPVEngine();
 }

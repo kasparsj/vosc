@@ -21,8 +21,10 @@ public:
     static void update(const vector<TidalNote>& notes);
     static void cleanup(const VarsHolder* holder);
     static void cleanup(int id);
+    static void setShuttingDown(bool value);
     
 private:
     static map<string, shared_ptr<BaseVar>> sharedPool;
     static map<int, map<string, shared_ptr<BaseVar>>> holderPool;
+    static bool isShuttingDown;
 };

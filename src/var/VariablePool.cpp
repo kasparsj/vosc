@@ -7,6 +7,7 @@
 
 map<string, shared_ptr<BaseVar>> VariablePool::sharedPool;
 map<int, map<string, shared_ptr<BaseVar>>> VariablePool::holderPool;
+bool VariablePool::isShuttingDown = false;
 
 bool VariablePool::hasShared(const string& name) {
     return sharedPool.find(name) != sharedPool.end();
@@ -86,11 +87,22 @@ void VariablePool::update(const vector<TidalNote> &notes) {
 void VariablePool::cleanup(int id) {
     // Directly access holderPool using the ID
     // During shutdown, holderPool might be destroyed, so we need to be careful
+    if (isShuttingDown) {
+        return;
+    }
+    // Try to clean up, but if the map is being destroyed, just ignore it
+    // During shutdown, static objects are destroyed in reverse order of construction
+    // If holderPool is destroyed before objects that call cleanup(), we'll crash
+    // So we check the shutdown flag and skip cleanup if we're shutting down
     auto it = holderPool.find(id);
     if (it != holderPool.end()) {
         it->second.clear();
         holderPool.erase(it);
     }
+}
+
+void VariablePool::setShuttingDown(bool value) {
+    isShuttingDown = value;
 }
 
 void VariablePool::cleanup(const VarsHolder* holder) {
@@ -105,6 +117,7 @@ void VariablePool::cleanup(const VarsHolder* holder) {
     } catch (...) {
         // During shutdown, the holder might be invalid or holderPool might be destroyed
         // Silently ignore any exceptions to prevent crashes
+        isShuttingDown = true;
     }
 }
 
