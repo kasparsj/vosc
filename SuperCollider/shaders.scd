@@ -1,6 +1,7 @@
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 // create visuals sender
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
+// ~visuals = OSCVisuals("192.168.8.240", 33333, reset: true);
 
 // initialize 1 layer
 ~visuals.send('/layers', 1, "stack");

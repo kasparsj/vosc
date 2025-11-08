@@ -20,6 +20,7 @@ public:
     const static shared_ptr<Variable<T>> createOrUpdateShared(const string& name, T value);
     static void update(const vector<TidalNote>& notes);
     static void cleanup(const VarsHolder* holder);
+    static void cleanup(int id);
     
 private:
     static map<string, shared_ptr<BaseVar>> sharedPool;

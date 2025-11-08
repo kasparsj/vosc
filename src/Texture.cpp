@@ -104,7 +104,7 @@ void Texture::_unload() {
 void Texture::unload() {
     _unload();
     vars.clear();
-    VariablePool::cleanup(this);
+    VariablePool::cleanup(_id);
 }
 
 void Texture::reload() {
@@ -283,7 +283,7 @@ void Texture::reset() {
         tex->reset();
     }
     vars.clear();
-    VariablePool::cleanup(this);
+    VariablePool::cleanup(_id);
     setVar("size", glm::vec3());
     setVar("speed", 1.f);
     setVar("color", ofFloatColor(1.f, 1.f));

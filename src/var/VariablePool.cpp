@@ -83,10 +83,29 @@ void VariablePool::update(const vector<TidalNote> &notes) {
     }
 }
 
+void VariablePool::cleanup(int id) {
+    // Directly access holderPool using the ID
+    // During shutdown, holderPool might be destroyed, so we need to be careful
+    auto it = holderPool.find(id);
+    if (it != holderPool.end()) {
+        it->second.clear();
+        holderPool.erase(it);
+    }
+}
+
 void VariablePool::cleanup(const VarsHolder* holder) {
-    map<string, shared_ptr<BaseVar>>& pool = getPool(holder);
-    pool.clear();
-    holderPool.erase(holder->getId());
+    if (holder == NULL) {
+        return;
+    }
+    try {
+        // Get the ID before accessing the holder further, in case it's being destroyed
+        int id = holder->getId();
+        // Call the ID-based version to avoid accessing the holder pointer again
+        cleanup(id);
+    } catch (...) {
+        // During shutdown, the holder might be invalid or holderPool might be destroyed
+        // Silently ignore any exceptions to prevent crashes
+    }
 }
 
 template const shared_ptr<Variable<float>> VariablePool::createOrUpdateShared(const string& name, float value);

@@ -355,7 +355,7 @@ void Shader::reset() {
     TexturePool::clean(_id);
     textures.clear();
     buffers.clear();
-    VariablePool::cleanup(this);
+    VariablePool::cleanup(_id);
     vars.clear();
 }
 

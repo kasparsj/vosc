@@ -299,7 +299,7 @@ void Layer::unload() {
     glm::vec3 pos = getVarVec3("pos", glm::vec3());
     glm::vec3 size = getVarVec3("size", glm::vec3());
     vars.clear();
-    VariablePool::cleanup(this);
+    VariablePool::cleanup(_id);
     setVar("pos", pos);
     setVar("size", size);
 }
