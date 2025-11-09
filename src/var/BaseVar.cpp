@@ -118,26 +118,26 @@ void BaseVar::update(shared_ptr<BaseVar>& var, const string& command, const ofxO
 
 void BaseVar::updateVar(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx, size_t size) {
     if (size == 3) {
-        auto var1 = dynamic_pointer_cast<Variable<glm::vec3>>(var);
+        auto var1 = std::dynamic_pointer_cast<Variable<glm::vec3>>(var);
         if (var1) {
             var1->set(m, idx);
             return;
         }
-        auto var2 = dynamic_pointer_cast<Variable<ofFloatColor>>(var);
+        auto var2 = std::dynamic_pointer_cast<Variable<ofFloatColor>>(var);
         if (var2) {
             var2->set(m, idx);
             return;
         }
     }
     else if (size == 4) {
-        auto var3 = dynamic_pointer_cast<Variable<ofFloatColor>>(var);
+        auto var3 = std::dynamic_pointer_cast<Variable<ofFloatColor>>(var);
         if (var3) {
             var3->set(m, idx);
             return;
         }
     }
     else if (size == 16) {
-        auto var4 = dynamic_pointer_cast<Variable<glm::mat4>>(var);
+        auto var4 = std::dynamic_pointer_cast<Variable<glm::mat4>>(var);
         if (var4) {
             var4->set(m, idx);
             return;

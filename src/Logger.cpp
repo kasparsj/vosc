@@ -1,5 +1,8 @@
 #include "Logger.h"
 #include "Config.h"
+#include <cstdarg>
+#include <cstdio>
+#include <vector>
 
 Logger::Logger() {}
 
@@ -20,9 +23,21 @@ void Logger::log(ofLogLevel level, const string & module, const char* format, ..
 }
 
 void Logger::log(ofLogLevel level, const string & module, const char* format, va_list args) {
-    consoleLogger.log(level, module, format, args);
-    if (level >= consoleLogLevel) lines.push_back({ofGetElapsedTimef(), module + ": " + format, toColor(level)});
-    if (level >= fileLogLevel) fileLogger.log(level, module, format, args);
+    // Format the message using vsnprintf
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int size = vsnprintf(nullptr, 0, format, args_copy) + 1;
+    va_end(args_copy);
+    
+    if (size > 0) {
+        std::vector<char> buffer(size);
+        vsnprintf(buffer.data(), size, format, args);
+        string message = string(buffer.data());
+        
+        consoleLogger.log(level, module, message);
+        if (level >= consoleLogLevel) lines.push_back({ofGetElapsedTimef(), module + ": " + message, toColor(level)});
+        if (level >= fileLogLevel) fileLogger.log(level, module, message);
+    }
 }
 
 void Logger::draw(bool* isOpen) {

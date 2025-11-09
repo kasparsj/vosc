@@ -24,7 +24,7 @@ class WaveClock : public Sketch {
         glm::vec2 size = data.getSize();
         float _w = size.x;
         float _h = size.y;
-        float _r = min(_w, _h) - 150;
+        float _r = std::min(_w, _h) - 150;
         _radiusNoise += 0.005;
         _radius = (ofNoise(_radiusNoise, data.randomSeed) * _r) +1;
     
@@ -69,10 +69,10 @@ class WaveClock : public Sketch {
             break;
           case 2:
             ofSetRectMode(OF_RECTMODE_CORNER);
-            ofDrawRectangle(min(x1, x2), min(y1, y2), abs(x1-x2), abs(y1-y2));
+            ofDrawRectangle(std::min(x1, x2), std::min(y1, y2), abs(x1-x2), abs(y1-y2));
             break;
           case 3:
-            ofDrawEllipse(min(x1, x2), min(y1, y2), abs(x1-x2), abs(y1-y2));
+            ofDrawEllipse(std::min(x1, x2), std::min(y1, y2), abs(x1-x2), abs(y1-y2));
             break;
         }
         ofPopMatrix();

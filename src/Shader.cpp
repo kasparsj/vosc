@@ -3,6 +3,7 @@
 #include "VariablePool.h"
 #include "Lights.h"
 #include <regex>
+#include <exception>
 #include "Camera.hpp"
 
 void loadShaders(const string& path, map<string, ofxAutoReloadedShader>& shaders) {
@@ -45,11 +46,11 @@ string parseShadertoy(const string& path) {
     std::regex re_api("^https?://(www\\.)?shadertoy\\.com/api/v1/shaders/(.+)(/|\\?.*)");
     std::smatch m;
     if (regex_match(path, m, re_view) && m.size() >= 3) {
-        ssub_match submatch = m[2];
+        std::ssub_match submatch = m[2];
         return submatch.str();
     }
     else if (regex_match(path, m, re_api) && m.size() >= 3) {
-        ssub_match submatch = m[2];
+        std::ssub_match submatch = m[2];
         return submatch.str();
     }
     return "";
@@ -74,7 +75,7 @@ bool Shader::load(string path) {
                 ofLogError() << ("could not load shadertoy: " + shadertoyId);
             }
         }
-        catch (exception& ex) {
+        catch (std::exception& ex) {
             ofLogError() << ("could not load shadertoy: " + path + "(" + ex.what() + ")");
         }
     }
@@ -270,7 +271,7 @@ void Shader::setUniforms(const map<string, shared_ptr<BaseVar>>& vars) {
 template<typename T>
 void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<BaseVar>>& vars) {
     for (map<string, shared_ptr<BaseVar>>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
-        const auto floatVar = dynamic_pointer_cast<const Variable<float>>(it->second);
+        const auto floatVar = std::dynamic_pointer_cast<const Variable<float>>(it->second);
         if (floatVar != NULL) {
             const auto& values = floatVar->getVec();
             if (values.size() == 1) {
@@ -290,17 +291,17 @@ void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<Bas
             }
         }
         else {
-            const auto vec3Var = dynamic_pointer_cast<const Variable<glm::vec3>>(it->second);
+            const auto vec3Var = std::dynamic_pointer_cast<const Variable<glm::vec3>>(it->second);
             if (vec3Var != NULL/* && vec3Var->size() == 1*/) {
                 shader->setUniform3f(it->first, vec3Var->get());
             }
             else {
-                const auto mat4Var = dynamic_pointer_cast<const Variable<glm::mat4>>(it->second);
+                const auto mat4Var = std::dynamic_pointer_cast<const Variable<glm::mat4>>(it->second);
                 if (mat4Var != NULL/* && mat4Var->size() == 1*/) {
                     shader->setUniformMatrix4f(it->first, mat4Var->get());
                 }
                 else {
-                    const auto colorVar = dynamic_pointer_cast<const Variable<ofFloatColor>>(it->second);
+                    const auto colorVar = std::dynamic_pointer_cast<const Variable<ofFloatColor>>(it->second);
                     if (colorVar != NULL/* && colorVar->size() == 1*/) {
                         shader->setUniform4f(it->first, colorVar->get());
                     }
@@ -362,7 +363,7 @@ void Shader::reset() {
 void Shader::unload() {
     if (shader != NULL) {
         try {
-            shared_ptr<ofxAutoReloadedShader> autoShader = static_pointer_cast<ofxAutoReloadedShader>(shader);
+            shared_ptr<ofxAutoReloadedShader> autoShader = std::static_pointer_cast<ofxAutoReloadedShader>(shader);
             if (autoShader->isLoaded()) {
                 autoShader->unload();
             }

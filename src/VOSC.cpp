@@ -211,7 +211,8 @@ void VOSC::parseMessage(const ofxOscMessage &m) {
         midiCommand(command, m);
     }
     else if (command == "/dirt/play") {
-        tidal->parse(m);
+        ofxOscMessage nonConstM = m;
+        tidal->parse(nonConstM);
         if (waitOnset == -1) {
             waitOnset = 1;
         }

@@ -1,4 +1,5 @@
 #include "Tex.h"
+#include "TexData.h"
 
 void Tex::update(TexData& data) {
     glm::vec2 size = data.getSize();
