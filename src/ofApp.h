@@ -6,7 +6,7 @@
 #include "VOSC.hpp"
 
 #define PORT 33333
-#define FRAME_RATE 30
+#define FRAME_RATE 60
 
 class ofApp : public ofBaseApp {
 
