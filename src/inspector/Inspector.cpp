@@ -1,11 +1,15 @@
 #include "Inspector.hpp"
-#include "TexturePool.h"
-#include "Buffer.hpp"
-#include "Inputs.hpp"
+#include "../TexturePool.h"
+#include "../Buffer.hpp"
+#include "../input/Inputs.hpp"
 
-Inspector::Inspector() : printUniformsButton(-10, -35, 190, 25) {
-    printUniformsButton.setFill(false);
-    printUniformsButton.setColor(ofColor(255));
+Inspector::Inspector() {
+    // Set up callback for TextureInspector to open ShaderInspector
+    textureInspector.onOpenShaderInspector = [this](Shader* shader, const string& name) {
+        showingShaderInspector = true;
+        showingTextureInspector = false;
+        shaderInspector.setShader(shader, name);
+    };
 }
 
 void Inspector::inspect(const vector<shared_ptr<Layer>>& layers) {
@@ -13,11 +17,20 @@ void Inspector::inspect(const vector<shared_ptr<Layer>>& layers) {
 
     ofPushMatrix();
 
-    if (debugLayer < 0) {
-        drawDebugGlobals();
+    if (showingTextureInspector) {
+        textureInspector.draw();
+    }
+    else if (showingShaderInspector) {
+        shaderInspector.draw();
     }
     else {
-        drawDebugLayer(debugLayer);
+        // Main mode
+        if (debugLayer < 0) {
+            drawDebugGlobals();
+        }
+        else {
+            drawDebugLayer(debugLayer);
+        }
     }
 
     ofPopMatrix();
@@ -66,21 +79,24 @@ void Inspector::drawDebugLayer(int i) {
     ofPopStyle();
     ofTranslate(0, 140);
 
+    // Draw clickable shader info area
+    Button shaderInfoButton(0, -20, 300, 30);
+    shaderInfoButton.setFill(false);
+    shaderInfoButton.setColor(ofColor(255, 255, 0));
+    shaderInfoButton.draw("");
+    
     if (layers->at(i)->shader.isLoaded()) {
         string shaderPath = layers->at(i)->shader.getShaderPath();
         if (shaderPath != "") {
-            ofDrawBitmapString("Shader: " + shaderPath, 0, -20);
+            ofDrawBitmapString("Shader: " + shaderPath + " (click to inspect)", 0, 0);
         }
         else {
-            ofDrawBitmapString("Shader: loaded", 0, -20);
+            ofDrawBitmapString("Shader: loaded (click to inspect)", 0, 0);
         }
     }
     else {
-        ofDrawBitmapString("Shader: not loaded", 0, -20);
+        ofDrawBitmapString("Shader: not loaded (click to inspect)", 0, 0);
     }
-    ofTranslate(0, 30);
-
-    printUniformsButton.draw("Print Shader Uniforms");
     ofTranslate(0, 30);
 
     ofDrawBitmapString("Shader Textures", 0, -20);
@@ -210,43 +226,79 @@ void Inspector::drawAmplitude(const shared_ptr<OSCInput> input) {
 }
 
 void Inspector::mousePressed(int x, int y, int button) {
-    if (button == 0) { // Left mouse button
+    // Forward mouse events to active inspector
+    if (showingTextureInspector) {
+        textureInspector.mousePressed(x, y, button);
+        // Check if back button was clicked (which clears the inspector)
+        if (textureInspector.isEmpty()) {
+            showingTextureInspector = false;
+        }
+        return;
+    }
+    else if (showingShaderInspector) {
+        shaderInspector.mousePressed(x, y, button);
+        // Check if back button was clicked (which clears the inspector)
+        if (shaderInspector.isEmpty()) {
+            showingShaderInspector = false;
+        }
+        return;
+    }
+    
+    if (button == 0 || button == 2) { // Left or right mouse button
         // Close large texture view on left click
         if (largeTexture != nullptr) {
             largeTexture = nullptr;
             largeTextureName = "";
             return;
         }
-    }
-    else if (button == 2) { // Right mouse button
-        // Check texture buttons
+
+        // Check texture buttons to open TextureInspector
         float baseOffsetX = 20; // Base offset from drawDebugGlobals/drawDebugLayer
         float baseOffsetY = 60; // Base offset
-        
         if (debugLayer < 0) {
             // Global textures section
             float sectionOffsetY = 140; // Textures section offset
             float offsetY = baseOffsetY + sectionOffsetY;
             
-            for (size_t i = 0; i < textureButtons.size(); i++) {
-                float btnX = textureButtons[i].getX() + baseOffsetX;
-                float btnY = textureButtons[i].getY() + offsetY;
-                
-                if (textureButtons[i].hitTest(x - baseOffsetX, y - offsetY)) {
-                    largeTexture = textureButtonTextures[i];
-                    largeTextureName = textureButtonNames[i];
+            // Store texture objects for global textures
+            map<string, shared_ptr<Texture>>& pool = TexturePool::getPool(NULL);
+            int textureIndex = 0;
+            for (map<string, shared_ptr<Texture>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
+                if (textureIndex < textureButtons.size() && 
+                    textureButtons[textureIndex].hitTest(x - baseOffsetX, y - offsetY)) {
+                    // Open TextureInspector with this texture
+                    showingTextureInspector = true;
+                    showingShaderInspector = false;
+                    textureInspector.setTexture(it->second.get(), textureButtonNames[textureIndex]);
                     return;
                 }
+                textureIndex++;
             }
         }
         else {
+            // Check shader info button
+            float shaderInfoOffsetY = 140; // Shader info section offset (after Default Texture section)
+            Button shaderInfoButton(0, -20, 300, 30);
+            // Account for the -20 offset in the button position
+            if (shaderInfoButton.hitTest(x - baseOffsetX, y - (baseOffsetY + shaderInfoOffsetY - 20))) {
+                // Open ShaderInspector with this shader
+                showingShaderInspector = true;
+                showingTextureInspector = false;
+                string shaderName = "Layer " + ofToString(debugLayer + 1) + " Shader";
+                shaderInspector.setShader(&layers->at(debugLayer)->shader, shaderName);
+                return;
+            }
+            
             // Check default texture first
             float defaultTexOffsetY = 140; // Default texture section
             Button defaultTexButton(0, 0, 100, 100);
             if (layers->at(debugLayer)->shader.hasDefaultTexture()) {
                 if (defaultTexButton.hitTest(x - baseOffsetX, y - (baseOffsetY + defaultTexOffsetY))) {
-                    largeTexture = &layers->at(debugLayer)->shader.getDefaultTexture()->getTexture();
-                    largeTextureName = "Default Texture";
+                    // Open TextureInspector with default texture
+                    showingTextureInspector = true;
+                    showingShaderInspector = false;
+                    shared_ptr<Texture> defaultTex = layers->at(debugLayer)->shader.getDefaultTexture();
+                    textureInspector.setTexture(defaultTex.get(), "Default Texture");
                     return;
                 }
             }
@@ -255,48 +307,79 @@ void Inspector::mousePressed(int x, int y, int button) {
             float shaderTexOffsetY = 140 + 140 + 30; // Shader textures section
             float offsetY = baseOffsetY + shaderTexOffsetY;
             
-            for (size_t i = 0; i < textureButtons.size(); i++) {
-                if (textureButtons[i].hitTest(x - baseOffsetX, y - offsetY)) {
-                    largeTexture = textureButtonTextures[i];
-                    largeTextureName = textureButtonNames[i];
+            const map<string, shared_ptr<Texture>>& textures = layers->at(debugLayer)->shader.getTextures();
+            int textureIndex = 0;
+            for (map<string, shared_ptr<Texture>>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
+                if (textureIndex < textureButtons.size() && 
+                    textureButtons[textureIndex].hitTest(x - baseOffsetX, y - offsetY)) {
+                    // Open TextureInspector with this texture
+                    showingTextureInspector = true;
+                    showingShaderInspector = false;
+                    textureInspector.setTexture(it->second.get(), textureButtonNames[textureIndex]);
                     return;
                 }
+                textureIndex++;
             }
             
-            // Check shader buffers
+            // Check shader buffers (buffers don't have Texture objects, only ofTexture)
             float bufferOffsetY = 140 + 140 + 30 + 140; // Shader buffers section
             offsetY = baseOffsetY + bufferOffsetY;
             
-            // Texture buttons for buffers are added after shader textures
-            // We need to check which section the button belongs to
-            // For simplicity, check all buttons again with buffer offset
-            for (size_t i = 0; i < textureButtons.size(); i++) {
-                if (textureButtons[i].hitTest(x - baseOffsetX, y - offsetY)) {
-                    largeTexture = textureButtonTextures[i];
-                    largeTextureName = textureButtonNames[i];
+            // For buffers, we can only pass the ofTexture since Buffer doesn't have a Texture object
+            int bufferIndex = 0;
+            const map<string, shared_ptr<Buffer>>& buffers = layers->at(debugLayer)->shader.getBuffers();
+            for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
+                int buttonIndex = textureIndex + bufferIndex;
+                if (buttonIndex < textureButtons.size() && 
+                    textureButtons[buttonIndex].hitTest(x - baseOffsetX, y - offsetY)) {
+                    // Open TextureInspector with this buffer texture
+                    showingTextureInspector = true;
+                    showingShaderInspector = false;
+                    textureInspector.setTexture(&it->second->getTexture(), textureButtonNames[buttonIndex]);
                     return;
                 }
+                bufferIndex++;
             }
         }
     }
 }
 
 void Inspector::mouseReleased(int x, int y, int button) {
-    if (debugLayer >= 0) {
-        float offsetX = 20; // Base offset from drawDebugLayer
-        float offsetY = 60 + 140 + 140 + 30; // Position of print button
-        float btnX = printUniformsButton.getX() + offsetX;
-        float btnY = printUniformsButton.getY() + offsetY;
-        
-        if (printUniformsButton.hitTest(x - offsetX, y - offsetY)) {
-            if (layers->at(debugLayer)->shader.isLoaded()) {
-                layers->at(debugLayer)->shader.getShader().printActiveUniforms();
-            }
-        }
+    // Forward mouse events to active inspector
+    if (showingTextureInspector) {
+        textureInspector.mouseReleased(x, y, button);
+        return;
     }
+    else if (showingShaderInspector) {
+        shaderInspector.mouseReleased(x, y, button);
+        return;
+    }
+    
+    // Main mode handling (print button moved to ShaderInspector)
 }
 
 void Inspector::keyPressed(int key) {
+    // Forward key events to active inspector
+    if (showingTextureInspector) {
+        textureInspector.keyPressed(key);
+        // ESC or 'q' to go back to main view
+        if (key == OF_KEY_ESC || key == 'q') {
+            showingTextureInspector = false;
+            textureInspector.clear();
+        }
+        return;
+    }
+    else if (showingShaderInspector) {
+        shaderInspector.keyPressed(key);
+        // ESC or 'q' to go back to main view
+        if (key == OF_KEY_ESC || key == 'q') {
+            showingShaderInspector = false;
+            shaderInspector.clear();
+        }
+        return;
+    }
+    
+    // Main mode handling
     if (key == '0') {
         debugLayer = -1;
     }

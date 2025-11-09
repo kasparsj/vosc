@@ -8,13 +8,13 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/tex', "square_3x3", "square_3x3.png");
 
 ~visuals.send('/var/colors/scheme', "colors", "tetrad", Color(1.0, 0, 1.0, 1.0).hexString, 54);
-~visuals.send('/shader', 0, "layers/palettemap");
-~visuals.send('/shader/buffer', 0, "colors", "colors");
-~visuals.send('/shader/var', 0, "size", paletteMapSize.asInteger);
-~visuals.send('/shader/var', 0, "algorithm", 0);
-~visuals.send('/shader/var', 0, "error", 0);
-~visuals.send('/shader/var', 0, "offset", 0);
-~visuals.send('/shader/var', 0, "luminanceWeight", 0);
+~visuals.send('/tex', "colormap", "layers/palettemap.frag");
+~visuals.send('/tex/shader/buffer', "colormap", "colors", "colors");
+~visuals.send('/tex/var', "colormap", "size", paletteMapSize.asInteger);
+~visuals.send('/tex/var', "colormap", "algorithm", 0);
+~visuals.send('/tex/var', "colormap", "error", 0);
+~visuals.send('/tex/var', "colormap", "offset", 0);
+~visuals.send('/tex/var', "colormap", "luminanceWeight", 0);
 
 /*~createLayer = { |i, w, h, d|
 	var prefix = "tex" ++ i;

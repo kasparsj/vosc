@@ -5,6 +5,7 @@
 #include "VariablePool.h"
 #include "Args.h"
 #include "tex/Tex.h"
+#include "tex/ShaderTex.h"
 
 void Texture::load(string source, const vector<float>& args) {
     _unload();
@@ -211,6 +212,24 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
         }
         else {
             setVar(name, value);
+        }
+    }
+    else if (command.substr(0, 12) == "/tex/shader") {
+        // Forward shader commands to the tex object if it's based on Shader
+        if (tex == NULL) {
+            ofLogError() << "Texture::oscCommand: tex is NULL, cannot forward shader command: " << command;
+        }
+        else {
+            shared_ptr<Shader> shaderTex = std::dynamic_pointer_cast<Shader>(tex);
+            if (shaderTex != NULL) {
+                // Transform "/tex/shader/..." to "/shader/..."
+                string shaderCommand = "/shader" + command.substr(11);
+                shaderTex->oscCommand(shaderCommand, m);
+                return;
+            }
+            else {
+                ofLogError() << "Texture::oscCommand: tex is not a Shader-based texture, cannot forward shader command: " << command;
+            }
         }
     }
     else {

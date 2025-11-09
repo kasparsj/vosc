@@ -1,9 +1,11 @@
 #pragma once
 
 #include "ofMain.h"
-#include "OSCInput.h"
-#include "Layer.h"
-#include "ui/Button.h"
+#include "../input/OSCInput.h"
+#include "../layer/Layer.h"
+#include "../ui/Button.h"
+#include "TextureInspector.hpp"
+#include "ShaderInspector.hpp"
 
 class Inspector {
 public:
@@ -38,10 +40,15 @@ private:
     void drawLargeTexture();
     
     // Buttons
-    Button printUniformsButton;
     vector<Button> textureButtons;
     vector<string> textureButtonNames;
     vector<const ofTexture*> textureButtonTextures;
+    
+    // Active inspectors
+    TextureInspector textureInspector;
+    ShaderInspector shaderInspector;
+    bool showingTextureInspector = false;
+    bool showingShaderInspector = false;
     
     void updateTextureButtons();
     void clearTextureButtons();

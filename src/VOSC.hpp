@@ -7,7 +7,7 @@
 #include "Camera.hpp"
 #include "ofxPostProcessing.h"
 #include "ofxMidi.h"
-#include "Inspector.hpp"
+#include "inspector/Inspector.hpp"
 #include "ofxDeferredShading.h"
 
 class VOSC {

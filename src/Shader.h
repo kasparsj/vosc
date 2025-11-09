@@ -73,7 +73,9 @@ public:
     string getShaderPath() const {
         return shaderPath;
     }
-    const map<string, GLenum>& getUniformTypes();
+    const map<string, GLenum>& getUniformTypes() const;
+    map<string, string> getUniformValues() const;
+    void checkUniforms();
     
 private:
     void setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay = 0);
@@ -101,6 +103,6 @@ private:
     shared_ptr<ofShader> shader;
     shared_ptr<ofxShadertoy> shadertoy;
     string shaderPath;
-    map<string, GLenum> uniformTypes;
+    mutable map<string, GLenum> uniformTypes;
 };
 
