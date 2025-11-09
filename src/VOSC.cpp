@@ -120,9 +120,6 @@ void VOSC::beginDraw() {
             }
             
             deferred.begin(camera.getCamera());
-            
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_BACK);
         }
         else {
             Lights::get().update();
@@ -131,6 +128,10 @@ void VOSC::beginDraw() {
             ofEnableLighting();
 
             post.begin(camera.getCamera());
+        }
+        if (deferredShading/* || cull_back_enabled*/) {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
         }
     }
     else {
