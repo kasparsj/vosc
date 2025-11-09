@@ -190,6 +190,7 @@ void BaseVar::updateColorsScheme(const shared_ptr<BaseVar>& var, const ofxOscMes
     if (scheme != NULL) {
         scheme->setPrimaryColor(primaryColor);
         int numColors = m.getNumArgs() > (idx+2) ? m.getArgAsInt(idx+2) : 1;
+        scheme->regenerate();
         static_cast<Variable<ofFloatColor>*>(var.get())->set(scheme->interpolate(numColors));
     }
     else {
