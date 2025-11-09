@@ -283,6 +283,8 @@ bool Geom::loadQuad(const ofxOscMessage& m, int idx) {
     mesh->addVertices( vertices, 4 );
     mesh->addTexCoords( texCoords, 4 );
     mesh->addIndices( indices, 6 );
+
+    return true;
 }
 
 bool Geom::loadGrass(const ofxOscMessage& m, int idx) {

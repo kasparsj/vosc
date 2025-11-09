@@ -1,6 +1,7 @@
 #include "GVVideoTex.h"
 #include "Layer.h"
 
+#if USE_OFX_EXTREME_GPU_VIDEO
 vector<string> loadLocalGVs()
 {
     ofDirectory dir("videos");
@@ -81,3 +82,4 @@ void GVVideoTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
 void GVVideoTex::choose() {
     path = random();
 }
+#endif

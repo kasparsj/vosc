@@ -64,7 +64,7 @@ private:
     
     string path = "";
     string prevPath = "";
-    ofxAssimpModelLoader model;
+    mutable ofxAssimpModelLoader model;
     shared_ptr<ofMesh> mesh;
     BoundingBox boundingBox;
     bool usingModel;

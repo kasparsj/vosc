@@ -1,5 +1,6 @@
 #include "ofMain.h"
 #include "ofApp.h"
+#include "Config.h"
 
 #define USE_PROGRAMMABLE_RENDERER
 
@@ -12,7 +13,7 @@ int main( ){
     
 #ifdef USE_PROGRAMMABLE_RENDERER
     ofGLWindowSettings settings;
-    settings.setGLVersion(3, 2);
+    settings.setGLVersion(GL_VERSION_MAJOR, GL_VERSION_MINOR);
     settings.setSize(1024, 768);
     ofCreateWindow(settings);
 #else

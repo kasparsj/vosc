@@ -96,7 +96,6 @@ const shared_ptr<Variable<T>>& VarsHolder::setVar(const string& name, vector<T> 
 void VarsHolder::setVar(const string& name, const ofxOscMessage& m, int idx) {
     auto& var = VariablePool::createOrUpdate(name, m, idx, this);
     vars[name] = var;
-    return var;
 }
 
 template const shared_ptr<Variable<float>>& VarsHolder::setVar(const string& name, float value);

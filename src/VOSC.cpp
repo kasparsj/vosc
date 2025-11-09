@@ -1,21 +1,23 @@
 #include "VOSC.hpp"
 #include "Args.h"
 #include "VariablePool.h"
+#if USE_OFX_HPVPLAYER
 #include "ofxHPVPlayer.h"
+#endif
 #include "TexturePool.h"
 #include "GeomPool.h"
 #include "ShaderTex.h"
 #include "Lights.h"
 #include "Inputs.hpp"
 
-#if USE_ULTRALIGHT
+#if USE_OFX_ULTRALIGHT
 #include "ofxUltralight.h"
 #endif
 
 void VOSC::setup(unsigned int port) {
     receiver.setup(port);
     camera.setup();
-    setupLayers(INITIAL_VISUALS);
+    setupLayers(INITIAL_LAYERS);
     tidal = new ofxTidalCycles(1);
     
     windowResized(ofGetWidth(), ofGetHeight());
@@ -70,8 +72,10 @@ void VOSC::update() {
         layers[i]->update(tidal->notes);
     }
     camera.update();
+#if USE_OFX_HPVPLAYER
     HPV::Update();
-#if USE_ULTRALIGHT
+#endif
+#if USE_OFX_ULTRALIGHT
     ofxUltralight::update();
 #endif
     if (pointLightPass != NULL) {
@@ -319,7 +323,7 @@ Layout parseLayout(const ofxOscMessage &m, int idx)
 
 void VOSC::layersCommand(string command, const ofxOscMessage& m) {
     if (command == "/layers") {
-        auto numLayers = m.getNumArgs() > 0 ? m.getArgAsInt(0) : INITIAL_VISUALS;
+        auto numLayers = m.getNumArgs() > 0 ? m.getArgAsInt(0) : INITIAL_LAYERS;
         setupLayers(numLayers);
         layoutLayers(m.getNumArgs() > 1 ? parseLayout(m, 1) : layout);
     }
@@ -506,9 +510,9 @@ void VOSC::createShadingPass(ofxPostProcessing& post, PostPass passId) {
         case PostPass::LIMBDARKENING:
             post.createPass<itg::LimbDarkeningPass>();
             break;
-        case PostPass::INVERT:
-            post.createPass<itg::Invert>();
-            break;
+//        case PostPass::INVERT:
+//            post.createPass<itg::Invert>();
+//            break;
 //        case PostPass::GLITCH:
 //            post.createPass<itg::Glitch>();
 //            break;
@@ -658,5 +662,7 @@ void VOSC::windowResized(int w, int h) {
 
 void VOSC::exit() {
     VariablePool::setShuttingDown(true);
+#if USE_OFX_HPVPLAYER
     HPV::DestroyHPVEngine();
+#endif
 }
