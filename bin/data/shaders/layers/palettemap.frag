@@ -50,8 +50,7 @@ in VertexAttrib {
 
 // Uniforms
 uniform int size;              // The size of the rendering area
-uniform sampler2D palette;     // Texture containing the color palette
-uniform ivec2 paletteSize;     // Dimensions of the palette texture
+uniform samplerBuffer palette; // Buffer texture containing the color palette
 uniform int algorithm;         // 0=NONE (passthrough, no palette mapping)
                                // 1=RGB_DIFF (RGB Euclidean distance)
                                // 2=LAB_DIFF (CIEDE2000 perceptual distance)
@@ -518,8 +517,11 @@ void main() {
     // -------------------------------------------------------------------------
 
     // Initialize with first palette color
-    vec4 closest = texelFetch(palette, ivec2(0, 0), 0);
+    vec4 closest = texelFetch(palette, 0);
     float diff;
+
+    // Get palette size from texture
+    int paletteSize = textureSize(palette);
 
     // Use proper branching for better performance (avoids computing both distances)
     if (algorithm == 1) {
@@ -527,17 +529,15 @@ void main() {
         diff = diffRGB(closest.rgb, colorRGB, luminanceWeight);
 
         // Search through all colors in the palette
-        for (int x = 0; x < paletteSize.x; x++) {
-            for (int y = 0; y < paletteSize.y; y++) {
-                if (x == 0 && y == 0) continue;
+        for (int i = 0; i < paletteSize; i++) {
+            if (i == 0) continue;
 
-                vec4 candidateColor = texelFetch(palette, ivec2(x, y), 0);
-                float candidateDiff = diffRGB(candidateColor.rgb, colorRGB, luminanceWeight);
+            vec4 candidateColor = texelFetch(palette, i);
+            float candidateDiff = diffRGB(candidateColor.rgb, colorRGB, luminanceWeight);
 
-                if (candidateDiff < diff) {
-                    diff = candidateDiff;
-                    closest = candidateColor;
-                }
+            if (candidateDiff < diff) {
+                diff = candidateDiff;
+                closest = candidateColor;
             }
         }
     } else {
@@ -547,18 +547,16 @@ void main() {
         diff = diffLab(closestLab, colorLab, luminanceWeight);
 
         // Search through all colors in the palette
-        for (int x = 0; x < paletteSize.x; x++) {
-            for (int y = 0; y < paletteSize.y; y++) {
-                if (x == 0 && y == 0) continue;
+        for (int i = 0; i < paletteSize; i++) {
+            if (i == 0) continue;
 
-                vec4 candidateColor = texelFetch(palette, ivec2(x, y), 0);
-                vec3 candidateLab = toLab(candidateColor.rgb);
-                float candidateDiff = diffLab(candidateLab, colorLab, luminanceWeight);
+            vec4 candidateColor = texelFetch(palette, i);
+            vec3 candidateLab = toLab(candidateColor.rgb);
+            float candidateDiff = diffLab(candidateLab, colorLab, luminanceWeight);
 
-                if (candidateDiff < diff) {
-                    diff = candidateDiff;
-                    closest = candidateColor;
-                }
+            if (candidateDiff < diff) {
+                diff = candidateDiff;
+                closest = candidateColor;
             }
         }
     }

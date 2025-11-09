@@ -34,14 +34,64 @@ float Args::parsePercent(const ofxOscMessage& m, int idx) {
 }
 
 template<>
+int Args::parse(const ofxOscMessage& m, int idx) {
+    int value;
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            string str = m.getArgAsString(idx);
+            string trimmed = ofTrim(str);
+            if (trimmed.empty()) {
+                throw "string not int: empty string";
+            }
+            value = ofToInt(trimmed);
+            // Validate that the string represents an integer
+            // Check if the trimmed string contains only valid integer characters
+            if (trimmed.find_first_not_of("+-0123456789") != string::npos) {
+                throw "string not int: " + str;
+            }
+            break;
+        }
+        case OFXOSC_TYPE_INT32:
+        case OFXOSC_TYPE_INT64:
+        case OFXOSC_TYPE_CHAR:
+            value = m.getArgAsInt(idx);
+            break;
+        case OFXOSC_TYPE_FLOAT:
+        case OFXOSC_TYPE_DOUBLE:
+            value = (int) m.getArgAsFloat(idx);
+            break;
+        default:
+            throw "could not parse int at: " + ofToString(idx);
+    }
+    return value;
+}
+
+template<>
 float Args::parse(const ofxOscMessage& m, int idx) {
     float value;
     switch (m.getArgType(idx)) {
         case OFXOSC_TYPE_STRING: {
             string str = m.getArgAsString(idx);
-            value = ofToFloat(str);
-            if (std::isnan(value) || strspn(str.c_str(), "-.0123456789") != str.size()) {
+            string trimmed = ofTrim(str);
+            if (trimmed.empty()) {
+                throw "string not float: empty string";
+            }
+            value = ofToFloat(trimmed);
+            // Check if conversion was successful (not NaN and not infinity)
+            // Allow 0.0 as a valid value - check if value is 0 and string represents 0
+            if (std::isnan(value) || std::isinf(value)) {
                 throw "string not float: " + str;
+            }
+            // Additional validation: if value is 0, verify the string actually represents 0
+            // This prevents cases where ofToFloat returns 0 for invalid strings
+            if (value == 0.0f) {
+                // Check if the trimmed string represents zero
+                bool isZero = (trimmed == "0" || trimmed == "0.0" || trimmed == "-0" || trimmed == "-0.0" || 
+                              trimmed == "+0" || trimmed == "+0.0");
+                // If not explicitly zero, check if it contains at least one digit
+                if (!isZero && trimmed.find_first_of("0123456789") == string::npos) {
+                    throw "string not float: " + str;
+                }
             }
             break;
         }
@@ -131,6 +181,42 @@ ofFloatColor Args::parse(const ofxOscMessage& m, int idx) {
 }
 
 template<>
+glm::vec2 Args::parse(const ofxOscMessage &m, int idx) {
+    glm::vec2 vec;
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            string str = m.getArgAsString(idx);
+            if (isJSONObj(str)) {
+                auto json = ofJson::parse(str);
+                vec.x = json.at("x");
+                vec.y = json.at("y");
+            }
+            else if (isJSONArr(str)) {
+                auto json = ofJson::parse(str);
+                vec.x = json[0];
+                vec.y = json[1];
+            }
+            else {
+                throw ("string not vec2: " + str);
+            }
+            break;
+        }
+        case OFXOSC_TYPE_INT32:
+        case OFXOSC_TYPE_INT64:
+        case OFXOSC_TYPE_CHAR:
+            vec = glm::vec2(m.getArgAsInt(idx));
+            break;
+        case OFXOSC_TYPE_FLOAT:
+        case OFXOSC_TYPE_DOUBLE:
+            vec = glm::vec2(m.getArgAsFloat(idx));
+            break;
+        default:
+            throw "could not parse vec2 at: " + ofToString(idx);
+    }
+    return vec;
+}
+
+template<>
 glm::vec3 Args::parse(const ofxOscMessage &m, int idx) {
     glm::vec3 vec;
     switch (m.getArgType(idx)) {
@@ -216,11 +302,31 @@ ofxExprNode Args::parse(const ofxOscMessage &m, int idx) {
 
 template<typename T>
 vector<T> Args::parseConst(const ofxOscMessage &m, int idx) {
-    vector<T> values(m.getNumArgs()-idx);
+    int numArgs = m.getNumArgs() - idx;
+    if (numArgs <= 0) {
+        // If no arguments, return an empty vector
+        // The caller should handle this case appropriately
+        return vector<T>();
+    }
+    vector<T> values(numArgs);
     for (int i=idx; i<m.getNumArgs(); i++) {
         values[i-idx] = parse<T>(m, i);
     }
     return values;
+}
+
+template<>
+vector<string> Args::parseExpr<int>(const ofxOscMessage& m, int& idx) {
+    vector<string> intExpr;
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            intExpr.push_back(m.getArgAsString(idx++));
+            break;
+        }
+        default:
+            throw "could not parse int expr: " + ofToString(idx);
+    }
+    return intExpr;
 }
 
 template<>
@@ -295,6 +401,52 @@ vector<string> Args::parseExpr<ofFloatColor>(const ofxOscMessage& m, int& idx) {
             throw "could not parse vec3 at: " + ofToString(idx);
     }
     return colorExpr;
+}
+
+template<>
+vector<string> Args::parseExpr<glm::vec2>(const ofxOscMessage &m, int& idx) {
+    vector<string> vec2Expr;
+    vec2Expr.resize(2);
+    switch (m.getArgType(idx)) {
+        case OFXOSC_TYPE_STRING: {
+            string str = m.getArgAsString(idx++);
+            if (isJSONArr(str)) {
+                auto json = ofJson::parse(str);
+                if (json.at(0).is_string())
+                    vec2Expr[0] = json.at(0);
+                else
+                    vec2Expr[0] = ofToString(json.at(0));
+                if (json.at(1).is_string())
+                    vec2Expr[1] = json.at(1);
+                else
+                    vec2Expr[1] = ofToString(json.at(1));
+            }
+            else if (isJSONObj(str)) {
+                auto json = ofJson::parse(str);
+                if (json.at("x").is_string())
+                    vec2Expr[0] = json.at("x");
+                else
+                    vec2Expr[0] = ofToString(json.at("x"));
+                if (json.at("y").is_string())
+                    vec2Expr[1] = json.at("y");
+                else
+                    vec2Expr[1] = ofToString(json.at("y"));
+            }
+            else {
+                vec2Expr[0] = str;
+                vec2Expr[1] = str;
+            }
+            break;
+        }
+        case OFXOSC_TYPE_BLOB:
+            // todo: implement
+            // m.getArgAsBlob(idx++);
+            break;
+        default:
+            ofLogError() << "could not parse vec2 expr: " << m << idx;
+            break;
+    }
+    return vec2Expr;
 }
 
 template<>
@@ -380,6 +532,8 @@ vector<string> Args::parseExpr<ofxExprNode>(const ofxOscMessage &m, int& idx) {
 }
 
 template vector<float> Args::parseConst<float>(const ofxOscMessage& m, int idx);
+template vector<int> Args::parseConst<int>(const ofxOscMessage& m, int idx);
+template vector<glm::vec2> Args::parseConst<glm::vec2>(const ofxOscMessage& m, int idx);
 template vector<ofFloatColor> Args::parseConst<ofFloatColor>(const ofxOscMessage& m, int idx);
 template vector<glm::vec3> Args::parseConst<glm::vec3>(const ofxOscMessage& m, int idx);
 template vector<glm::mat4> Args::parseConst<glm::mat4>(const ofxOscMessage& m, int idx);

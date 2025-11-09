@@ -70,6 +70,10 @@ public:
     ofxShadertoy& getShadertoy() {
         return *shadertoy;
     }
+    string getShaderPath() const {
+        return shaderPath;
+    }
+    const map<string, GLenum>& getUniformTypes();
     
 private:
     void setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay = 0);
@@ -87,5 +91,7 @@ private:
     map<string, shared_ptr<Buffer>> buffers;
     shared_ptr<ofShader> shader;
     shared_ptr<ofxShadertoy> shadertoy;
+    string shaderPath;
+    map<string, GLenum> uniformTypes;
 };
 

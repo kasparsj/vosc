@@ -3,6 +3,11 @@
 #include "Buffer.hpp"
 #include "Inputs.hpp"
 
+Inspector::Inspector() : printUniformsButton(-10, -35, 190, 25) {
+    printUniformsButton.setFill(false);
+    printUniformsButton.setColor(ofColor(255));
+}
+
 void Inspector::inspect(const vector<shared_ptr<Layer>>& layers) {
     this->layers = &layers;
 
@@ -23,6 +28,7 @@ void Inspector::inspect(const vector<shared_ptr<Layer>>& layers) {
 }
 
 void Inspector::drawDebugGlobals() {
+    clearTextureButtons();
     ofTranslate(20, 60);
     ofDrawBitmapString("Global Geometry", 0, -20);
     ofPushStyle();
@@ -41,6 +47,7 @@ void Inspector::drawDebugGlobals() {
 }
 
 void Inspector::drawDebugLayer(int i) {
+    clearTextureButtons();
     ofTranslate(20, 60);
     ofDrawBitmapString("Layer " + ofToString(debugLayer+1) + " Geometry", 0, -20);
     ofPushStyle();
@@ -59,11 +66,21 @@ void Inspector::drawDebugLayer(int i) {
     ofPopStyle();
     ofTranslate(0, 140);
 
-    ofPushStyle();
-    ofNoFill();
-    ofDrawRectangle(-10, -35, 190, 25);
-    ofDrawBitmapString("Print Shader Uniforms", 0, -20);
-    ofPopStyle();
+    if (layers->at(i)->shader.isLoaded()) {
+        string shaderPath = layers->at(i)->shader.getShaderPath();
+        if (shaderPath != "") {
+            ofDrawBitmapString("Shader: " + shaderPath, 0, -20);
+        }
+        else {
+            ofDrawBitmapString("Shader: loaded", 0, -20);
+        }
+    }
+    else {
+        ofDrawBitmapString("Shader: not loaded", 0, -20);
+    }
+    ofTranslate(0, 30);
+
+    printUniformsButton.draw("Print Shader Uniforms");
     ofTranslate(0, 30);
 
     ofDrawBitmapString("Shader Textures", 0, -20);
@@ -132,12 +149,23 @@ void Inspector::debugShaderBuffers(int i) {
 }
 
 void Inspector::debugTexture(const ofTexture& tex, const string& name, float x, float y) {
+    // Create a button for this texture
+    Button texButton(x, y, 100, 100);
+    texButton.setFill(false);
+    texButton.setColor(ofColor(255));
+    
+    // Store button info for hit testing
+    textureButtons.push_back(texButton);
+    textureButtonNames.push_back(name);
+    textureButtonTextures.push_back(&tex);
+    
+    // Draw texture with button
     if (!name.empty()) {
         ofSetColor(255);
-        ofDrawBitmapString(name, 0, -5);
+        ofDrawBitmapString(name, x, y - 5);
     }
     ofSetColor(255);
-    tex.draw(0, 0, 100, 100);
+    tex.draw(x, y, 100, 100);
 }
 
 void Inspector::debugEmpty(string text) {
@@ -191,66 +219,79 @@ void Inspector::mousePressed(int x, int y, int button) {
         }
     }
     else if (button == 2) { // Right mouse button
-        // Check if clicking on a texture in global view
+        // Check texture buttons
+        float baseOffsetX = 20; // Base offset from drawDebugGlobals/drawDebugLayer
+        float baseOffsetY = 60; // Base offset
+        
         if (debugLayer < 0) {
-            float baseX = 20;
-            float baseY = 60 + 140; // Textures section
-            map<string, shared_ptr<Texture>>& pool = TexturePool::getPool(NULL);
-            float texX = baseX;
-            for (map<string, shared_ptr<Texture>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
-                if (checkTextureClick(x, y, button, texX, baseY)) {
-                    largeTexture = &it->second->getTexture();
-                    largeTextureName = it->first;
+            // Global textures section
+            float sectionOffsetY = 140; // Textures section offset
+            float offsetY = baseOffsetY + sectionOffsetY;
+            
+            for (size_t i = 0; i < textureButtons.size(); i++) {
+                float btnX = textureButtons[i].getX() + baseOffsetX;
+                float btnY = textureButtons[i].getY() + offsetY;
+                
+                if (textureButtons[i].hitTest(x - baseOffsetX, y - offsetY)) {
+                    largeTexture = textureButtonTextures[i];
+                    largeTextureName = textureButtonNames[i];
                     return;
                 }
-                texX += 120;
             }
         }
         else {
-            // Check default texture
-            float baseX = 20;
-            float baseY = 60 + 140; // Default texture section
+            // Check default texture first
+            float defaultTexOffsetY = 140; // Default texture section
+            Button defaultTexButton(0, 0, 100, 100);
             if (layers->at(debugLayer)->shader.hasDefaultTexture()) {
-                if (checkTextureClick(x, y, button, baseX, baseY)) {
+                if (defaultTexButton.hitTest(x - baseOffsetX, y - (baseOffsetY + defaultTexOffsetY))) {
                     largeTexture = &layers->at(debugLayer)->shader.getDefaultTexture()->getTexture();
                     largeTextureName = "Default Texture";
                     return;
                 }
             }
-
+            
             // Check shader textures
-            baseY = 60 + 140 + 140 + 30; // Shader textures section
-            const map<string, shared_ptr<Texture>>& textures = layers->at(debugLayer)->shader.getTextures();
-            float texX = baseX;
-            for (map<string, shared_ptr<Texture>>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
-                if (checkTextureClick(x, y, button, texX, baseY)) {
-                    largeTexture = &it->second->getTexture();
-                    largeTextureName = it->first;
+            float shaderTexOffsetY = 140 + 140 + 30; // Shader textures section
+            float offsetY = baseOffsetY + shaderTexOffsetY;
+            
+            for (size_t i = 0; i < textureButtons.size(); i++) {
+                if (textureButtons[i].hitTest(x - baseOffsetX, y - offsetY)) {
+                    largeTexture = textureButtonTextures[i];
+                    largeTextureName = textureButtonNames[i];
                     return;
                 }
-                texX += 120;
             }
-
+            
             // Check shader buffers
-            baseY = 60 + 140 + 140 + 30 + 140; // Shader buffers section
-            const map<string, shared_ptr<Buffer>>& buffers = layers->at(debugLayer)->shader.getBuffers();
-            texX = baseX;
-            for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
-                if (checkTextureClick(x, y, button, texX, baseY)) {
-                    largeTexture = &it->second->getTexture();
-                    largeTextureName = it->first;
+            float bufferOffsetY = 140 + 140 + 30 + 140; // Shader buffers section
+            offsetY = baseOffsetY + bufferOffsetY;
+            
+            // Texture buttons for buffers are added after shader textures
+            // We need to check which section the button belongs to
+            // For simplicity, check all buttons again with buffer offset
+            for (size_t i = 0; i < textureButtons.size(); i++) {
+                if (textureButtons[i].hitTest(x - baseOffsetX, y - offsetY)) {
+                    largeTexture = textureButtonTextures[i];
+                    largeTextureName = textureButtonNames[i];
                     return;
                 }
-                texX += 120;
             }
         }
     }
 }
 
 void Inspector::mouseReleased(int x, int y, int button) {
-    if (x > 10 && x < 200 && y > 305 && y < 330) {
-        if (layers->at(debugLayer)->shader.isLoaded()) {
-            layers->at(debugLayer)->shader.getShader().printActiveUniforms();
+    if (debugLayer >= 0) {
+        float offsetX = 20; // Base offset from drawDebugLayer
+        float offsetY = 60 + 140 + 140 + 30; // Position of print button
+        float btnX = printUniformsButton.getX() + offsetX;
+        float btnY = printUniformsButton.getY() + offsetY;
+        
+        if (printUniformsButton.hitTest(x - offsetX, y - offsetY)) {
+            if (layers->at(debugLayer)->shader.isLoaded()) {
+                layers->at(debugLayer)->shader.getShader().printActiveUniforms();
+            }
         }
     }
 }
@@ -264,14 +305,15 @@ void Inspector::keyPressed(int key) {
     }
 }
 
-bool Inspector::checkTextureClick(int x, int y, int button, float texX, float texY) {
-    // Account for the translation offsets in the drawing functions
-    float offsetX = 20; // Base offset from drawDebugGlobals/drawDebugLayer
-    float offsetY = 60; // Base offset
-    float actualX = offsetX + texX;
-    float actualY = offsetY + texY;
+void Inspector::updateTextureButtons() {
+    // This method can be used to update button positions if needed
+    // Currently buttons are created in debugTexture
+}
 
-    return (x >= actualX && x <= actualX + 100 && y >= actualY && y <= actualY + 100);
+void Inspector::clearTextureButtons() {
+    textureButtons.clear();
+    textureButtonNames.clear();
+    textureButtonTextures.clear();
 }
 
 void Inspector::drawLargeTexture() {

@@ -1,10 +1,20 @@
 (
+var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
 ~visuals.send('/cam', "easy");
 
 ~visuals.send('/tex', "square_3x3", "square_3x3.png");
+
+~visuals.send('/var/colors/scheme', "colors", "tetrad", Color(1.0, 0, 1.0, 1.0).hexString, 54);
+~visuals.send('/shader', 0, "layers/palettemap");
+~visuals.send('/shader/buffer', 0, "colors", "colors");
+~visuals.send('/shader/var', 0, "size", paletteMapSize.asInteger);
+~visuals.send('/shader/var', 0, "algorithm", 0);
+~visuals.send('/shader/var', 0, "error", 0);
+~visuals.send('/shader/var', 0, "offset", 0);
+~visuals.send('/shader/var', 0, "luminanceWeight", 0);
 
 /*~createLayer = { |i, w, h, d|
 	var prefix = "tex" ++ i;

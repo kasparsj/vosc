@@ -35,7 +35,12 @@ shared_ptr<BaseVar> BaseVar::create(const string& command, const ofxOscMessage& 
 }
 
 shared_ptr<BaseVar> BaseVar::createVar(const ofxOscMessage& m, int idx, size_t size) {
-    if (size == 3) {
+    if (size == 2) {
+        Variable<glm::vec2>* var = new Variable<glm::vec2>();
+        var->set(m, idx);
+        return shared_ptr<BaseVar>(var);
+    }
+    else if (size == 3) {
         Variable<glm::vec3>* var = new Variable<glm::vec3>();
         var->set(m, idx);
         return shared_ptr<BaseVar>(var);
@@ -70,8 +75,12 @@ shared_ptr<BaseVar> BaseVar::createVar(const ofxOscMessage& m, int idx) {
                 return var;
             }
         }
+        case OFXOSC_TYPE_INT32: {
+            shared_ptr<Variable<int>> var = make_shared<Variable<int>>();
+            var->set(m, idx);
+            return var;
+        }
         case OFXOSC_TYPE_FLOAT:
-        case OFXOSC_TYPE_INT32:
         case OFXOSC_TYPE_TRUE:
         case OFXOSC_TYPE_FALSE: {
             shared_ptr<Variable<float>> var = make_shared<Variable<float>>();
@@ -117,7 +126,14 @@ void BaseVar::update(shared_ptr<BaseVar>& var, const string& command, const ofxO
 }
 
 void BaseVar::updateVar(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int idx, size_t size) {
-    if (size == 3) {
+    if (size == 2) {
+        auto var2 = std::dynamic_pointer_cast<Variable<glm::vec2>>(var);
+        if (var2) {
+            var2->set(m, idx);
+            return;
+        }
+    }
+    else if (size == 3) {
         auto var1 = std::dynamic_pointer_cast<Variable<glm::vec3>>(var);
         if (var1) {
             var1->set(m, idx);
@@ -189,9 +205,12 @@ void BaseVar::updateColorsScheme(const shared_ptr<BaseVar>& var, const ofxOscMes
     shared_ptr<FloatColorWheelScheme> scheme = FloatColorWheelSchemes::get(schemeName);
     if (scheme != NULL) {
         scheme->setPrimaryColor(primaryColor);
-        int numColors = m.getNumArgs() > (idx+2) ? m.getArgAsInt(idx+2) : 1;
-        scheme->regenerate();
-        static_cast<Variable<ofFloatColor>*>(var.get())->set(scheme->interpolate(numColors));
+        vector<ofFloatColor> colors = scheme->regenerate();
+        if (m.getNumArgs() > (idx+2)) {
+            int numColors = m.getArgAsInt(idx+2);
+            colors = scheme->interpolate(numColors);
+        }
+        static_cast<Variable<ofFloatColor>*>(var.get())->set(colors);
     }
     else {
         ofLogError() << "/var/colors/scheme invalid scheme name: " << schemeName;

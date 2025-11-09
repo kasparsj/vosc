@@ -3,6 +3,7 @@
 #include "BaseVar.h"
 #include "ofxOsc.h"
 #include "ofxExpr.hpp"
+#include <type_traits>
 
 template <typename T>
 class Variable : public BaseVar {
@@ -43,7 +44,9 @@ public:
 private:
     vector<T> values;
     bool _isExpr = true;
-    ofxExpr<T> expr;
+    // Use float for int expressions since ofxExpr<int> doesn't exist
+    using ExprType = typename std::conditional<std::is_same<T, int>::value, ofxExpr<float>, ofxExpr<T>>::type;
+    ExprType expr;
     // todo: needed only for Variable<ofxExprNode>
     vector<glm::mat4> matrices;
 };

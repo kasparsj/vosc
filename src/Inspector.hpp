@@ -3,9 +3,11 @@
 #include "ofMain.h"
 #include "OSCInput.h"
 #include "Layer.h"
+#include "ui/Button.h"
 
 class Inspector {
 public:
+    Inspector();
     void inspect(const vector<shared_ptr<Layer>>& layers);
     
     void mousePressed(int x, int y, int button);
@@ -34,6 +36,13 @@ private:
     const ofTexture* largeTexture = nullptr;
     string largeTextureName;
     void drawLargeTexture();
-    bool checkTextureClick(int x, int y, int button, float texX, float texY);
     
+    // Buttons
+    Button printUniformsButton;
+    vector<Button> textureButtons;
+    vector<string> textureButtonNames;
+    vector<const ofTexture*> textureButtonTextures;
+    
+    void updateTextureButtons();
+    void clearTextureButtons();
 };

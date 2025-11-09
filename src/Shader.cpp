@@ -63,12 +63,14 @@ bool Shader::load(string path) {
     string shadertoyId = parseShadertoy(path);
     bool _isFile = !_isSource && shadertoyId == "";
     if (_isSource) {
+        shaderPath = "source";
         success = loadFromSource(path);
         if (!success) {
             ofLogError() << ("could not load shader from source");
         }
     }
     else if (shadertoyId != "") {
+        shaderPath = "shadertoy/" + shadertoyId + ".frag";
         try {
             success = loadShadertoy(shadertoyId);
             if (!success) {
@@ -80,9 +82,11 @@ bool Shader::load(string path) {
         }
     }
     else if (path.empty() == false) {
+        shaderPath = path;
         success = loadFromFile(path);
         if (!success) {
             ofLogError() << ("could not load shader: " + path);
+            shaderPath = "";
         }
     }
     return success;
@@ -150,6 +154,7 @@ bool Shader::loadFromFile(const string& path) {
         ofxAutoReloadedShader* autoShader = new ofxAutoReloadedShader();
         if (autoShader->load(vertPath, fragPath, geomPath)) {
             shader = shared_ptr<ofShader>(autoShader);
+            shaderPath = ofFilePath::getFileName(fragPath);
             return true;
         }
     }
@@ -270,45 +275,157 @@ void Shader::setUniforms(const map<string, shared_ptr<BaseVar>>& vars) {
 
 template<typename T>
 void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<BaseVar>>& vars) {
+    const map<string, GLenum>& types = getUniformTypes();
+    
     for (map<string, shared_ptr<BaseVar>>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
-        const auto floatVar = std::dynamic_pointer_cast<const Variable<float>>(it->second);
-        if (floatVar != NULL) {
-            const auto& values = floatVar->getVec();
-            if (values.size() == 1) {
-                shader->setUniform1f(it->first, values[0]);
-            }
-            else if (values.size() == 2) {
-                shader->setUniform2f(it->first, values[0], values[1]);
-            }
-            else if (values.size() == 3) {
-                shader->setUniform3f(it->first, values[0], values[1], values[2]);
-            }
-            else if (values.size() == 4) {
-                shader->setUniform4f(it->first, values[0], values[1], values[2], values[3]);
-            }
-            else {
-                shader->setUniform1fv(it->first, &values[0], values.size());
-            }
-        }
-        else {
-            const auto vec3Var = std::dynamic_pointer_cast<const Variable<glm::vec3>>(it->second);
-            if (vec3Var != NULL/* && vec3Var->size() == 1*/) {
-                shader->setUniform3f(it->first, vec3Var->get());
-            }
-            else {
-                const auto mat4Var = std::dynamic_pointer_cast<const Variable<glm::mat4>>(it->second);
-                if (mat4Var != NULL/* && mat4Var->size() == 1*/) {
-                    shader->setUniformMatrix4f(it->first, mat4Var->get());
-                }
-                else {
-                    const auto colorVar = std::dynamic_pointer_cast<const Variable<ofFloatColor>>(it->second);
-                    if (colorVar != NULL/* && colorVar->size() == 1*/) {
-                        shader->setUniform4f(it->first, colorVar->get());
+        auto typeIt = types.find(it->first);
+        GLenum uniformType = (typeIt != types.end()) ? typeIt->second : GL_FLOAT;
+        
+        switch (uniformType) {
+            case GL_INT:
+            case GL_INT_VEC2:
+            case GL_INT_VEC3:
+            case GL_INT_VEC4: {
+                const auto intVar = std::dynamic_pointer_cast<const Variable<int>>(it->second);
+                if (intVar != NULL) {
+                    const auto& values = intVar->getVec();
+                    if (values.size() == 1) {
+                        shader->setUniform1i(it->first, values[0]);
+                    }
+                    else if (values.size() == 2) {
+                        shader->setUniform2i(it->first, values[0], values[1]);
+                    }
+                    else if (values.size() == 3) {
+                        shader->setUniform3i(it->first, values[0], values[1], values[2]);
+                    }
+                    else if (values.size() == 4) {
+                        shader->setUniform4i(it->first, values[0], values[1], values[2], values[3]);
                     }
                     else {
-                        ofLogError() << "Shader::setUniforms only float vars implemented";
+                        shader->setUniform1iv(it->first, &values[0], values.size());
                     }
                 }
+                else {
+                    // Fallback to float if int variable not available
+                    const auto floatVar = std::dynamic_pointer_cast<const Variable<float>>(it->second);
+                    if (floatVar != NULL) {
+                        const auto& values = floatVar->getVec();
+                        if (values.size() >= 1) shader->setUniform1i(it->first, (int)values[0]);
+                    }
+                }
+                break;
+            }
+            case GL_FLOAT_VEC2: {
+                const auto vec2Var = std::dynamic_pointer_cast<const Variable<glm::vec2>>(it->second);
+                if (vec2Var != NULL) {
+                    glm::vec2 vec = vec2Var->get();
+                    shader->setUniform2f(it->first, vec.x, vec.y);
+                }
+                else {
+                    // Fallback to float array
+                    const auto floatVar = std::dynamic_pointer_cast<const Variable<float>>(it->second);
+                    if (floatVar != NULL) {
+                        const auto& values = floatVar->getVec();
+                        if (values.size() >= 2) {
+                            shader->setUniform2f(it->first, values[0], values[1]);
+                        }
+                    }
+                }
+                break;
+            }
+            case GL_FLOAT_VEC3: {
+                const auto vec3Var = std::dynamic_pointer_cast<const Variable<glm::vec3>>(it->second);
+                if (vec3Var != NULL) {
+                    shader->setUniform3f(it->first, vec3Var->get());
+                }
+                else {
+                    // Fallback to float array
+                    const auto floatVar = std::dynamic_pointer_cast<const Variable<float>>(it->second);
+                    if (floatVar != NULL) {
+                        const auto& values = floatVar->getVec();
+                        if (values.size() >= 3) {
+                            shader->setUniform3f(it->first, values[0], values[1], values[2]);
+                        }
+                    }
+                }
+                break;
+            }
+            case GL_FLOAT_VEC4: {
+                const auto colorVar = std::dynamic_pointer_cast<const Variable<ofFloatColor>>(it->second);
+                if (colorVar != NULL) {
+                    shader->setUniform4f(it->first, colorVar->get());
+                }
+                else {
+                    // Fallback to float array
+                    const auto floatVar = std::dynamic_pointer_cast<const Variable<float>>(it->second);
+                    if (floatVar != NULL) {
+                        const auto& values = floatVar->getVec();
+                        if (values.size() >= 4) {
+                            shader->setUniform4f(it->first, values[0], values[1], values[2], values[3]);
+                        }
+                    }
+                }
+                break;
+            }
+            case GL_FLOAT_MAT4: {
+                const auto mat4Var = std::dynamic_pointer_cast<const Variable<glm::mat4>>(it->second);
+                if (mat4Var != NULL) {
+                    shader->setUniformMatrix4f(it->first, mat4Var->get());
+                }
+                break;
+            }
+            case GL_FLOAT:
+            default: {
+                // Default to float
+                const auto floatVar = std::dynamic_pointer_cast<const Variable<float>>(it->second);
+                if (floatVar != NULL) {
+                    const auto& values = floatVar->getVec();
+                    if (values.size() == 1) {
+                        shader->setUniform1f(it->first, values[0]);
+                    }
+                    else if (values.size() == 2) {
+                        shader->setUniform2f(it->first, values[0], values[1]);
+                    }
+                    else if (values.size() == 3) {
+                        shader->setUniform3f(it->first, values[0], values[1], values[2]);
+                    }
+                    else if (values.size() == 4) {
+                        shader->setUniform4f(it->first, values[0], values[1], values[2], values[3]);
+                    }
+                    else {
+                        shader->setUniform1fv(it->first, &values[0], values.size());
+                    }
+                }
+                else {
+                    // Try other types as fallback
+                    const auto intVar = std::dynamic_pointer_cast<const Variable<int>>(it->second);
+                    if (intVar != NULL) {
+                        const auto& values = intVar->getVec();
+                        if (values.size() >= 1) {
+                            shader->setUniform1f(it->first, (float)values[0]);
+                        }
+                    }
+                    else {
+                        const auto vec2Var = std::dynamic_pointer_cast<const Variable<glm::vec2>>(it->second);
+                        if (vec2Var != NULL) {
+                            glm::vec2 vec = vec2Var->get();
+                            shader->setUniform2f(it->first, vec.x, vec.y);
+                        }
+                        else {
+                            const auto vec3Var = std::dynamic_pointer_cast<const Variable<glm::vec3>>(it->second);
+                            if (vec3Var != NULL) {
+                                shader->setUniform3f(it->first, vec3Var->get());
+                            }
+                            else {
+                                const auto colorVar = std::dynamic_pointer_cast<const Variable<ofFloatColor>>(it->second);
+                                if (colorVar != NULL) {
+                                    shader->setUniform4f(it->first, colorVar->get());
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
             }
         }
     }
@@ -358,9 +475,11 @@ void Shader::reset() {
     buffers.clear();
     VariablePool::cleanup(_id);
     vars.clear();
+    uniformTypes.clear();
 }
 
 void Shader::unload() {
+    shaderPath = "";
     if (shader != NULL) {
         try {
             shared_ptr<ofxAutoReloadedShader> autoShader = std::static_pointer_cast<ofxAutoReloadedShader>(shader);
@@ -462,6 +581,46 @@ void Shader::set(const ofxOscMessage& m) {
             shader->setGeometryOutputCount(m.getArgAsInt(2));
         }
     }
+}
+
+const map<string, GLenum>& Shader::getUniformTypes() {
+    if (uniformTypes.empty() && isShaderLoaded()) {
+        if (shadertoy == NULL && shader != NULL) {
+            GLuint program = shader->getProgram();
+            if (program != 0) {
+                GLint numUniforms = 0;
+                glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numUniforms);
+                
+                GLint maxNameLength = 0;
+                glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxNameLength);
+                
+                if (maxNameLength > 0) {
+                    vector<GLchar> nameBuffer(maxNameLength);
+                    
+                    for (GLint i = 0; i < numUniforms; i++) {
+                        GLint size = 0;
+                        GLenum type = 0;
+                        GLsizei length = 0;
+                        
+                        glGetActiveUniform(program, i, maxNameLength, &length, &size, &type, nameBuffer.data());
+                        
+                        if (length > 0) {
+                            string uniformName(nameBuffer.data(), length);
+                            // Handle array uniforms (e.g., "array[0]" -> "array")
+                            size_t bracketPos = uniformName.find('[');
+                            if (bracketPos != string::npos) {
+                                uniformName = uniformName.substr(0, bracketPos);
+                            }
+                            uniformTypes[uniformName] = type;
+                        }
+                    }
+                }
+            }
+        }
+        // Note: ofxShadertoy doesn't provide direct access to uniform types
+        // For shadertoy, we could leave the map empty or try to infer from usage
+    }
+    return uniformTypes;
 }
 
 template void Shader::setUniforms(shared_ptr<ofShader>& shader, const map<string, shared_ptr<BaseVar>>& vars);

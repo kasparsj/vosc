@@ -1,15 +1,15 @@
 #include "VOSC.hpp"
 #include "Args.h"
 #include "VariablePool.h"
-#if USE_OFX_HPVPLAYER
-#include "ofxHPVPlayer.h"
-#endif
 #include "TexturePool.h"
 #include "GeomPool.h"
 #include "ShaderTex.h"
 #include "Lights.h"
 #include "Inputs.hpp"
 
+#if USE_OFX_HPVPLAYER
+#include "ofxHPVPlayer.h"
+#endif
 #if USE_OFX_ULTRALIGHT
 #include "ofxUltralight.h"
 #endif

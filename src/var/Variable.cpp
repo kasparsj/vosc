@@ -68,6 +68,27 @@ void Variable<T>::addSharedVars() {
     expr.addConst("center", 0.5f);
 }
 
+template<>
+void Variable<int>::addSharedVars() {
+    // For int variables, use float expressions and cast to int
+    auto& pool = VariablePool::getPool(NULL);
+    for (auto& kv : pool) {
+        Variable<float>* floatVar = dynamic_cast<Variable<float>*>(kv.second.get());
+        if (floatVar != NULL) {
+            expr.addVar(kv.first, floatVar->get());
+        }
+    }
+    const auto& inputs = Inputs::get().all();
+    for (const auto& kv : inputs) {
+        expr.addVar("in_" + kv.first, kv.second->get());
+    }
+    expr.addConst("left", 0.f);
+    expr.addConst("right", 1.f);
+    expr.addConst("top", 0.f);
+    expr.addConst("bottom", 1.f);
+    expr.addConst("center", 0.5f);
+}
+
 // todo: fix
 //template<>
 //void Value<float>::set(const string& type) {
@@ -195,6 +216,20 @@ void Variable<T>::update() {
     }
 }
 
+template<>
+void Variable<int>::update() {
+    if (_isExpr) {
+        float i = 0;
+        float total = values.size();
+        expr.addVar("i", i, true, false);
+        expr.addVar("total", total, true, false);
+        // todo: add mics, sounds notes, data to expr vars
+        for (i; i<values.size(); i++) {
+            values[i] = static_cast<int>(expr.get());
+        }
+    }
+}
+
 template <typename T>
 void Variable<T>::afterDraw() {
 }
@@ -237,6 +272,8 @@ ofBufferObject Variable<T>::asBufferObject() {
 }
 
 template class Variable<float>;
+template class Variable<int>;
+template class Variable<glm::vec2>;
 template class Variable<glm::vec3>;
 template class Variable<glm::mat4>;
 template class Variable<ofFloatColor>;
