@@ -22,12 +22,18 @@ private:
     void debugGlobalTextures();
     void debugShaderTextures(int i);
     void debugShaderBuffers(int i);
-    void debugTexture(const ofTexture& tex);
+    void debugTexture(const ofTexture& tex, const string& name = "", float x = 0, float y = 0);
     void debugEmpty(string text);
     void drawInputs();
     void drawAmplitude(const shared_ptr<OSCInput> input);
     
     const vector<shared_ptr<Layer>>* layers;
     int debugLayer = -1;
+    
+    // Large texture view
+    const ofTexture* largeTexture = nullptr;
+    string largeTextureName;
+    void drawLargeTexture();
+    bool checkTextureClick(int x, int y, int button, float texX, float texY);
     
 };

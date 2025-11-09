@@ -1,11 +1,12 @@
+(
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
 ~visuals.send('/cam', "easy");
 
-~visuals.send('/tex', "square_3x3", "sieves/square_3x3.png");
+~visuals.send('/tex', "square_3x3", "square_3x3.png");
 
-~createLayer = { |i, w, h, d|
+/*~createLayer = { |i, w, h, d|
 	var prefix = "tex" ++ i;
 	// generate colormap
 	// generate colorscheme: /var/colors/scheme
@@ -37,8 +38,9 @@
 
 8.do { |i|
 	~createLayer.(i, 16, 16, 16);
-};
+};*/
 // todo: render layermapped
 // todo: colorweave
 // todo: blend all layers together
 // todo: post-process
+)
