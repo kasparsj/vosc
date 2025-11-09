@@ -17,22 +17,46 @@ public:
     glm::vec2 getSize() const {
         return getVarVec3("size");
     }
-    void setSize(float w, float h) {
-        parent->setVar("size", glm::vec3(w, h, 0));
+    void setSize(float w, float h, float d = 0) {
+        parent->setVar("size", glm::vec3(w, h, d));
+        texData.width = w;
+        texData.height = h;
+        texData.depth = d;
         fboSettings.width = w;
         fboSettings.height = h;
     }
     void setSize(glm::vec2 size) {
         setSize(size.x, size.y);
     }
+    void setSize(glm::vec3 size) {
+        setSize(size.x, size.y, size.z);
+    }
     void setSize(const ofxOscMessage& m) {
-        setSize(m.getArgAsFloat(1), m.getArgAsFloat(2));
+        switch (m.getNumArgs()) {
+            case 4:
+                setSize(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsFloat(3));
+                break;
+            case 3:
+                setSize(m.getArgAsFloat(1), m.getArgAsFloat(2));
+                break;
+            case 2:
+                setSize(m.getArgAsFloat(1), m.getArgAsFloat(1));
+                break;
+        }
     }
     void set(const ofxOscMessage& m);
     ofFbo::Settings& getFboSettings() {
+        fboSettings.width = texData.width;
+        fboSettings.height = texData.height;
+        fboSettings.internalformat = texData.glInternalFormat;
+        fboSettings.textureTarget = texData.textureTarget;
+        fboSettings.wrapModeHorizontal = texData.wrapModeHorizontal;
+        fboSettings.wrapModeVertical = texData.wrapModeVertical;
+        fboSettings.minFilter = texData.minFilter;
+        fboSettings.maxFilter = texData.magFilter;
         return fboSettings;
     }
-    void setFboSettings(const ofxOscMessage& m);
+    void setSettings(const ofxOscMessage& m);
     void allocate(ofFbo& fbo);
     void allocate(ofTexture& tex);
     void afterDraw(const map<string, shared_ptr<BaseVar>>& vars);
@@ -67,6 +91,7 @@ public:
     
 protected:
     VarsHolder* parent;
+    ofTextureData texData;
     ofFbo::Settings fboSettings;
 
 };

@@ -1,19 +1,19 @@
 #pragma once
 
-#include "Tex.h"
+#include "BaseTex.h"
 #include "Config.h"
 #if USE_OFX_EXTREME_GPU_VIDEO
 #include "ofxExtremeGpuVideo.hpp"
 #include "ofxGvTexture.hpp"
 #endif
 
-class GVVideoTex : public Tex {
+class GVVideoTex : public BaseTex {
 public:
     static vector<string> cache;
     static string random();
     static bool engineInitialized;
     
-    GVVideoTex(string name, const vector<float>& args) : Tex(name, args) {
+    GVVideoTex(string name, const vector<float>& args) : BaseTex(name, args) {
     }
     ~GVVideoTex() {}
     void update(TexData& data) override;

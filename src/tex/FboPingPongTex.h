@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Tex.h"
+#include "BaseTex.h"
 #include "FboPingPong.h"
 
-class FboPingPongTex : public Tex {
+class FboPingPongTex : public BaseTex {
 public:
-    FboPingPongTex(string path, const vector<float>& args) : Tex(path, args) {}
+    FboPingPongTex(string path, const vector<float>& args) : BaseTex(path, args) {}
     virtual void update(TexData& data) override;
     void draw(const glm::vec2 &pos, const glm::vec2 &size) override;
     void clear() override;

@@ -40,7 +40,7 @@ float Args::parse(const ofxOscMessage& m, int idx) {
         case OFXOSC_TYPE_STRING: {
             string str = m.getArgAsString(idx);
             value = ofToFloat(str);
-            if (isnan(value) || strspn(str.c_str(), "-.0123456789") != str.size()) {
+            if (std::isnan(value) || strspn(str.c_str(), "-.0123456789") != str.size()) {
                 throw "string not float: " + str;
             }
             break;

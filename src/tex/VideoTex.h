@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Tex.h"
+#include "BaseTex.h"
 
-class VideoTex : public Tex {
+class VideoTex : public BaseTex {
 public:
     static vector<string> cache;
     static string random();
     
-    VideoTex(string name, const vector<float>& args) : Tex(name, args) {}
+    VideoTex(string name, const vector<float>& args) : BaseTex(name, args) {}
     ~VideoTex() {}
     void update(TexData& data) override;
     void seek(float pct);

@@ -1,13 +1,13 @@
 #pragma once
 
 #include "TexData.h"
-#include "Tex.h"
+#include "tex/BaseTex.h"
 #include "ofFbo.h"
 #include "ofxLooper.h"
 
 class Texture : public VarsHolder {
 public:
-    Texture(shared_ptr<Tex> tex) : VarsHolder(), tex(tex) {
+    Texture(shared_ptr<BaseTex> tex) : VarsHolder(), tex(tex) {
         data.setup(this);
         reset();
     }
@@ -41,16 +41,16 @@ public:
     }
     void setLooper(const ofxOscMessage& m);
 
-    shared_ptr<Tex> tex = NULL;
+    shared_ptr<BaseTex> tex = NULL;
     TexData data;
     int numFrames = 1;
     vector<ofFbo> frames;
     int curFbo = -1;
     
 private:
-    static shared_ptr<Tex> chooseTex(const ofxOscMessage& m);
-    static shared_ptr<Tex> chooseTex(string type, const vector<float>& args);
-    static shared_ptr<Tex> chooseTex() {
+    static shared_ptr<BaseTex> chooseTex(const ofxOscMessage& m);
+    static shared_ptr<BaseTex> chooseTex(string type, const vector<float>& args);
+    static shared_ptr<BaseTex> chooseTex() {
         vector<float> args;
         return chooseTex("", args);
     }

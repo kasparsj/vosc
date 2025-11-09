@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Tex.h"
+#include "BaseTex.h"
 
-class ImageTex : public Tex {
+class ImageTex : public BaseTex {
 public:
     static vector<string> cache;
     static string random();
     
-    ImageTex(string path, const vector<float>& args) : Tex(path, args) {}
+    ImageTex(string path, const vector<float>& args) : BaseTex(path, args) {}
     ~ImageTex() {}
     void update(TexData& data) override;
     void draw(const glm::vec2 &pos, const glm::vec2 &size) override;

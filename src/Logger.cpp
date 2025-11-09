@@ -1,4 +1,5 @@
 #include "Logger.h"
+#include "Config.h"
 
 Logger::Logger() {}
 
@@ -25,6 +26,7 @@ void Logger::log(ofLogLevel level, const string & module, const char* format, va
 }
 
 void Logger::draw(bool* isOpen) {
+#if USE_OFX_IMGUI
     ImGui::SetNextWindowSize(ofVec2f(ofGetWidth(),200));
     ImGui::SetNextWindowPos(ofVec2f(0,ofGetHeight()-200));
     if (!ImGui::Begin("Console", isOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
@@ -74,4 +76,5 @@ void Logger::draw(bool* isOpen) {
     ImGui::Separator();
     
     ImGui::End();
+#endif
 }

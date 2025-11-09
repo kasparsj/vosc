@@ -15,7 +15,7 @@ void TexData::oscCommand(const string& command, const ofxOscMessage &m) {
         set(m);
     }
     else if (command == "/tex/fbo") {
-        setFboSettings(m);
+        setSettings(m);
     }
 }
 
@@ -32,32 +32,30 @@ void TexData::set(const ofxOscMessage& m) {
     }
 }
 
-void TexData::setFboSettings(const ofxOscMessage &m) {
-    std::unordered_map<string, function<void(int, ofFbo::Settings&)>> mapping;
-    mapping["numColorbuffers"] = [](int v, ofFbo::Settings& a) { a.numColorbuffers = v; };
-    mapping["useDepth"] = [](int v, ofFbo::Settings& a) { a.useDepth = v; };
-    mapping["internalformat"] = [](int v, ofFbo::Settings& a) { a.internalformat = v; };
-    mapping["textureTarget"] = [](int v, ofFbo::Settings& a) { a.textureTarget = v; };
-    mapping["wrapModeHorizontal"] = [](int v, ofFbo::Settings& a) { a.wrapModeHorizontal = v; };
-    mapping["wrapModeVertical"] = [](int v, ofFbo::Settings& a) { a.wrapModeVertical = v; };
-    mapping["minFilter"] = [](int v, ofFbo::Settings& a) { a.minFilter = v; };
-    mapping["maxFilter"] = [](int v, ofFbo::Settings& a) { a.maxFilter = v; };
+void TexData::setSettings(const ofxOscMessage &m) {
+    std::unordered_map<string, std::function<void(int, ofTextureData&)>> mapping;
+    mapping["internalformat"] = [](int v, ofTextureData& a) { a.glInternalFormat = v; };
+    mapping["textureTarget"] = [](int v, ofTextureData& a) { a.textureTarget = v; };
+    mapping["wrapModeHorizontal"] = [](int v, ofTextureData& a) { a.wrapModeHorizontal = v; };
+    mapping["wrapModeVertical"] = [](int v, ofTextureData& a) { a.wrapModeVertical = v; };
+    mapping["minFilter"] = [](int v, ofTextureData& a) { a.minFilter = v; };
+    mapping["maxFilter"] = [](int v, ofTextureData& a) { a.magFilter = v; };
     string key = m.getArgAsString(1);
     int value = m.getArgAsInt(2);
     if (mapping.find(key) != mapping.end()) {
-        mapping[key](value, fboSettings);
+        mapping[key](value, texData);
     }
 }
 
 void TexData::allocate(ofFbo& fbo) {
     ofDisableTextureEdgeHack();
-    fbo.allocate(fboSettings);
+    fbo.allocate(getFboSettings());
     ofEnableTextureEdgeHack();
 }
 
 void TexData::allocate(ofTexture& tex) {
     ofDisableTextureEdgeHack();
-    tex.allocate(fboSettings);
+    tex.allocate(texData);
     ofEnableTextureEdgeHack();
 }
 

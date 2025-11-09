@@ -36,7 +36,7 @@ const shared_ptr<Variable<T>> VariablePool::createOrUpdateShared(const string& n
     if (!hasShared(name)) {
         sharedPool[name] = make_shared<Variable<T>>();
     }
-    auto var = static_pointer_cast<Variable<T>>(sharedPool.at(name));
+    auto var = std::static_pointer_cast<Variable<T>>(sharedPool.at(name));
     var->set(value);
     return var;
 }
@@ -63,7 +63,7 @@ const shared_ptr<Variable<T>> VariablePool::getOrCreate(const string& name, cons
     if (pool.find(name) == pool.end()) {
         pool[name] = make_shared<Variable<T>>();
     }
-    return static_pointer_cast<Variable<T>>(pool.at(name));
+    return std::static_pointer_cast<Variable<T>>(pool.at(name));
 }
 
 map<string, shared_ptr<BaseVar>>& VariablePool::getPool(const VarsHolder* holder) {

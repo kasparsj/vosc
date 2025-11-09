@@ -1,15 +1,15 @@
 #pragma once
 
-#include "Tex.h"
+#include "BaseTex.h"
 #include "Config.h"
 
 #if USE_OFX_ULTRALIGHT
 #include "ofxUltralight.h"
 #endif
 
-class UltralightTex : public Tex {
+class UltralightTex : public BaseTex {
 public:
-    UltralightTex(string path, const vector<float>& args) : Tex(path, args) {}
+    UltralightTex(string path, const vector<float>& args) : BaseTex(path, args) {}
     ~UltralightTex() {
         _unload();
     }

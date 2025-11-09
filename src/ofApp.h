@@ -1,7 +1,10 @@
 #pragma once
 
 #include "ofMain.h"
+#include "Config.h"
+#if USE_OFX_IMGUI
 #include "ofxImGui.h"
+#endif
 #include "Logger.h"
 #include "VOSC.hpp"
 
@@ -33,5 +36,7 @@ public:
     
     bool showConsole = false;
     std::shared_ptr<Logger> console;
+#if USE_OFX_IMGUI
     ofxImGui::Gui gui;
+#endif
 };

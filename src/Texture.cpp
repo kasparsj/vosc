@@ -4,13 +4,14 @@
 #include "Layer.h"
 #include "VariablePool.h"
 #include "Args.h"
+#include "tex/Tex.h"
 
 void Texture::load(string source, const vector<float>& args) {
     _unload();
     bool explicitType = source.find(":") != string::npos;
     bool _isURL = Args::isURL(source);
     if (explicitType && !_isURL) {
-        tex = Tex::factory(source, args);
+        tex = BaseTex::factory(source, args);
     }
     else {
         string extension = ofFile(source).getExtension();
@@ -18,28 +19,28 @@ void Texture::load(string source, const vector<float>& args) {
             extension[i] = tolower(extension[i]);
         }
         if (extension == "frag") {
-            tex = Tex::factory("shader", source, args);
+            tex = BaseTex::factory("shader", source, args);
         }
         else if (extension == "jpg" || extension == "jpeg" || extension == "png") {
-            tex = Tex::factory("image", source, args);
+            tex = BaseTex::factory("image", source, args);
         }
         else if (extension == "mov" || extension == "mp4") {
-            tex = Tex::factory("video", source, args);
+            tex = BaseTex::factory("video", source, args);
         }
         else if (extension == "hpv") {
-            tex = Tex::factory("hpv", source, args);
+            tex = BaseTex::factory("hpv", source, args);
         }
         else if (extension == "html" || _isURL) {
-            tex = Tex::factory("html", source, args);
+            tex = BaseTex::factory("html", source, args);
         }
         else {
             if (Args::isHexColor(source)) {
                 ofFloatColor color = Args::parseHexColor(source);
                 vector<float> args1 = {color.r, color.g, color.b, color.a};
-                tex = Tex::factory("color", "color", args1);
+                tex = BaseTex::factory("color", "color", args1);
             }
             else if (SketchTex::exists(source)) {
-                tex = Tex::factory("sketch", source, args);
+                tex = BaseTex::factory("sketch", source, args);
             }
         }
     }
@@ -60,7 +61,7 @@ void Texture::load(const ofxOscMessage &m, int arg) {
 void Texture::loadData(const ofxOscMessage &m, int arg) {
     if (tex == NULL) {
         vector<float> args;
-        tex = make_shared<GenericTex>("loadData", args);
+        tex = make_shared<Tex>("loadData", args);
     }
     shared_ptr<Variable<ofFloatColor>> var = make_shared<Variable<ofFloatColor>>();
     var->set(m, arg);
@@ -83,13 +84,13 @@ void Texture::choose(const ofxOscMessage& m) {
     }
 }
 
-shared_ptr<Tex> Texture::chooseTex(string type, const vector<float>& args) {
+shared_ptr<BaseTex> Texture::chooseTex(string type, const vector<float>& args) {
     if (type == "") {
         auto it = SourceMap.begin();
         advance(it, int(ofRandom(SourceMap.size())));
         type = it->first;
     }
-    return Tex::factory(type, args);
+    return BaseTex::factory(type, args);
 }
 
 void Texture::_unload() {

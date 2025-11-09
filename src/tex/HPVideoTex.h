@@ -1,18 +1,18 @@
 #pragma once
 
-#include "Tex.h"
+#include "BaseTex.h"
 #include "Config.h"
 #if USE_OFX_HPVPLAYER
 #include "ofxHPVPlayer.h"
 #endif
 
-class HPVideoTex : public Tex {
+class HPVideoTex : public BaseTex {
 public:
     static vector<string> cache;
     static string random();
     static bool engineInitialized;
     
-    HPVideoTex(string name, const vector<float>& args) : Tex(name, args) {
+    HPVideoTex(string name, const vector<float>& args) : BaseTex(name, args) {
 #if USE_OFX_HPVPLAYER
         if (!engineInitialized) {
             HPV::InitHPVEngine();

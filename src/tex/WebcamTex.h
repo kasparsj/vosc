@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Tex.h"
+#include "BaseTex.h"
 
-class WebcamTex : public Tex {
+class WebcamTex : public BaseTex {
 public:
     static bool exists(int device);
     static int random();
     
-    WebcamTex(string path, const vector<float>& args) : Tex(path, args) {}
+    WebcamTex(string path, const vector<float>& args) : BaseTex(path, args) {}
     ~WebcamTex() {
         vidGrabber.close();
     }

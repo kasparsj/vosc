@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "Config.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -6,7 +7,9 @@ void ofApp::setup(){
 	ofSetVerticalSync(true);
 	ofBackground(0);
     
+#if USE_OFX_IMGUI
     gui.setup();
+#endif
     ofDisableArbTex();
 
     console = std::make_shared<Logger>();
@@ -31,11 +34,13 @@ void ofApp::drawConsole() {
         showConsole = true;
     }
     if (vosc.showDebug || showConsole) {
+#if USE_OFX_IMGUI
         gui.begin();
         
         console->draw(&showConsole);
 
         gui.end();
+#endif
     }
 }
 

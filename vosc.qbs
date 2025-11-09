@@ -26,7 +26,7 @@ Project{
             // 'ofxExtremeGpuVideo',
             'ofxGui',
             'ofxHPVPlayer',
-            'ofxImGui',
+            //'ofxImGui', // works in of_v11 only
             'ofxLooper',
             'ofxMidi',
             'ofxOsc',

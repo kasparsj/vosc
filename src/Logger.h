@@ -1,7 +1,10 @@
 #pragma once
 
 #include "ofMain.h"
+#include "Config.h"
+#if USE_OFX_IMGUI
 #include "ofxImGui.h"
+#endif
 
 struct LoggerLine {
     float time;
@@ -55,6 +58,8 @@ private:
     ofFileLoggerChannel fileLogger;
     
     vector<LoggerLine> lines;
+#if USE_OFX_IMGUI
     ImGuiTextFilter Filter;
+#endif
     int index = 0;
 };
