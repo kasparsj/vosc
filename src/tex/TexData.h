@@ -34,6 +34,7 @@ public:
     }
     void setFboSettings(const ofxOscMessage& m);
     void allocate(ofFbo& fbo);
+    void allocate(ofTexture& tex);
     void afterDraw(const map<string, shared_ptr<BaseVar>>& vars);
     const map<string, shared_ptr<BaseVar>>& getVars() const {
         return parent->vars;

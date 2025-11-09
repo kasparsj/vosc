@@ -55,6 +55,12 @@ void TexData::allocate(ofFbo& fbo) {
     ofEnableTextureEdgeHack();
 }
 
+void TexData::allocate(ofTexture& tex) {
+    ofDisableTextureEdgeHack();
+    tex.allocate(fboSettings);
+    ofEnableTextureEdgeHack();
+}
+
 void TexData::afterDraw(const map<string, shared_ptr<BaseVar>>& vars) {
     for (map<string, shared_ptr<BaseVar>>::const_iterator it=vars.begin(); it!=vars.end(); ++it) {
         it->second->afterDraw();

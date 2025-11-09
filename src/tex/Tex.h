@@ -15,7 +15,7 @@ public:
     virtual ~Tex() = default;
     virtual void update(TexData& data) = 0;
     virtual void draw(const glm::vec2 &pos, const glm::vec2 &size) = 0;
-    virtual void choose() = 0;
+    virtual void choose() {};
     virtual void reload() {};
     virtual void clear() {};
     virtual void reset() {};

@@ -58,19 +58,16 @@ void Texture::load(const ofxOscMessage &m, int arg) {
 }
 
 void Texture::loadData(const ofxOscMessage &m, int arg) {
-    // todo: allow to load data into uninitialized
-    if (tex != NULL) {
-        shared_ptr<Variable<ofFloatColor>> var = make_shared<Variable<ofFloatColor>>();
-        var->set(m, arg);
-        var->update();
-        // todo: hack to make sure it's allocated
-        tex->update(data);
-        tex->getTexture().loadData(var->asBufferObject(), GL_RGBA, GL_FLOAT);
-        var = NULL;
+    if (tex == NULL) {
+        vector<float> args;
+        tex = make_shared<GenericTex>("loadData", args);
     }
-    else {
-        ofLogError() << "cannot load texture data because texture not loaded";
-    }
+    shared_ptr<Variable<ofFloatColor>> var = make_shared<Variable<ofFloatColor>>();
+    var->set(m, arg);
+    var->update();
+    tex->update(data);
+    tex->getTexture().loadData(var->asBufferObject(), GL_RGBA, GL_FLOAT);
+    var = NULL;
 }
 
 void Texture::choose(const ofxOscMessage& m) {
