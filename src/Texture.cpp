@@ -112,7 +112,7 @@ void Texture::reload() {
         tex->reload();
     }
     else {
-        ofLog() << ("cannot reload layer " + ofToString(index));
+        ofLog() << "cannot reload layer";
     }
 }
 
@@ -121,7 +121,7 @@ void Texture::clear() {
         tex->clear();
     }
     else {
-        ofLog() << ("cannot clear layer " + ofToString(index));
+        ofLog() << "cannot clear layer";
     }
 }
 

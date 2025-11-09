@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ofMain.h"
-
 //#define USE_ULTRALIGHT !defined TARGET_CPU_UNIVERSAL
-#define USE_ULTRALIGHT 0
-#define INITIAL_VISUALS 9
+#define USE_OFX_ULTRALIGHT 0
+#define USE_OFX_EXTREME_GPU_VIDEO 0
+#define USE_OFX_HPVPLAYER 1
+#define INITIAL_LAYERS 9
 #define MAX_NOTES 10
 
 enum class Behaviour {

@@ -4,14 +4,19 @@
 #include "VideoTex.h"
 #include "SketchTex.h"
 #include "ImageTex.h"
-#include "HPVideoTex.h"
-//#include "GVVideoTex.h"
+#include "Config.h"
 #include "WebcamTex.h"
 #include "DrawTex.h"
-#include "Config.h"
 #include "VariablePool.h"
 
-#if USE_ULTRALIGHT
+#include "Config.h"
+#if USE_OFX_HPVPLAYER
+#include "HPVideoTex.h"
+#endif
+#if USE_OFX_EXTREME_GPU_VIDEO
+#include "GVVideoTex.h"
+#endif
+#if USE_OFX_ULTRALIGHT
 #include "UltralightTex.h"
 #endif
 
@@ -20,7 +25,7 @@ shared_ptr<Tex> Tex::factory(string type, string path, const vector<float>& args
     auto it = SourceMap.find(type);
     if (it != SourceMap.end()) {
         switch (it->second) {
-#if USE_ULTRALIGHT
+#if USE_OFX_ULTRALIGHT
             case Source::HTML:
                 tex = make_shared<UltralightTex>(path, args);
                 break;
@@ -28,12 +33,16 @@ shared_ptr<Tex> Tex::factory(string type, string path, const vector<float>& args
             case Source::VIDEO:
                 tex = make_shared<VideoTex>(path, args);
                 break;
+#if USE_OFX_HPVPLAYER
             case Source::HPV:
                 tex = make_shared<HPVideoTex>(path, args);
                 break;
-//            case Source::GV:
-//                tex = make_shared<GVVideoTex>(path, args);
-//                break;
+#endif
+#if USE_OFX_EXTREME_GPU_VIDEO
+            case Source::GV:
+                tex = make_shared<GVVideoTex>(path, args);
+                break;
+#endif
             case Source::SHADER:
                 tex = make_shared<ShaderTex>(path, args);
                 break;
@@ -78,12 +87,14 @@ shared_ptr<Tex> Tex::factory(string source, const vector<float>& args) {
                     // todo: use google's "I'm feeling lucky"
                     ofLogError() << "/tex/choose for html not implemented";
                     break;
-                case Source::VIDEO:
+            case Source::VIDEO:
                     path = VideoTex::random();
                     break;
-                case Source::HPV:
+#if USE_OFX_HPVPLAYER
+            case Source::HPV:
                     path = HPVideoTex::random();
                     break;
+#endif
                 case Source::SHADER:
                     path = ShaderTex::random();
                     break;

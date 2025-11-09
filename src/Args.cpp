@@ -355,6 +355,9 @@ vector<string> Args::parseExpr<glm::vec3>(const ofxOscMessage &m, int& idx) {
 template<>
 vector<string> Args::parseExpr<glm::mat4>(const ofxOscMessage &m, int& idx) {
     ofLogError() << "Args::parseExpr<glm::mat4> not implemented";
+    vector<string> mat4Expr;
+    mat4Expr.resize(16);
+    return mat4Expr;
 }
 
 template<>

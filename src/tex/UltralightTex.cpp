@@ -1,5 +1,6 @@
 #include "UltralightTex.h"
 
+#if USE_OFX_ULTRALIGHT
 void UltralightTex::update(TexData& data) {
     ofxUltralight::setup();
     if (path != prevPath) {
@@ -15,3 +16,4 @@ void UltralightTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
         ofxUltralight::draw(ulId);
     }
 }
+#endif

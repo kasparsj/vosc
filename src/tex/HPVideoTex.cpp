@@ -1,6 +1,7 @@
 #include "HPVideoTex.h"
 #include "Layer.h"
 
+#if USE_OFX_HPVPLAYER
 vector<string> loadLocalHPVs()
 {
     ofDirectory dir("videos");
@@ -77,3 +78,4 @@ void HPVideoTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
 void HPVideoTex::choose() {
     path = random();
 }
+#endif
