@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VarsHolder.h"
+#include "Config.h"
 
 class TexData {
 public:
@@ -21,7 +22,9 @@ public:
         parent->setVar("size", glm::vec3(w, h, d));
         texData.width = w;
         texData.height = h;
+#if ALLOW_TEX_2D_ARRAY
         texData.depth = d;
+#endif
         fboSettings.width = w;
         fboSettings.height = h;
     }
