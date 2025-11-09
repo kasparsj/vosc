@@ -86,6 +86,15 @@ private:
     void setUniformCameraMatrices(shared_ptr<T>& shader, ofCamera& cam, const string& prefix = "cam");
     template<typename T>
     void setUniformMaterial(shared_ptr<T>& shader, ofMaterial& mat, const string& prefix = "mat");
+    
+    template<typename T>
+    void setUniformFloatArray(shared_ptr<T>& shader, const string& name, const vector<float>& values);
+    template<typename T>
+    void setUniformIntArray(shared_ptr<T>& shader, const string& name, const vector<int>& values);
+    template<typename T>
+    void setUniformFromFloatVar(shared_ptr<T>& shader, const string& name, const Variable<float>* var, GLenum uniformType);
+    template<typename T>
+    void setUniformFromIntVar(shared_ptr<T>& shader, const string& name, const Variable<int>* var, GLenum uniformType);
 
     map<string, shared_ptr<Texture>> textures;
     map<string, shared_ptr<Buffer>> buffers;
