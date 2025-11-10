@@ -15,7 +15,11 @@ public:
     void update(const vector<TidalNote> &notes);
     void oscCommand(const string& command, const ofxOscMessage &m);
     
+#if ALLOW_TEX_2D_ARRAY
+    glm::vec3 getSize() const {
+#else
     glm::vec2 getSize() const {
+#endif
         return getVarVec3("size");
     }
     void setSize(float w, float h, float d = 0) {
@@ -24,6 +28,14 @@ public:
         texData.height = h;
 #if ALLOW_TEX_2D_ARRAY
         texData.depth = d;
+        // todo: set tex_d?
+        if (d > 0) {
+            texData.textureTarget = GL_TEXTURE_2D_ARRAY;
+        }
+        else {
+            ofTextureData tmp;
+            texData.textureTarget = tmp.textureTarget;
+        }
 #endif
         fboSettings.width = w;
         fboSettings.height = h;

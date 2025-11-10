@@ -68,7 +68,12 @@ void Texture::loadData(const ofxOscMessage &m, int arg) {
     var->set(m, arg);
     var->update();
     tex->update(data);
-    tex->getTexture().loadData(var->asBufferObject(), GL_RGBA, GL_FLOAT);
+    if (tex->getTexture().getDepth() > 0) {
+        tex->getTexture().loadData(var->getVec());
+    }
+    else {
+        tex->getTexture().loadData(var->asBufferObject(), GL_RGBA, GL_FLOAT);
+    }
     var = NULL;
 }
 

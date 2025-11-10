@@ -2,11 +2,16 @@
 #include "../tex/ShaderTex.h"
 
 TextureInspector::TextureInspector() : backButton(20, 20, 100, 30),
-                                       shaderButton(0, 0, 320, 30) {
+                                       shaderButton(0, 0, 320, 30),
+                                       currentLayerIndex(0) {
     backButton.setFill(true);
     backButton.setColor(ofColor(100, 100, 100));
     shaderButton.setFill(false);
     shaderButton.setColor(ofColor(255, 255, 0));
+}
+
+TextureInspector::~TextureInspector() {
+    // TextureArrayDraw will be cleaned up automatically
 }
 
 void TextureInspector::setTexture(const ofTexture* texture, const string& name) {
@@ -14,6 +19,7 @@ void TextureInspector::setTexture(const ofTexture* texture, const string& name) 
     this->textureObj = nullptr;
     this->textureName = name;
     this->showLargeView = false;
+    this->currentLayerIndex = 0;
 }
 
 void TextureInspector::setTexture(Texture* texture, const string& name) {
@@ -26,6 +32,7 @@ void TextureInspector::setTexture(Texture* texture, const string& name) {
     }
     this->textureName = name;
     this->showLargeView = false;
+    this->currentLayerIndex = 0;
 }
 
 void TextureInspector::clear() {
@@ -33,7 +40,9 @@ void TextureInspector::clear() {
     textureObj = nullptr;
     textureName = "";
     showLargeView = false;
+    currentLayerIndex = 0;
 }
+
 
 void TextureInspector::draw() {
     // Draw back button
@@ -145,14 +154,31 @@ void TextureInspector::drawTexturePreview() {
     float scaledWidth = texWidth * scale;
     float scaledHeight = texHeight * scale;
     
+    float previewX = 0;
+    float previewY = 20;
+    
     ofSetColor(255);
-    texture->draw(0, 20, scaledWidth, scaledHeight);
+    
+    // If texture has depth > 1, use tex_array shader to display specific layer
+    int depth = texture->getDepth();
+    if (depth > 1) {
+        drawArrayTexture(previewX, previewY, scaledWidth, scaledHeight);
+    } else {
+        // Normal 2D texture
+        texture->draw(previewX, previewY, scaledWidth, scaledHeight);
+    }
     
     // Draw border
     ofNoFill();
     ofSetColor(255);
-    ofDrawRectangle(0, 20, scaledWidth, scaledHeight);
+    ofDrawRectangle(previewX, previewY, scaledWidth, scaledHeight);
     ofFill();
+}
+
+void TextureInspector::drawArrayTexture(float x, float y, float width, float height) {
+    if (texture == nullptr) return;
+    
+    textureArrayDraw.draw(const_cast<ofTexture&>(*texture), (int)x, (int)y, (int)width, (int)height, currentLayerIndex);
 }
 
 void TextureInspector::drawLargeTexture() {
@@ -179,16 +205,33 @@ void TextureInspector::drawLargeTexture() {
     float centerX = (ofGetWidth() - scaledWidth) * 0.5f;
     float centerY = (ofGetHeight() - scaledHeight) * 0.5f;
 
-    // Draw texture name
+    // Draw texture name and layer info
     ofSetColor(255);
-    ofDrawBitmapString(textureName, centerX, centerY - 20);
+    string displayName = textureName;
+    int depth = texture->getDepth();
+    if (depth > 1) {
+        displayName += " (Layer " + ofToString(currentLayerIndex) + " / " + ofToString(depth - 1) + ")";
+        displayName += " - Click to cycle layers";
+    }
+    ofDrawBitmapString(displayName, centerX, centerY - 20);
 
     // Draw texture
     ofSetColor(255);
-    texture->draw(centerX, centerY, scaledWidth, scaledHeight);
+    
+    // If texture has depth > 1, use tex_array shader to display specific layer
+    if (depth > 1) {
+        drawArrayTexture(centerX, centerY, scaledWidth, scaledHeight);
+    } else {
+        // Normal 2D texture
+        texture->draw(centerX, centerY, scaledWidth, scaledHeight);
+    }
 
     // Draw instructions
-    ofDrawBitmapString("Left click to close", centerX, centerY + scaledHeight + 20);
+    string instructions = "Left click to close";
+    if (depth > 1) {
+        instructions += " | Click texture to cycle layers";
+    }
+    ofDrawBitmapString(instructions, centerX, centerY + scaledHeight + 20);
 
     ofPopMatrix();
     ofPopStyle();
@@ -219,7 +262,31 @@ void TextureInspector::mousePressed(int x, int y, int button) {
         }
         
         if (showLargeView) {
-            // Close large view
+            // Check if clicking on the texture (for layer cycling)
+            if (texture != nullptr) {
+                float texWidth = texture->getWidth();
+                float texHeight = texture->getHeight();
+                float maxWidth = ofGetWidth() * 0.8f;
+                float maxHeight = ofGetHeight() * 0.8f;
+                float scale = std::min(maxWidth / texWidth, maxHeight / texHeight);
+                float scaledWidth = texWidth * scale;
+                float scaledHeight = texHeight * scale;
+                float centerX = (ofGetWidth() - scaledWidth) * 0.5f;
+                float centerY = (ofGetHeight() - scaledHeight) * 0.5f;
+                
+                // Check if click is on the texture
+                if (x >= centerX && x <= centerX + scaledWidth &&
+                    y >= centerY && y <= centerY + scaledHeight) {
+                    // Cycle through layers if texture has depth > 1
+                    int depth = texture->getDepth();
+                    if (depth > 1) {
+                        currentLayerIndex = (currentLayerIndex + 1) % depth;
+                    }
+                    return;
+                }
+            }
+            
+            // Close large view if clicking outside texture
             showLargeView = false;
             return;
         }

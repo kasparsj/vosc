@@ -1,5 +1,7 @@
 (
+var w = h = d = 16;
 var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
+
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
@@ -15,6 +17,9 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/tex/var', "colormap", "error", 0);
 ~visuals.send('/tex/var', "colormap", "offset", 0);
 ~visuals.send('/tex/var', "colormap", "luminanceWeight", 0);
+
+~visuals.send('/tex/size', "seed", w, h, d);
+~visuals.send('/tex/data', "seed", ["rand(1.0)", "rand(1.0)", "rand(1.0)", 1], w * h * d);
 
 /*~createLayer = { |i, w, h, d|
 	var prefix = "tex" ++ i;

@@ -6,6 +6,7 @@
 #include "../ui/Button.h"
 #include "TextureInspector.hpp"
 #include "ShaderInspector.hpp"
+#include "TextureArrayDraw.h"
 
 class Inspector {
 public:
@@ -49,6 +50,9 @@ private:
     ShaderInspector shaderInspector;
     bool showingTextureInspector = false;
     bool showingShaderInspector = false;
+    
+    // Texture array drawing
+    TextureArrayDraw textureArrayDraw;
     
     void updateTextureButtons();
     void clearTextureButtons();

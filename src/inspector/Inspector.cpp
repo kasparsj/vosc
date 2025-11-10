@@ -180,7 +180,14 @@ void Inspector::debugTexture(const ofTexture& tex, const string& name, float x, 
         ofDrawBitmapString(name, x, y - 5);
     }
     ofSetColor(255);
-    tex.draw(x, y, 100, 100);
+    
+    // If texture has depth > 1, use tex_array shader to display layer 0
+    int depth = tex.getDepth();
+    if (depth > 1) {
+        textureArrayDraw.draw(const_cast<ofTexture&>(tex), (int)x, (int)y, 100, 100, 0);
+    } else {
+        tex.draw(x, y, 100, 100);
+    }
 }
 
 void Inspector::debugEmpty(string text) {
@@ -424,11 +431,22 @@ void Inspector::drawLargeTexture() {
 
     // Draw texture name
     ofSetColor(255);
-    ofDrawBitmapString(largeTextureName, centerX, centerY - 20);
+    string displayName = largeTextureName;
+    int depth = largeTexture->getDepth();
+    if (depth > 1) {
+        displayName += " (Layer 0 / " + ofToString(depth - 1) + ")";
+    }
+    ofDrawBitmapString(displayName, centerX, centerY - 20);
 
     // Draw texture
     ofSetColor(255);
-    largeTexture->draw(centerX, centerY, scaledWidth, scaledHeight);
+    
+    // If texture has depth > 1, use tex_array shader to display layer 0
+    if (depth > 1) {
+        textureArrayDraw.draw(const_cast<ofTexture&>(*largeTexture), (int)centerX, (int)centerY, (int)scaledWidth, (int)scaledHeight, 0);
+    } else {
+        largeTexture->draw(centerX, centerY, scaledWidth, scaledHeight);
+    }
 
     // Draw instructions
     ofDrawBitmapString("Left click to close", centerX, centerY + scaledHeight + 20);

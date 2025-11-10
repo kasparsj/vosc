@@ -4,10 +4,12 @@
 #include "../ui/Button.h"
 #include "../Texture.h"
 #include "../Shader.h"
+#include "TextureArrayDraw.h"
 
 class TextureInspector {
 public:
     TextureInspector();
+    ~TextureInspector();
     void draw();
     void mousePressed(int x, int y, int button);
     void mouseReleased(int x, int y, int button);
@@ -25,6 +27,7 @@ private:
     void drawTextureInfo();
     void drawTexturePreview();
     void drawLargeTexture();
+    void drawArrayTexture(float x, float y, float width, float height);
     
     const ofTexture* texture = nullptr;
     Texture* textureObj = nullptr; // Full texture object to check if it's Shader-based
@@ -33,5 +36,9 @@ private:
     bool showLargeView = false;
     Button backButton;
     Button shaderButton;
+    
+    // Texture array support
+    int currentLayerIndex = 0;
+    TextureArrayDraw textureArrayDraw;
 };
 

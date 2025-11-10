@@ -193,7 +193,7 @@ void Layer::draw(const glm::vec3& pos, const glm::vec2& size) {
         }
         if (shader.hasDefaultTexture()) {
             if (!shader.isLoaded()) {
-                shader.load("texture");
+                shader.load("tex");
             }
         }
         

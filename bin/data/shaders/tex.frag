@@ -13,4 +13,5 @@ out vec4 fragColor;
 
 void main() {
     fragColor = texture(tex, vertex.texcoord);
+//    fragColor = vec4(vertex.texcoord, 0, 1);
 }
