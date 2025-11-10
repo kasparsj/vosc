@@ -29,6 +29,14 @@ private:
     void drawLargeTexture();
     void drawArrayTexture(float x, float y, float width, float height);
     void drawShaderPasses();
+    float getPreviewOffsetY() {
+        // Calculate offset for preview based on content
+        int previewOffset = 260; // Base offset
+        if (textureObj != nullptr && textureObj->hasShader()) {
+            previewOffset = 310; // Offset when shader button is shown
+        }
+        return previewOffset;
+    }
     
     const ofTexture* texture = nullptr;
     Texture* textureObj = nullptr; // Full texture object to check if it's Shader-based

@@ -66,14 +66,8 @@ void TextureInspector::draw() {
 
     ofTranslate(20, 100);
     drawTextureInfo();
-
-    // Calculate offset for preview based on content
-    int previewOffset = 260; // Base offset
-    if (textureObj != nullptr && textureObj->hasShader()) {
-        previewOffset = 310; // Offset when shader button is shown
-    }
     
-    ofTranslate(0, previewOffset);
+    ofTranslate(0, getPreviewOffsetY());
     drawTexturePreview();
     
     ofPopMatrix();
@@ -379,7 +373,6 @@ void TextureInspector::mousePressed(int x, int y, int button) {
         
         // Check if clicking on preview
         float baseOffsetX = 20;
-        float baseOffsetY = 100 + 200; // Preview position
         float previewSize = 200;
         
         if (texture != nullptr) {
@@ -390,7 +383,7 @@ void TextureInspector::mousePressed(int x, int y, int button) {
             float scaledHeight = texHeight * scale;
             
             float previewX = baseOffsetX;
-            float previewY = baseOffsetY;
+            float previewY = getPreviewOffsetY() + 110;
             
             if (x >= previewX && x <= previewX + scaledWidth &&
                 y >= previewY && y <= previewY + scaledHeight) {

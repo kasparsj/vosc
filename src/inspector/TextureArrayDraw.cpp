@@ -1,4 +1,5 @@
 #include "TextureArrayDraw.h"
+#include "utils.h"
 
 TextureArrayDraw::TextureArrayDraw() : shaderLoaded(false) {
 }
@@ -28,12 +29,7 @@ void TextureArrayDraw::draw(ofTexture& tex, int x, int y, int w, int h, int inde
         texArrayShader.setUniform1i("texIndex", index);
         
         // Draw a quad with the shader using getQuad
-        glm::vec3 p1(x, y, 0);
-        glm::vec3 p2(x + w, y, 0);
-        glm::vec3 p3(x + w, y + h, 0);
-        glm::vec3 p4(x, y + h, 0);
-        ofMesh quad = tex.getQuad(p1, p2, p3, p4);
-        quad.draw();
+        getQuad(tex, x, y, w, h).draw();
         
         texArrayShader.end();
     } else {
