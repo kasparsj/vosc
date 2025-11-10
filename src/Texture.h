@@ -4,6 +4,7 @@
 #include "tex/BaseTex.h"
 #include "ofFbo.h"
 #include "ofxLooper.h"
+#include "ShaderPass.h"
 
 class Texture : public VarsHolder {
 public:
@@ -46,6 +47,7 @@ public:
     int numFrames = 1;
     vector<ofFbo> frames;
     int curFbo = -1;
+    vector<shared_ptr<ShaderPass>> passes;
     
 private:
     static shared_ptr<BaseTex> chooseTex(const ofxOscMessage& m);

@@ -24,6 +24,7 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/tex/set', "seed", "filter", ~gl[\NEAREST]);
 ~visuals.send('/tex/size', "seed", w, h, d);
 ~visuals.send('/tex/data', "seed", ["rand(1.0)", "rand(1.0)", "rand(1.0)", 1], w * h * d);
+~visuals.send('/tex/passes', "seed", "layers/mirror.frag");
 ~visuals.send('/tex/set', "seed", "static", true);
 
 /*~createLayer = { |i, w, h, d|

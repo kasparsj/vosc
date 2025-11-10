@@ -6,6 +6,7 @@
 #include "Args.h"
 #include "tex/Tex.h"
 #include "tex/ShaderTex.h"
+#include "ShaderPass.h"
 
 void Texture::load(string source, const vector<float>& args) {
     _unload();
@@ -134,6 +135,15 @@ void Texture::update(const vector<TidalNote> &notes) {
         data.update(notes);
         tex->update(data);
         
+        // Apply shader passes
+        ofTexture* currentTexture = &tex->getTexture();
+        for (auto& pass : passes) {
+            if (pass && pass->isAllocated()) {
+                pass->update(*currentTexture, data);
+                currentTexture = &pass->getTexture();
+            }
+        }
+        
         // if var->size() > 1
         // make a loop to draw the tex into a parent
         
@@ -257,6 +267,22 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
                 ofLogError() << "Texture::oscCommand: tex is not a Shader-based texture, cannot forward shader command: " << command;
             }
         }
+    }
+    else if (command == "/tex/passes") {
+        // Add a shader pass: /tex/passes <shaderPath> [width] [height] [depth]
+        // Width, height, and depth are optional - if not specified, will inherit from current texture size
+        if (m.getNumArgs() < 2) {
+            ofLogError() << "Texture::oscCommand: /tex/passes requires at least 1 argument: shaderPath";
+            return;
+        }
+        string shaderPath = m.getArgAsString(1);
+        float width = m.getNumArgs() > 2 ? m.getArgAsFloat(2) : -1;
+        float height = m.getNumArgs() > 3 ? m.getArgAsFloat(3) : -1;
+        float depth = m.getNumArgs() > 4 ? m.getArgAsFloat(4) : -1;
+        
+        shared_ptr<ShaderPass> pass = make_shared<ShaderPass>();
+        pass->setup(shaderPath, width, height, depth);
+        passes.push_back(pass);
     }
     else {
         data.oscCommand(command, m);
