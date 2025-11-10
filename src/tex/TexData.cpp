@@ -14,9 +14,6 @@ void TexData::oscCommand(const string& command, const ofxOscMessage &m) {
     else if (command == "/tex/set") {
         set(m);
     }
-    else if (command == "/tex/fbo") {
-        setSettings(m);
-    }
 }
 
 void TexData::set(const ofxOscMessage& m) {
@@ -30,20 +27,32 @@ void TexData::set(const ofxOscMessage& m) {
     else if (prop == "aspectRatio") {
         aspectRatio = m.getArgAsBool(2);
     }
-}
-
-void TexData::setSettings(const ofxOscMessage &m) {
-    std::unordered_map<string, std::function<void(int, ofTextureData&)>> mapping;
-    mapping["internalformat"] = [](int v, ofTextureData& a) { a.glInternalFormat = v; };
-    mapping["textureTarget"] = [](int v, ofTextureData& a) { a.textureTarget = v; };
-    mapping["wrapModeHorizontal"] = [](int v, ofTextureData& a) { a.wrapModeHorizontal = v; };
-    mapping["wrapModeVertical"] = [](int v, ofTextureData& a) { a.wrapModeVertical = v; };
-    mapping["minFilter"] = [](int v, ofTextureData& a) { a.minFilter = v; };
-    mapping["maxFilter"] = [](int v, ofTextureData& a) { a.magFilter = v; };
-    string key = m.getArgAsString(1);
-    int value = m.getArgAsInt(2);
-    if (mapping.find(key) != mapping.end()) {
-        mapping[key](value, texData);
+    // FBO/Texture settings (previously handled by /tex/fbo)
+    else if (prop == "internalformat") {
+        texData.glInternalFormat = m.getArgAsInt(2);
+    }
+    else if (prop == "textureTarget") {
+        texData.textureTarget = m.getArgAsInt(2);
+    }
+    else if (prop == "wrapMode") {
+        texData.wrapModeHorizontal = m.getArgAsInt(2);
+        texData.wrapModeVertical = m.getArgAsInt(2);
+    }
+    else if (prop == "wrapModeHorizontal") {
+        texData.wrapModeHorizontal = m.getArgAsInt(2);
+    }
+    else if (prop == "wrapModeVertical") {
+        texData.wrapModeVertical = m.getArgAsInt(2);
+    }
+    else if (prop == "filter") {
+        texData.minFilter = m.getArgAsInt(2);
+        texData.magFilter = m.getArgAsInt(2);
+    }
+    else if (prop == "minFilter") {
+        texData.minFilter = m.getArgAsInt(2);
+    }
+    else if (prop == "maxFilter" || prop == "magFilter") {
+        texData.magFilter = m.getArgAsInt(2);
     }
 }
 

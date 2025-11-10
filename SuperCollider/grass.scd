@@ -1,4 +1,6 @@
 (
+"gl.scd".loadRelative;
+
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 ~visuals = OSCVisuals("127.0.0.1", 33333);
 
@@ -13,8 +15,8 @@
 ~visuals.send('/layer/rot', 0, [0, 0, -90]);
 
 ~visuals.send('/geom', 1, "grass", 60, 2, 1.0, 0);
-~visuals.send('/shader/set', 1, "geomInputType", 0x0001); // GL_LINES
-~visuals.send('/shader/set', 1, "geomOutputType", 0x0005); // GL_TRIANGLE_STRIP
+~visuals.send('/shader/set', 1, "geomInputType", ~gl[\LINES]);
+~visuals.send('/shader/set', 1, "geomOutputType", ~gl[\TRIANGLE_STRIP]);
 ~visuals.send('/shader/set', 1, "geomOutputCount", 14);
 ~visuals.send('/shader/var', 1, "stalkHalfWidth", 0.1 / 2);
 ~visuals.send('/shader/var', 1, "stalkHeight", 1.0);

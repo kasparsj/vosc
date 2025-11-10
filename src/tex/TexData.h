@@ -76,7 +76,6 @@ public:
         fboSettings.maxFilter = texData.magFilter;
         return fboSettings;
     }
-    void setSettings(const ofxOscMessage& m);
     void allocate(ofFbo& fbo);
     void allocate(ofTexture& tex);
     void afterDraw(const map<string, shared_ptr<BaseVar>>& vars);

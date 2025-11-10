@@ -1,3 +1,5 @@
+"gl.scd".loadRelative;
+
 (
 var w = h = d = 16;
 var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
@@ -18,6 +20,7 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/tex/var', "colormap", "offset", 0);
 ~visuals.send('/tex/var', "colormap", "luminanceWeight", 0);
 
+~visuals.send('/tex/set', "seed", "filter", ~gl[\NEAREST]);
 ~visuals.send('/tex/size', "seed", w, h, d);
 ~visuals.send('/tex/data', "seed", ["rand(1.0)", "rand(1.0)", "rand(1.0)", 1], w * h * d);
 

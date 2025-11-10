@@ -1,4 +1,6 @@
 (
+"gl.scd".loadRelative;
+
 // create visuals sender
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
@@ -20,7 +22,8 @@
 ~visuals.send('/tex', 0, "noise.png");
 
 // set opengl textureWrap property to GL_REPEAT
-~visuals.send('/tex/set', 0, "textureWrap", 0x2901, 0x2901); // GL_REPEAT
+~visuals.send('/tex/set', 0, "wrapModeHorizontal", ~gl[\REPEAT]);
+~visuals.send('/tex/set', 0, "wrapModeVertical", ~gl[\REPEAT]);
 
 // set some shader variables
 ~visuals.send('/shader/var', 0, "fovYScale", (30.degrad/2).tan);

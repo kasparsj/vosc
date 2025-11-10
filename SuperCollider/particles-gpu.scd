@@ -1,4 +1,6 @@
 (
+"gl.scd".loadRelative;
+
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
@@ -10,12 +12,11 @@
 ~visuals.send('/tex/size', "particlesData", 128, 128);
 ~visuals.send('/tex/fbo', "particlesData", "numColorbuffers", 2);
 ~visuals.send('/tex/fbo', "particlesData", "useDepth", 0);
-~visuals.send('/tex/fbo', "particlesData", "internalformat", 0x8814); // GL_RGBA32F
-~visuals.send('/tex/fbo', "particlesData", "textureTarget", 0x0DE1); // GL_TEXTURE_2D
-~visuals.send('/tex/fbo', "particlesData", "wrapModeHorizontal", 0x812F); // GL_CLAMP_TO_EDGE
-~visuals.send('/tex/fbo', "particlesData", "wrapModeVertical", 0x812F);
-~visuals.send('/tex/fbo', "particlesData", "minFilter", 0x2600); // GL_NEAREST
-~visuals.send('/tex/fbo', "particlesData", "maxFilter", 0x2600);
+~visuals.send('/tex/set', "particlesData", "internalformat", ~gl[\RGBA32F]);
+~visuals.send('/tex/set', "particlesData", "textureTarget", ~gl[\TEXTURE_2D]);
+~visuals.send('/tex/set', "particlesData", "wrapModeHorizontal", ~gl[\CLAMP_TO_EDGE]);
+~visuals.send('/tex/set', "particlesData", "wrapModeVertical", ~gl[\CLAMP_TO_EDGE]);
+~visuals.send('/tex/set', "particlesData", "filter", ~gl[\NEAREST]);
 ~visuals.send('/tex/set', "particlesData", "blendMode", 0);
 ~visuals.send('/tex/var', "particlesData", "timeStep", 1.0 / 60.0);
 ~visuals.send('/tex/var', "particlesData", "particleMaxAge", 2.25);
