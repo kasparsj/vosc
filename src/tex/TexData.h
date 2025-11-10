@@ -64,7 +64,9 @@ public:
                 break;
         }
     }
+    void setTextureWrap(GLint wrapModeHorizontal, GLint wrapModeVertical);
     void set(const ofxOscMessage& m);
+
     ofFbo::Settings& getFboSettings() {
         fboSettings.width = texData.width;
         fboSettings.height = texData.height;

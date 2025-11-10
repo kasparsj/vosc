@@ -2,6 +2,7 @@
 #include "Layer.h"
 
 void ShaderTex::update(TexData& data) {
+    if (isStatic && !needsUpdate) return;
     FboTex::update(data);
     if (!isLoaded()) {
         if (load(path)) {

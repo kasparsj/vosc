@@ -175,11 +175,32 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
     }
     else if (command == "/tex/set") {
         string method = m.getArgAsString(1);
-        if (method == "textureWrap") {
-            getTexture().setTextureWrap(m.getArgAsInt(2), m.getArgAsInt(3));
+        if (method == "textureWrap" || method == "wrapMode" || method == "wrapModeHorizontal" || method == "wrapModeVertical") {
+            if (method == "wrapModeHorizontal" || method == "wrapModeVertical") {
+                // todo: implement
+            }
+            else {
+                GLint wrapModeHorizontal, wrapModeVertical;
+                if (m.getNumArgs() > 3) {
+                    wrapModeHorizontal = m.getArgAsInt(2);
+                    wrapModeVertical = m.getArgAsInt(3);
+                }
+                else {
+                    wrapModeHorizontal = m.getArgAsInt(2);
+                    wrapModeVertical = m.getArgAsInt(2);
+                }
+                getTexture().setTextureWrap(wrapModeHorizontal, wrapModeVertical);
+                data.setTextureWrap(wrapModeHorizontal, wrapModeVertical);
+            }
         }
         else if (method == "numFrames") {
             setNumFrames(m.getArgAsInt(2));
+        }
+        else if (method == "static") {
+            tex->isStatic = m.getArgAsBool(2);
+        }
+        else if (method == "needsUpdate") {
+            tex->needsUpdate = m.getArgAsBool(2);
         }
         else {
             data.oscCommand(command, m);

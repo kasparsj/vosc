@@ -54,5 +54,7 @@ public:
     vector<float> args;
     bool aspectRatio;
     ofPixels pixels;
+    bool isStatic = false;
+    bool needsUpdate = true;
 };
 

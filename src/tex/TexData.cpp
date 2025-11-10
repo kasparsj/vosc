@@ -34,16 +34,6 @@ void TexData::set(const ofxOscMessage& m) {
     else if (prop == "textureTarget") {
         texData.textureTarget = m.getArgAsInt(2);
     }
-    else if (prop == "wrapMode") {
-        texData.wrapModeHorizontal = m.getArgAsInt(2);
-        texData.wrapModeVertical = m.getArgAsInt(2);
-    }
-    else if (prop == "wrapModeHorizontal") {
-        texData.wrapModeHorizontal = m.getArgAsInt(2);
-    }
-    else if (prop == "wrapModeVertical") {
-        texData.wrapModeVertical = m.getArgAsInt(2);
-    }
     else if (prop == "filter") {
         texData.minFilter = m.getArgAsInt(2);
         texData.magFilter = m.getArgAsInt(2);
@@ -54,6 +44,11 @@ void TexData::set(const ofxOscMessage& m) {
     else if (prop == "maxFilter" || prop == "magFilter") {
         texData.magFilter = m.getArgAsInt(2);
     }
+}
+
+void TexData::setTextureWrap(GLint wrapModeHorizontal, GLint wrapModeVertical) {
+    texData.wrapModeHorizontal = wrapModeHorizontal;
+    texData.wrapModeVertical = wrapModeVertical;
 }
 
 void TexData::allocate(ofFbo& fbo) {

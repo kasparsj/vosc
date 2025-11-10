@@ -61,7 +61,7 @@ void TextureInspector::draw() {
     ofTranslate(20, 100);
     drawTextureInfo();
 
-    ofTranslate(0, 230);
+    ofTranslate(0, 260);
     drawTexturePreview();
     
     ofPopMatrix();
@@ -137,6 +137,12 @@ void TextureInspector::drawTextureInfo() {
         GLint magFilter = texture->getTextureData().magFilter;
         ofDrawBitmapString("Min Filter: " + ofToString(minFilter), 0, 140 + yOffset);
         ofDrawBitmapString("Mag Filter: " + ofToString(magFilter), 0, 160 + yOffset);
+        
+        // Static flag
+        if (textureObj != nullptr && textureObj->tex != nullptr) {
+            bool isStatic = textureObj->tex->isStatic;
+            ofDrawBitmapString("Static: " + string(isStatic ? "true" : "false"), 0, 180 + yOffset);
+        }
     }
 }
 
