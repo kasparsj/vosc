@@ -29,7 +29,7 @@ in VertexAttrib {
 
 // Uniforms
 uniform ivec2 dim;           // Dimensions of the output rendering area
-uniform sampler2D tex;       // Source data texture to sample from
+uniform sampler2D srctex;       // Source data texture to sample from
 uniform ivec2 texdim;        // Dimensions of the data texture (unused - reserved for future use)
 uniform sampler2D sieve;     // Sieve texture containing offset information
 uniform ivec2 sievedim;      // Dimensions of the sieve texture
@@ -130,7 +130,7 @@ void main(){
     );
 
     // Sample the data texture at the calculated position
-    vec4 dataPix = texture(tex, dataPos);
+    vec4 dataPix = texture(srctex, dataPos);
 
     // -------------------------------------------------------------------------
     // STEP 4: Blend colors based on sieve properties

@@ -11,6 +11,15 @@
 #define DEFAULT_TEX "tex"
 #define MAX_LIGHTS 8
 
+struct ShaderPaths {
+    string vertPath;
+    string fragPath;
+    string geomPath;
+    
+    ShaderPaths() : vertPath(""), fragPath(""), geomPath("") {}
+    bool isValid() const { return fragPath != ""; }
+};
+
 class Shader : public VarsHolder {
 public:
     static map<string, ofxAutoReloadedShader> cache;
@@ -30,7 +39,8 @@ public:
     bool load(string path);
     bool loadFromSource(const string& source);
     bool loadShadertoy(const string& shadertoyId);
-    bool loadFromFile(const string& path);
+    static ShaderPaths getShaderPaths(const string& path);  // Returns vert, frag, and geom paths
+    bool loadFromFileAndWatch(const string& path);  // Instance method that loads into this shader
     void reload();
     void update(const vector<TidalNote> &notes);
     void oscCommand(const string& command, const ofxOscMessage& m);
@@ -75,7 +85,6 @@ public:
     }
     const map<string, GLenum>& getUniformTypes() const;
     map<string, string> getUniformValues() const;
-    void checkUniforms();
     
 private:
     void setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay = 0);

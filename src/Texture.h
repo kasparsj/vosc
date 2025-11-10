@@ -48,6 +48,8 @@ public:
     vector<ofFbo> frames;
     int curFbo = -1;
     vector<shared_ptr<ShaderPass>> passes;
+    bool isStatic = false;
+    bool needsUpdate = true;
     
 private:
     static shared_ptr<BaseTex> chooseTex(const ofxOscMessage& m);

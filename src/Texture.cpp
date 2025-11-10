@@ -131,6 +131,8 @@ void Texture::clear() {
 }
 
 void Texture::update(const vector<TidalNote> &notes) {
+    if (isStatic && !needsUpdate) return;
+
     if (isLoaded()) {
         data.update(notes);
         tex->update(data);
@@ -138,10 +140,8 @@ void Texture::update(const vector<TidalNote> &notes) {
         // Apply shader passes
         ofTexture* currentTexture = &tex->getTexture();
         for (auto& pass : passes) {
-            if (pass && pass->isAllocated()) {
-                pass->update(*currentTexture, data);
-                currentTexture = &pass->getTexture();
-            }
+            pass->update(*currentTexture, data);
+            currentTexture = &pass->getTexture();
         }
         
         // if var->size() > 1
@@ -206,11 +206,12 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
         else if (method == "numFrames") {
             setNumFrames(m.getArgAsInt(2));
         }
+        // todo: BaseTex also has isStatic and needsUpdate, expose these as well
         else if (method == "static") {
-            tex->isStatic = m.getArgAsBool(2);
+            isStatic = m.getArgAsBool(2);
         }
         else if (method == "needsUpdate") {
-            tex->needsUpdate = m.getArgAsBool(2);
+            needsUpdate = m.getArgAsBool(2);
         }
         else {
             data.oscCommand(command, m);

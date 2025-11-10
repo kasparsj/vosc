@@ -12,7 +12,7 @@ void TextureArrayDraw::loadShader() {
     
     // Load the tex_array shader with passthru vertex shader
     // The passthru.vert provides the VertexAttrib structure that tex_array.frag expects
-    if (texArrayShader.load("shaders/passthru.vert", "shaders/tex_array.frag")) {
+    if (texArrayShader.load("shaders/passthru.vert", "shaders/array/tex.frag")) {
         shaderLoaded = true;
     } else {
         ofLogWarning("TextureArrayDraw") << "Could not load tex_array shader";

@@ -18,10 +18,12 @@ private:
     string shaderPath;
     ofShader shader;
     ofFbo fbo;
+    ofTexture arrayTexture;  // For array texture output
     glm::vec3 outputSize;
     bool widthSet;
     bool heightSet;
     bool depthSet;
     bool allocated;
+    bool isArrayTexture;
 };
 

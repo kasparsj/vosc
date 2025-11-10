@@ -85,7 +85,7 @@ bool Shader::load(string path) {
     }
     else if (path.empty() == false) {
         shaderPath = path;
-        success = loadFromFile(path);
+        success = loadFromFileAndWatch(path);
         if (!success) {
             ofLogError() << ("could not load shader: " + path);
             shaderPath = "";
@@ -118,7 +118,8 @@ bool Shader::loadShadertoy(const string& shadertoyId) {
     return false;
 }
 
-bool Shader::loadFromFile(const string& path) {
+ShaderPaths Shader::getShaderPaths(const string& path) {
+    ShaderPaths paths;
     string fragPath = "";
     vector<string> fragPaths;
     if (!ofFilePath::isAbsolute(path)) {
@@ -141,22 +142,33 @@ bool Shader::loadFromFile(const string& path) {
             break;
         }
     }
+    
     if (fragPath != "") {
-        string vertPath = "shaders/passthru.vert";
-        string geomPath = "";
+        paths.fragPath = fragPath;
+        paths.vertPath = "shaders/passthru.vert";
+        paths.geomPath = "";
+        
         string pathNoExt = fragPath.substr(0, fragPath.find(".frag"));
         string tmpVertPath = pathNoExt + ".vert";
         if (ofFile(tmpVertPath).exists()) {
-            vertPath = tmpVertPath;
+            paths.vertPath = tmpVertPath;
         }
         string tmpGeomPath = pathNoExt + ".geom";
         if (ofFile(tmpGeomPath).exists()) {
-            geomPath = tmpGeomPath;
+            paths.geomPath = tmpGeomPath;
         }
+    }
+    
+    return paths;
+}
+
+bool Shader::loadFromFileAndWatch(const string& path) {
+    ShaderPaths paths = getShaderPaths(path);
+    if (paths.isValid()) {
         ofxAutoReloadedShader* autoShader = new ofxAutoReloadedShader();
-        if (autoShader->load(vertPath, fragPath, geomPath)) {
+        if (autoShader->load(paths.vertPath, paths.fragPath, paths.geomPath)) {
             shader = shared_ptr<ofShader>(autoShader);
-            shaderPath = ofFilePath::getFileName(fragPath);
+            shaderPath = ofFilePath::getFileName(paths.fragPath);
             return true;
         }
     }
@@ -215,7 +227,6 @@ void Shader::begin(TexData& data, int delay) {
         setUniformTextures(textures, delay);
         setUniforms(vars);
         setUniforms(data.getVars());
-        checkUniforms();
         if (shadertoy == NULL) {
             setLights(shader);
         }
@@ -541,52 +552,6 @@ void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<Bas
                 break;
             }
         }
-    }
-}
-
-void Shader::checkUniforms() {
-    const map<string, GLenum>& types = getUniformTypes();
-    
-    // Built-in OpenFrameworks uniforms that are set automatically
-    static const std::set<string> builtInUniforms = {
-        "projectionMatrix",
-        "modelViewMatrix",
-        "modelViewProjectionMatrix",
-        "textureMatrix",
-        "time",
-        "resolution",
-        "random",
-    };
-    
-    // Loop through uniform types to check if they have been set
-    for (const auto& typeIt : types) {
-        const string& name = typeIt.first;
-        GLenum uniformType = typeIt.second;
-        
-        // Check if it's a type we can handle in the switch statement
-        bool isHandledType = (uniformType == GL_INT || uniformType == GL_INT_VEC2 || uniformType == GL_INT_VEC3 || uniformType == GL_INT_VEC4 ||
-                              uniformType == GL_FLOAT || uniformType == GL_FLOAT_VEC2 || uniformType == GL_FLOAT_VEC3 ||
-                              uniformType == GL_FLOAT_VEC4 || uniformType == GL_FLOAT_MAT4);
-        if (!isHandledType) {
-            // Skip sampler types and other unhandled types
-            continue;
-        }
-        
-        // Check if it's a built-in uniform (set automatically) or a camera/light uniform
-        bool isBuiltIn = builtInUniforms.find(name) != builtInUniforms.end();
-        bool isCameraUniform = name.substr(0, 3) == "cam";
-        bool isLightUniform = name == "lights" || name == "numLights";
-        
-        if (isBuiltIn || isCameraUniform || isLightUniform) {
-            // Skip built-in uniforms
-            continue;
-        }
-        
-        // Check if the uniform has a variable
-//        if (!uniformIsSet) {
-//            // Uniform not found in vars, log a warning
-//            ofLogWarning() << "Shader::checkUniforms: uniform '" << name << "' found in shader but no variable provided";
-//        }
     }
 }
 

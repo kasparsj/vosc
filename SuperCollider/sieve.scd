@@ -1,7 +1,7 @@
 "gl.scd".loadRelative;
 
 (
-var w = h = d = 16;
+var w = h = d = 8;
 var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
@@ -12,7 +12,7 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/tex', "square_3x3", "square_3x3.png");
 
 ~visuals.send('/var/colors/scheme', "colors", "tetrad", Color(1.0, 0, 1.0, 1.0).hexString, 54);
-~visuals.send('/tex', "colormap", "layers/palettemap.frag");
+~visuals.send('/tex', "colormap", "palettemap.frag");
 ~visuals.send('/tex/shader/buffer', "colormap", "colors", "colors");
 ~visuals.send('/tex/size', "colormap", paletteMapSize.asInteger, paletteMapSize.asInteger);
 ~visuals.send('/tex/var', "colormap", "algorithm", 0);
@@ -24,7 +24,7 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/tex/set', "seed", "filter", ~gl[\NEAREST]);
 ~visuals.send('/tex/size', "seed", w, h, d);
 ~visuals.send('/tex/data', "seed", ["rand(1.0)", "rand(1.0)", "rand(1.0)", 1], w * h * d);
-~visuals.send('/tex/passes', "seed", "layers/mirror.frag");
+~visuals.send('/tex/passes', "seed", "array/mirror.frag", w * 2, h * 2);
 ~visuals.send('/tex/set', "seed", "static", true);
 
 /*~createLayer = { |i, w, h, d|
