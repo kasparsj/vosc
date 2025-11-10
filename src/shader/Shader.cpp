@@ -1,12 +1,12 @@
 #include "Shader.h"
-#include "Layer.h"
-#include "VariablePool.h"
-#include "Lights.h"
+#include "../layer/Layer.h"
+#include "../var/VariablePool.h"
+#include "../light/Lights.h"
 #include <regex>
 #include <exception>
 #include <set>
-#include "Camera.hpp"
-#include "utils.h"
+#include "../Camera.hpp"
+#include "../utils.h"
 
 void loadShaders(const string& path, map<string, ofxAutoReloadedShader>& shaders) {
     ofDirectory dir(path);

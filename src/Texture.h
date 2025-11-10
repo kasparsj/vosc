@@ -4,7 +4,7 @@
 #include "tex/BaseTex.h"
 #include "ofFbo.h"
 #include "ofxLooper.h"
-#include "ShaderPass.h"
+#include "shader/ShaderPass.h"
 
 class Texture : public VarsHolder {
 public:

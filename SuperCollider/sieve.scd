@@ -10,6 +10,8 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 // ~visuals.send('/cam', "easy");
 
 ~visuals.send('/tex', "square_3x3", "square_3x3.png");
+~visuals.send('/tex/set', "square_3x3", "wrapMode", ~gl[\REPEAT]);
+~visuals.send('/tex/set', "square_3x3", "filter", ~gl[\NEAREST]);
 ~visuals.send('/tex/set', "square_3x3", "static", true);
 
 ~visuals.send('/var/colors/scheme', "colors", "tetrad", Color(1.0, 0, 1.0, 1.0).hexString, 54);
@@ -22,11 +24,14 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/tex/var', "colormap", "luminanceWeight", 0);
 ~visuals.send('/tex/set', "colormap", "static", true);
 
+~visuals.send('/shader', "arr_sieve", "array/sieve.frag");
+~visuals.send('/shader/tex', "arr_sieve", "sieve", "square_3x3");
+
 ~visuals.send('/tex/set', "seed", "filter", ~gl[\NEAREST]);
 ~visuals.send('/tex/size', "seed", w, h, d);
 ~visuals.send('/tex/data', "seed", ["rand(1.0)", "rand(1.0)", "rand(1.0)", 1], w * h * d);
 ~visuals.send('/tex/passes', "seed", "array/mirror.frag", w * 2, h * 2);
-// ~visuals.send('/tex/passes', "seed", "array/tex.frag", w, h);
+~visuals.send('/tex/passes', "seed", "array/sieve.frag", w * 6, h * 6);
 ~visuals.send('/tex/set', "seed", "static", true);
 
 /*~createLayer = { |i, w, h, d|

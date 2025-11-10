@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "../ui/Button.h"
 #include "../Texture.h"
-#include "../Shader.h"
+#include "../shader/Shader.h"
 #include "TextureArrayDraw.h"
 
 class TextureInspector {

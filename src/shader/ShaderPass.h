@@ -2,7 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxAutoReloadedShader.h"
-#include "TexData.h"
+#include "../tex/TexData.h"
 
 class ShaderPass {
 public:

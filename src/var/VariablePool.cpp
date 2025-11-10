@@ -1,6 +1,6 @@
 #include "VariablePool.h"
 #include "Texture.h"
-#include "Shader.h"
+#include "shader/Shader.h"
 #include "Layer.h"
 #include "VarsHolder.h"
 #include "ofxExpr.hpp"

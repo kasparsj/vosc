@@ -3,9 +3,9 @@
 #include "ofMain.h"
 #include "ofxAutoReloadedShader.h"
 #include "ofxOsc.h"
-#include "Texture.h"
-#include "Buffer.hpp"
-#include "TexturePool.h"
+#include "../Texture.h"
+#include "../Buffer.hpp"
+#include "../TexturePool.h"
 #include "ofxShadertoy.h"
 
 #define DEFAULT_TEX "tex"

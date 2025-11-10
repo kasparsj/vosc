@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Shader.h"
+#include "../shader/Shader.h"
 #include "FboTex.h"
 
 class ShaderTex : public Shader, public FboTex {

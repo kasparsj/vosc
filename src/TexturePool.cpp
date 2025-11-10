@@ -1,5 +1,5 @@
 #include "TexturePool.h"
-#include "Shader.h"
+#include "shader/Shader.h"
 
 map<string, shared_ptr<Texture>> TexturePool::sharedPool;
 map<int, map<string, shared_ptr<Texture>>> TexturePool::shaderPool;

@@ -6,6 +6,7 @@
 #include "ShaderTex.h"
 #include "Lights.h"
 #include "Inputs.hpp"
+#include "shader/ShaderPool.h"
 
 #if USE_OFX_HPVPLAYER
 #include "ofxHPVPlayer.h"
@@ -265,6 +266,9 @@ void VOSC::processQueue() {
                 }
                 else if (command.substr(0, 5) == "/geom") {
                     GeomPool::getShared(which, true)->oscCommand(command, m);
+                }
+                else if (command.substr(0, 7) == "/shader") {
+                    ShaderPool::getShared(which, true)->oscCommand(command, m);
                 }
                 else {
                     invalidCommand(m);

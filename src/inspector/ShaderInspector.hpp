@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
-#include "../Shader.h"
+#include "../shader/Shader.h"
 #include "../ui/Button.h"
 
 class ShaderInspector {

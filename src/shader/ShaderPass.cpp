@@ -1,7 +1,7 @@
 #include "ShaderPass.h"
 #include "Shader.h"
 #include <GL/gl.h>
-#include "utils.h"
+#include "../utils.h"
 
 ShaderPass::ShaderPass() : allocated(false), outputSize(0, 0, 0), widthSet(false), heightSet(false), depthSet(false), isArrayTexture(false) {
 }

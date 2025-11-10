@@ -6,7 +6,7 @@
 #include "Args.h"
 #include "tex/Tex.h"
 #include "tex/ShaderTex.h"
-#include "ShaderPass.h"
+#include "shader/ShaderPass.h"
 #include <algorithm>
 #include <cctype>
 
