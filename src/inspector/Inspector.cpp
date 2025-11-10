@@ -134,7 +134,6 @@ void Inspector::debugGlobalTextures() {
     float x = 0;
     for (map<string, shared_ptr<Texture>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
         debugTexture(it->second->getTexture(), it->first, x, 0);
-        ofTranslate(120, 0);
         x += 120;
     }
     ofPopMatrix();

@@ -2,7 +2,7 @@
 #include "../tex/ShaderTex.h"
 
 TextureInspector::TextureInspector() : backButton(20, 20, 100, 30),
-                                       shaderButton(20, 60, 300, 30) {
+                                       shaderButton(0, 0, 320, 30) {
     backButton.setFill(true);
     backButton.setColor(ofColor(100, 100, 100));
     shaderButton.setFill(false);
@@ -48,10 +48,11 @@ void TextureInspector::draw() {
     }
     
     ofPushMatrix();
+
     ofTranslate(20, 100);
-    
     drawTextureInfo();
-    ofTranslate(0, 200);
+
+    ofTranslate(0, 230);
     drawTexturePreview();
     
     ofPopMatrix();
@@ -134,7 +135,7 @@ void TextureInspector::drawTexturePreview() {
     if (texture == nullptr) return;
     
     ofSetColor(255);
-    ofDrawBitmapString("Preview (click to enlarge)", 0, -20);
+    ofDrawBitmapString("Preview (click to enlarge)", 0, 0);
     
     // Draw preview texture
     float previewSize = 200;
@@ -145,12 +146,12 @@ void TextureInspector::drawTexturePreview() {
     float scaledHeight = texHeight * scale;
     
     ofSetColor(255);
-    texture->draw(0, 0, scaledWidth, scaledHeight);
+    texture->draw(0, 20, scaledWidth, scaledHeight);
     
     // Draw border
     ofNoFill();
     ofSetColor(255);
-    ofDrawRectangle(0, 0, scaledWidth, scaledHeight);
+    ofDrawRectangle(0, 20, scaledWidth, scaledHeight);
     ofFill();
 }
 

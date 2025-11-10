@@ -43,7 +43,12 @@ public:
                 setSize(m.getArgAsFloat(1), m.getArgAsFloat(2));
                 break;
             case 2:
-                setSize(m.getArgAsFloat(1), m.getArgAsFloat(1));
+                if (m.getArgType(1) == 's') {
+                    ofLogWarning() << "/tex/size expects 1 to 3 numeric parameters";
+                }
+                else {
+                    setSize(m.getArgAsFloat(1), m.getArgAsFloat(1));
+                }
                 break;
         }
     }

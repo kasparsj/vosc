@@ -6,6 +6,7 @@
 #include <exception>
 #include <set>
 #include "Camera.hpp"
+#include "utils.h"
 
 void loadShaders(const string& path, map<string, ofxAutoReloadedShader>& shaders) {
     ofDirectory dir(path);
@@ -334,6 +335,89 @@ void Shader::setUniformFromFloatVar(shared_ptr<T>& shader, const string& name, c
     }
 }
 
+// Helper function to get dimension from GLenum uniform type
+static int getUniformTypeDimension(GLenum uniformType) {
+    switch (uniformType) {
+        case GL_FLOAT_VEC2:
+        case GL_INT_VEC2:
+            return 2;
+        case GL_FLOAT_VEC3:
+        case GL_INT_VEC3:
+            return 3;
+        case GL_FLOAT_VEC4:
+        case GL_INT_VEC4:
+            return 4;
+        default:
+            return 0;
+    }
+}
+
+// Helper function to try setting vec2 uniform from a glm vector variable
+// Can use vec2, vec3, or vec4 (takes first 2 components)
+template<typename T>
+static bool trySetUniformVec2(shared_ptr<T>& shader, const string& name, shared_ptr<const BaseVar> var) {
+    const auto vec2Var = std::dynamic_pointer_cast<const Variable<glm::vec2>>(var);
+    if (vec2Var != NULL && glmVecTypeDimensionOf(vec2Var->get()) >= 2) {
+        glm::vec2 vec = vec2Var->get();
+        shader->setUniform2f(name, vec.x, vec.y);
+        return true;
+    }
+    const auto vec3Var = std::dynamic_pointer_cast<const Variable<glm::vec3>>(var);
+    if (vec3Var != NULL && glmVecTypeDimensionOf(vec3Var->get()) >= 2) {
+        glm::vec3 vec = vec3Var->get();
+        shader->setUniform2f(name, vec.x, vec.y);
+        return true;
+    }
+    const auto vec4Var = std::dynamic_pointer_cast<const Variable<glm::vec4>>(var);
+    if (vec4Var != NULL && glmVecTypeDimensionOf(vec4Var->get()) >= 2) {
+        glm::vec4 vec = vec4Var->get();
+        shader->setUniform2f(name, vec.x, vec.y);
+        return true;
+    }
+    return false;
+}
+
+// Helper function to try setting vec3 uniform from a glm vector variable
+// Can use vec3 or vec4 (takes first 3 components)
+template<typename T>
+static bool trySetUniformVec3(shared_ptr<T>& shader, const string& name, shared_ptr<const BaseVar> var) {
+    const auto vec3Var = std::dynamic_pointer_cast<const Variable<glm::vec3>>(var);
+    if (vec3Var != NULL && glmVecTypeDimensionOf(vec3Var->get()) >= 3) {
+        shader->setUniform3f(name, vec3Var->get());
+        return true;
+    }
+    const auto vec4Var = std::dynamic_pointer_cast<const Variable<glm::vec4>>(var);
+    if (vec4Var != NULL && glmVecTypeDimensionOf(vec4Var->get()) >= 3) {
+        glm::vec4 vec = vec4Var->get();
+        shader->setUniform3f(name, vec.x, vec.y, vec.z);
+        return true;
+    }
+    const auto colorVar = std::dynamic_pointer_cast<const Variable<ofFloatColor>>(var);
+    if (colorVar != NULL) {
+        ofFloatColor c = colorVar->get();
+        shader->setUniform3f(name, c.r, c.g, c.b);
+        return true;
+    }
+    return false;
+}
+
+// Helper function to try setting vec4 uniform from a glm vector variable
+// Can only use vec4 or ofFloatColor
+template<typename T>
+static bool trySetUniformVec4(shared_ptr<T>& shader, const string& name, shared_ptr<const BaseVar> var) {
+    const auto vec4Var = std::dynamic_pointer_cast<const Variable<glm::vec4>>(var);
+    if (vec4Var != NULL && glmVecTypeDimensionOf(vec4Var->get()) == 4) {
+        shader->setUniform4f(name, vec4Var->get());
+        return true;
+    }
+    const auto colorVar = std::dynamic_pointer_cast<const Variable<ofFloatColor>>(var);
+    if (colorVar != NULL) {
+        shader->setUniform4f(name, colorVar->get());
+        return true;
+    }
+    return false;
+}
+
 template<typename T>
 void Shader::setUniformFromIntVar(shared_ptr<T>& shader, const string& name, const Variable<int>* var, GLenum uniformType) {
     if (var == NULL) return;
@@ -357,7 +441,7 @@ void Shader::setUniformFromIntVar(shared_ptr<T>& shader, const string& name, con
 template<typename T>
 void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<BaseVar>>& vars) {
     const map<string, GLenum>& types = getUniformTypes();
-    
+
     // Built-in OpenFrameworks uniforms that are set automatically
     static const std::set<string> builtInUniforms = {
         "projectionMatrix",
@@ -399,38 +483,28 @@ void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<Bas
                     if (floatVar != NULL && floatVar->getVec().size() >= 1) {
                         shader->setUniform1i(name, (int)floatVar->getVec()[0]);
                     }
+                    else {
+                        // todo: log error
+                    }
                 }
                 break;
             }
             case GL_FLOAT_VEC2: {
-                const auto vec2Var = std::dynamic_pointer_cast<const Variable<glm::vec2>>(varIt->second);
-                if (vec2Var != NULL) {
-                    glm::vec2 vec = vec2Var->get();
-                    shader->setUniform2f(name, vec.x, vec.y);
-                }
-                else {
+                if (!trySetUniformVec2(shader, name, varIt->second)) {
                     setUniformFromFloatVar(shader, name, 
                         std::dynamic_pointer_cast<const Variable<float>>(varIt->second).get(), uniformType);
                 }
                 break;
             }
             case GL_FLOAT_VEC3: {
-                const auto vec3Var = std::dynamic_pointer_cast<const Variable<glm::vec3>>(varIt->second);
-                if (vec3Var != NULL) {
-                    shader->setUniform3f(name, vec3Var->get());
-                }
-                else {
+                if (!trySetUniformVec3(shader, name, varIt->second)) {
                     setUniformFromFloatVar(shader, name, 
                         std::dynamic_pointer_cast<const Variable<float>>(varIt->second).get(), uniformType);
                 }
                 break;
             }
             case GL_FLOAT_VEC4: {
-                const auto colorVar = std::dynamic_pointer_cast<const Variable<ofFloatColor>>(varIt->second);
-                if (colorVar != NULL) {
-                    shader->setUniform4f(name, colorVar->get());
-                }
-                else {
+                if (!trySetUniformVec4(shader, name, varIt->second)) {
                     setUniformFromFloatVar(shader, name, 
                         std::dynamic_pointer_cast<const Variable<float>>(varIt->second).get(), uniformType);
                 }
@@ -456,22 +530,11 @@ void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<Bas
                         shader->setUniform1f(name, (float)intVar->getVec()[0]);
                     }
                     else {
-                        const auto vec2Var = std::dynamic_pointer_cast<const Variable<glm::vec2>>(varIt->second);
-                        if (vec2Var != NULL) {
-                            glm::vec2 vec = vec2Var->get();
-                            shader->setUniform2f(name, vec.x, vec.y);
-                        }
-                        else {
-                            const auto vec3Var = std::dynamic_pointer_cast<const Variable<glm::vec3>>(varIt->second);
-                            if (vec3Var != NULL) {
-                                shader->setUniform3f(name, vec3Var->get());
-                            }
-                            else {
-                                const auto colorVar = std::dynamic_pointer_cast<const Variable<ofFloatColor>>(varIt->second);
-                                if (colorVar != NULL) {
-                                    shader->setUniform4f(name, colorVar->get());
-                                }
-                            }
+                        // Try glm vectors as fallback
+                        if (trySetUniformVec2(shader, name, varIt->second) ||
+                            trySetUniformVec3(shader, name, varIt->second) ||
+                            trySetUniformVec4(shader, name, varIt->second)) {
+                            // Successfully set from glm vector
                         }
                     }
                 }

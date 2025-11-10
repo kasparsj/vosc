@@ -49,7 +49,7 @@ in VertexAttrib {
 } vertex;
 
 // Uniforms
-uniform int size;              // The size of the rendering area
+uniform vec2 size;              // The size of the rendering area
 uniform samplerBuffer palette; // Buffer texture containing the color palette
 uniform int algorithm;         // 0=NONE (passthrough, no palette mapping)
                                // 1=RGB_DIFF (RGB Euclidean distance)
@@ -438,13 +438,15 @@ vec3 toLab(vec3 color) {
  *
  * @param pos Pixel position (from vertex.position.xy)
  * @param offset Animation offset (0.0-1.0)
- * @param size Size of the rendering area
+ * @param size Size of the rendering area (vec2 with width and height)
  * @param error Error dithering parameter
  * @return RGB color (normalized 0-1)
  */
-vec3 generateColorFromPosition(vec2 pos, float offset, float size, int error) {
-    // Calculate scaling factor (incorporates error dithering)
-    float k = float(size) / float(4096 + error);
+vec3 generateColorFromPosition(vec2 pos, float offset, vec2 size, int error) {
+    // Calculate scaling factors (incorporates error dithering)
+    // Use separate scaling for x and y to handle non-square rendering areas
+    float kx = size.x / float(4096 + error);
+    float ky = size.y / float(4096 + error);
 
     // Generate a unique integer color value based on:
     // - Pixel position (x, y)
@@ -454,8 +456,9 @@ vec3 generateColorFromPosition(vec2 pos, float offset, float size, int error) {
     // including black (0,0,0) so source images can map all colors to the palette
     int colorValue = int(mod(
         offset * 0xFFFFFF +
-        int((pos.x + size / 2.0) * (4096 + error) / k +
-            (pos.y + size / 2.0) / k),
+        int((pos.x + size.x / 2.0) * (4096 + error) / kx +
+            (pos.y + size.y / 2.0) / ky),
+//            (pos.y + size.y / 2.0) * (4096 + error) / ky),
         0xFFFFFF
     ));
 
@@ -501,7 +504,7 @@ void main() {
     // STEP 1: Generate source color based on pixel position
     // -------------------------------------------------------------------------
 
-    vec3 colorRGB = generateColorFromPosition(vertex.position.xy, offset, float(size), error);
+    vec3 colorRGB = generateColorFromPosition(vertex.position.xy, offset, size, error);
 
     // -------------------------------------------------------------------------
     // STEP 2: Check for passthrough mode (no palette mapping)

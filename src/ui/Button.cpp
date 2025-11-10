@@ -42,7 +42,7 @@ void Button::draw(const string& label) const {
     draw();
     ofPushStyle();
     ofSetColor(labelColor);
-    ofDrawBitmapString(label, x, y + height / 2 + 4);
+    ofDrawBitmapString(label, x + 10, y + height / 2 + 4);
     ofPopStyle();
 }
 
