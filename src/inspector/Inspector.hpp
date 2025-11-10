@@ -25,6 +25,7 @@ private:
     void debugGeoms();
     void debugGeom(int i);
     void debugGlobalTextures();
+    void debugGlobalShaders();
     void debugShaderTextures(int i);
     void debugShaderBuffers(int i);
     void debugTexture(const ofTexture& tex, const string& name = "", float x = 0, float y = 0);

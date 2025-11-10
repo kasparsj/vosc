@@ -255,12 +255,18 @@ void Shader::setUniformTextures(const map<string, shared_ptr<Texture>>& textures
             if (tex->hasTexture(delay)) {
                 for (int i=0; i<tex->getNumTextures(); i++) {
                     string name = i == 0 ? it.first : it.first + ofToString(i);
-                    shader.setUniformTexture(name, tex->getTexture(delay, i), texLoc++);
+                    const ofTexture& texture = tex->getTexture(delay, i);
+                    shader.setUniformTexture(name, texture, texLoc++);
+                    // Set texture size as vec2 uniform
+                    shader.setUniform2f(name + "Size", texture.getWidth(), texture.getHeight());
                 }
             }
         }
         for (const auto& it : bufs) {
-            shader.setUniformTexture(it.first, it.second->getTexture(), texLoc++);
+            const ofTexture& texture = it.second->getTexture();
+            shader.setUniformTexture(it.first, texture, texLoc++);
+            // Set buffer texture size as vec2 uniform
+            shader.setUniform2f(it.first + "Size", texture.getWidth(), texture.getHeight());
         }
     };
     

@@ -41,13 +41,21 @@ void ShaderInspector::draw() {
     printUniformsButton.draw("Print Shader Uniforms");
     ofTranslate(0, 30);
     
+    // Draw uniforms in second column (starting from screen middle)
+    ofPushMatrix();
+    ofTranslate(ofGetWidth() / 2, 0);
     drawShaderUniforms();
-    ofTranslate(0, 140);
+    ofPopMatrix();
     
+    // Keep textures and buffers in first column
+    ofPushMatrix();
     drawShaderTextures();
+    ofPopMatrix();
+
+    ofPushMatrix();
     ofTranslate(0, 140);
-    
     drawShaderBuffers();
+    ofPopMatrix();
     
     ofPopMatrix();
 }
@@ -122,7 +130,7 @@ void ShaderInspector::drawShaderUniforms() {
             y += 15;
             
             // Limit display to prevent overflow
-            if (y > 120) {
+            if (y > 300) {
                 ofDrawBitmapString("... (more uniforms)", 0, y);
                 break;
             }

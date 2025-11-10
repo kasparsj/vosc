@@ -104,6 +104,7 @@ void Texture::_unload() {
     frames.clear();
     frames.resize(numFrames);
     tex = NULL;
+    needsUpdate = true;
 }
 
 void Texture::unload() {

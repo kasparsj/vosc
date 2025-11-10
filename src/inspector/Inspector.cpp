@@ -1,5 +1,6 @@
 #include "Inspector.hpp"
 #include "../TexturePool.h"
+#include "../shader/ShaderPool.h"
 #include "../Buffer.hpp"
 #include "../input/Inputs.hpp"
 
@@ -52,6 +53,12 @@ void Inspector::drawDebugGlobals() {
     ofDrawBitmapString("Global Textures", 0, -20);
     ofPushStyle();
     debugGlobalTextures();
+    ofPopStyle();
+
+    ofTranslate(0, 140);
+    ofDrawBitmapString("Global Shaders", 0, -20);
+    ofPushStyle();
+    debugGlobalShaders();
     ofPopStyle();
 
     ofTranslate(0, 140);
@@ -135,6 +142,27 @@ void Inspector::debugGlobalTextures() {
     for (map<string, shared_ptr<Texture>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
         debugTexture(it->second->getTexture(), it->first, x, 0);
         x += 120;
+    }
+    ofPopMatrix();
+}
+
+void Inspector::debugGlobalShaders() {
+    ofPushMatrix();
+    map<string, shared_ptr<Shader>>& pool = ShaderPool::getPool();
+    float x = 0;
+    for (map<string, shared_ptr<Shader>>::iterator it=pool.begin(); it!=pool.end(); ++it) {
+        shared_ptr<Shader> shader = it->second;
+        string shaderPath = shader->getShaderPath();
+        string displayName = shaderPath != "" ? shaderPath : "loaded";
+        
+        // Draw clickable shader button
+        Button shaderButton(x, 0, 200, 30);
+        shaderButton.setFill(false);
+        shaderButton.setColor(ofColor(255, 255, 0));
+        shaderButton.draw("");
+        
+        ofDrawBitmapString(it->first + ": " + displayName, x + 5, 15);
+        x += 220;
     }
     ofPopMatrix();
 }
@@ -279,6 +307,24 @@ void Inspector::mousePressed(int x, int y, int button) {
                     return;
                 }
                 textureIndex++;
+            }
+            
+            // Global shaders section
+            float shaderSectionOffsetY = 140 + 140; // Shaders section offset (after textures)
+            float shaderOffsetY = baseOffsetY + shaderSectionOffsetY;
+            
+            map<string, shared_ptr<Shader>>& shaderPool = ShaderPool::getPool();
+            float shaderX = 0;
+            for (map<string, shared_ptr<Shader>>::iterator it=shaderPool.begin(); it!=shaderPool.end(); ++it) {
+                Button shaderButton(shaderX, 0, 200, 30);
+                if (shaderButton.hitTest(x - baseOffsetX, y - shaderOffsetY)) {
+                    // Open ShaderInspector with this shader
+                    showingShaderInspector = true;
+                    showingTextureInspector = false;
+                    shaderInspector.setShader(it->second.get(), it->first);
+                    return;
+                }
+                shaderX += 220;
             }
         }
         else {
