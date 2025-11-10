@@ -71,6 +71,7 @@ public:
     void setBuffer(const string& name, const ofxOscMessage& m, int arg = 1);
     void setUniform1i(const string& name, int v1);
     void setUniform2f(const string& name, float v1, float v2);
+    void setUniformTexture(const string& name, int target, GLint textureID, int loc = 0);
     void setUniformTexture(const string& name, ofTexture& tex, int loc = 0);
     void setUniformMaterial(ofMaterial& mat, const string& prefix = "mat");
     void set(const ofxOscMessage& m);

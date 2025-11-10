@@ -17,7 +17,7 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/var/colors/scheme', "colors", "tetrad", Color(1.0, 0, 1.0, 1.0), 54);
 
 ~visuals.send('/tex', "colormap", "palettemap.frag");
-~visuals.send('/tex/shader/buffer', "colormap", "colors");
+~visuals.send('/tex/shader/buffer', "colormap", "colors", "colors");
 ~visuals.send('/tex/size', "colormap", paletteMapSize.asInteger, paletteMapSize.asInteger);
 ~visuals.send('/tex/var', "colormap", "algorithm", 0);
 ~visuals.send('/tex/var', "colormap", "error", 0);
@@ -25,17 +25,19 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/tex/var', "colormap", "luminanceWeight", 0);
 ~visuals.send('/tex/set', "colormap", "static", true);
 
+~visuals.send('/shader', "arr_mirror", "array/mirror.frag");
+~visuals.send('/shader/var', "arr_mirror", "sizeMult", 2);
+
 ~visuals.send('/shader', "arr_sieve", "array/sieve.frag");
 ~visuals.send('/shader/tex', "arr_sieve", "sieve", "square_3x3");
 ~visuals.send('/shader/var', "arr_sieve", "vColor", Color(1.0, 1.0, 1.0, 1.0));
 ~visuals.send('/shader/var', "arr_sieve", "hColor", Color(0.0, 0.0, 0.0, 1.0));
-~visuals.send('/shader/var', "arr_sieve", "multiplier", 3, 3);
+~visuals.send('/shader/var', "arr_sieve", "sizeMult", 3);
 
 ~visuals.send('/tex/set', "seed", "filter", ~gl[\NEAREST]);
 ~visuals.send('/tex/size', "seed", w, h, d);
 ~visuals.send('/tex/data', "seed", ["rand(1.0)", "rand(1.0)", "rand(1.0)", 1], w * h * d);
-// ~visuals.send('/tex/passes', "seed", "array/mirror.frag", w * 2, h * 2);
-// ~visuals.send('/tex/passes', "seed", "array/sieve.frag", w * 6, h * 6);
+~visuals.send('/tex/passes', "seed", "arr_mirror", "arr_sieve");
 ~visuals.send('/tex/set', "seed", "static", true);
 
 /*~createLayer = { |i, w, h, d|

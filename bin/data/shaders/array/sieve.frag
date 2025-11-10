@@ -35,7 +35,7 @@ uniform sampler2D sieve;     // Sieve texture containing offset information
 uniform ivec2 sieveSize;      // Dimensions of the sieve texture
 uniform vec4 vColor;         // Vertical color tint
 uniform vec4 hColor;         // Horizontal/highlight color
-uniform vec2 multiplier;     // Scale multiplier for the sieve grid
+uniform vec2 sizeMult;     // Scale multiplier for the sieve grid
 
 uniform float time;          // Time uniform (currently unused)
 
@@ -114,17 +114,17 @@ void main(){
     // -------------------------------------------------------------------------
 
     // Calculate the size of each sieve cell in the grid
-    vec2 sieves = vec2(sieveSize) / multiplier;
+    vec2 sieves = vec2(sieveSize) / sizeMult;
 
     // Complex remapping calculation:
-    // 1. floor(position / multiplier / sieves) - Determine which sieve grid cell we're in
+    // 1. floor(position / sizeMult / sieves) - Determine which sieve grid cell we're in
     // 2. * sieves - Convert back to pixel coordinates (base position of the cell)
     // 3. + vec2(offset) - Add the offset from sieve texture
     // 4. + 0.5 - Center the sample for better interpolation
-    // 5. / (vec2(resolution) / multiplier) - Normalize to 0-1 texture coordinates
+    // 5. / (vec2(resolution) / sizeMult) - Normalize to 0-1 texture coordinates
     // 6. clamp() - Ensure we stay within valid texture bounds
     vec2 dataPos = clamp(
-        (floor(position / multiplier / sieves) * sieves + vec2(offset) + 0.5) / (vec2(resolution) / multiplier),
+        (floor(position / sizeMult / sieves) * sieves + vec2(offset) + 0.5) / (vec2(resolution) / sizeMult),
         0.0,
         1.0
     );

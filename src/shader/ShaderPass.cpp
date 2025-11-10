@@ -1,48 +1,21 @@
 #include "ShaderPass.h"
 #include "Shader.h"
+#include "../var/Variable.h"
 #include <GL/gl.h>
 #include "../utils.h"
 
-ShaderPass::ShaderPass() : allocated(false), outputSize(0, 0, 0), widthSet(false), heightSet(false), depthSet(false), isArrayTexture(false) {
+ShaderPass::ShaderPass(Shader* shader) 
+    : shader(shader), allocated(false), outputSize(0, 0, 0), isArrayTexture(false) {
+    // FBO will be allocated in update() when we know the actual size
+    allocated = false;
 }
 
 ShaderPass::~ShaderPass() {
     clear();
 }
 
-void ShaderPass::setup(const string& shaderPath, float width, float height, float depth) {
-    this->shaderPath = shaderPath;
-    this->widthSet = (width >= 0);
-    this->heightSet = (height >= 0);
-    this->depthSet = (depth >= 0);
-
-    // Store the specified values (or 0 if not set, will be inherited in update)
-    this->outputSize = glm::vec3(
-        widthSet ? width : 0,
-        heightSet ? height : 0,
-        depthSet ? depth : 0
-    );
-
-    // Load shader using Shader::getShaderPaths to find all shader paths
-    ShaderPaths paths = Shader::getShaderPaths(shaderPath);
-    if (!paths.isValid()) {
-        ofLogError("ShaderPass") << "Could not find shader file: " << shaderPath;
-        return;
-    }
-
-    // Load shader
-    bool loaded = shader.load(paths.vertPath, paths.fragPath, paths.geomPath);
-    if (!loaded) {
-        ofLogError("ShaderPass") << "Could not load shader: " << shaderPath;
-        return;
-    }
-
-    // FBO will be allocated in update() when we know the actual size
-    allocated = false;
-}
-
 void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
-    if (!shader.isLoaded()) {
+    if (shader == nullptr || !shader->isShaderLoaded()) {
         return;
     }
 
@@ -58,27 +31,50 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
     int inputDepth = inputTexture.getDepth();
     bool inputIsArray = (inputDepth > 1);
 
-    // Inherit dimensions from data if not set
-    float finalWidth = widthSet ? outputSize.x : currentSize.x;
-    float finalHeight = heightSet ? outputSize.y : currentSize.y;
-    float finalDepth = depthSet ? outputSize.z : (inputIsArray ? inputDepth : currentSize.z);
+    // Get sizeMult from shader vars (default to 1.0 if not set)
+    glm::vec3 sizeMult(1.0f, 1.0f, 1.0f);
+    if (shader->hasVar("sizeMult")) {
+        // Try different types for sizeMult
+        const Variable<float>* floatVar = dynamic_cast<const Variable<float>*>(shader->getVariable("sizeMult").get());
+        const Variable<int>* intVar = dynamic_cast<const Variable<int>*>(shader->getVariable("sizeMult").get());
+        const Variable<glm::vec2>* vec2Var = dynamic_cast<const Variable<glm::vec2>*>(shader->getVariable("sizeMult").get());
+        const Variable<glm::vec3>* vec3Var = dynamic_cast<const Variable<glm::vec3>*>(shader->getVariable("sizeMult").get());
+        
+        if (floatVar != nullptr) {
+            float mult = floatVar->get();
+            sizeMult = glm::vec3(mult, mult, mult);
+        }
+        else if (intVar != nullptr) {
+            int mult = intVar->get();
+            sizeMult = glm::vec3(mult, mult, mult);
+        }
+        else if (vec2Var != nullptr) {
+            glm::vec2 mult = vec2Var->get();
+            sizeMult = glm::vec3(mult.x, mult.y, 1.0f);
+        }
+        else if (vec3Var != nullptr) {
+            sizeMult = vec3Var->get();
+        }
+    }
+
+    // Calculate output size: currentSize * sizeMult
+    float finalWidth = currentSize.x * sizeMult.x;
+    float finalHeight = currentSize.y * sizeMult.y;
+    float finalDepth = inputIsArray ? (inputDepth * sizeMult.z) : (currentSize.z * sizeMult.z);
 
     // Update outputSize with final values
     outputSize = glm::vec3(finalWidth, finalHeight, finalDepth);
 
-    // Check if dimensions have changed and update TexData
-    if (widthSet || heightSet || depthSet) {
-        // Only update TexData if we're setting explicit dimensions
+    // Update TexData if dimensions changed
 #if ALLOW_TEX_2D_ARRAY
-        if (currentSize.x != outputSize.x || currentSize.y != outputSize.y || currentSize.z != outputSize.z) {
-            texData.setSize(outputSize.x, outputSize.y, outputSize.z);
-        }
-#else
-        if (currentSize.x != outputSize.x || currentSize.y != outputSize.y) {
-            texData.setSize(outputSize.x, outputSize.y);
-        }
-#endif
+    if (currentSize.x != outputSize.x || currentSize.y != outputSize.y || currentSize.z != outputSize.z) {
+        texData.setSize(outputSize.x, outputSize.y, outputSize.z);
     }
+#else
+    if (currentSize.x != outputSize.x || currentSize.y != outputSize.y) {
+        texData.setSize(outputSize.x, outputSize.y);
+    }
+#endif
 
     // Handle array textures
     if (inputIsArray && outputSize.z > 1) {
@@ -143,22 +139,14 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
             }
 
             ofClear(0, 0, 0, 0);
-            shader.begin();
+            shader->begin(texData);
 
-            // Set up standard uniforms
-            glm::vec2 size = glm::vec2(outputSize.x, outputSize.y);
-            shader.setUniform1f("time", texData.time);
-            shader.setUniform2f("resolution", size.x, size.y);
-            shader.setUniform1i("random", texData.randomSeed);
-
-            // Set input texture as uniform
-            // For array textures, the shader should use sampler2DArray and sample with layer index
-            shader.setUniformTexture("tex", GL_TEXTURE_2D_ARRAY, inputTexture.getTextureData().textureID, 0);
-            shader.setUniform1i("texIndex", layer);  // Pass layer index for shader to use
+            shader->setTexture("srctex", inputTexture);
+            shader->setUniform1i("texIndex", layer);  // Pass layer index for shader to use
 
             getQuad(inputTexture, 0, 0, outputSize.x, outputSize.y).draw();
 
-            shader.end();
+            shader->end();
             fbo.end();
         }
     }
@@ -189,20 +177,12 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
         fbo.begin();
         ofClear(0, 0, 0, 0);
 
-        shader.begin();
-
-        // Set up standard uniforms (similar to Shader::begin)
-        glm::vec2 size = glm::vec2(outputSize.x, outputSize.y);
-        shader.setUniform1f("time", texData.time);
-        shader.setUniform2f("resolution", size.x, size.y);
-        shader.setUniform1i("random", texData.randomSeed);
-
-        // Set input texture as uniform
-        shader.setUniformTexture("srctex", inputTexture, 0);
+        shader->begin(texData);
+        shader->setTexture("srctex", inputTexture);
 
         getQuad(inputTexture, 0, 0, outputSize.x, outputSize.y).draw();
 
-        shader.end();
+        shader->end();
         fbo.end();
     }
 }
@@ -226,8 +206,5 @@ void ShaderPass::clear() {
     arrayTexture.clear();
     allocated = false;
     isArrayTexture = false;
-    if (shader.isLoaded()) {
-        shader.unload();
-    }
+    shader = nullptr;
 }
-

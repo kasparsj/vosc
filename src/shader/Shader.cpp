@@ -689,6 +689,16 @@ void Shader::setUniform2f(const string& name, float v1, float v2) {
     }
 }
 
+void Shader::setUniformTexture(const string& name, int target, GLint textureID, int loc) {
+    if (shadertoy == NULL) {
+        shader->setUniformTexture(name, target, textureID, loc);
+    }
+    else {
+        ofLogWarning() << "ofxShadertoy does not support setUniformTexture(const string& name, int target, GLint textureID, int loc)";
+        //shadertoy->setUniformTexture(name, target, textureID, loc);
+    }
+}
+
 void Shader::setUniformTexture(const string& name, ofTexture& tex, int loc) {
     if (shadertoy == NULL) {
         shader->setUniformTexture(name, tex, loc);

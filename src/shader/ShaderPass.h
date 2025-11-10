@@ -1,30 +1,28 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxAutoReloadedShader.h"
 #include "../tex/TexData.h"
+
+class Shader;
 
 class ShaderPass {
 public:
-    ShaderPass();
+    ShaderPass(Shader* shader);
     ~ShaderPass();
     
-    void setup(const string& shaderPath, float width = -1, float height = -1, float depth = -1);
     void update(ofTexture& inputTexture, TexData& texData);
     ofTexture& getTexture();
     bool isAllocated() const;
     void clear();
-    const string& getShaderPath() const { return shaderPath; }
+    const Shader& getShader() const {
+        return *shader;
+    }
     
 private:
-    string shaderPath;
-    ofxAutoReloadedShader shader;
+    Shader* shader;
     ofFbo fbo;
     ofTexture arrayTexture;  // For array texture output
     glm::vec3 outputSize;
-    bool widthSet;
-    bool heightSet;
-    bool depthSet;
     bool allocated;
     bool isArrayTexture;
 };

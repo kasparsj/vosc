@@ -7,6 +7,7 @@
 #include "tex/Tex.h"
 #include "tex/ShaderTex.h"
 #include "shader/ShaderPass.h"
+#include "shader/ShaderPool.h"
 #include <algorithm>
 #include <cctype>
 
@@ -272,20 +273,19 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
         }
     }
     else if (command == "/tex/passes") {
-        // Add a shader pass: /tex/passes <shaderPath> [width] [height] [depth]
-        // Width, height, and depth are optional - if not specified, will inherit from current texture size
-        if (m.getNumArgs() < 2) {
-            ofLogError() << "Texture::oscCommand: /tex/passes requires at least 1 argument: shaderPath";
-            return;
-        }
-        string shaderPath = m.getArgAsString(1);
-        float width = m.getNumArgs() > 2 ? m.getArgAsFloat(2) : -1;
-        float height = m.getNumArgs() > 3 ? m.getArgAsFloat(3) : -1;
-        float depth = m.getNumArgs() > 4 ? m.getArgAsFloat(4) : -1;
-        
-        shared_ptr<ShaderPass> pass = make_shared<ShaderPass>();
-        pass->setup(shaderPath, width, height, depth);
+        auto idx = 1;
+        while (idx < m.getNumArgs()) {
+            string shaderName = m.getArgAsString(idx);
+            shared_ptr<Shader> shader = ShaderPool::getShared(shaderName);
+            if (shader->isLoaded() || shader->load(shaderName)) {
+        shared_ptr<ShaderPass> pass = make_shared<ShaderPass>(shader.get());
         passes.push_back(pass);
+            }
+            else {
+                ofLogError() << "Texture::oscCommand: Could not load shader: " << shaderName;
+            }
+            idx++;
+        }
     }
     else {
         data.oscCommand(command, m);

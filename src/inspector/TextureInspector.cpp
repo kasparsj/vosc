@@ -189,7 +189,7 @@ void TextureInspector::drawShaderPasses() {
     
     for (size_t i = 0; i < textureObj->passes.size(); i++) {
         int yPos = startY + 20 + (i * 20);
-        string passPath = textureObj->passes[i]->getShaderPath();
+        string passPath = textureObj->passes[i]->getShader().getShaderPath();
         // Extract just the filename from the path
         string filename = ofFilePath::getFileName(passPath);
         if (filename == "") {
