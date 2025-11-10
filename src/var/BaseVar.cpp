@@ -69,6 +69,11 @@ shared_ptr<BaseVar> BaseVar::createVar(const ofxOscMessage& m, int idx) {
                 auto json = ofJson::parse(str);
                 return createVar(m, idx, json.size());
             }
+            else if (Args::isHexColor(str)) {
+                shared_ptr<Variable<ofFloatColor>> var = make_shared<Variable<ofFloatColor>>();
+                var->set(m, idx);
+                return var;
+            }
             else {
                 shared_ptr<Variable<float>> var = make_shared<Variable<float>>();
                 var->set(m, idx);

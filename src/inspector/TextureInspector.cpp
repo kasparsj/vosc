@@ -75,6 +75,17 @@ void TextureInspector::draw() {
     // Draw shader passes in second column
     drawShaderPasses();
     
+    // Draw vars in second column after shader passes
+    if (textureObj != nullptr) {
+        int columnX = ofGetWidth() / 2;
+        int startY = 100; // Base start position
+        if (!textureObj->passes.empty()) {
+            // Add space for shader passes section
+            startY += 20 + (textureObj->passes.size() * 20) + 20; // Title + items + spacing
+        }
+        varsInspector.draw(textureObj, columnX, startY);
+    }
+    
     if (showLargeView) {
         drawLargeTexture();
     }
@@ -187,6 +198,7 @@ void TextureInspector::drawShaderPasses() {
         ofDrawBitmapString("  " + ofToString(i + 1) + ". " + filename, columnX, yPos);
     }
 }
+
 
 void TextureInspector::drawTexturePreview() {
     if (texture == nullptr) return;

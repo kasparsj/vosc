@@ -5,6 +5,7 @@
 #include "../Texture.h"
 #include "../shader/Shader.h"
 #include "TextureArrayDraw.h"
+#include "VarsInspector.h"
 
 class TextureInspector {
 public:
@@ -51,5 +52,8 @@ private:
     // Texture array support
     int currentLayerIndex = 0;
     TextureArrayDraw textureArrayDraw;
+    
+    // Vars inspector
+    VarsInspector varsInspector;
 };
 

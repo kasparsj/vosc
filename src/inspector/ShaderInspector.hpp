@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "../shader/Shader.h"
 #include "../ui/Button.h"
+#include "VarsInspector.h"
 
 class ShaderInspector {
 public:
@@ -26,7 +27,9 @@ private:
     string shaderName;
     
     // Buttons
-    Button printUniformsButton;
     Button backButton;
+    
+    // Vars inspector
+    VarsInspector varsInspector;
 };
 

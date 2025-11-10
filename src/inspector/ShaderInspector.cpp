@@ -2,10 +2,7 @@
 #include "../Texture.h"
 #include "../Buffer.hpp"
 
-ShaderInspector::ShaderInspector() : printUniformsButton(-10, -35, 190, 25),
-                                       backButton(20, 20, 100, 30) {
-    printUniformsButton.setFill(false);
-    printUniformsButton.setColor(ofColor(255));
+ShaderInspector::ShaderInspector() : backButton(20, 20, 100, 30) {
     backButton.setFill(true);
     backButton.setColor(ofColor(100, 100, 100));
 }
@@ -38,14 +35,46 @@ void ShaderInspector::draw() {
     drawShaderInfo();
     ofTranslate(0, 80);
     
-    printUniformsButton.draw("Print Shader Uniforms");
-    ofTranslate(0, 30);
-    
     // Draw uniforms in second column (starting from screen middle)
     ofPushMatrix();
     ofTranslate(ofGetWidth() / 2, 0);
     drawShaderUniforms();
     ofPopMatrix();
+    
+    // Draw vars in second column after uniforms
+    if (shader != nullptr) {
+        ofPushMatrix();
+        ofTranslate(ofGetWidth() / 2, 0);
+        
+        // Calculate start Y position: after uniforms
+        int startY = 0; // Base position (relative to uniforms section)
+        
+        // Calculate how many uniforms were displayed
+        int uniformsHeight = 20; // Title height
+        if (shader->isShaderLoaded()) {
+            const map<string, GLenum>& uniformTypes = shader->getUniformTypes();
+            int uniformCount = uniformTypes.size();
+            if (uniformCount > 0) {
+                // Uniforms are limited to 300 pixels in drawShaderUniforms
+                int displayedUniforms = uniformCount;
+                if (displayedUniforms * 15 > 300) {
+                    displayedUniforms = 20; // Max displayed before truncation
+                    uniformsHeight += 300 + 15; // Max height + "... (more uniforms)" line
+                } else {
+                    uniformsHeight += displayedUniforms * 15; // Each uniform line
+                }
+            } else {
+                uniformsHeight += 15; // "No uniforms found" line
+            }
+        } else {
+            uniformsHeight += 15; // "Shader not loaded" line
+        }
+        
+        startY = uniformsHeight + 20; // Add spacing after uniforms
+        
+        varsInspector.draw(shader, 0, startY);
+        ofPopMatrix();
+    }
     
     // Keep textures and buffers in first column
     ofPushMatrix();
@@ -145,6 +174,7 @@ void ShaderInspector::drawShaderUniforms() {
     }
 }
 
+
 void ShaderInspector::drawShaderTextures() {
     ofSetColor(255);
     ofDrawBitmapString("Shader Textures", 0, -20);
@@ -218,20 +248,7 @@ void ShaderInspector::mousePressed(int x, int y, int button) {
 }
 
 void ShaderInspector::mouseReleased(int x, int y, int button) {
-    if (shader == nullptr) {
-        return;
-    }
-    
-    float offsetX = 20;
-    float offsetY = 60 + 80 + 30; // Position of print button
-    float btnX = printUniformsButton.getX() + offsetX;
-    float btnY = printUniformsButton.getY() + offsetY;
-    
-    if (printUniformsButton.hitTest(x - offsetX, y - offsetY)) {
-        if (shader->isShaderLoaded()) {
-            shader->getShader().printActiveUniforms();
-        }
-    }
+    // Not used for now
 }
 
 void ShaderInspector::keyPressed(int key) {
