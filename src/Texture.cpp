@@ -7,6 +7,8 @@
 #include "tex/Tex.h"
 #include "tex/ShaderTex.h"
 #include "ShaderPass.h"
+#include <algorithm>
+#include <cctype>
 
 void Texture::load(string source, const vector<float>& args) {
     _unload();
@@ -17,9 +19,7 @@ void Texture::load(string source, const vector<float>& args) {
     }
     else {
         string extension = ofFile(source).getExtension();
-        for (int i=0; i<extension.size(); i++) {
-            extension[i] = tolower(extension[i]);
-        }
+        std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
         if (extension == "frag") {
             tex = BaseTex::factory("shader", source, args);
         }
@@ -132,16 +132,22 @@ void Texture::clear() {
 
 void Texture::update(const vector<TidalNote> &notes) {
     if (isStatic && !needsUpdate) return;
+    needsUpdate = false;
 
     if (isLoaded()) {
         data.update(notes);
+        // tex->update(data) updates the tex member's texture:
+        // - ShaderTex: renders shader to FBO, updating fbo.getTexture()
+        // - VideoTex: calls videoPlayer.update(), updating video frame
+        // - ImageTex: only loads if not loaded (static content)
+        // - Tex: only allocates if needed (static content)
         tex->update(data);
         
         // Apply shader passes
-        ofTexture* currentTexture = &tex->getTexture();
+        render = &tex->getTexture();
         for (auto& pass : passes) {
-            pass->update(*currentTexture, data);
-            currentTexture = &pass->getTexture();
+            pass->update(*render, data);
+            render = &pass->getTexture();
         }
         
         // if var->size() > 1
@@ -253,20 +259,15 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
     }
     else if (command.substr(0, 12) == "/tex/shader") {
         // Forward shader commands to the tex object if it's based on Shader
-        if (tex == NULL) {
-            ofLogError() << "Texture::oscCommand: tex is NULL, cannot forward shader command: " << command;
+        if (!hasShader()) {
+            ofLogError() << "Texture::oscCommand: tex is not a Shader-based texture, cannot forward shader command: " << command;
         }
         else {
             shared_ptr<Shader> shaderTex = std::dynamic_pointer_cast<Shader>(tex);
-            if (shaderTex != NULL) {
-                // Transform "/tex/shader/..." to "/shader/..."
-                string shaderCommand = "/shader" + command.substr(11);
-                shaderTex->oscCommand(shaderCommand, m);
-                return;
-            }
-            else {
-                ofLogError() << "Texture::oscCommand: tex is not a Shader-based texture, cannot forward shader command: " << command;
-            }
+            // Transform "/tex/shader/..." to "/shader/..."
+            string shaderCommand = "/shader" + command.substr(11);
+            shaderTex->oscCommand(shaderCommand, m);
+            return;
         }
     }
     else if (command == "/tex/passes") {
@@ -359,6 +360,9 @@ void Texture::reset() {
     setVar("color", ofFloatColor(1.f, 1.f));
     setVar("tint", ofFloatColor(1.f, 1.f));
     setVar("timePct", 0.f);
+    // todo: who cleans up?
+    render = NULL;
+    looper = NULL;
 }
 
 const ofFbo& Texture::getFrame(int delay) const {
@@ -382,14 +386,34 @@ bool Texture::hasTexture(int delay) const {
     return fbo.isAllocated() && fbo.getTexture().isAllocated();
 }
 
+const ofTexture& Texture::getSingleFrameTexture(int att) const {
+    if (looper == NULL) {
+        return render != NULL ? *render : tex->getTexture(att);
+    }
+    else {
+        return looper->getFbo().getTexture(att);
+    }
+}
+
+ofTexture& Texture::getSingleFrameTexture(int att) {
+    if (looper == NULL) {
+        return render != NULL ? *render : tex->getTexture(att);
+    }
+    else {
+        return looper->getFbo().getTexture(att);
+    }
+}
+
 const ofTexture& Texture::getTexture(int delay, int att) const {
     if (numFrames <= 1) {
-        if (looper == NULL) {
-            return tex->getTexture(att);
-        }
-        else {
-            return looper->getFbo().getTexture(att);
-        }
+        return getSingleFrameTexture(att);
+    }
+    return getFrame(delay).getTexture(att);
+}
+
+ofTexture& Texture::getTexture(int delay, int att) {
+    if (numFrames <= 1) {
+        return getSingleFrameTexture(att);
     }
     return getFrame(delay).getTexture(att);
 }
@@ -404,18 +428,6 @@ int Texture::getNumTextures(int delay) const {
         }
     }
     return getFrame(delay).getNumTextures();
-}
-
-ofTexture& Texture::getTexture(int delay, int att) {
-    if (numFrames <= 1) {
-        if (looper == NULL) {
-            return tex->getTexture(att);
-        }
-        else {
-            return looper->getFbo().getTexture(att);
-        }
-    }
-    return getFrame(delay).getTexture(att);
 }
 
 ofPixels& Texture::getPixels() const {
@@ -442,4 +454,9 @@ void Texture::setLooper(const ofxOscMessage& m) {
         }
     }
 
+}
+
+bool Texture::hasShader() const {
+    if (tex == NULL) return false;
+    return std::dynamic_pointer_cast<ShaderTex>(tex) != nullptr;
 }

@@ -19,6 +19,8 @@ string ImageTex::random() {
 }
 
 void ImageTex::update(TexData& data) {
+    if (isStatic && !needsUpdate) return;
+
     if (!image.isAllocated()) {
         string absPath = path;
         if (absPath.substr(0, 7) != "http://" && absPath.substr(0, 8) != "https://" && !ofFilePath::isAbsolute(absPath)) {
@@ -38,6 +40,8 @@ void ImageTex::update(TexData& data) {
         }
     }
     aspectRatio = data.aspectRatio;
+    isStatic = true;
+    needsUpdate = false;
 }
 
 void ImageTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {

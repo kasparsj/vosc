@@ -181,19 +181,29 @@ void BaseVar::updateVar(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int id
             return;
         }
     }
-    auto var1 = dynamic_cast<Variable<float>*>(var.get());
-    if (var1 != NULL) {
-        var1->set(m, idx);
+    auto varInt = dynamic_cast<Variable<int>*>(var.get());
+    if (varInt != NULL) {
+        varInt->set(m, idx);
         return;
     }
-    auto var2 = dynamic_cast<Variable<ofFloatColor>*>(var.get());
-    if (var2 != NULL) {
-        var2->set(m, idx);
+    auto varFloat = dynamic_cast<Variable<float>*>(var.get());
+    if (varFloat != NULL) {
+        varFloat->set(m, idx);
         return;
     }
-    auto var3 = dynamic_cast<Variable<glm::vec3>*>(var.get());
-    if (var3 != NULL) {
-        var3->set(m, idx);
+    auto varVec2 = dynamic_cast<Variable<glm::vec2>*>(var.get());
+    if (varVec2 != NULL) {
+        varVec2->set(m, idx);
+        return;
+    }
+    auto varVec3 = dynamic_cast<Variable<glm::vec3>*>(var.get());
+    if (varVec3 != NULL) {
+        varVec3->set(m, idx);
+        return;
+    }
+    auto varColor = dynamic_cast<Variable<ofFloatColor>*>(var.get());
+    if (varColor != NULL) {
+        varColor->set(m, idx);
         return;
     }
     ofLogError() << "VariablePool::update type not implemented: " << type << m << idx;

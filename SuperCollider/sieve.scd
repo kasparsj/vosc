@@ -10,6 +10,7 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/cam', "easy");
 
 ~visuals.send('/tex', "square_3x3", "square_3x3.png");
+~visuals.send('/tex/set', "square_3x3", "static", true);
 
 ~visuals.send('/var/colors/scheme', "colors", "tetrad", Color(1.0, 0, 1.0, 1.0).hexString, 54);
 ~visuals.send('/tex', "colormap", "palettemap.frag");

@@ -24,7 +24,7 @@ void TextureArrayDraw::draw(ofTexture& tex, int x, int y, int w, int h, int inde
     
     if (shaderLoaded) {
         texArrayShader.begin();
-        texArrayShader.setUniformTexture("tex", tex, 0);
+        texArrayShader.setUniformTexture("tex", GL_TEXTURE_2D_ARRAY, tex.getTextureData().textureID, 0);
         texArrayShader.setUniform1i("texIndex", index);
         
         // Draw a quad with the shader using getQuad

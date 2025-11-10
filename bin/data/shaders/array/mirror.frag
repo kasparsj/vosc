@@ -1,4 +1,4 @@
-#version 150
+#version 330 core
 
 uniform sampler2DArray srctex;
 uniform float time;
@@ -17,7 +17,7 @@ out vec4 fragColor;
 
 void main() {
     vec2 uv = vertex.texcoord;
-    
+
     // Determine which quadrant we're in
     // Top-left (0,0 to 0.5,0.5): original
     // Top-right (0.5,0 to 1,0.5): horizontal mirror

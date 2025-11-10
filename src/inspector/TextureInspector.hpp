@@ -28,6 +28,7 @@ private:
     void drawTexturePreview();
     void drawLargeTexture();
     void drawArrayTexture(float x, float y, float width, float height);
+    void drawShaderPasses();
     
     const ofTexture* texture = nullptr;
     Texture* textureObj = nullptr; // Full texture object to check if it's Shader-based
@@ -36,6 +37,8 @@ private:
     bool showLargeView = false;
     Button backButton;
     Button shaderButton;
+    Button isStaticButton;
+    Button needsUpdateButton;
     
     // Texture array support
     int currentLayerIndex = 0;

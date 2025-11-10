@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxAutoReloadedShader.h"
 #include "TexData.h"
 
 class ShaderPass {
@@ -13,10 +14,11 @@ public:
     ofTexture& getTexture();
     bool isAllocated() const;
     void clear();
+    const string& getShaderPath() const { return shaderPath; }
     
 private:
     string shaderPath;
-    ofShader shader;
+    ofxAutoReloadedShader shader;
     ofFbo fbo;
     ofTexture arrayTexture;  // For array texture output
     glm::vec3 outputSize;

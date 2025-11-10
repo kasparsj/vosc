@@ -3,11 +3,17 @@
 
 TextureInspector::TextureInspector() : backButton(20, 20, 100, 30),
                                        shaderButton(0, 0, 320, 30),
+                                       isStaticButton(0, 0, 160, 25),
+                                       needsUpdateButton(0, 0, 160, 25),
                                        currentLayerIndex(0) {
     backButton.setFill(true);
     backButton.setColor(ofColor(100, 100, 100));
     shaderButton.setFill(false);
     shaderButton.setColor(ofColor(255, 255, 0));
+    isStaticButton.setFill(true);
+    isStaticButton.setColor(ofColor(100, 150, 100));
+    needsUpdateButton.setFill(true);
+    needsUpdateButton.setColor(ofColor(100, 150, 100));
 }
 
 TextureInspector::~TextureInspector() {
@@ -61,10 +67,19 @@ void TextureInspector::draw() {
     ofTranslate(20, 100);
     drawTextureInfo();
 
-    ofTranslate(0, 260);
+    // Calculate offset for preview based on content
+    int previewOffset = 260; // Base offset
+    if (textureObj != nullptr && textureObj->hasShader()) {
+        previewOffset = 310; // Offset when shader button is shown
+    }
+    
+    ofTranslate(0, previewOffset);
     drawTexturePreview();
     
     ofPopMatrix();
+    
+    // Draw shader passes in second column
+    drawShaderPasses();
     
     if (showLargeView) {
         drawLargeTexture();
@@ -76,23 +91,21 @@ void TextureInspector::drawTextureInfo() {
     ofDrawBitmapString("Texture: " + textureName, 0, 0);
     
     // Check if texture is Shader-based
-    if (textureObj != nullptr && textureObj->tex != nullptr) {
+    if (textureObj != nullptr && textureObj->hasShader()) {
         shared_ptr<ShaderTex> shaderTex = std::dynamic_pointer_cast<ShaderTex>(textureObj->tex);
-        if (shaderTex != nullptr) {
-            // Draw clickable shader button
-            ofPushMatrix();
-            ofTranslate(0, 20);
-            shaderButton.draw("");
-            ofSetColor(255, 255, 0);
-            string shaderPath = shaderTex->getShaderPath();
-            if (shaderPath != "") {
-                ofDrawBitmapString("Shader: " + shaderPath + " (click to inspect)", 5, 20);
-            }
-            else {
-                ofDrawBitmapString("Shader: loaded (click to inspect)", 5, 20);
-            }
-            ofPopMatrix();
+        // Draw clickable shader button
+        ofPushMatrix();
+        ofTranslate(0, 20);
+        shaderButton.draw("");
+        ofSetColor(255, 255, 0);
+        string shaderPath = shaderTex->getShaderPath();
+        if (shaderPath != "") {
+            ofDrawBitmapString("Shader: " + shaderPath, 5, 20);
         }
+        else {
+            ofDrawBitmapString("Shader: loaded (click to inspect)", 5, 20);
+        }
+        ofPopMatrix();
     }
     
     if (texture != nullptr) {
@@ -101,11 +114,8 @@ void TextureInspector::drawTextureInfo() {
         int depth = texture->getDepth();
         
         int yOffset = 0;
-        if (textureObj != nullptr && textureObj->tex != nullptr) {
-            shared_ptr<ShaderTex> shaderTex = std::dynamic_pointer_cast<ShaderTex>(textureObj->tex);
-            if (shaderTex != nullptr) {
-                yOffset = 50; // Make room for shader button
-            }
+        if (textureObj != nullptr && textureObj->hasShader()) {
+            yOffset = 50; // Make room for shader button
         }
         
         ofDrawBitmapString("Size: " + ofToString(width) + " x " + ofToString(height), 0, 20 + yOffset);
@@ -124,6 +134,7 @@ void TextureInspector::drawTextureInfo() {
         else if (target == GL_TEXTURE_RECTANGLE) targetStr = "GL_TEXTURE_RECTANGLE";
         else if (target == GL_TEXTURE_3D) targetStr = "GL_TEXTURE_3D";
         else if (target == GL_TEXTURE_CUBE_MAP) targetStr = "GL_TEXTURE_CUBE_MAP";
+        else if (target == GL_TEXTURE_2D_ARRAY) targetStr = "GL_TEXTURE_2D_ARRAY";
         ofDrawBitmapString("Target: " + targetStr, 0, 80 + yOffset);
         
         // Wrap modes
@@ -138,11 +149,48 @@ void TextureInspector::drawTextureInfo() {
         ofDrawBitmapString("Min Filter: " + ofToString(minFilter), 0, 140 + yOffset);
         ofDrawBitmapString("Mag Filter: " + ofToString(magFilter), 0, 160 + yOffset);
         
-        // Static flag
-        if (textureObj != nullptr && textureObj->tex != nullptr) {
-            bool isStatic = textureObj->tex->isStatic;
-            ofDrawBitmapString("Static: " + string(isStatic ? "true" : "false"), 0, 180 + yOffset);
+        // Static and needsUpdate toggle buttons
+        if (textureObj != nullptr) {
+            // Draw isStatic toggle button
+            ofPushMatrix();
+            ofTranslate(0, 180 + yOffset);
+            bool isStatic = textureObj->isStatic;
+            isStaticButton.setColor(isStatic ? ofColor(100, 200, 100) : ofColor(200, 100, 100));
+            isStaticButton.draw(isStatic ? "isStatic: true" : "isStatic: false");
+            ofPopMatrix();
+            
+            // Draw needsUpdate toggle button
+            ofPushMatrix();
+            ofTranslate(0, 210 + yOffset);
+            bool needsUpdate = textureObj->needsUpdate;
+            needsUpdateButton.setColor(needsUpdate ? ofColor(100, 200, 100) : ofColor(200, 100, 100));
+            needsUpdateButton.draw(needsUpdate ? "needsUpdate: true" : "needsUpdate: false");
+            ofPopMatrix();
         }
+    }
+}
+
+void TextureInspector::drawShaderPasses() {
+    if (textureObj == nullptr || textureObj->passes.empty()) {
+        return;
+    }
+    
+    // Draw in second column starting from screen middle
+    int columnX = ofGetWidth() / 2;
+    int startY = 100; // Same vertical start as first column
+    
+    ofSetColor(255);
+    ofDrawBitmapString("Shader Passes:", columnX, startY);
+    
+    for (size_t i = 0; i < textureObj->passes.size(); i++) {
+        int yPos = startY + 20 + (i * 20);
+        string passPath = textureObj->passes[i]->getShaderPath();
+        // Extract just the filename from the path
+        string filename = ofFilePath::getFileName(passPath);
+        if (filename == "") {
+            filename = passPath; // Fallback to full path if no filename
+        }
+        ofDrawBitmapString("  " + ofToString(i + 1) + ". " + filename, columnX, yPos);
     }
 }
 
@@ -252,18 +300,50 @@ void TextureInspector::mousePressed(int x, int y, int button) {
         }
         
         // Check shader button
-        if (textureObj != nullptr && textureObj->tex != nullptr) {
+        if (textureObj != nullptr && textureObj->hasShader()) {
             shared_ptr<ShaderTex> shaderTex = std::dynamic_pointer_cast<ShaderTex>(textureObj->tex);
-            if (shaderTex != nullptr) {
-                float shaderButtonX = 20;
-                float shaderButtonY = 100 + 20; // Position of shader button
-                if (shaderButton.hitTest(x - shaderButtonX, y - shaderButtonY)) {
-                    // Open ShaderInspector
-                    if (onOpenShaderInspector) {
-                        onOpenShaderInspector(shaderTex.get(), textureName + " Shader");
-                    }
-                    return;
+            float shaderButtonX = 20;
+            float shaderButtonY = 100 + 20; // Position of shader button
+            if (shaderButton.hitTest(x - shaderButtonX, y - shaderButtonY)) {
+                // Open ShaderInspector
+                if (onOpenShaderInspector) {
+                    onOpenShaderInspector(shaderTex.get(), textureName + " Shader");
                 }
+                return;
+            }
+        }
+        
+        // Check isStatic button
+        if (textureObj != nullptr) {
+            // Calculate yOffset for button position (same as in drawTextureInfo)
+            int yOffset = 0;
+            if (textureObj->hasShader()) {
+                yOffset = 50; // Make room for shader button
+            }
+            // Button position: base translation (20, 100) + drawTextureInfo offset (0, 180 + yOffset)
+            float isStaticButtonX = 20;
+            float isStaticButtonY = 100 + 180 + yOffset;
+            if (isStaticButton.hitTest(x - isStaticButtonX, y - isStaticButtonY)) {
+                // Toggle isStatic
+                textureObj->isStatic = !textureObj->isStatic;
+                return;
+            }
+        }
+        
+        // Check needsUpdate button
+        if (textureObj != nullptr) {
+            // Calculate yOffset for needsUpdate button position (same as in drawTextureInfo)
+            int yOffset = 0;
+            if (textureObj->hasShader()) {
+                yOffset = 50; // Make room for shader button
+            }
+            // Button position: base translation (20, 100) + drawTextureInfo offset (0, 210 + yOffset)
+            float needsUpdateButtonX = 20;
+            float needsUpdateButtonY = 100 + 210 + yOffset;
+            if (needsUpdateButton.hitTest(x - needsUpdateButtonX, y - needsUpdateButtonY)) {
+                // Toggle needsUpdate
+                textureObj->needsUpdate = !textureObj->needsUpdate;
+                return;
             }
         }
         

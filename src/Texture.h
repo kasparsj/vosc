@@ -40,6 +40,7 @@ public:
     bool isLoaded() const {
         return tex != NULL;
     }
+    bool hasShader() const;
     void setLooper(const ofxOscMessage& m);
 
     shared_ptr<BaseTex> tex = NULL;
@@ -64,5 +65,10 @@ private:
     const ofFbo& getFrame(int delay = 0) const;
     ofFbo& getFrame(int delay = 0);
     
+    // Helper methods for DRY
+    const ofTexture& getSingleFrameTexture(int att) const;
+    ofTexture& getSingleFrameTexture(int att);
+    
     ofxLooper* looper = NULL;
+    ofTexture* render = NULL;
 };

@@ -30,17 +30,9 @@ void ShaderPass::setup(const string& shaderPath, float width, float height, floa
     }
     
     // Load shader
-    if (paths.geomPath != "") {
-        if (!shader.load(paths.vertPath, paths.fragPath, paths.geomPath)) {
-            ofLogError("ShaderPass") << "Could not load shader: " << shaderPath;
-            return;
-        }
-    }
-    else {
-        if (!shader.load(paths.vertPath, paths.fragPath)) {
-            ofLogError("ShaderPass") << "Could not load shader: " << shaderPath;
-            return;
-        }
+    if (!shader.load(paths.vertPath, paths.fragPath, paths.geomPath)) {
+        ofLogError("ShaderPass") << "Could not load shader: " << shaderPath;
+        return;
     }
     
     // FBO will be allocated in update() when we know the actual size
@@ -129,7 +121,7 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
         // Render each layer separately
         for (int layer = 0; layer < outputSize.z; layer++) {
             // Bind FBO and attach specific layer of output array texture
-            glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)fbo.getIdDrawBuffer());
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo.getIdDrawBuffer());
             glFramebufferTextureLayer(GL_FRAMEBUFFER,
                                       GL_COLOR_ATTACHMENT0,
                                       (GLuint)arrayTexture.getTextureData().textureID,
@@ -140,7 +132,7 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
             // glViewport(0, 0, outputSize.x, outputSize.y);
             
             // Clear and begin rendering
-            ofClear(0, 0, 0, 0);
+//            ofClear(0, 0, 0, 0);
             
             shader.begin();
             
@@ -152,11 +144,13 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
             
             // Set input texture as uniform
             // For array textures, the shader should use sampler2DArray and sample with layer index
-            shader.setUniformTexture("srctex", inputTexture, 0);
+            shader.setUniformTexture("srctex", GL_TEXTURE_2D_ARRAY, inputTexture.getTextureData().textureID, 0);
             shader.setUniform1i("texIndex", layer);  // Pass layer index for shader to use
-            
+
+            ofSetColor(255);
+
             // Draw fullscreen quad
-            // ofDrawRectangle(0, 0, outputSize.x, outputSize.y);
+            //ofDrawRectangle(0, 0, outputSize.x, outputSize.y);
 
             glm::vec3 p1(0, 0, 0);
             glm::vec3 p2(outputSize.x, 0, 0);
@@ -164,6 +158,8 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
             glm::vec3 p4(0, outputSize.y, 0);
             ofMesh quad = inputTexture.getQuad(p1, p2, p3, p4);
             quad.draw();
+
+//            inputTexture.draw(0, 0, outputSize.x, outputSize.y);
             
             shader.end();
         }

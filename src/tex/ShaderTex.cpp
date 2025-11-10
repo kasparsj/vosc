@@ -3,6 +3,8 @@
 
 void ShaderTex::update(TexData& data) {
     if (isStatic && !needsUpdate) return;
+    needsUpdate = false;
+
     FboTex::update(data);
     if (!isLoaded()) {
         if (load(path)) {
