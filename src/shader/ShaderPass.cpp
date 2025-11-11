@@ -141,7 +141,10 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
             ofClear(0, 0, 0, 0);
             shader->begin(texData);
 
-            shader->setTexture("srctex", inputTexture);
+            glm::vec2 size = glm::vec2(outputSize.x, outputSize.y);
+            shader->setUniform2f("resolution", size.x, size.y);
+
+            shader->setUniformTextureWithSize("srctex", inputTexture);
             shader->setUniform1i("texIndex", layer);  // Pass layer index for shader to use
 
             getQuad(inputTexture, 0, 0, outputSize.x, outputSize.y).draw();
@@ -177,8 +180,11 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
         fbo.begin();
         ofClear(0, 0, 0, 0);
 
+        glm::vec2 size = glm::vec2(outputSize.x, outputSize.y);
+        shader->setUniform2f("resolution", size.x, size.y);
+
         shader->begin(texData);
-        shader->setTexture("srctex", inputTexture);
+        shader->setUniformTextureWithSize("srctex", inputTexture);
 
         getQuad(inputTexture, 0, 0, outputSize.x, outputSize.y).draw();
 

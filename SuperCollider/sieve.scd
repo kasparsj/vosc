@@ -1,8 +1,5 @@
-"gl.scd".loadRelative;
-
 (
-var w = h = d = 8;
-var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
+"gl.scd".loadRelative;
 
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
@@ -15,6 +12,12 @@ var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 ~visuals.send('/tex/set', "square_3x3", "static", true);
 
 ~visuals.send('/var/colors/scheme', "colors", "tetrad", Color(1.0, 0, 1.0, 1.0), 54);
+)
+
+
+(
+var w = h = d = 8;
+var paletteMapSize = (0xffffff * 0.5).sqrt.asInteger;
 
 ~visuals.send('/tex', "colormap", "palettemap.frag");
 ~visuals.send('/tex/shader/buffer', "colormap", "colors", "colors");

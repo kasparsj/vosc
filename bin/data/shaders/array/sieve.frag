@@ -28,11 +28,12 @@ in VertexAttrib {
 } vertex;
 
 // Uniforms
-uniform ivec2 resolution;           // Dimensions of the output rendering area
-uniform sampler2D srctex;       // Source data texture to sample from
-uniform ivec2 srctexSize;        // Dimensions of the data texture (unused - reserved for future use)
+uniform vec2 resolution;           // Dimensions of the output rendering area
+uniform int texIndex;
+uniform sampler2DArray srctex;       // Source data texture to sample from
+uniform vec2 srctexSize;        // Dimensions of the data texture (unused - reserved for future use)
 uniform sampler2D sieve;     // Sieve texture containing offset information
-uniform ivec2 sieveSize;      // Dimensions of the sieve texture
+uniform vec2 sieveSize;      // Dimensions of the sieve texture
 uniform vec4 vColor;         // Vertical color tint
 uniform vec4 hColor;         // Horizontal/highlight color
 uniform vec2 sizeMult;     // Scale multiplier for the sieve grid
@@ -88,18 +89,18 @@ void main(){
     // -------------------------------------------------------------------------
 
     // Transform from centered coordinates (-resolution/2 to +resolution/2) to (0 to resolution)
-    vec2 position = vertex.position.xy + vec2(resolution) / 2.0;
+    vec2 position = vertex.position.xy + resolution / 2.0;
 
     // Optional: Animate sieve position over time (currently disabled)
-    // vec2 t = mod(vec2(position.x, position.y + int(time)), vec2(sieveSize));
-    // vec2 sievePos = t / vec2(sieveSize); // 0 to 1
+    // vec2 t = mod(vec2(position.x, position.y + int(time)), sieveSize);
+    // vec2 sievePos = t / sieveSize; // 0 to 1
 
     // -------------------------------------------------------------------------
     // STEP 2: Sample the sieve texture to get offset information
     // -------------------------------------------------------------------------
 
     // Normalize position to 0-1 range for texture sampling
-    vec2 sievePos = position / vec2(sieveSize);
+    vec2 sievePos = position / sieveSize;
     vec4 sievePix = texture(sieve, sievePos);
 
     // Extract x, y offsets from blue and green channels
@@ -114,7 +115,7 @@ void main(){
     // -------------------------------------------------------------------------
 
     // Calculate the size of each sieve cell in the grid
-    vec2 sieves = vec2(sieveSize) / sizeMult;
+    vec2 sieves = sieveSize / sizeMult;
 
     // Complex remapping calculation:
     // 1. floor(position / sizeMult / sieves) - Determine which sieve grid cell we're in
@@ -124,13 +125,13 @@ void main(){
     // 5. / (vec2(resolution) / sizeMult) - Normalize to 0-1 texture coordinates
     // 6. clamp() - Ensure we stay within valid texture bounds
     vec2 dataPos = clamp(
-        (floor(position / sizeMult / sieves) * sieves + vec2(offset) + 0.5) / (vec2(resolution) / sizeMult),
+        (floor(position / sizeMult / sieves) * sieves + vec2(offset) + 0.5) / (resolution / sizeMult),
         0.0,
         1.0
     );
 
     // Sample the data texture at the calculated position
-    vec4 dataPix = texture(srctex, dataPos);
+    vec4 dataPix = texture(srctex, vec3(dataPos, texIndex));
 
     // -------------------------------------------------------------------------
     // STEP 4: Blend colors based on sieve properties

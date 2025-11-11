@@ -205,6 +205,9 @@ void Shader::oscCommand(const string& command, const ofxOscMessage& m) {
 
 void Shader::begin(TexData& data, int delay) {
     if (isLoaded()) {
+        // Reset texture location at the start of each begin call
+        texLoc = 0;
+        
         glm::vec2 size = data.getSize();
         auto beginShader = [&data, &size](auto& sh) {
             sh.begin();
@@ -247,34 +250,34 @@ void Shader::end() {
     }
 }
 
-void Shader::setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay) {
-    int texLoc = 0;
-    auto setTextures = [&texLoc, delay](auto& shader, const map<string, shared_ptr<Texture>>& texs, const map<string, shared_ptr<Buffer>>& bufs) {
-        for (const auto& it : texs) {
-            shared_ptr<Texture> tex = it.second;
-            if (tex->hasTexture(delay)) {
-                for (int i=0; i<tex->getNumTextures(); i++) {
-                    string name = i == 0 ? it.first : it.first + ofToString(i);
-                    const ofTexture& texture = tex->getTexture(delay, i);
-                    shader.setUniformTexture(name, texture, texLoc++);
-                    // Set texture size as vec2 uniform
-                    shader.setUniform2f(name + "Size", texture.getWidth(), texture.getHeight());
-                }
-            }
-        }
-        for (const auto& it : bufs) {
-            const ofTexture& texture = it.second->getTexture();
-            shader.setUniformTexture(it.first, texture, texLoc++);
-            // Set buffer texture size as vec2 uniform
-            shader.setUniform2f(it.first + "Size", texture.getWidth(), texture.getHeight());
-        }
-    };
-    
+void Shader::setUniformTextureWithSize(const string& name, ofTexture& tex, int loc) {
+    setUniformTexture(name, tex, loc >= 0 ? loc : getNextTextureLocation());
     if (shadertoy == NULL) {
-        setTextures(*shader, textures, buffers);
+        shader->setUniform2f(name + "Size", tex.getWidth(), tex.getHeight());
     }
     else {
-        setTextures(*shadertoy, textures, buffers);
+        shadertoy->setUniform2f(name + "Size", tex.getWidth(), tex.getHeight());
+    }
+}
+
+int Shader::getNextTextureLocation() {
+    return texLoc++;
+}
+
+void Shader::setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay) {
+    for (map<string, shared_ptr<Texture>>::const_iterator it=textures.begin(); it!=textures.end(); ++it) {
+        shared_ptr<Texture> tex = it->second;
+        if (tex->hasTexture(delay)) {
+            for (int i=0; i<tex->getNumTextures(); i++) {
+                string name = i == 0 ? it->first : it->first + ofToString(i);
+                ofTexture& texture = const_cast<ofTexture&>(tex->getTexture(delay, i));
+                this->setUniformTextureWithSize(name, texture);
+            }
+        }
+    }
+    for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
+        ofTexture& texture = const_cast<ofTexture&>(it->second->getTexture());
+        this->setUniformTextureWithSize(it->first, texture);
     }
 }
 
@@ -456,6 +459,50 @@ void Shader::setUniformFromIntVar(shared_ptr<T>& shader, const string& name, con
 }
 
 template<typename T>
+void Shader::setUniformFromFloatFromInt(shared_ptr<T>& shader, const string& name, const Variable<int>* var, GLenum uniformType) {
+    if (var == NULL) return;
+    const auto& values = var->getVec();
+    
+    switch (uniformType) {
+        case GL_FLOAT_VEC2:
+            if (values.size() >= 2) {
+                shader->setUniform2f(name, (float)values[0], (float)values[1]);
+            }
+            else if (values.size() == 1) {
+                shader->setUniform2f(name, (float)values[0], (float)values[0]);
+            }
+            break;
+        case GL_FLOAT_VEC3:
+            if (values.size() >= 3) {
+                shader->setUniform3f(name, (float)values[0], (float)values[1], (float)values[2]);
+            }
+            else if (values.size() == 2) {
+                shader->setUniform3f(name, (float)values[0], (float)values[1], 0.0f);
+            }
+            else if (values.size() == 1) {
+                shader->setUniform3f(name, (float)values[0], (float)values[0], (float)values[0]);
+            }
+            break;
+        case GL_FLOAT_VEC4:
+            if (values.size() >= 4) {
+                shader->setUniform4f(name, (float)values[0], (float)values[1], (float)values[2], (float)values[3]);
+            }
+            else if (values.size() == 3) {
+                shader->setUniform4f(name, (float)values[0], (float)values[1], (float)values[2], 0.0f);
+            }
+            else if (values.size() == 2) {
+                shader->setUniform4f(name, (float)values[0], (float)values[1], 0.0f, 0.0f);
+            }
+            else if (values.size() == 1) {
+                shader->setUniform4f(name, (float)values[0], (float)values[0], (float)values[0], (float)values[0]);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+template<typename T>
 void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<BaseVar>>& vars) {
     const map<string, GLenum>& types = getUniformTypes();
 
@@ -508,22 +555,46 @@ void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<Bas
             }
             case GL_FLOAT_VEC2: {
                 if (!trySetUniformVec2(shader, name, varIt->second)) {
-                    setUniformFromFloatVar(shader, name, 
-                        std::dynamic_pointer_cast<const Variable<float>>(varIt->second).get(), uniformType);
+                    const auto floatVar = std::dynamic_pointer_cast<const Variable<float>>(varIt->second);
+                    if (floatVar != NULL) {
+                        setUniformFromFloatVar(shader, name, floatVar.get(), uniformType);
+                    }
+                    else {
+                        const auto intVar = std::dynamic_pointer_cast<const Variable<int>>(varIt->second);
+                        if (intVar != NULL) {
+                            setUniformFromFloatFromInt(shader, name, intVar.get(), uniformType);
+                        }
+                    }
                 }
                 break;
             }
             case GL_FLOAT_VEC3: {
                 if (!trySetUniformVec3(shader, name, varIt->second)) {
-                    setUniformFromFloatVar(shader, name, 
-                        std::dynamic_pointer_cast<const Variable<float>>(varIt->second).get(), uniformType);
+                    const auto floatVar = std::dynamic_pointer_cast<const Variable<float>>(varIt->second);
+                    if (floatVar != NULL) {
+                        setUniformFromFloatVar(shader, name, floatVar.get(), uniformType);
+                    }
+                    else {
+                        const auto intVar = std::dynamic_pointer_cast<const Variable<int>>(varIt->second);
+                        if (intVar != NULL) {
+                            setUniformFromFloatFromInt(shader, name, intVar.get(), uniformType);
+                        }
+                    }
                 }
                 break;
             }
             case GL_FLOAT_VEC4: {
                 if (!trySetUniformVec4(shader, name, varIt->second)) {
-                    setUniformFromFloatVar(shader, name, 
-                        std::dynamic_pointer_cast<const Variable<float>>(varIt->second).get(), uniformType);
+                    const auto floatVar = std::dynamic_pointer_cast<const Variable<float>>(varIt->second);
+                    if (floatVar != NULL) {
+                        setUniformFromFloatVar(shader, name, floatVar.get(), uniformType);
+                    }
+                    else {
+                        const auto intVar = std::dynamic_pointer_cast<const Variable<int>>(varIt->second);
+                        if (intVar != NULL) {
+                            setUniformFromFloatFromInt(shader, name, intVar.get(), uniformType);
+                        }
+                    }
                 }
                 break;
             }
@@ -689,19 +760,17 @@ void Shader::setUniform2f(const string& name, float v1, float v2) {
     }
 }
 
-void Shader::setUniformTexture(const string& name, int target, GLint textureID, int loc) {
-    if (shadertoy == NULL) {
-        shader->setUniformTexture(name, target, textureID, loc);
-    }
-    else {
-        ofLogWarning() << "ofxShadertoy does not support setUniformTexture(const string& name, int target, GLint textureID, int loc)";
-        //shadertoy->setUniformTexture(name, target, textureID, loc);
-    }
-}
-
 void Shader::setUniformTexture(const string& name, ofTexture& tex, int loc) {
+    loc = loc >= 0 ? loc : getNextTextureLocation();
     if (shadertoy == NULL) {
-        shader->setUniformTexture(name, tex, loc);
+        // Check if texture is GL_TEXTURE_2D_ARRAY
+        GLenum textureTarget = tex.getTextureData().textureTarget;
+        if (textureTarget == GL_TEXTURE_2D_ARRAY) {
+            shader->setUniformTexture(name, GL_TEXTURE_2D_ARRAY, (GLint)tex.getTextureData().textureID, loc);
+        }
+        else {
+            shader->setUniformTexture(name, tex, loc);
+        }
     }
     else {
         shadertoy->setUniformTexture(name, tex, loc);
@@ -847,6 +916,8 @@ template void Shader::setUniformFromFloatVar(shared_ptr<ofShader>& shader, const
 template void Shader::setUniformFromFloatVar(shared_ptr<ofxShadertoy>& shader, const string& name, const Variable<float>* var, GLenum uniformType);
 template void Shader::setUniformFromIntVar(shared_ptr<ofShader>& shader, const string& name, const Variable<int>* var, GLenum uniformType);
 template void Shader::setUniformFromIntVar(shared_ptr<ofxShadertoy>& shader, const string& name, const Variable<int>* var, GLenum uniformType);
+template void Shader::setUniformFromFloatFromInt(shared_ptr<ofShader>& shader, const string& name, const Variable<int>* var, GLenum uniformType);
+template void Shader::setUniformFromFloatFromInt(shared_ptr<ofxShadertoy>& shader, const string& name, const Variable<int>* var, GLenum uniformType);
 template void Shader::setUniforms(shared_ptr<ofShader>& shader, const map<string, shared_ptr<BaseVar>>& vars);
 template void Shader::setUniforms(shared_ptr<ofxShadertoy>& shader, const map<string, shared_ptr<BaseVar>>& vars);
 template void Shader::setLights(shared_ptr<ofShader>& shader);

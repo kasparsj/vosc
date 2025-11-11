@@ -32,6 +32,8 @@ void ImageTex::update(TexData& data) {
         if (image.load(absPath)) {
             prevPath = path;
             data.setSize(image.getWidth(), image.getHeight());
+            isStatic = true;
+            needsUpdate = false;
         }
         else {
             ofLogError() << ("could not load image: " + path);
@@ -40,8 +42,6 @@ void ImageTex::update(TexData& data) {
         }
     }
     aspectRatio = data.aspectRatio;
-    isStatic = true;
-    needsUpdate = false;
 }
 
 void ImageTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {

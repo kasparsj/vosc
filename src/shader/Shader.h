@@ -25,7 +25,7 @@ public:
     static map<string, ofxAutoReloadedShader> cache;
     static string random();
     
-    Shader() : VarsHolder() {
+    Shader() : VarsHolder(), texLoc(0) {
     }
     ~Shader() {
         reset();
@@ -71,8 +71,9 @@ public:
     void setBuffer(const string& name, const ofxOscMessage& m, int arg = 1);
     void setUniform1i(const string& name, int v1);
     void setUniform2f(const string& name, float v1, float v2);
-    void setUniformTexture(const string& name, int target, GLint textureID, int loc = 0);
-    void setUniformTexture(const string& name, ofTexture& tex, int loc = 0);
+    void setUniformTexture(const string& name, ofTexture& tex, int loc = -1);
+    void setUniformTextureWithSize(const string& name, ofTexture& tex, int loc = -1);
+    int getNextTextureLocation();
     void setUniformMaterial(ofMaterial& mat, const string& prefix = "mat");
     void set(const ofxOscMessage& m);
     ofShader& getShader() {
@@ -107,6 +108,8 @@ private:
     void setUniformFromFloatVar(shared_ptr<T>& shader, const string& name, const Variable<float>* var, GLenum uniformType);
     template<typename T>
     void setUniformFromIntVar(shared_ptr<T>& shader, const string& name, const Variable<int>* var, GLenum uniformType);
+    template<typename T>
+    void setUniformFromFloatFromInt(shared_ptr<T>& shader, const string& name, const Variable<int>* var, GLenum uniformType);
 
     map<string, shared_ptr<Texture>> textures;
     map<string, shared_ptr<Buffer>> buffers;
@@ -114,5 +117,6 @@ private:
     shared_ptr<ofxShadertoy> shadertoy;
     string shaderPath;
     mutable map<string, GLenum> uniformTypes;
+    int texLoc;
 };
 
