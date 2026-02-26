@@ -1,11 +1,5 @@
 #include "VOSC.hpp"
-#include "Args.h"
-#include "VariablePool.h"
-#include "TexturePool.h"
-#include "GeomPool.h"
-#include "ShaderTex.h"
-#include "Lights.h"
-#include "shader/ShaderPool.h"
+#include "Config.h"
 
 #if USE_OFX_HPVPLAYER
 #include "ofxHPVPlayer.h"
@@ -14,20 +8,25 @@
 #include "ofxUltralight.h"
 #endif
 
+VOSC::VOSC()
+    : resourceSystem()
+    , runtime()
+    , inputSystem()
+    , renderSystem()
+    , commandSystem(runtime, renderSystem, inputSystem) {}
+
 void VOSC::setup(unsigned int port) {
-    receiver.setup(port);
-    resources.activate();
-    VariablePool::setShuttingDown(false);
+    inputSystem.setup(port);
+    resourceSystem.setup();
     runtime.camera.setup();
-    setupLayers(INITIAL_LAYERS);
-    setupCommandRouter();
-    
-    windowResized(ofGetWidth(), ofGetHeight());
-    
+    renderSystem.setup(INITIAL_LAYERS);
+    commandSystem.setup();
+    renderSystem.windowResized(ofGetWidth(), ofGetHeight());
+
 #ifdef TARGET_CPU_UNIVERSAL
-    ofLog() << ("ARM64: Yes");
+    ofLog() << "ARM64: Yes";
 #else
-    ofLog() << ("ARM64: No");
+    ofLog() << "ARM64: No";
 #endif
     ofLog() << ("Vendor :" + ofToString(glGetString(GL_VENDOR)));
     ofLog() << ("GPU : " + ofToString(glGetString(GL_RENDERER)));
@@ -35,49 +34,15 @@ void VOSC::setup(unsigned int port) {
     ofLog() << ("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 }
 
-void VOSC::setupLayers(int numVisuals) {
-    layers.resize(numVisuals);
-    for (int i=0; i<layers.size(); i++) {
-        if (layers[i] == nullptr) {
-            layers[i] = make_shared<Layer>();
-        }
-        layers[i]->setup(i);
-    }
-}
-
-void VOSC::layoutLayers(Layout layout) {
-    this->layout = layout;
-    for (int i=0; i<layers.size(); i++) {
-        // todo: add support for animation
-        layers[i]->layout(layout, i, layers.size());
-    }
-}
-
-void VOSC::applyLayersPayload(const osc::LayersPayload& layersPayload) {
-    int numLayers = layersPayload.hasLayerCount ? layersPayload.layerCount : INITIAL_LAYERS;
-    setupLayers(numLayers);
-    layoutLayers(layersPayload.hasLayout ? layersPayload.layout : layout);
-}
-
-void VOSC::resetLayers(const osc::LayersPayload& layersPayload) {
-    setupLayers(0);
-    applyLayersPayload(layersPayload);
-    // todo: reset deferredShading
-}
-
 void VOSC::update() {
     runtime.camera.preUpdate();
-    parseMessages();
+    commandSystem.update();
     runtime.inputs.update();
     while (runtime.tidal->notes.size() > MAX_NOTES) {
         runtime.tidal->notes.erase(runtime.tidal->notes.begin());
     }
-    VariablePool::update(runtime.tidal->notes);
-    TexturePool::update(runtime.tidal->notes);
-    GeomPool::update();
-    for (int i = 0; i < layers.size(); i++) {
-        layers[i]->update(runtime.tidal->notes);
-    }
+    resourceSystem.update(runtime.tidal->notes);
+    renderSystem.update(runtime.tidal->notes);
     runtime.camera.update();
 #if USE_OFX_HPVPLAYER
     HPV::Update();
@@ -85,499 +50,18 @@ void VOSC::update() {
 #if USE_OFX_ULTRALIGHT
     ofxUltralight::update();
 #endif
-    if (pointLightPass != nullptr) {
-        // todo: fix
-//        pointLightPass->clear();
-//        const map<string, shared_ptr<Light>>& lights = Lights::get().all();
-//        for (map<string, shared_ptr<Light>>::const_iterator it=lights.begin(); it!=lights.end(); ++it) {
-//            //pointLightPass->addLight(it->second->getVarVec3("pos"));
-//            //pointLightPass->addLight();
-//        }
-    }
 }
 
 void VOSC::draw() {
-    beginDraw();
-    doDraw();
-    endDraw();
-    
-    if (showDebug) {
-        if (runtime.camera.isEnabled()) {
-            ofDrawBitmapString(ofToString(runtime.camera.getPosition()), 20, 20);
-        }
-        ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
-
-        inspector.inspect(layers);
-    }
-}
-
-void VOSC::beginDraw() {
-    ofPushMatrix();
-    if (runtime.camera.isEnabled()) {
-        if (deferredShading) {
-            //ofEnableArbTex();
-            
-            if (shadowLightPass != nullptr) {
-                shadowLightPass->beginShadowMap(runtime.camera.getCamera());
-                doDraw();
-                if (pointLightPass != nullptr) {
-                    pointLightPass->drawLights();
-                }
-                shadowLightPass->endShadowMap();
-            }
-            
-            deferred.begin(runtime.camera.getCamera());
-        }
-        else {
-            Lights::get().update();
-            
-            ofEnableDepthTest();
-            ofEnableLighting();
-
-            post.begin(runtime.camera.getCamera());
-        }
-        if (deferredShading/* || cull_back_enabled*/) {
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_BACK);
-        }
-    }
-    else {
-        post.begin();
-    }
-    ofClear(0, 0, 0, 0);
-}
-
-void VOSC::doDraw() {
-    if (runtime.camera.isEnabled()) {
-        ofTranslate(-ofGetWidth()/2.f, -ofGetHeight()/2);
-    }
-    int totalVisible = 0;
-    for (int i=0; i<layers.size(); i++) {
-        if (layers[i]->getVarBool("visible")) {
-            totalVisible++;
-        }
-    }
-    for (int i=0; i<layers.size(); i++) {
-        layers[i]->draw(totalVisible, &runtime.camera);
-    }
-
-}
-
-void VOSC::endDraw() {
-    if (deferredShading) {
-        if (pointLightPass != nullptr) {
-            pointLightPass->drawLights();
-        }
-        glDisable(GL_CULL_FACE);
-
-        deferred.end();
-        
-        //ofDisableArbTex();
-    }
-    else {
-        post.end();
-    }
-    ofDisableLighting();
-    ofDisableDepthTest();
-    ofPopMatrix();
-}
-
-void VOSC::parseMessages(){
-    while (receiver.hasWaitingMessages()) {
-        ofxOscMessage m;
-        receiver.getNextMessage(m);
-        parseMessage(m);
-    }
-    if (waitOnset < 1 || forceOnset || checkOnset()) {
-        processQueue();
-        forceOnset = false;
-    }
-}
-
-void VOSC::setupCommandRouter() {
-    commandRouter.clear();
-
-    commandRouter.registerHandler(osc::CommandType::INPUT, [this](const osc::Command& command) {
-        runtime.inputs.oscCommand(command.input.commandPath, command.raw);
-        if (command.input.action == osc::InputAction::DATA && waitOnset == -1) {
-            waitOnset = 1;
-        }
-    });
-
-    commandRouter.registerHandler(osc::CommandType::MIDI, [this](const osc::Command& command) {
-        handleMidi(command);
-    });
-
-    commandRouter.registerHandler(osc::CommandType::DIRT_PLAY, [this](const osc::Command& command) {
-        ofxOscMessage nonConstM = command.raw;
-        runtime.tidal->parse(nonConstM);
-        if (waitOnset == -1) {
-            waitOnset = 1;
-        }
-    });
-
-    commandRouter.registerHandler(osc::CommandType::ONSET, [this](const osc::Command& command) {
-        waitOnset = command.hasOnsetValue ? static_cast<int>(command.onsetValue) : static_cast<int>(!(bool)waitOnset);
-    });
-
-    commandRouter.registerHandler(osc::CommandType::ONSET_FORCE, [this](const osc::Command&) {
-        forceOnset = true;
-    });
-
-    commandRouter.registerHandler(osc::CommandType::LAYERS, [this](const osc::Command& command) {
-        applyLayersPayload(command.layers);
-    });
-    commandRouter.registerHandler(osc::CommandType::LAYERS_RESET, [this](const osc::Command& command) {
-        resetLayers(command.layers);
-    });
-    commandRouter.registerHandler(osc::CommandType::LAYERS_LAYOUT, [this](const osc::Command& command) {
-        layoutLayers(command.layers.hasLayout ? command.layers.layout : layout);
-    });
-
-    commandRouter.registerHandler(osc::CommandType::CAMERA, [this](const osc::Command& command) {
-        runtime.camera.oscCommand(command.camera.commandPath, command.raw);
-    });
-
-    commandRouter.registerHandler(osc::CommandType::LIGHT, [this](const osc::Command& command) {
-        Lights::get().create(command.raw);
-    });
-    commandRouter.registerHandler(osc::CommandType::LIGHT_REMOVE, [this](const osc::Command& command) {
-        Lights::get().remove(command.raw);
-    });
-
-    commandRouter.registerHandler(osc::CommandType::SHADING_MODE, [this](const osc::Command& command) {
-        deferredShading = (command.shadingMode == "deferred");
-    });
-    commandRouter.registerHandler(osc::CommandType::SHADING_PASSES, [this](const osc::Command& command) {
-        applyShadingPasses(command.shadingPasses);
-    });
-
-    commandRouter.registerHandler(osc::CommandType::TARGETED_RESOURCE, [this](const osc::Command& command) {
-        routeTargetedResource(command);
-    });
-}
-
-bool VOSC::isQueuedCommand(osc::CommandType type) const {
-    return type == osc::CommandType::SHADING_MODE
-        || type == osc::CommandType::SHADING_PASSES
-        || type == osc::CommandType::TARGETED_RESOURCE;
-}
-
-void VOSC::handleMidi(const osc::Command& command) {
-    if (command.midiAction == osc::MidiAction::LIST_PORTS) {
-        vector<string> inPorts = midiIn.getInPortList();
-        ofLog() << ("MIDI in ports:");
-        for (int i=0; i<inPorts.size(); i++) {
-            ofLog() << (ofToString(i) + ": " + inPorts[i]);
-        }
-    }
-}
-
-bool VOSC::checkOnset() {
-    bool isOnset;
-    if (runtime.tidal->notes.size()) {
-        isOnset = true;
-    }
-    else {
-        isOnset = runtime.inputs.checkOnset();
-    }
-    return isOnset;
-}
-
-void VOSC::parseMessage(const ofxOscMessage &m) {
-    auto parsed = commandParser.parse(m);
-    if (!parsed.isOk()) {
-        invalidCommand(parsed.error());
-        return;
-    }
-
-    const osc::Command& command = parsed.value();
-    if (isQueuedCommand(command.type)) {
-        messageQueue.push_back(command);
-        return;
-    }
-
-    if (!commandRouter.route(command)) {
-        invalidCommand(command.raw);
-    }
-}
-
-void VOSC::processQueue() {
-    while (!messageQueue.empty()) {
-        const osc::Command& command = messageQueue.front();
-        if (!commandRouter.route(command)) {
-            invalidCommand(command.raw);
-        }
-        messageQueue.pop_front();
-    }
-}
-
-void VOSC::invalidCommand(const ofxOscMessage& m) {
-    ofLogError() << "command not recognized: " << m;
-    for (int i=0; i<m.getNumArgs(); i++) {
-        if (m.getArgType(i) == OFXOSC_TYPE_BLOB) {
-            ofLog() << m.getArgAsBlob(i);
-        }
-    }
-}
-
-void VOSC::invalidCommand(const osc::ParseError& error) {
-    ofLogError() << "invalid command: " << error.address << " - " << error.message;
-}
-
-void VOSC::routeTargetedResource(const osc::Command& command) {
-    const ofxOscMessage& m = command.raw;
-    const string& commandPath = command.resource.commandPath;
-    const osc::TargetSelector& target = command.resource.target;
-
-    if (target.kind == osc::TargetKind::ALL) {
-        allLayersCommand(commandPath, m);
-        return;
-    }
-
-    if (target.kind == osc::TargetKind::INDEX) {
-        int idx = target.index;
-        if (idx > -1 && static_cast<size_t>(idx) < layers.size()) {
-            if (command.resource.action == osc::ResourceAction::LAYER_SOLO) {
-                for (int i=0; i<layers.size(); i++) {
-                    if (i == idx) {
-                        layers[i]->setVar("visible", true);
-                    }
-                    else {
-                        layers[i]->setVar("visible", false);
-                    }
-                }
-            }
-            else {
-                layers[idx]->oscCommand(commandPath, m);
-            }
-        }
-        else {
-            ofLog() << "layer index out of bounds: " << m;
-        }
-        return;
-    }
-
-    if (target.kind == osc::TargetKind::NAME) {
-        const string& which = target.name;
-        switch (command.resource.domain) {
-            case osc::ResourceDomain::TEX: {
-                shared_ptr<Texture> tex = TexturePool::getShared(which, true);
-                tex->oscCommand(commandPath, m);
-                const glm::vec2& size = tex->data.getSize();
-                if (size.x == 0 && size.y == 0) {
-                    tex->data.setSize(ofGetScreenWidth(), ofGetScreenHeight());
-                }
-                return;
-            }
-            case osc::ResourceDomain::VAR:
-                VariablePool::createOrUpdateShared(which, m, 1);
-                return;
-            case osc::ResourceDomain::GEOM:
-                GeomPool::getShared(which, true)->oscCommand(commandPath, m);
-                return;
-            case osc::ResourceDomain::SHADER:
-                ShaderPool::getShared(which, true)->oscCommand(commandPath, m);
-                return;
-            default:
-                break;
-        }
-    }
-
-    invalidCommand(m);
-}
-
-void VOSC::allLayersCommand(string command, const ofxOscMessage &m) {
-    for (int i=0; i<layers.size(); i++) {
-        layers[i]->oscCommand(command, m);
-    }
-}
-
-template<>
-void VOSC::createShadingPass(ofxDeferredProcessing& deferred, PostPass passId) {
-    ofEnableArbTex();
-    switch (passId) {
-        case PostPass::BG:
-            deferred.createPass<ofxDeferred::BgPass>();
-            break;
-        case PostPass::EDGE:
-            deferred.createPass<ofxDeferred::EdgePass>();
-            break;
-        case PostPass::SSAO:
-            deferred.createPass<ofxDeferred::SsaoPass>();
-            break;
-        case PostPass::SHADOWLIGHT:
-            shadowLightPass = deferred.createPass<ofxDeferred::ShadowLightPass>();
-            break;
-        case PostPass::POINTLIGHT:
-            pointLightPass = deferred.createPass<ofxDeferred::PointLightPass>();
-            pointLightPass->addLight();
-            break;
-        case PostPass::FXAA:
-            deferred.createPass<ofxDeferred::FxaaPass>();
-            break;
-        case PostPass::FOG:
-            deferred.createPass<ofxDeferred::FogPass>();
-            break;
-        case PostPass::DOF:
-            deferred.createPass<ofxDeferred::DofPass>();
-            break;
-        case PostPass::BLOOM:
-            deferred.createPass<ofxDeferred::BloomPass>();;
-            break;
-    }
-    ofDisableArbTex();
-}
-
-template<>
-void VOSC::createShadingPass(ofxDeferredProcessing& deferred, string passName) {
-    createShadingPass(deferred, PostPassMap.at(passName));
-}
-
-template<>
-void VOSC::createShadingPass(ofxDeferredProcessing& deferred, int passId) {
-    createShadingPass(deferred, static_cast<PostPass>(passId));
-}
-
-template<>
-void VOSC::createShadingPass(ofxPostProcessing& post, PostPass passId) {
-    switch (passId) {
-        case PostPass::BLOOM:
-            post.createPass<itg::BloomPass>();
-            break;
-        case PostPass::CONVOLUTION:
-            post.createPass<itg::ConvolutionPass>();
-            break;
-        case PostPass::DOF:
-            post.createPass<itg::DofPass>();
-            break;
-        case PostPass::DOFALT:
-            post.createPass<itg::DofAltPass>();
-            break;
-        case PostPass::EDGE:
-            post.createPass<itg::EdgePass>();
-            break;
-        case PostPass::FXAA:
-            post.createPass<itg::FxaaPass>();
-            break;
-        case PostPass::KALEIDOSCOPE:
-            post.createPass<itg::KaleidoscopePass>();
-            break;
-        case PostPass::NOISEWARP:
-            post.createPass<itg::NoiseWarpPass>();
-            break;
-        case PostPass::PIXELATE:
-            post.createPass<itg::PixelatePass>();
-            break;
-        case PostPass::LUT:
-            post.createPass<itg::LUTPass>();
-            break;
-        case PostPass::CONTRAST:
-            post.createPass<itg::ContrastPass>();
-            break;
-        case PostPass::SSAO:
-            post.createPass<itg::SSAOPass>();
-            break;
-        case PostPass::HTILTSHIFT:
-            post.createPass<itg::HorizontalTiltShifPass>();
-            break;
-        case PostPass::VTILTSHIFT:
-            post.createPass<itg::VerticalTiltShifPass>();
-            break;
-        case PostPass::RGBSHIFT:
-            post.createPass<itg::RGBShiftPass>();
-            break;
-        case PostPass::FAKESSS:
-            post.createPass<itg::FakeSSSPass>();
-            break;
-        case PostPass::ZOOMBLUR:
-            post.createPass<itg::ZoomBlurPass>();
-            break;
-        case PostPass::BLEACHBYPASS:
-            post.createPass<itg::BleachBypassPass>();
-            break;
-        case PostPass::TOON:
-            post.createPass<itg::ToonPass>();
-            break;
-        case PostPass::GODRAYS:
-            post.createPass<itg::GodRaysPass>();
-            break;
-        case PostPass::RIMHIGHLIGHTING:
-            post.createPass<itg::RimHighlightingPass>();
-            break;
-        case PostPass::LIMBDARKENING:
-            post.createPass<itg::LimbDarkeningPass>();
-            break;
-//        case PostPass::INVERT:
-//            post.createPass<itg::Invert>();
-//            break;
-//        case PostPass::GLITCH:
-//            post.createPass<itg::Glitch>();
-//            break;
-//        case PostPass::ROTATE:
-//            post.createPass<itg::Rotate>();
-//            break;
-//        case PostPass::PIXELSORT:
-//            post.createPass<itg::Pixelsort>();
-//            break;
-//        case PostPass::BEYOON:
-//            post.createPass<itg::Beyoon>();
-//            break;
-//        case PostPass::REFLECTX:
-//            post.createPass<itg::ReflectX>();
-//            break;
-//        case PostPass::REFLECTY:
-//            post.createPass<itg::ReflectY>();
-//            break;
-//        case PostPass::SPLIT:
-//            post.createPass<itg::Split>();
-//            break;
-    }
-}
-
-template<>
-void VOSC::createShadingPass(ofxPostProcessing& post, string passName) {
-    if (PostPassMap.find(passName) != PostPassMap.end()) {
-        createShadingPass(post, PostPassMap.at(passName));
-    }
-    else {
-        ofLogError("shading pass: " + passName + " does not exist");
-    }
-}
-
-template<>
-void VOSC::createShadingPass(ofxPostProcessing& post, int passId) {
-    createShadingPass(post, static_cast<PostPass>(passId));
-}
-
-void VOSC::applyShadingPasses(const vector<osc::ShadingPassSpec>& passes) {
-    post.getPasses().clear();
-    deferred.getPasses().clear();
-    shadowLightPass = nullptr;
-    pointLightPass = nullptr;
-
-    for (size_t i = 0; i < passes.size(); ++i) {
-        if (passes[i].byName) {
-            createShadingPass(post, passes[i].name);
-            createShadingPass(deferred, passes[i].name);
-        }
-        else {
-            createShadingPass(post, passes[i].id);
-            createShadingPass(deferred, passes[i].id);
-        }
-    }
+    renderSystem.draw(runtime.camera, showDebug);
 }
 
 void VOSC::mousePressed(int x, int y, int button) {
-    if (showDebug) {
-        inspector.mousePressed(x, y, button);
-    }
+    renderSystem.mousePressed(x, y, button, showDebug);
 }
 
 void VOSC::mouseReleased(int x, int y, int button) {
-    if (showDebug) {
-        inspector.mouseReleased(x, y, button);
-    }
+    renderSystem.mouseReleased(x, y, button, showDebug);
 }
 
 void VOSC::keyPressed(int key) {
@@ -585,75 +69,22 @@ void VOSC::keyPressed(int key) {
         case 'f':
             ofToggleFullscreen();
             break;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-        case '0': {
-            if (showDebug) {
-                inspector.keyPressed(key);
-            }
-            else {
-                // todo: not working
-                ofxOscMessage m;
-                if (key == '0') {
-                    m.addIntArg(OF_BLENDMODE_DISABLED);
-                    allLayersCommand("/blendmode", m);
-                }
-                else {
-                    m.addIntArg(static_cast<ofBlendMode>(key - '1' + 1));
-                    allLayersCommand("/blendmode", m);
-                }
-            }
-            break;
-        }
         case OF_KEY_TAB:
             showDebug = !showDebug;
             break;
-        case 'r': {
-            ofxOscMessage m;
-            allLayersCommand("/tex/reload", m);
-            break;
-        }
-        case 'u': {
-            ofxOscMessage m;
-            allLayersCommand("/layer/reset", m);
-            break;
-        }
-        case 'w': {
-            for (int i=0; i<layers.size(); i++) {
-                if (layers[i]->hasGeom()) {
-                    layers[i]->geom->drawWireframe = !layers[i]->geom->drawWireframe;
-                }
-            }
-            break;
-        }
         default:
+            renderSystem.keyPressed(key, showDebug);
             break;
     }
 }
 
 void VOSC::windowResized(int w, int h) {
-    if (w > 0 && h > 0) {
-        ofEnableArbTex();
-        deferred.init(ofGetWidth(), ofGetHeight());
-        ofDisableArbTex();
-        
-        post.init(ofGetWidth(), ofGetHeight());
-    }
-    layoutLayers(layout);
+    renderSystem.windowResized(w, h);
 }
 
 void VOSC::exit() {
-    VariablePool::setShuttingDown(true);
-    layers.clear();
-    resources.clear();
-    resources.deactivate();
+    renderSystem.shutdown();
+    resourceSystem.shutdown();
     runtime.tidal.reset();
 #if USE_OFX_HPVPLAYER
     HPV::DestroyHPVEngine();
