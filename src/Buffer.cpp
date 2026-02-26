@@ -15,12 +15,24 @@ Buffer::Buffer(string name, const ofxOscMessage& m, int arg, VarsHolder* parent)
     var = vartmp;
     buf.allocate();
     buf.bind(GL_TEXTURE_BUFFER);
+    static const float kZeroRGBA[4] = {0.f, 0.f, 0.f, 0.f};
     BufData data = var->asBufferData();
-    buf.setData(data.bytes, data.data, GL_STREAM_DRAW);
+    if (data.bytes > 0 && data.data != nullptr) {
+        buf.setData(data.bytes, data.data, GL_STREAM_DRAW);
+    }
+    else {
+        buf.setData(sizeof(kZeroRGBA), kZeroRGBA, GL_STREAM_DRAW);
+    }
     tex.allocateAsBufferTexture(buf, GL_RGBA32F);
 }
 
 void Buffer::update() {
+    static const float kZeroRGBA[4] = {0.f, 0.f, 0.f, 0.f};
     BufData data = var->asBufferData();
-    buf.updateData(data.bytes, data.data);
+    if (data.bytes > 0 && data.data != nullptr) {
+        buf.updateData(data.bytes, data.data);
+    }
+    else {
+        buf.updateData(sizeof(kZeroRGBA), kZeroRGBA);
+    }
 }

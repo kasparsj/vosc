@@ -155,7 +155,7 @@ void Texture::update(const vector<TidalNote> &notes) {
         // if var->size() > 1
         // make a loop to draw the tex into a parent
         
-        if (looper != NULL) {
+        if (looper) {
             looper->swapBuffers(/*forceSwap*/);
             if (tex->isFrameNew()){
                 looper->addFrame(tex->getPixels());
@@ -276,10 +276,10 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
         auto idx = 1;
         while (idx < m.getNumArgs()) {
             string shaderName = m.getArgAsString(idx);
-            shared_ptr<Shader> shader = ShaderPool::getShared(shaderName);
+            shared_ptr<Shader> shader = ShaderPool::getShared(shaderName, true);
             if (shader->isLoaded() || shader->load(shaderName)) {
-        shared_ptr<ShaderPass> pass = make_shared<ShaderPass>(shader.get());
-        passes.push_back(pass);
+                shared_ptr<ShaderPass> pass = make_shared<ShaderPass>(shader.get());
+                passes.push_back(pass);
             }
             else {
                 ofLogError() << "Texture::oscCommand: Could not load shader: " << shaderName;
@@ -336,7 +336,7 @@ void Texture::texDraw(const glm::vec2& pos, const glm::vec2 size) {
     // todo: there is no way to multiply tints, therefore texture tint is disabled temporarily
     //ofPushStyle();
     //ofSetColor(getVarColor("tint"));
-    if (looper == NULL) {
+    if (!looper) {
         tex->draw(pos, size);
     }
     else {
@@ -363,7 +363,7 @@ void Texture::reset() {
     setVar("timePct", 0.f);
     // todo: who cleans up?
     render = NULL;
-    looper = NULL;
+    looper.reset();
 }
 
 const ofFbo& Texture::getFrame(int delay) const {
@@ -388,7 +388,7 @@ bool Texture::hasTexture(int delay) const {
 }
 
 const ofTexture& Texture::getSingleFrameTexture(int att) const {
-    if (looper == NULL) {
+    if (!looper) {
         return render != NULL ? *render : tex->getTexture(att);
     }
     else {
@@ -397,7 +397,7 @@ const ofTexture& Texture::getSingleFrameTexture(int att) const {
 }
 
 ofTexture& Texture::getSingleFrameTexture(int att) {
-    if (looper == NULL) {
+    if (!looper) {
         return render != NULL ? *render : tex->getTexture(att);
     }
     else {
@@ -421,7 +421,7 @@ ofTexture& Texture::getTexture(int delay, int att) {
 
 int Texture::getNumTextures(int delay) const {
     if (numFrames <= 1) {
-        if (looper == NULL) {
+        if (!looper) {
             return tex->getNumTextures();
         }
         else {
@@ -436,16 +436,19 @@ ofPixels& Texture::getPixels() const {
 }
 
 void Texture::setLooper(const ofxOscMessage& m) {
+    if (m.getNumArgs() < 2) {
+        ofLogError() << "/tex/looper expects at least one parameter: " << m;
+        return;
+    }
     if (m.getArgAsFloat(1) == 0) {
-        delete looper;
-        looper = NULL;
+        looper.reset();
     }
     else {
         float maxDuration = m.getArgAsFloat(1);
         int fps = m.getNumArgs() > 2 ? m.getArgAsInt(2) : 30;
         int speed = m.getNumArgs() > 3 ? m.getArgAsInt(3) : 2.0;
-        if (looper == NULL) {
-            looper = new ofxLooper();
+        if (!looper) {
+            looper = std::unique_ptr<ofxLooper>(new ofxLooper());
             looper->setup(maxDuration, fps, speed);
         }
         else {

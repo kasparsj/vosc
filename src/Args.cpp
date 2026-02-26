@@ -478,13 +478,13 @@ vector<string> Args::parseExpr<glm::vec3>(const ofxOscMessage &m, int& idx) {
                 else
                     vec3Expr[0] = ofToString(json.at("x"));
                 if (json.at("y").is_string())
-                    vec3Expr[0] = json.at("y");
+                    vec3Expr[1] = json.at("y");
                 else
-                    vec3Expr[0] = ofToString(json.at("y"));
+                    vec3Expr[1] = ofToString(json.at("y"));
                 if (json.at("z").is_string())
-                    vec3Expr[0] = json.at("z");
+                    vec3Expr[2] = json.at("z");
                 else
-                    vec3Expr[0] = ofToString(json.at("z"));
+                    vec3Expr[2] = ofToString(json.at("z"));
             }
             else {
                 vec3Expr[0] = str;

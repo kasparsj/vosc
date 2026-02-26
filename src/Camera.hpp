@@ -3,13 +3,14 @@
 #include "ofMain.h"
 #include "VariablePool.h"
 #include "ofxOsc.h"
+#include <memory>
 
 class Camera {
 public:
     static Camera& get() {
-        if (instance == NULL) {
-            Camera* cam = new Camera();
-            cam->setup();
+        static Camera fallback;
+        if (instance == nullptr) {
+            fallback.setup();
         }
         return (*instance);
     }
@@ -17,17 +18,20 @@ public:
     void setup();
     void reset();
     void preUpdate() {
-        ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam);
-        if (easyCam != NULL) {
+        ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam.get());
+        if (easyCam != nullptr) {
             camPos->set(cam->getPosition());
             camLook->set(cam->getLookAtDir());
         }
     }
     void update();
     bool isEnabled() {
-        return cam != NULL;
+        return cam != nullptr;
     }
     glm::vec3 getPosition() {
+        if (!cam) {
+            return glm::vec3(0.f);
+        }
         return cam->getPosition();
     }
     ofCamera& getCamera() {
@@ -39,8 +43,8 @@ public:
 private:
     static Camera* instance;
     
-    ofCamera* cam;
-    float orbit;
+    std::unique_ptr<ofCamera> cam;
+    float orbit = 0.f;
     
     shared_ptr<Variable<glm::vec3>> camPos;
     shared_ptr<Variable<glm::vec3>> camLook;

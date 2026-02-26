@@ -249,25 +249,29 @@ void Variable<float>::afterDraw() {
 
 template<typename T>
 BufData Variable<T>::asBufferData() {
-    GLsizeiptr size = values.size()*sizeof(T);
-    return {size, &values[0]};
+    GLsizeiptr size = values.size() * sizeof(T);
+    const void* ptr = values.empty() ? nullptr : static_cast<const void*>(values.data());
+    return {size, ptr};
 }
 
 template<>
 BufData Variable<ofxExprNode>::asBufferData() {
-    GLsizeiptr size = values.size()*sizeof(glm::mat4);
+    GLsizeiptr size = values.size() * sizeof(glm::mat4);
     matrices.resize(values.size());
     for (int i=0; i<values.size(); i++) {
         matrices[i] = values[i].getLocalTransformMatrix();
     }
-    return {size, &matrices[0]};
+    const void* ptr = matrices.empty() ? nullptr : static_cast<const void*>(matrices.data());
+    return {size, ptr};
 }
 
 template<typename T>
 ofBufferObject Variable<T>::asBufferObject() {
     ofBufferObject buf;
     BufData bufData = asBufferData();
-    buf.allocate(bufData.bytes, bufData.data, GL_STREAM_DRAW);
+    if (bufData.bytes > 0 && bufData.data != nullptr) {
+        buf.allocate(bufData.bytes, bufData.data, GL_STREAM_DRAW);
+    }
     return buf;
 }
 

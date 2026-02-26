@@ -3,8 +3,32 @@
 
 Lights Lights::instance;
 
+namespace {
+bool tryGetLightName(const ofxOscMessage& m, string& name) {
+    if (m.getNumArgs() < 1) {
+        ofLogError() << "light command missing target argument: " << m;
+        return false;
+    }
+    const auto type = m.getArgType(0);
+    if (type == OFXOSC_TYPE_STRING) {
+        name = m.getArgAsString(0);
+        return true;
+    }
+    if (type == OFXOSC_TYPE_INT32 || type == OFXOSC_TYPE_INT64) {
+        name = ofToString(m.getArgAsInt(0));
+        return true;
+    }
+    ofLogError() << "light command target must be string or int: " << m;
+    return false;
+}
+}  // namespace
+
 shared_ptr<Light>& Lights::create(const ofxOscMessage& m) {
-    string name = m.getArgType(0) == OFXOSC_TYPE_STRING ? m.getArgAsString(0) : ofToString(m.getArgAsInt(0));
+    string name;
+    if (!tryGetLightName(m, name)) {
+        static shared_ptr<Light> nullLight = make_shared<Light>();
+        return nullLight;
+    }
     lights[name] = make_shared<Light>();
     shared_ptr<Light>& light = lights.at(name);
     light->set(m, 1);
@@ -12,7 +36,10 @@ shared_ptr<Light>& Lights::create(const ofxOscMessage& m) {
 }
 
 void Lights::remove(const ofxOscMessage& m) {
-    string name = m.getArgType(0) == OFXOSC_TYPE_STRING ? m.getArgAsString(0) : ofToString(m.getArgAsInt(0));
+    string name;
+    if (!tryGetLightName(m, name)) {
+        return;
+    }
     lights.erase(name);
 }
 

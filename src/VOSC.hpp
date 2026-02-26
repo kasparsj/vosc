@@ -9,6 +9,8 @@
 #include "ofxMidi.h"
 #include "inspector/Inspector.hpp"
 #include "ofxDeferredShading.h"
+#include <deque>
+#include <memory>
 
 class VOSC {
 public:
@@ -52,12 +54,12 @@ private:
     void createShadingPass(T& processor, PostPass passId);
     
     ofxOscReceiver receiver;
-    vector<ofxOscMessage> messageQueue;
+    std::deque<ofxOscMessage> messageQueue;
     
     Camera camera;
     vector<shared_ptr<Layer>> layers = {};
     Layout layout = Layout::STACK;
-    ofxTidalCycles* tidal;
+    std::unique_ptr<ofxTidalCycles> tidal;
     ofxMidiIn midiIn;
     Inspector inspector;
     
@@ -68,6 +70,6 @@ private:
     ofxDeferred::ShadowLightPass::Ptr shadowLightPass;
     
     int waitOnset = -1;
-    bool forceOnset;
+    bool forceOnset = false;
 
 };

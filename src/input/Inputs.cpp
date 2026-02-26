@@ -2,12 +2,35 @@
 
 Inputs Inputs::instance;
 
+namespace {
+bool tryGetInputName(const ofxOscMessage& m, string& name) {
+    if (m.getNumArgs() < 1) {
+        ofLogError() << "input command missing target argument: " << m;
+        return false;
+    }
+    const auto type = m.getArgType(0);
+    if (type == OFXOSC_TYPE_STRING) {
+        name = m.getArgAsString(0);
+        return true;
+    }
+    if (type == OFXOSC_TYPE_INT32 || type == OFXOSC_TYPE_INT64) {
+        name = ofToString(m.getArgAsInt(0));
+        return true;
+    }
+    ofLogError() << "input command target must be string or int: " << m;
+    return false;
+}
+}  // namespace
+
 void Inputs::oscCommand(string command, const ofxOscMessage &m) {
     if (command == "/input/list") {
         Inputs::get().log();
     }
     else {
-        string name = m.getArgType(0) == OFXOSC_TYPE_STRING ? m.getArgAsString(0) : ofToString(m.getArgAsInt(0));
+        string name;
+        if (!tryGetInputName(m, name)) {
+            return;
+        }
         if (name == "*") {
             for (map<string, shared_ptr<OSCInput>>::iterator it=inputs.begin(); it!=inputs.end(); ++it) {
                 it->second->oscCommand(command, m);
@@ -24,7 +47,10 @@ void Inputs::oscCommand(string command, const ofxOscMessage &m) {
 }
 
 void Inputs::remove(const ofxOscMessage& m) {
-    string name = m.getArgType(0) == OFXOSC_TYPE_STRING ? m.getArgAsString(0) : ofToString(m.getArgAsInt(0));
+    string name;
+    if (!tryGetInputName(m, name)) {
+        return;
+    }
     inputs.erase(name);
 }
 

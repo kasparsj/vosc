@@ -5,6 +5,7 @@
 #include "ofFbo.h"
 #include "ofxLooper.h"
 #include "shader/ShaderPass.h"
+#include <memory>
 
 class Texture : public VarsHolder {
 public:
@@ -69,6 +70,6 @@ private:
     const ofTexture& getSingleFrameTexture(int att) const;
     ofTexture& getSingleFrameTexture(int att);
     
-    ofxLooper* looper = NULL;
+    std::unique_ptr<ofxLooper> looper;
     ofTexture* render = NULL;
 };

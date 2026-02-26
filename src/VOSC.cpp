@@ -19,7 +19,7 @@ void VOSC::setup(unsigned int port) {
     receiver.setup(port);
     camera.setup();
     setupLayers(INITIAL_LAYERS);
-    tidal = new ofxTidalCycles(1);
+    tidal = std::unique_ptr<ofxTidalCycles>(new ofxTidalCycles(1));
     
     windowResized(ofGetWidth(), ofGetHeight());
     
@@ -240,13 +240,18 @@ void VOSC::parseMessage(const ofxOscMessage &m) {
 }
 
 void VOSC::processQueue() {
-    while (messageQueue.size()) {
-        const ofxOscMessage &m = messageQueue[0];
+    while (!messageQueue.empty()) {
+        const ofxOscMessage &m = messageQueue.front();
         string command = m.getAddress();
         if (command.substr(0, 8) == "/shading") {
             shadingCommand(command, m);
         }
         else {
+            if (m.getNumArgs() < 1) {
+                invalidCommand(m);
+                messageQueue.pop_front();
+                continue;
+            }
             if (m.getArgType(0) == OFXOSC_TYPE_STRING) {
                 string which = m.getArgAsString(0);
                 bool all = which == "*" || which == "x" || which == "a";
@@ -299,7 +304,7 @@ void VOSC::processQueue() {
                 invalidCommand(m);
             }
         }
-        messageQueue.erase(messageQueue.begin());
+        messageQueue.pop_front();
     }
 }
 
@@ -312,10 +317,13 @@ void VOSC::invalidCommand(const ofxOscMessage& m) {
     }
 }
 
-Layout parseLayout(const ofxOscMessage &m, int idx)
-{
-    Layout layout;
-    if (m.getArgType(idx) == 's') {
+Layout parseLayout(const ofxOscMessage &m, int idx) {
+    if (idx < 0 || idx >= m.getNumArgs()) {
+        return Layout::STACK;
+    }
+
+    Layout layout = Layout::STACK;
+    if (m.getArgType(idx) == OFXOSC_TYPE_STRING) {
         auto it = LayoutMap.find(m.getArgAsString(idx));
         if (it != LayoutMap.end()) {
             layout = it->second;
@@ -347,7 +355,12 @@ void VOSC::layersCommand(string command, const ofxOscMessage& m) {
 //        else {
 //            layers = this->layers;
 //        }
-        layoutLayers(parseLayout(m, 0));
+        if (m.getNumArgs() > 0) {
+            layoutLayers(parseLayout(m, 0));
+        }
+        else {
+            invalidCommand(m);
+        }
     }
 }
 
@@ -560,6 +573,10 @@ void VOSC::createShadingPass(ofxPostProcessing& post, int passId) {
 
 void VOSC::shadingCommand(const string& command, const ofxOscMessage& m) {
     if (command == "/shading") {
+        if (m.getNumArgs() < 1) {
+            invalidCommand(m);
+            return;
+        }
         deferredShading = (m.getArgAsString(0) == "deferred");
     }
     else if (command == "/shading/passes") {
@@ -668,6 +685,7 @@ void VOSC::windowResized(int w, int h) {
 
 void VOSC::exit() {
     VariablePool::setShuttingDown(true);
+    tidal.reset();
 #if USE_OFX_HPVPLAYER
     HPV::DestroyHPVEngine();
 #endif
