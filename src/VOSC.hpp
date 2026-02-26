@@ -9,6 +9,8 @@
 #include "ofxMidi.h"
 #include "inspector/Inspector.hpp"
 #include "ofxDeferredShading.h"
+#include "osc/CommandParser.hpp"
+#include "osc/CommandRouter.hpp"
 #include <deque>
 #include <memory>
 
@@ -29,7 +31,9 @@ public:
 private:
     void setupLayers(int numLayers);
     void layoutLayers(Layout layout);
-    void resetLayers(const ofxOscMessage& m);
+    void applyLayersPayload(const osc::LayersPayload& layersPayload);
+    void resetLayers(const osc::LayersPayload& layersPayload);
+    void applyShadingPasses(const vector<osc::ShadingPassSpec>& passes);
     
     void beginDraw();
     void doDraw();
@@ -40,12 +44,13 @@ private:
     void parseMessage(const ofxOscMessage& m);
     void processQueue();
     void invalidCommand(const ofxOscMessage& m);
+    void invalidCommand(const osc::ParseError& error);
+    bool isQueuedCommand(osc::CommandType type) const;
+    void setupCommandRouter();
+    void routeTargetedResource(const osc::Command& command);
+    void handleMidi(const osc::Command& command);
 
-    void shadingCommand(const string& command, const ofxOscMessage& m);
     void allLayersCommand(string command, const ofxOscMessage& m);
-    void layersCommand(string command, const ofxOscMessage& m);
-    void lightCommand(string command, const ofxOscMessage& m);
-    void midiCommand(string command, const ofxOscMessage& m);
     template<typename T>
     void createShadingPass(T& processor, string passName);
     template<typename T>
@@ -54,7 +59,9 @@ private:
     void createShadingPass(T& processor, PostPass passId);
     
     ofxOscReceiver receiver;
-    std::deque<ofxOscMessage> messageQueue;
+    std::deque<osc::Command> messageQueue;
+    osc::CommandParser commandParser;
+    osc::CommandRouter commandRouter;
     
     Camera camera;
     vector<shared_ptr<Layer>> layers = {};

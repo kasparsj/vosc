@@ -19,6 +19,7 @@ void VOSC::setup(unsigned int port) {
     receiver.setup(port);
     camera.setup();
     setupLayers(INITIAL_LAYERS);
+    setupCommandRouter();
     tidal = std::unique_ptr<ofxTidalCycles>(new ofxTidalCycles(1));
     
     windowResized(ofGetWidth(), ofGetHeight());
@@ -52,10 +53,15 @@ void VOSC::layoutLayers(Layout layout) {
     }
 }
 
-void VOSC::resetLayers(const ofxOscMessage& m) {
+void VOSC::applyLayersPayload(const osc::LayersPayload& layersPayload) {
+    int numLayers = layersPayload.hasLayerCount ? layersPayload.layerCount : INITIAL_LAYERS;
+    setupLayers(numLayers);
+    layoutLayers(layersPayload.hasLayout ? layersPayload.layout : layout);
+}
+
+void VOSC::resetLayers(const osc::LayersPayload& layersPayload) {
     setupLayers(0);
-    layersCommand("/layers", m);
-    // todo: reset layout?
+    applyLayersPayload(layersPayload);
     // todo: reset deferredShading
 }
 
@@ -188,6 +194,85 @@ void VOSC::parseMessages(){
     }
 }
 
+void VOSC::setupCommandRouter() {
+    commandRouter.clear();
+
+    commandRouter.registerHandler(osc::CommandType::INPUT, [this](const osc::Command& command) {
+        Inputs::get().oscCommand(command.input.commandPath, command.raw);
+        if (command.input.action == osc::InputAction::DATA && waitOnset == -1) {
+            waitOnset = 1;
+        }
+    });
+
+    commandRouter.registerHandler(osc::CommandType::MIDI, [this](const osc::Command& command) {
+        handleMidi(command);
+    });
+
+    commandRouter.registerHandler(osc::CommandType::DIRT_PLAY, [this](const osc::Command& command) {
+        ofxOscMessage nonConstM = command.raw;
+        tidal->parse(nonConstM);
+        if (waitOnset == -1) {
+            waitOnset = 1;
+        }
+    });
+
+    commandRouter.registerHandler(osc::CommandType::ONSET, [this](const osc::Command& command) {
+        waitOnset = command.hasOnsetValue ? static_cast<int>(command.onsetValue) : static_cast<int>(!(bool)waitOnset);
+    });
+
+    commandRouter.registerHandler(osc::CommandType::ONSET_FORCE, [this](const osc::Command&) {
+        forceOnset = true;
+    });
+
+    commandRouter.registerHandler(osc::CommandType::LAYERS, [this](const osc::Command& command) {
+        applyLayersPayload(command.layers);
+    });
+    commandRouter.registerHandler(osc::CommandType::LAYERS_RESET, [this](const osc::Command& command) {
+        resetLayers(command.layers);
+    });
+    commandRouter.registerHandler(osc::CommandType::LAYERS_LAYOUT, [this](const osc::Command& command) {
+        layoutLayers(command.layers.hasLayout ? command.layers.layout : layout);
+    });
+
+    commandRouter.registerHandler(osc::CommandType::CAMERA, [this](const osc::Command& command) {
+        camera.oscCommand(command.camera.commandPath, command.raw);
+    });
+
+    commandRouter.registerHandler(osc::CommandType::LIGHT, [this](const osc::Command& command) {
+        Lights::get().create(command.raw);
+    });
+    commandRouter.registerHandler(osc::CommandType::LIGHT_REMOVE, [this](const osc::Command& command) {
+        Lights::get().remove(command.raw);
+    });
+
+    commandRouter.registerHandler(osc::CommandType::SHADING_MODE, [this](const osc::Command& command) {
+        deferredShading = (command.shadingMode == "deferred");
+    });
+    commandRouter.registerHandler(osc::CommandType::SHADING_PASSES, [this](const osc::Command& command) {
+        applyShadingPasses(command.shadingPasses);
+    });
+
+    commandRouter.registerHandler(osc::CommandType::TARGETED_RESOURCE, [this](const osc::Command& command) {
+        routeTargetedResource(command);
+    });
+}
+
+bool VOSC::isQueuedCommand(osc::CommandType type) const {
+    return type == osc::CommandType::SHADING_MODE
+        || type == osc::CommandType::SHADING_PASSES
+        || type == osc::CommandType::TARGETED_RESOURCE;
+}
+
+void VOSC::handleMidi(const osc::Command& command) {
+    if (command.midiAction == osc::MidiAction::LIST_PORTS) {
+        vector<string> inPorts = midiIn.getInPortList();
+        ofLog() << ("MIDI in ports:");
+        for (int i=0; i<inPorts.size(); i++) {
+            ofLog() << (ofToString(i) + ": " + inPorts[i]);
+        }
+    }
+}
+
 bool VOSC::checkOnset() {
     bool isOnset;
     if (tidal->notes.size()) {
@@ -200,109 +285,28 @@ bool VOSC::checkOnset() {
 }
 
 void VOSC::parseMessage(const ofxOscMessage &m) {
-    string command = m.getAddress();
-    if (command.substr(0, 6) == "/input") {
-        Inputs::get().oscCommand(command, m);
-        if (command == "/input/data") {
-            if (waitOnset == -1) {
-                waitOnset = 1;
-            }
-        }
+    auto parsed = commandParser.parse(m);
+    if (!parsed.isOk()) {
+        invalidCommand(parsed.error());
+        return;
     }
-    else if (command.substr(0, 5) == "/midi") {
-        midiCommand(command, m);
+
+    const osc::Command& command = parsed.value();
+    if (isQueuedCommand(command.type)) {
+        messageQueue.push_back(command);
+        return;
     }
-    else if (command == "/dirt/play") {
-        ofxOscMessage nonConstM = m;
-        tidal->parse(nonConstM);
-        if (waitOnset == -1) {
-            waitOnset = 1;
-        }
-    }
-    else if (command == "/onset") {
-        waitOnset = m.getNumArgs() > 0 ? m.getArgAsBool(0) : (int) !(bool)waitOnset;
-    }
-    else if (command == "/onset/force") {
-        forceOnset = true;
-    }
-    else if (command.substr(0, 7) == "/layers") {
-        layersCommand(command, m);
-    }
-    else if (command.substr(0, 4) == "/cam") {
-        camera.oscCommand(command, m);
-    }
-    else if (command.substr(0, 6) == "/light") {
-        lightCommand(command, m);
-    }
-    else {
-        messageQueue.push_back(m);
+
+    if (!commandRouter.route(command)) {
+        invalidCommand(command.raw);
     }
 }
 
 void VOSC::processQueue() {
     while (!messageQueue.empty()) {
-        const ofxOscMessage &m = messageQueue.front();
-        string command = m.getAddress();
-        if (command.substr(0, 8) == "/shading") {
-            shadingCommand(command, m);
-        }
-        else {
-            if (m.getNumArgs() < 1) {
-                invalidCommand(m);
-                messageQueue.pop_front();
-                continue;
-            }
-            if (m.getArgType(0) == OFXOSC_TYPE_STRING) {
-                string which = m.getArgAsString(0);
-                bool all = which == "*" || which == "x" || which == "a";
-                if (all) {
-                    allLayersCommand(command, m);
-                }
-                else if (command.substr(0, 4) == "/tex") {
-                    shared_ptr<Texture>& tex = TexturePool::getShared(which, true);
-                    tex->oscCommand(command, m);
-                    const glm::vec2& size = tex->data.getSize();
-                    if (size.x == 0 && size.y == 0) {
-                        tex->data.setSize(ofGetScreenWidth(), ofGetScreenHeight());
-                    }
-                }
-                else if (command.substr(0, 4) == "/var") {
-                    VariablePool::createOrUpdateShared(which, m, 1);
-                }
-                else if (command.substr(0, 5) == "/geom") {
-                    GeomPool::getShared(which, true)->oscCommand(command, m);
-                }
-                else if (command.substr(0, 7) == "/shader") {
-                    ShaderPool::getShared(which, true)->oscCommand(command, m);
-                }
-                else {
-                    invalidCommand(m);
-                }
-            }
-            else if (m.getArgType(0) == OFXOSC_TYPE_INT32) {
-                int idx = m.getArgAsInt(0);
-                if (idx > -1 && layers.size() > idx) {
-                    if (command == "/layer/solo") {
-                        for (int i=0; i<layers.size(); i++) {
-                            if (i == idx) {
-                                layers[i]->setVar("visible", true);
-                            }
-                            else {
-                                layers[i]->setVar("visible", false);
-                            }
-                        }
-                    }
-                    else {
-                        layers[idx]->oscCommand(command, m);
-                    }
-                }
-                else {
-                    ofLog() << "layer index out of bounds: " << m;
-                }
-            }
-            else {
-                invalidCommand(m);
-            }
+        const osc::Command& command = messageQueue.front();
+        if (!commandRouter.route(command)) {
+            invalidCommand(command.raw);
         }
         messageQueue.pop_front();
     }
@@ -317,100 +321,75 @@ void VOSC::invalidCommand(const ofxOscMessage& m) {
     }
 }
 
-Layout parseLayout(const ofxOscMessage &m, int idx) {
-    if (idx < 0 || idx >= m.getNumArgs()) {
-        return Layout::STACK;
-    }
-
-    Layout layout = Layout::STACK;
-    if (m.getArgType(idx) == OFXOSC_TYPE_STRING) {
-        auto it = LayoutMap.find(m.getArgAsString(idx));
-        if (it != LayoutMap.end()) {
-            layout = it->second;
-        }
-    }
-    else {
-        layout = static_cast<Layout>(m.getArgAsInt(idx));
-    }
-    return layout;
+void VOSC::invalidCommand(const osc::ParseError& error) {
+    ofLogError() << "invalid command: " << error.address << " - " << error.message;
 }
 
-void VOSC::layersCommand(string command, const ofxOscMessage& m) {
-    if (command == "/layers") {
-        auto numLayers = m.getNumArgs() > 0 ? m.getArgAsInt(0) : INITIAL_LAYERS;
-        setupLayers(numLayers);
-        layoutLayers(m.getNumArgs() > 1 ? parseLayout(m, 1) : layout);
+void VOSC::routeTargetedResource(const osc::Command& command) {
+    const ofxOscMessage& m = command.raw;
+    const string& commandPath = command.resource.commandPath;
+    const osc::TargetSelector& target = command.resource.target;
+
+    if (target.kind == osc::TargetKind::ALL) {
+        allLayersCommand(commandPath, m);
+        return;
     }
-    else if (command == "/layers/reset") {
-        resetLayers(m);
-    }
-    else if (command == "/layers/layout") {
-//        vector<shared_ptr<Layer>> layers;
-//        if (m.getNumArgs() > 1) {
-//            layers.resize(m.getNumArgs()-1);
-//            for (int i=0; i<m.getNumArgs()-1; i++) {
-//                layers[i] = this->layers[m.getArgAsInt(1+i)];
-//            }
-//        }
-//        else {
-//            layers = this->layers;
-//        }
-        if (m.getNumArgs() > 0) {
-            layoutLayers(parseLayout(m, 0));
+
+    if (target.kind == osc::TargetKind::INDEX) {
+        int idx = target.index;
+        if (idx > -1 && static_cast<size_t>(idx) < layers.size()) {
+            if (command.resource.action == osc::ResourceAction::LAYER_SOLO) {
+                for (int i=0; i<layers.size(); i++) {
+                    if (i == idx) {
+                        layers[i]->setVar("visible", true);
+                    }
+                    else {
+                        layers[i]->setVar("visible", false);
+                    }
+                }
+            }
+            else {
+                layers[idx]->oscCommand(commandPath, m);
+            }
         }
         else {
-            invalidCommand(m);
+            ofLog() << "layer index out of bounds: " << m;
+        }
+        return;
+    }
+
+    if (target.kind == osc::TargetKind::NAME) {
+        const string& which = target.name;
+        switch (command.resource.domain) {
+            case osc::ResourceDomain::TEX: {
+                shared_ptr<Texture>& tex = TexturePool::getShared(which, true);
+                tex->oscCommand(commandPath, m);
+                const glm::vec2& size = tex->data.getSize();
+                if (size.x == 0 && size.y == 0) {
+                    tex->data.setSize(ofGetScreenWidth(), ofGetScreenHeight());
+                }
+                return;
+            }
+            case osc::ResourceDomain::VAR:
+                VariablePool::createOrUpdateShared(which, m, 1);
+                return;
+            case osc::ResourceDomain::GEOM:
+                GeomPool::getShared(which, true)->oscCommand(commandPath, m);
+                return;
+            case osc::ResourceDomain::SHADER:
+                ShaderPool::getShared(which, true)->oscCommand(commandPath, m);
+                return;
+            default:
+                break;
         }
     }
-}
 
-void VOSC::lightCommand(string command, const ofxOscMessage& m) {
-    if (command == "/light") {
-        Lights::get().create(m);
-    }
-    else if (command == "/light/remove") {
-        Lights::get().remove(m);
-    }
+    invalidCommand(m);
 }
 
 void VOSC::allLayersCommand(string command, const ofxOscMessage &m) {
     for (int i=0; i<layers.size(); i++) {
         layers[i]->oscCommand(command, m);
-    }
-}
-
-struct retVals { bool all; int idx; };
-retVals parseIndex(const ofxOscMessage &m) {
-    bool all = false;
-    int idx = -1;
-    if (m.getArgType(0) == OFXOSC_TYPE_STRING) {
-        string which = m.getArgAsString(0);
-        all = which == "*" || which == "x" || which == "a";
-        if (!all) {
-            try {
-                idx = std::stoi(which);
-            }
-            catch (...) {
-                ofLogError() << ("invalid layer index " + which);
-            }
-        }
-    }
-    else {
-        idx = m.getArgAsInt(0);
-    }
-    return retVals { all, idx };
-}
-
-void VOSC::midiCommand(string command, const ofxOscMessage &m) {
-    if (command == "/midi") {
-        
-    }
-    else if (command == "/midi/list") {
-        vector<string> inPorts = midiIn.getInPortList();
-        ofLog() << ("MIDI in ports:");
-        for (int i=0; i<inPorts.size(); i++) {
-            ofLog() << (ofToString(i) + ": " + inPorts[i]);
-        }
     }
 }
 
@@ -571,34 +550,21 @@ void VOSC::createShadingPass(ofxPostProcessing& post, int passId) {
     createShadingPass(post, static_cast<PostPass>(passId));
 }
 
-void VOSC::shadingCommand(const string& command, const ofxOscMessage& m) {
-    if (command == "/shading") {
-        if (m.getNumArgs() < 1) {
-            invalidCommand(m);
-            return;
+void VOSC::applyShadingPasses(const vector<osc::ShadingPassSpec>& passes) {
+    post.getPasses().clear();
+    deferred.getPasses().clear();
+    shadowLightPass = NULL;
+    pointLightPass = NULL;
+
+    for (size_t i = 0; i < passes.size(); ++i) {
+        if (passes[i].byName) {
+            createShadingPass(post, passes[i].name);
+            createShadingPass(deferred, passes[i].name);
         }
-        deferredShading = (m.getArgAsString(0) == "deferred");
-    }
-    else if (command == "/shading/passes") {
-        post.getPasses().clear();
-        deferred.getPasses().clear();
-        shadowLightPass = NULL;
-        pointLightPass = NULL;
-        for (int i=0; i<m.getNumArgs(); i++) {
-            if (m.getArgType(i) == OFXOSC_TYPE_STRING) {
-                string passName = m.getArgAsString(i);
-                createShadingPass(post, passName);
-                createShadingPass(deferred, passName);
-            }
-            else {
-                int passId = m.getArgAsInt(i);
-                createShadingPass(post, passId);
-                createShadingPass(deferred, passId);
-            }
+        else {
+            createShadingPass(post, passes[i].id);
+            createShadingPass(deferred, passes[i].id);
         }
-    }
-    else {
-        // todo: set pass properties
     }
 }
 
