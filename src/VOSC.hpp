@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxOsc.h"
 #include "Layer.h"
+#include "ResourceRegistry.hpp"
 #include "RuntimeContext.hpp"
 #include "ofxPostProcessing.h"
 #include "ofxMidi.h"
@@ -62,6 +63,7 @@ private:
     osc::CommandParser commandParser;
     osc::CommandRouter commandRouter;
     
+    ResourceRegistry resources;
     RuntimeContext runtime;
     vector<shared_ptr<Layer>> layers = {};
     Layout layout = Layout::STACK;

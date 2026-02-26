@@ -10,8 +10,4 @@ public:
     static shared_ptr<Geom> getOrCreate(int layerId);
     static void update();
     static void clean(int layerId);
-    
-private:
-    static map<string, shared_ptr<Geom>> sharedPool;
-    static map<int, shared_ptr<Geom>> layerPool;
 };

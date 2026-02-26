@@ -10,8 +10,4 @@ public:
     static map<string, shared_ptr<Texture>>& getPool(const VarsHolder* holder);
     static void update(const vector<TidalNote>& notes);
     static void clean(int shaderId);
-    
-private:
-    static map<string, shared_ptr<Texture>> sharedPool;
-    static map<int, map<string, shared_ptr<Texture>>> shaderPool;
 };

@@ -1,36 +1,70 @@
 #include "ShaderPool.h"
 #include "ofxTidalCycles.h"
+#include "../ResourceRegistry.hpp"
 
-map<string, shared_ptr<Shader>> ShaderPool::sharedPool;
+namespace {
+map<string, shared_ptr<Shader>>& emptyPool() {
+    static map<string, shared_ptr<Shader>> pool;
+    return pool;
+}
+}
 
 bool ShaderPool::hasShared(string name) {
-    return sharedPool.find(name) != sharedPool.end();
+    ResourceRegistry* registry = ResourceRegistry::current();
+    return registry != nullptr && registry->shaderSharedPool.find(name) != registry->shaderSharedPool.end();
 }
 
 shared_ptr<Shader> ShaderPool::getShared(string name, bool create) {
-    if (create && !hasShared(name)) {
-        sharedPool[name] = make_shared<Shader>();
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        ofLogError() << "ShaderPool::getShared called without active ResourceRegistry";
+        return nullptr;
     }
-    return sharedPool.at(name);
+    if (create && !hasShared(name)) {
+        registry->shaderSharedPool[name] = make_shared<Shader>();
+    }
+    auto it = registry->shaderSharedPool.find(name);
+    if (it == registry->shaderSharedPool.end()) {
+        return nullptr;
+    }
+    return it->second;
 }
 
 shared_ptr<Shader> ShaderPool::getOrCreate(string name) {
-    if (sharedPool.find(name) == sharedPool.end()) {
-        sharedPool[name] = make_shared<Shader>();
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        ofLogError() << "ShaderPool::getOrCreate called without active ResourceRegistry";
+        return nullptr;
     }
-    return sharedPool.at(name);
+    if (registry->shaderSharedPool.find(name) == registry->shaderSharedPool.end()) {
+        registry->shaderSharedPool[name] = make_shared<Shader>();
+    }
+    return registry->shaderSharedPool.at(name);
 }
 
 map<string, shared_ptr<Shader>>& ShaderPool::getPool() {
-    return sharedPool;
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        ofLogError() << "ShaderPool::getPool called without active ResourceRegistry";
+        return emptyPool();
+    }
+    return registry->shaderSharedPool;
 }
 
 void ShaderPool::update(const vector<TidalNote> &notes) {
-    for (map<string, shared_ptr<Shader>>::iterator it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        return;
+    }
+    for (map<string, shared_ptr<Shader>>::iterator it=registry->shaderSharedPool.begin(); it!=registry->shaderSharedPool.end(); ++it) {
         it->second->update(notes);
     }
 }
 
 void ShaderPool::clean() {
-    sharedPool.clear();
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        return;
+    }
+    registry->shaderSharedPool.clear();
 }

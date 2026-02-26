@@ -10,7 +10,4 @@ public:
     static map<string, shared_ptr<Shader>>& getPool();
     static void update(const vector<TidalNote>& notes);
     static void clean();
-    
-private:
-    static map<string, shared_ptr<Shader>> sharedPool;
 };

@@ -16,6 +16,8 @@
 
 void VOSC::setup(unsigned int port) {
     receiver.setup(port);
+    resources.activate();
+    VariablePool::setShuttingDown(false);
     runtime.camera.setup();
     setupLayers(INITIAL_LAYERS);
     setupCommandRouter();
@@ -649,6 +651,9 @@ void VOSC::windowResized(int w, int h) {
 
 void VOSC::exit() {
     VariablePool::setShuttingDown(true);
+    layers.clear();
+    resources.clear();
+    resources.deactivate();
     runtime.tidal.reset();
 #if USE_OFX_HPVPLAYER
     HPV::DestroyHPVEngine();

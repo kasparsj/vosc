@@ -4,17 +4,31 @@
 #include "Layer.h"
 #include "VarsHolder.h"
 #include "ofxExpr.hpp"
+#include "../ResourceRegistry.hpp"
 
-map<string, shared_ptr<BaseVar>> VariablePool::sharedPool;
-map<int, map<string, shared_ptr<BaseVar>>> VariablePool::holderPool;
-bool VariablePool::isShuttingDown = false;
+namespace {
+map<string, shared_ptr<BaseVar>>& emptyPool() {
+    static map<string, shared_ptr<BaseVar>> pool;
+    return pool;
+}
+}
 
 bool VariablePool::hasShared(const string& name) {
-    return sharedPool.find(name) != sharedPool.end();
+    ResourceRegistry* registry = ResourceRegistry::current();
+    return registry != nullptr && registry->variableSharedPool.find(name) != registry->variableSharedPool.end();
 }
 
 shared_ptr<BaseVar> VariablePool::getShared(const string& name) {
-    return sharedPool.at(name);
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        ofLogError() << "VariablePool::getShared called without active ResourceRegistry";
+        return nullptr;
+    }
+    auto it = registry->variableSharedPool.find(name);
+    if (it == registry->variableSharedPool.end()) {
+        return nullptr;
+    }
+    return it->second;
 }
 
 shared_ptr<BaseVar> VariablePool::createOrUpdateShared(const string& name, const ofxOscMessage& m, int idx) {
@@ -22,21 +36,35 @@ shared_ptr<BaseVar> VariablePool::createOrUpdateShared(const string& name, const
 }
 
 shared_ptr<BaseVar> VariablePool::createOrUpdateShared(const string& name, const string& command, const ofxOscMessage& m, int idx) {
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        ofLogError() << "VariablePool::createOrUpdateShared called without active ResourceRegistry";
+        return nullptr;
+    }
     if (hasShared(name)) {
-        BaseVar::update(sharedPool.at(name), command, m, idx);
+        BaseVar::update(registry->variableSharedPool.at(name), command, m, idx);
     }
     else {
-        sharedPool[name] = BaseVar::create(command, m, idx);
+        registry->variableSharedPool[name] = BaseVar::create(command, m, idx);
     }
-    return sharedPool.at(name);
+    auto it = registry->variableSharedPool.find(name);
+    if (it == registry->variableSharedPool.end()) {
+        return nullptr;
+    }
+    return it->second;
 }
 
 template<typename T>
 const shared_ptr<Variable<T>> VariablePool::createOrUpdateShared(const string& name, T value) {
-    if (!hasShared(name)) {
-        sharedPool[name] = make_shared<Variable<T>>();
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        ofLogError() << "VariablePool::createOrUpdateShared called without active ResourceRegistry";
+        return nullptr;
     }
-    auto var = std::static_pointer_cast<Variable<T>>(sharedPool.at(name));
+    if (!hasShared(name)) {
+        registry->variableSharedPool[name] = make_shared<Variable<T>>();
+    }
+    auto var = std::static_pointer_cast<Variable<T>>(registry->variableSharedPool.at(name));
     var->set(value);
     return var;
 }
@@ -67,17 +95,26 @@ const shared_ptr<Variable<T>> VariablePool::getOrCreate(const string& name, cons
 }
 
 map<string, shared_ptr<BaseVar>>& VariablePool::getPool(const VarsHolder* holder) {
-    if (holder == nullptr) {
-        return sharedPool;
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        ofLogError() << "VariablePool::getPool called without active ResourceRegistry";
+        return emptyPool();
     }
-    return holderPool[holder->getId()];
+    if (holder == nullptr) {
+        return registry->variableSharedPool;
+    }
+    return registry->variableHolderPool[holder->getId()];
 }
 
 void VariablePool::update(const vector<TidalNote> &notes) {
-    for (auto it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        return;
+    }
+    for (auto it=registry->variableSharedPool.begin(); it!=registry->variableSharedPool.end(); ++it) {
         it->second->update();
     }
-    for (auto it=holderPool.begin(); it!=holderPool.end(); ++it) {
+    for (auto it=registry->variableHolderPool.begin(); it!=registry->variableHolderPool.end(); ++it) {
         for (auto it2=it->second.begin(); it2!=it->second.end(); ++it2) {
             it2->second->update();
         }
@@ -85,40 +122,30 @@ void VariablePool::update(const vector<TidalNote> &notes) {
 }
 
 void VariablePool::cleanup(int id) {
-    // Directly access holderPool using the ID
-    // During shutdown, holderPool might be destroyed, so we need to be careful
-    if (isShuttingDown) {
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr || registry->variablePoolShuttingDown) {
         return;
     }
-    // Try to clean up, but if the map is being destroyed, just ignore it
-    // During shutdown, static objects are destroyed in reverse order of construction
-    // If holderPool is destroyed before objects that call cleanup(), we'll crash
-    // So we check the shutdown flag and skip cleanup if we're shutting down
-    auto it = holderPool.find(id);
-    if (it != holderPool.end()) {
+    auto it = registry->variableHolderPool.find(id);
+    if (it != registry->variableHolderPool.end()) {
         it->second.clear();
-        holderPool.erase(it);
+        registry->variableHolderPool.erase(it);
     }
 }
 
 void VariablePool::setShuttingDown(bool value) {
-    isShuttingDown = value;
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        return;
+    }
+    registry->variablePoolShuttingDown = value;
 }
 
 void VariablePool::cleanup(const VarsHolder* holder) {
     if (holder == nullptr) {
         return;
     }
-    try {
-        // Get the ID before accessing the holder further, in case it's being destroyed
-        int id = holder->getId();
-        // Call the ID-based version to avoid accessing the holder pointer again
-        cleanup(id);
-    } catch (...) {
-        // During shutdown, the holder might be invalid or holderPool might be destroyed
-        // Silently ignore any exceptions to prevent crashes
-        isShuttingDown = true;
-    }
+    cleanup(holder->getId());
 }
 
 template const shared_ptr<Variable<float>> VariablePool::createOrUpdateShared(const string& name, float value);

@@ -1,17 +1,25 @@
 #include "GeomPool.h"
-
-map<string, shared_ptr<Geom>> GeomPool::sharedPool = {};
-map<int, shared_ptr<Geom>> GeomPool::layerPool = {};
+#include "ResourceRegistry.hpp"
 
 bool GeomPool::hasShared(string name) {
-    return sharedPool.find(name) != sharedPool.end();
+    ResourceRegistry* registry = ResourceRegistry::current();
+    return registry != nullptr && registry->geomSharedPool.find(name) != registry->geomSharedPool.end();
 }
 
 shared_ptr<Geom> GeomPool::getShared(string name, bool create) {
-    if (create && !hasShared(name)) {
-        sharedPool[name] = make_shared<Geom>();
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        ofLogError() << "GeomPool::getShared called without active ResourceRegistry";
+        return nullptr;
     }
-    return sharedPool.at(name);
+    if (create && !hasShared(name)) {
+        registry->geomSharedPool[name] = make_shared<Geom>();
+    }
+    auto it = registry->geomSharedPool.find(name);
+    if (it == registry->geomSharedPool.end()) {
+        return nullptr;
+    }
+    return it->second;
 }
 
 shared_ptr<Geom> GeomPool::getOrCreate(string name, int layerId) {
@@ -24,21 +32,34 @@ shared_ptr<Geom> GeomPool::getOrCreate(string name, int layerId) {
 }
 
 shared_ptr<Geom> GeomPool::getOrCreate(int layerId) {
-    if (layerPool.find(layerId) == layerPool.end()) {
-        layerPool[layerId] = make_shared<Geom>();
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        ofLogError() << "GeomPool::getOrCreate called without active ResourceRegistry";
+        return nullptr;
     }
-    return layerPool.at(layerId);
+    if (registry->geomLayerPool.find(layerId) == registry->geomLayerPool.end()) {
+        registry->geomLayerPool[layerId] = make_shared<Geom>();
+    }
+    return registry->geomLayerPool.at(layerId);
 }
 
 void GeomPool::update() {
-    for (map<string, shared_ptr<Geom>>::iterator it=sharedPool.begin(); it!=sharedPool.end(); ++it) {
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        return;
+    }
+    for (map<string, shared_ptr<Geom>>::iterator it=registry->geomSharedPool.begin(); it!=registry->geomSharedPool.end(); ++it) {
         it->second->update();
     }
-    for (map<int, shared_ptr<Geom>>::iterator it=layerPool.begin(); it!=layerPool.end(); ++it) {
+    for (map<int, shared_ptr<Geom>>::iterator it=registry->geomLayerPool.begin(); it!=registry->geomLayerPool.end(); ++it) {
         it->second->update();
     }
 }
 
 void GeomPool::clean(int layerId) {
-    layerPool.erase(layerId);
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) {
+        return;
+    }
+    registry->geomLayerPool.erase(layerId);
 }
