@@ -9,10 +9,10 @@
 #define USE_OFX_ULTRALIGHT 0
 #define USE_OFX_EXTREME_GPU_VIDEO 0
 #define USE_OFX_HPVPLAYER 0
-#define USE_OFX_IMGUI 0
+#define USE_OFX_IMGUI 1
 #define INITIAL_LAYERS 9
 #define MAX_NOTES 10
-#define ALLOW_TEX_2D_ARRAY 1
+#define ALLOW_TEX_2D_ARRAY 0
 
 enum class Behaviour {
     RANDOM_SHADER = 1,
