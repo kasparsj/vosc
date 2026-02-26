@@ -1,0 +1,698 @@
+{
+  "/cam": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Camera"
+  },
+  "/cam/look": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Camera"
+  },
+  "/cam/orbit": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Camera"
+  },
+  "/cam/pos": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Camera"
+  },
+  "/cam/reset": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Camera"
+  },
+  "/cam/set": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Camera"
+  },
+  "/dirt/play": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "CommandSystem"
+  },
+  "/geom": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Geom"
+  },
+  "/geom/boxes": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Geom"
+  },
+  "/geom/choose": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Geom"
+  },
+  "/geom/color": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Geom"
+  },
+  "/geom/pos": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Geom"
+  },
+  "/geom/rot": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Geom"
+  },
+  "/geom/scale": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Geom"
+  },
+  "/geom/set": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Geom"
+  },
+  "/input": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Inputs"
+  },
+  "/input/data": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Inputs"
+  },
+  "/input/list": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Inputs"
+  },
+  "/input/set": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Inputs"
+  },
+  "/layer": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "Prefix command is parser-accepted; use explicit /layer/* subcommands for behavior.",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/align": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/alpha": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/behaviour": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/bri": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/delay": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/pivot": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/pos": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/reset": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/rot": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/scale": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/size": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/solo": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "Implemented as action path for index target; wildcard target does not apply solo semantics.",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/tint": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/visible": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layers": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "RenderSystem"
+  },
+  "/layers/layout": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "RenderSystem"
+  },
+  "/layers/reset": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "RenderSystem"
+  },
+  "/light": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Lights"
+  },
+  "/light/remove": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Lights"
+  },
+  "/mat": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "Prefix command is parser-accepted; use explicit /mat/* subcommands for behavior.",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Material"
+  },
+  "/mat/ambient": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Material"
+  },
+  "/mat/diffuse": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Material"
+  },
+  "/mat/emissive": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Material"
+  },
+  "/mat/shininess": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Material"
+  },
+  "/mat/specular": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Material"
+  },
+  "/mic": {
+    "status": "deprecated",
+    "canonical": "/input",
+    "notes": "Legacy input setup command removed in typed router.",
+    "feature_flag": "",
+    "replacement": "/input",
+    "owner": "Migration"
+  },
+  "/midi": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "CommandSystem"
+  },
+  "/midi/list": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "CommandSystem"
+  },
+  "/onset": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "CommandSystem"
+  },
+  "/onset/force": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "CommandSystem"
+  },
+  "/shader": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shader/buf": {
+    "status": "alias",
+    "canonical": "/shader/buffer",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shader/buffer": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shader/reset": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shader/set": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shader/tex": {
+    "status": "alias",
+    "canonical": "/shader/texture",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shader/texture": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shader/uniform": {
+    "status": "alias",
+    "canonical": "/shader/var",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shader/var": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shading": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "CommandSystem"
+  },
+  "/shading/passes": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "CommandSystem"
+  },
+  "/sound/data": {
+    "status": "deprecated",
+    "canonical": "/input/data",
+    "notes": "Legacy audio analysis payload command removed in typed router.",
+    "feature_flag": "",
+    "replacement": "/input/data",
+    "owner": "Migration"
+  },
+  "/tex": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex (gv source)": {
+    "status": "feature-flagged",
+    "canonical": "/tex",
+    "notes": "GV source support depends on compile-time addon availability.",
+    "feature_flag": "USE_OFX_EXTREME_GPU_VIDEO",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex (hpv source)": {
+    "status": "feature-flagged",
+    "canonical": "/tex",
+    "notes": "HPV source support depends on compile-time addon availability.",
+    "feature_flag": "USE_OFX_HPVPLAYER",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex (ultralight html source)": {
+    "status": "feature-flagged",
+    "canonical": "/tex",
+    "notes": "Ultralight-backed HTML source support depends on compile-time addon availability.",
+    "feature_flag": "USE_OFX_ULTRALIGHT",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/choose": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/clear": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/color": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/data": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/fbo": {
+    "status": "deprecated",
+    "canonical": "/tex/set",
+    "notes": "FBO settings moved to /tex/set properties (internalformat/textureTarget/filter/minFilter/magFilter).",
+    "feature_flag": "",
+    "replacement": "/tex/set",
+    "owner": "Migration"
+  },
+  "/tex/looper": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/passes": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/reload": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/seek": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/set": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/shader": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "Prefix for forwarding to shader-backed textures; use /tex/shader/* subcommands.",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/size": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/speed": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/tint": {
+    "status": "disabled",
+    "canonical": "/layer/tint",
+    "notes": "Texture tint path is disabled at runtime; use /layer/tint.",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/uniform": {
+    "status": "alias",
+    "canonical": "/tex/var",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/unload": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/var": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/tex/var/lifo": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Texture"
+  },
+  "/var": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "VariablePool"
+  },
+  "/var/colors": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "Color scheme forms are fully handled for shared variables; layer-local forms follow generic var parsing.",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "VariablePool"
+  },
+  "/var/colors/scheme": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "Color scheme forms are fully handled for shared variables.",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "VariablePool"
+  }
+}

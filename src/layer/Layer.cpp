@@ -133,36 +133,36 @@ void Layer::layerCommand(const string& command, const ofxOscMessage& m) {
         setVar("scale", m);
     }
     else if (command == "/layer/align") {
-        ofAlignHorz alignH;
-        ofAlignVert alignV;
+        ofAlignHorz newAlignH = alignH;
+        ofAlignVert newAlignV = alignV;
         if (m.getArgType(1) == OFXOSC_TYPE_STRING) {
             string argH = m.getArgAsString(1);
             string argV = m.getNumArgs() > 2 ? m.getArgAsString(2) : argH;
             if (argH == "center") {
-                alignH = OF_ALIGN_HORZ_CENTER;
+                newAlignH = OF_ALIGN_HORZ_CENTER;
             }
             else if (argH == "left") {
-                alignH = OF_ALIGN_HORZ_LEFT;
+                newAlignH = OF_ALIGN_HORZ_LEFT;
             }
             else if (argH == "right") {
-                alignH = OF_ALIGN_HORZ_RIGHT;
+                newAlignH = OF_ALIGN_HORZ_RIGHT;
             }
             if (argV == "center") {
-                alignV = OF_ALIGN_VERT_CENTER;
+                newAlignV = OF_ALIGN_VERT_CENTER;
             }
             else if (argV == "top") {
-                alignV = OF_ALIGN_VERT_TOP;
+                newAlignV = OF_ALIGN_VERT_TOP;
             }
             else if (argV == "bottom") {
-                alignV = OF_ALIGN_VERT_BOTTOM;
+                newAlignV = OF_ALIGN_VERT_BOTTOM;
             }
         }
         else {
-            alignH = static_cast<ofAlignHorz>(m.getArgAsInt(1));
-            alignV = static_cast<ofAlignVert>(m.getNumArgs() > 2 ? m.getArgAsInt(2) : m.getArgAsInt(1) * 16);
+            newAlignH = static_cast<ofAlignHorz>(m.getArgAsInt(1));
+            newAlignV = static_cast<ofAlignVert>(m.getNumArgs() > 2 ? m.getArgAsInt(2) : m.getArgAsInt(1) * 16);
         }
-        alignH = alignH;
-        alignV = alignV;
+        alignH = newAlignH;
+        alignV = newAlignV;
     }
     else if (command == "/layer/delay") {
         delay = m.getArgAsFloat(1);

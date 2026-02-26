@@ -1,93 +1,97 @@
 ## Overview
 
-- `/cam` [Use camera](#use-camera)
-- `/cam/pos` [Camera position](#camera-position)
-- `/cam/look` [Camera look at](#camera-look)
-- `/cam/orbit` [Orbit camera](#camera-orbit)
-- `/cam/set` [Set camera property](#camera-set)
+- `/cam` enable/disable camera and choose camera type
+- `/cam/reset` reset camera vars (`camPos`, `camLook`, `camOrbit`)
+- `/cam/pos` set camera position
+- `/cam/look` set look-at target
+- `/cam/orbit` set orbit speed (easy cam only)
+- `/cam/set` set camera properties
 
 ## Reference
 
-### Use camera
-
-`/cam`
+### `/cam`
 
 Arguments:
-- **camera** (string) switch camera
+- `type` (string, optional)
+
+Supported `type` values:
+- `"easy"` -> `ofEasyCam`
+- `"fp"` -> `ofxFirstPersonCamera`
+- any non-empty string -> base `ofCamera`
+- empty / omitted -> disable camera
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/cam', "default"); // enable default (ofCamera) camera
-~visuals.sendMsg('/cam', ""); // disable camera
-~visuals.sendMsg('/cam', "easy"); // enable easy (ofEasyCam) camera
+~visuals.sendMsg('/cam', 'easy');
+~visuals.sendMsg('/cam', 'fp');
+~visuals.sendMsg('/cam', 'default');
+~visuals.sendMsg('/cam', ''); // disable
 ```
 
-### Camera position
+### `/cam/reset`
 
-`/cam/pos`
+Arguments: none
+
+Resets shared vars to defaults:
+- `camPos = (0,0,-870)`
+- `camLook = (0,0,0)`
+- `camOrbit = 0`
+
+### `/cam/pos`
 
 Arguments:
-- **x** (float)
-- **y** (float)
-- **z** (float)
-- duration (float)
+- `x,y,z` (mixed; const or expression-driven var payload)
 
-Examples:
+Example:
 ```supercollider
-~visuals.sendMsg('/cam/pos', 1, 2, 100); // set camera position
-~visuals.sendMsg('/cam/pos', 0, 0, -3000, 10); // zoom out camera over 10 seconds
-
-// map camera distance to a sine variable oscillating between 400 and 500
-~visuals.sendMsg('/var', "sine_osc", "sin");
-~visuals.sendMsg('/var/range', "sine_osc", 400, 1500);
-// map camera's z coordinate to sine_osc variable
-~visuals.sendMsg('/cam/pos', 0, 0, "sine_osc");
+~visuals.sendMsg('/cam/pos', 0, 0, -1200);
 ```
 
-### Camera look
-
-`/cam/look`
+### `/cam/look`
 
 Arguments:
-- **x** (float)
-- **y** (float)
-- **z** (float)
-- duration (float)
+- `x,y,z` (mixed; const or expression-driven var payload)
 
-Examples:
+Example:
 ```supercollider
-~visuals.sendMsg('/cam/look', 0, 0, 0); // set camera to look at center of the scene
+~visuals.sendMsg('/cam/look', 0, 0, 0);
 ```
 
-### Camera orbit
-
-`/cam/orbit`
+### `/cam/orbit`
 
 Arguments:
-- **degrees** (float) degrees per second
-- duration (float)
+- `degreesPerSecond` (float)
 
-Examples:
+Notes:
+- only meaningful for `easy` camera mode
+
+Example:
 ```supercollider
-~visuals.sendMsg('/cam/orbit', 20); // orbit camera 20 degrees per second
+~visuals.sendMsg('/cam/orbit', 20);
 ```
 
-### Camera set
-
-`/cam/set`
+### `/cam/set`
 
 Arguments:
-- **property** (string)
-- **arg1** (float)
-- arg2 (float)
-- arg3 (float)
+- `property` (string)
+- additional args depend on property
+
+Supported properties:
+- `nearClip` float
+- `farClip` float
+- `globalPosition` float float float
+- `distance` float (`easy` cam)
+- `autoDistance` bool (`easy` cam)
+- `mouseInput` bool (`easy` cam)
+- `movementMaxSpeed` float (`fp` cam)
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/cam/set', "nearClip", 0.1);
-~visuals.sendMsg('/cam/set', "farClip", 10000);
-~visuals.sendMsg('/cam/set', "globalPosition", 0, 0, -870);
-~visuals.sendMsg('/cam/set', "distance", 1000); // only when camera is set to "easy"
-~visuals.sendMsg('/cam/set', "autoDistance", false); // only when camera is set to "easy"
-~visuals.sendMsg('/cam/set', "movementMaxSpeed", 1); // only when camera is set to "fp"
+~visuals.sendMsg('/cam/set', 'nearClip', 0.1);
+~visuals.sendMsg('/cam/set', 'farClip', 10000);
+~visuals.sendMsg('/cam/set', 'globalPosition', 0, 0, -870);
+~visuals.sendMsg('/cam/set', 'distance', 1000);
+~visuals.sendMsg('/cam/set', 'autoDistance', false);
+~visuals.sendMsg('/cam/set', 'mouseInput', false);
+~visuals.sendMsg('/cam/set', 'movementMaxSpeed', 1);
 ```

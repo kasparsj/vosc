@@ -1,95 +1,59 @@
 # vosc
 
-2D/3D OSC VJing software built on openFrameworks. **This is work in progress!**
+2D/3D OSC VJing software built on openFrameworks.
 
-# Installation
+This documentation tracks the current typed OSC router in `main`.
 
-**For MacOS:** download pre-compiled [version Alpha binary](https://github.com/kasparsj/vosc/releases/tag/alpha).
+## Installation
 
-**For all other OS:** clone the repository into your openFrameworks apps folder, then use project generator to generate project files, then build.
+- macOS: precompiled alpha build is available at [releases/alpha](https://github.com/kasparsj/vosc/releases/tag/alpha).
+- other OS: clone into your openFrameworks `apps` folder, run project generator, then build.
 
-# Keyboard shortcuts
+## Keyboard shortcuts
 
 - `f` toggle fullscreen
+- `c` toggle console window
+- `TAB` toggle debug inspector
+- `r` reload textures on all layers
+- `u` reset all layers
+- `w` toggle wireframe on all geometries
+- `1..9` set blend mode on all layers (when debug view is off)
+- `0` disable blend mode on all layers (when debug view is off)
 
-- `c` toggle console
+## Command overview
 
-- `TAB` toggle debug view
+- setup/input: [Setup commands](Setup-commands.md)
+- camera: [Camera commands](Camera-commands.md)
+- textures: [Texture commands](Texture-commands.md)
+- geometry: [Geometry commands](Geometry-commands.md)
+- shaders: [Shader commands](Shader-commands.md)
+- layers: [Layer commands](Layer-commands.md)
+- variables: [Variable commands](Variable-commands.md)
+- lights: [Light commands](Light-commands.md)
+- materials: [Material commands](Material-commands.md)
+- constants: [Constants](Constants.md)
+- full command surface: [OSC reference](OSC-reference.md)
+- migration map: [Command migration](Command-migration.md)
+- runtime ownership/flow: [Architecture](Architecture.md)
 
-# Command overview
+## Core transport commands
 
-## Setup
-- `/mic` [Setup microphone input](Setup-commands#setup-microphone)
-- `/sound/data` [Update sound data from SC](Setup-commands#sound-data)
-- `/layers` [Setup layers](Setup-commands#setup-layers)
-- `/layers/layout` [Change layout](Setup-commands#change-layout)
+These are handled by the typed parser but are not resource-domain commands:
 
-## Camera
-- `/cam` [Use camera](Camera-commands#use-camera)
-- `/cam/pos` [Camera position](Camera-commands#camera-position)
-- `/cam/look` [Camera look at](Camera-commands#camera-look)
-- `/cam/orbit` [Orbit camera](Camera-commands#camera-orbit)
-- `/cam/set` [Set camera property](Camera-commands#camera-set)
+- `/onset` enable/disable onset-gated queue processing
+- `/onset/force` force queue flush on current frame
+- `/dirt/play` forward a TidalCycles event payload
+- `/midi` forward MIDI command group
+- `/midi/list` print MIDI input ports
+- `/shading` select shading mode (`deferred` enables deferred path)
+- `/shading/passes` configure post/deferred passes
 
-## Textures
-- `/tex` [Load texture](Texture-commands#texture-load)
-- `/tex/reload` [Reload texture](Texture-commands#texture-reload)
-- `/tex/unload` [Unload texture](Texture-commands#texture-unload)
-- `/tex/choose` [Choose texture at random](Texture-commands#texture-choose)
-- `/tex/clear` [Clear texture](Texture-commands#texture-clear)
-- `/tex/var` [Set texture variable](Texture-commands#texture-variable)
-- `/tex/set` [Set texture property](Texture-commands#texture-set)
-- `/tex/size` [Set texture size](Texture-commands#texture-size)
-- `/tex/color` [Set texture color](Texture-commands#texture-color)
-- `/tex/tint` [Set texture tint](Texture-commands#texture-tint)
-- `/tex/speed` [Set texture playback speed](Texture-commands#texture-speed)
-- `/tex/seek` [Seek texture playback position](Texture-commands#texture-seek)
-- `/tex/fbo` [Configure texture FBO](Texture-commands#texture-fbo)
-- `/tex/looper` [Enable texture looper](Texture-commands#texture-looper)
+## Target selector model
 
-## Geometry
-- `/geom` [Load geometry](Geometry-commands#geometry-load)
-- `/geom/set` [Set geometry property](Geometry-commands#geometry-set)
+For targeted command groups (`/tex*`, `/var*`, `/geom*`, `/shader*`, `/layer*`, `/mat*`), argument 0 is a selector:
 
-## Shaders
-- `/shader` [Load layer shader](Shader-commands#shader-load)
-- `/shader/var` [Set layer shader variable](Shader-commands#shader-var)
-- `/shader/texture` [Set layer shader texture](Shader-commands#shader-texture)
-- `/shader/set` [Set layer shader property](Shader-commands#shader-set)
+- integer or numeric string: layer index
+- `*`, `x`, `a`: all layers
+- non-numeric string: shared resource name (supported for `/tex`, `/var`, `/geom`, `/shader`)
 
-## Layers
-- `/layer/visible` [Show/hide layer](Layer-commands#layer-visible)
-- `/layer/solo` [Hide all other layers](Layer-commands#layer-solo)
-- `/layer/pos` [Set layer position](Layer-commands#layer-position)
-- `/layer/size` [Set layer size](Layer-commands#layer-size)
-- `/layer/scale` [Set layer scale](Layer-commands#layer-scale)
-- `/layer/rot` [Set layer rotation](Layer-commands#layer-rotation)
-- `/layer/pivot` [Set layer pivot point](Layer-commands#layer-pivot-point)
-- `/layer/reset` [Reset layer](Layer-commands#layer-reset)
-- `/layer/color` [Set layer color](Layer-commands#layer-color)
-- `/layer/tint` [Set layer tint](Layer-commands#layer-tint)
-- `/layer/alpha` [Set layer alpha](Layer-commands#layer-alpha)
-- `/layer/bri` [Set layer brightness](Layer-commands#layer-brightness)
-- `/layer/delay` [Set layer delay](Layer-commands#layer-delay)
-
-## Variables
-
-- `/var` [Set variable](Variable-commands#variable-set)
-
-## Lights
-
-- `/light` [Set light](Light-commands#light-set)
-- `/light/remove` [Remove a light](Light-commands#light-remove)
-
-## Materials
-- `/mat/diffuse` [Set material diffuse color](Material-commands#diffuse)
-- `/mat/ambient` [Set material ambient color](Material-commands#ambient)
-- `/mat/specular` [Set material specular color](Material-commands#specular)
-- `/mat/emissive` [Set material emissive color](Material-commands#emissive)
-- `/mat/shininess` [Set material shininess](Material-commands#shininess)
-
-# Constants
-
-- [Layouts](Constants#layouts)
-- [Source types](Constants#source-types)
-- [3D primitives](Constants#3d-primitives)
+Shared-name targeting is not supported for `/layer*` and `/mat*`.

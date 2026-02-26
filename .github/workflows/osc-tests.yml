@@ -5,6 +5,18 @@ on:
   pull_request:
 
 jobs:
+  docs-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Generated OSC Reference
+        run: python3 scripts/generate_osc_reference.py --check
+
+      - name: Verify Markdown Links
+        run: bash scripts/check_md_links.sh
+
   osc-tests:
     runs-on: ubuntu-latest
     steps:

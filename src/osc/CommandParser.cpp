@@ -346,6 +346,9 @@ Result<Command> CommandParser::parse(const ofxOscMessage& message) const {
     if (isPrefixedCommand(address, "/layer")) {
         return parseTargeted(message, ResourceDomain::LAYER, "/layer");
     }
+    if (isPrefixedCommand(address, "/mat")) {
+        return parseTargeted(message, ResourceDomain::LAYER, "/mat");
+    }
 
     return Result<Command>::fail(ParseError(
         ParseErrorCode::UNKNOWN_COMMAND,

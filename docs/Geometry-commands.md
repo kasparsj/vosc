@@ -1,38 +1,74 @@
 ## Overview
 
-- `/geom` [Load geometry](#geometry-load)
-- `/geom/set` [Set geometry property](#geometry-set)
+Geometry commands are targeted resource commands. First argument is `target`:
+- `int` or numeric string: layer index
+- `"*"`, `"x"`, `"a"`: all layers
+- non-numeric string: shared geometry name
 
-## Reference
+Supported commands:
+- `/geom`
+- `/geom/choose`
+- `/geom/set`
 
-### Geometry load
+## `/geom`
 
-`/geom`
+Load geometry.
 
 Arguments:
-- **target** (int|string) layer index or wildcard or shared geometry name, e.g. "*"
-- **source** (string) model file or [primitive](#primitive)
+- `target`
+- `source` (string)
+- optional primitive/model args
+
+Supported primitives (see [Primitives](Constants.md#primitives)):
+- `plane`, `box`, `sphere`, `icosphere`, `cylinder`, `cone`, `grass`, `quad`
+
+If `source` is not a primitive, runtime attempts model load from:
+- absolute path
+- `data/<source>`
+- `data/models/<source>`
 
 Examples:
 ```supercollider
-~visuals.sendMsg('/geom', 0, "plane"); // set first layer geometry to the default plane
-~visuals.sendMsg('/geom', 0, "box"); // set first layer geometry to box/cube
-~visuals.sendMsg('/geom', 0, "sphere"); // set first layer geometry to sphere
-~visuals.sendMsg('/geom', 0, "penguin/penguin.dae"); // load penguin model into first layer
+~visuals.sendMsg('/geom', 0, 'plane');
+~visuals.sendMsg('/geom', 0, 'box', 200, 200, 200);
+~visuals.sendMsg('/geom', 0, 'penguin/penguin.dae');
+~visuals.sendMsg('/geom', 'sharedMesh', 'sphere');
+~visuals.sendMsg('/geom', 1, 'sharedMesh');
 ```
 
-### Geometry set
+## `/geom/choose`
 
-`/geom/set`
+Choose random primitive and load it.
 
 Arguments:
-- **target** (int|string) layer index or wildcard or shared geometry name, e.g. "*"
-- **property** (string) property name
-- **value** (int|bool) property value
+- `target`
+- optional primitive args
 
-Examples:
+## `/geom/set`
+
+Set geometry draw properties.
+
+Arguments:
+- `target`
+- `property` (string)
+- property value
+
+Supported properties:
+- `drawInstanced` (int)
+- `meshMode` (int, `ofPrimitiveMode`)
+- `drawWireframe` (bool)
+
+Example:
 ```supercollider
-~visuals.sendMsg('/geom/set', 0, "drawInstanced", 100); // set first layer geometry to draw 100 instanced
-~visuals.sendMsg('/geom/set', 0, "meshMode", 3); // set first layer geometry mesh mode to OF_PRIMITIVE_LINES
-~visuals.sendMsg('/geom/set', 0, "drawWireframe", true); // set first layer geometry to drawWireframe
+~visuals.sendMsg('/geom/set', 0, 'drawWireframe', true);
+~visuals.sendMsg('/geom/set', 0, 'drawInstanced', 100);
 ```
+
+## Recognized but not implemented
+
+The runtime currently recognizes these geometry subcommands, but handlers are placeholders (`todo`) and do not apply transformations yet:
+- `/geom/pos`
+- `/geom/rot`
+- `/geom/scale`
+- `/geom/color`
+- `/geom/boxes`

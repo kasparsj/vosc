@@ -1,33 +1,35 @@
 ## Overview
 
-- `/light` [Set light](#light-set)
-- `/light/remove` [Remove a light](#light-remove)
+Light commands:
+- `/light`
+- `/light/remove`
 
-## Reference
+These are top-level parser commands (not targeted layer resources).
 
-### Light set
+## `/light`
 
-`/light`
+Create or replace a light by id.
 
 Arguments:
-- **light** (int|string)  light id
-- **x** (float)
-- **y** (float)
-- **z** (float)
+- `id` (string|int)
+- `x`
+- `y`
+- `z`
 
-Examples:
+Example:
 ```supercollider
-~visuals.sendMsg('/light', 0, 500, 0, 500); // create a light at (500, 0, 500)
+~visuals.sendMsg('/light', 0, 500, 0, 500);
+~visuals.sendMsg('/light', 'key', 250, 300, 400);
 ```
 
-### Light remove
+## `/light/remove`
 
-`/light/remove`
+Remove light by id.
 
 Arguments:
-- **light** (int|string)  light id
+- `id` (string|int)
 
-Examples:
+Example:
 ```supercollider
-~visuals.sendMsg('/light/remove', 0); // remove light 0
+~visuals.sendMsg('/light/remove', 0);
 ```

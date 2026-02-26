@@ -25,11 +25,27 @@ SANITIZER=address ./scripts/run_osc_tests.sh
 SANITIZER=undefined ./scripts/run_osc_tests.sh
 ```
 
+## Docs Sync
+
+Generate canonical OSC docs from parser/handlers + metadata:
+
+```bash
+python3 scripts/generate_osc_reference.py
+```
+
+Validate internal markdown links and anchors:
+
+```bash
+bash scripts/check_md_links.sh
+```
+
+PRs should include regenerated `docs/OSC-reference.md` whenever command surface changes.
+
 ## Contributors
 
 The engine is built on openFrameworks and uses the following addons:
 
-- ofxAssimModelLoader
+- ofxAssimpModelLoader
 - ofxAutoReloadedShader
 - ofxColorTheory
 - ofxDeferredShading

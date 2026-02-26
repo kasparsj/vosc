@@ -115,6 +115,24 @@ static bool testTargetedResourceKeepsSubPath() {
     return true;
 }
 
+static bool testMaterialParsesAsTargetedResource() {
+    CommandParser parser;
+    ofxOscMessage m = msg("/mat/diffuse");
+    m.addIntArg(1);
+    m.addFloatArg(1.0f);
+    m.addFloatArg(0.5f);
+    m.addFloatArg(0.25f);
+
+    Result<Command> result = parser.parse(m);
+    TEST_REQUIRE(result.isOk());
+    TEST_REQUIRE_EQ(result.value().type, CommandType::TARGETED_RESOURCE);
+    TEST_REQUIRE_EQ(result.value().resource.domain, ResourceDomain::LAYER);
+    TEST_REQUIRE_EQ(result.value().resource.commandPath, "/mat/diffuse");
+    TEST_REQUIRE_EQ(result.value().resource.target.kind, TargetKind::INDEX);
+    TEST_REQUIRE_EQ(result.value().resource.target.index, 1);
+    return true;
+}
+
 static bool testPrefixMatchDoesNotAcceptSimilarWords() {
     CommandParser parser;
     ofxOscMessage m = msg("/texture");
@@ -292,6 +310,7 @@ int main() {
     RUN_TEST(testOnsetParsesOptionalBool);
     RUN_TEST(testLayerSoloParsesAction);
     RUN_TEST(testTargetedResourceKeepsSubPath);
+    RUN_TEST(testMaterialParsesAsTargetedResource);
     RUN_TEST(testPrefixMatchDoesNotAcceptSimilarWords);
     RUN_TEST(testInputParsesTypedPathAndAction);
     RUN_TEST(testInputListParsesTypedAction);
