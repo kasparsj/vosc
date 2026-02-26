@@ -6,7 +6,7 @@ vosc is a visuals/vjing 2D/3D graphics engine that can be controlled via OSC com
 
 It is mainly used within live-coding scenarios sending OSC from SuperCollider / TidalCycles.
 
-See [Wiki](https://github.com/kasparsj/osc_vj/wiki) for documentation.
+See [docs/Home.md](docs/Home.md) for documentation.
 
 See [SuperCollider](SuperCollider) folder for examples.
 
