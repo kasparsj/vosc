@@ -6,3 +6,4 @@ bin/data/videos
 *.user
 bin/data/shaders/shadertoy
 log.txt
+tests/bin

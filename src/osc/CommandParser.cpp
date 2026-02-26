@@ -304,7 +304,7 @@ Result<Command> CommandParser::parse(const ofxOscMessage& message) const {
     if (isPrefixedCommand(address, "/input")) {
         return parseInput(message);
     }
-    if (startsWith(address, "/midi")) {
+    if (isPrefixedCommand(address, "/midi")) {
         return parseMidi(message);
     }
     if (address == "/dirt/play") {

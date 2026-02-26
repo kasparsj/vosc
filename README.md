@@ -10,6 +10,21 @@ See [Wiki](https://github.com/kasparsj/osc_vj/wiki) for documentation.
 
 See [SuperCollider](SuperCollider) folder for examples.
 
+## Testing
+
+Run the OSC harness tests:
+
+```bash
+./scripts/run_osc_tests.sh
+```
+
+Run AddressSanitizer or UndefinedBehaviorSanitizer builds:
+
+```bash
+SANITIZER=address ./scripts/run_osc_tests.sh
+SANITIZER=undefined ./scripts/run_osc_tests.sh
+```
+
 ## Contributors
 
 The engine is built on openFrameworks and uses the following addons:

@@ -1,0 +1,40 @@
+name: OSC Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  osc-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang nlohmann-json3-dev
+
+      - name: Run Harness Tests
+        run: ./scripts/run_osc_tests.sh
+
+  osc-tests-sanitizers:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, undefined]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang nlohmann-json3-dev
+
+      - name: Run Harness Tests (${{ matrix.sanitizer }})
+        env:
+          SANITIZER: ${{ matrix.sanitizer }}
+        run: ./scripts/run_osc_tests.sh
