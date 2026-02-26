@@ -2,13 +2,58 @@
 
 **This is work in progress!**
 
-vosc is a visuals/vjing 2D/3D graphics engine that can be controlled via OSC commands.
+vosc is a real-time 2D/3D visuals engine for OSC-driven performance and installations.
 
-It is mainly used within live-coding scenarios sending OSC from SuperCollider / TidalCycles.
+At a high level, vosc gives you:
+- a render runtime (layers, textures, geometry, shaders, camera, post effects),
+- an OSC command surface to control that runtime live,
+- a workflow where your music/livecoding environment drives visuals over the network.
 
-See [docs/Home.md](docs/Home.md) for documentation.
+It is mainly used from SuperCollider / TidalCycles, but any OSC client can drive it.
 
-See [SuperCollider](SuperCollider) folder for examples.
+See [docs/Home.md](docs/Home.md) for full docs and [SuperCollider](SuperCollider) for more scripts.
+
+## Good Fit Workflows
+
+vosc is a good fit when you need:
+- livecoding visuals that react to musical structure (onset-gated command queueing, fast command iteration),
+- a dedicated visuals node controlled remotely over OSC (laptop-to-laptop or controller-to-render-machine),
+- shader/texture layering workflows for VJ sets and audiovisual performances,
+- installation setups where control and render are separated.
+
+Compact hardware workflow:
+- vosc can be used in Raspberry Pi-class workflows as an OSC-controlled visual node or as part of a split setup.
+- In practice, feature availability/performance depends on GPU drivers/OpenGL support and enabled addons.
+- Heavier shader/post pipelines are better suited to desktop GPUs.
+
+## Quickstart (Local + SuperCollider)
+
+Default OSC receive port in this app is `33333` (`src/ofApp.h`).
+
+1. Build and run `vosc`.
+2. Open SuperCollider and run:
+
+```supercollider
+(
+~v = NetAddr("127.0.0.1", 33333);
+
+~v.sendMsg("/layers", 4, "grid");         // 4 layers in grid layout
+~v.sendMsg("/tex/choose", "*", "image");  // random image source on all layers
+~v.sendMsg("/layer/alpha", "*", 0.8);     // set opacity
+~v.sendMsg("/cam", "easy");               // enable easy camera
+~v.sendMsg("/shading", "deferred");       // optional: switch shading mode
+~v.sendMsg("/shading/passes", "bloom", "fxaa");
+)
+```
+
+3. Interact while running:
+- press `TAB` for debug inspector,
+- press `f` fullscreen,
+- press `r` to reload textures.
+
+Next steps:
+- browse [docs/OSC-reference.md](docs/OSC-reference.md),
+- try richer examples in [SuperCollider/intro.scd](SuperCollider/intro.scd) and [SuperCollider/test.scd](SuperCollider/test.scd).
 
 ## Testing
 
