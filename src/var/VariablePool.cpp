@@ -13,15 +13,15 @@ bool VariablePool::hasShared(const string& name) {
     return sharedPool.find(name) != sharedPool.end();
 }
 
-shared_ptr<BaseVar>& VariablePool::getShared(const string& name) {
+shared_ptr<BaseVar> VariablePool::getShared(const string& name) {
     return sharedPool.at(name);
 }
 
-shared_ptr<BaseVar>& VariablePool::createOrUpdateShared(const string& name, const ofxOscMessage& m, int idx) {
+shared_ptr<BaseVar> VariablePool::createOrUpdateShared(const string& name, const ofxOscMessage& m, int idx) {
     return createOrUpdateShared(name, m.getAddress(), m, idx);
 }
 
-shared_ptr<BaseVar>& VariablePool::createOrUpdateShared(const string& name, const string& command, const ofxOscMessage& m, int idx) {
+shared_ptr<BaseVar> VariablePool::createOrUpdateShared(const string& name, const string& command, const ofxOscMessage& m, int idx) {
     if (hasShared(name)) {
         BaseVar::update(sharedPool.at(name), command, m, idx);
     }
@@ -41,12 +41,12 @@ const shared_ptr<Variable<T>> VariablePool::createOrUpdateShared(const string& n
     return var;
 }
 
-shared_ptr<BaseVar>& VariablePool::get(const string& name, const VarsHolder* holder) {
+shared_ptr<BaseVar> VariablePool::get(const string& name, const VarsHolder* holder) {
     map<string, shared_ptr<BaseVar>>& pool = getPool(holder);
     return pool.at(name);
 }
 
-shared_ptr<BaseVar>& VariablePool::createOrUpdate(const string& name, const ofxOscMessage& m, int idx, const VarsHolder* holder) {
+shared_ptr<BaseVar> VariablePool::createOrUpdate(const string& name, const ofxOscMessage& m, int idx, const VarsHolder* holder) {
     auto& pool = getPool(holder);
     if (pool.find(name) == pool.end()) {
         pool[name] = BaseVar::createVar(m, idx);
@@ -67,7 +67,7 @@ const shared_ptr<Variable<T>> VariablePool::getOrCreate(const string& name, cons
 }
 
 map<string, shared_ptr<BaseVar>>& VariablePool::getPool(const VarsHolder* holder) {
-    if (holder == NULL) {
+    if (holder == nullptr) {
         return sharedPool;
     }
     return holderPool[holder->getId()];
@@ -106,7 +106,7 @@ void VariablePool::setShuttingDown(bool value) {
 }
 
 void VariablePool::cleanup(const VarsHolder* holder) {
-    if (holder == NULL) {
+    if (holder == nullptr) {
         return;
     }
     try {

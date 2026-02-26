@@ -7,14 +7,6 @@
 
 class Camera {
 public:
-    static Camera& get() {
-        static Camera fallback;
-        if (instance == nullptr) {
-            fallback.setup();
-        }
-        return (*instance);
-    }
-    
     void setup();
     void reset();
     void preUpdate() {
@@ -41,8 +33,6 @@ public:
     void oscInit(const ofxOscMessage& m);
     
 private:
-    static Camera* instance;
-    
     std::unique_ptr<ofCamera> cam;
     float orbit = 0.f;
     

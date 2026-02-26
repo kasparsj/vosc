@@ -7,14 +7,14 @@ bool GeomPool::hasShared(string name) {
     return sharedPool.find(name) != sharedPool.end();
 }
 
-shared_ptr<Geom>& GeomPool::getShared(string name, bool create) {
+shared_ptr<Geom> GeomPool::getShared(string name, bool create) {
     if (create && !hasShared(name)) {
         sharedPool[name] = make_shared<Geom>();
     }
     return sharedPool.at(name);
 }
 
-shared_ptr<Geom>& GeomPool::getOrCreate(string name, int layerId) {
+shared_ptr<Geom> GeomPool::getOrCreate(string name, int layerId) {
     if (hasShared(name)) {
         return getShared(name);
     }
@@ -23,7 +23,7 @@ shared_ptr<Geom>& GeomPool::getOrCreate(string name, int layerId) {
     }
 }
 
-shared_ptr<Geom>& GeomPool::getOrCreate(int layerId) {
+shared_ptr<Geom> GeomPool::getOrCreate(int layerId) {
     if (layerPool.find(layerId) == layerPool.end()) {
         layerPool[layerId] = make_shared<Geom>();
     }

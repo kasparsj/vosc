@@ -74,36 +74,36 @@ ofFloatColor VarsHolder::getVarColor(const string& name) const {
 }
 
 template <typename T>
-const shared_ptr<Variable<T>>& VarsHolder::setVar(const string& name, T value) {
-    const auto& var = VariablePool::getOrCreate<T>(name, this);
+shared_ptr<Variable<T>> VarsHolder::setVar(const string& name, T value) {
+    auto var = VariablePool::getOrCreate<T>(name, this);
     var->set(value);
     vars[name] = VariablePool::get(name, this);
     return var;
 }
 
-const shared_ptr<Variable<float>>& VarsHolder::setVar(const string& name, bool value) {
+shared_ptr<Variable<float>> VarsHolder::setVar(const string& name, bool value) {
     return setVar(name, (float) value);
 }
 
 template <typename T>
-const shared_ptr<Variable<T>>& VarsHolder::setVar(const string& name, vector<T> value) {
-    const auto& var = VariablePool::getOrCreate<T>(name, this);
+shared_ptr<Variable<T>> VarsHolder::setVar(const string& name, vector<T> value) {
+    auto var = VariablePool::getOrCreate<T>(name, this);
     var->set(value);
     vars[name] = VariablePool::get(name, this);
     return var;
 }
 
 void VarsHolder::setVar(const string& name, const ofxOscMessage& m, int idx) {
-    auto& var = VariablePool::createOrUpdate(name, m, idx, this);
+    auto var = VariablePool::createOrUpdate(name, m, idx, this);
     vars[name] = var;
 }
 
-template const shared_ptr<Variable<float>>& VarsHolder::setVar(const string& name, float value);
-template const shared_ptr<Variable<glm::vec3>>& VarsHolder::setVar(const string& name, glm::vec3 value);
-template const shared_ptr<Variable<glm::mat4>>& VarsHolder::setVar(const string& name, glm::mat4 value);
-template const shared_ptr<Variable<ofFloatColor>>& VarsHolder::setVar(const string& name, ofFloatColor value);
+template shared_ptr<Variable<float>> VarsHolder::setVar(const string& name, float value);
+template shared_ptr<Variable<glm::vec3>> VarsHolder::setVar(const string& name, glm::vec3 value);
+template shared_ptr<Variable<glm::mat4>> VarsHolder::setVar(const string& name, glm::mat4 value);
+template shared_ptr<Variable<ofFloatColor>> VarsHolder::setVar(const string& name, ofFloatColor value);
 
-template const shared_ptr<Variable<float>>& VarsHolder::setVar(const string& name, vector<float> value);
-template const shared_ptr<Variable<glm::vec3>>& VarsHolder::setVar(const string& name, vector<glm::vec3> value);
-template const shared_ptr<Variable<glm::mat4>>& VarsHolder::setVar(const string& name, vector<glm::mat4> value);
-template const shared_ptr<Variable<ofFloatColor>>& VarsHolder::setVar(const string& name, vector<ofFloatColor> value);
+template shared_ptr<Variable<float>> VarsHolder::setVar(const string& name, vector<float> value);
+template shared_ptr<Variable<glm::vec3>> VarsHolder::setVar(const string& name, vector<glm::vec3> value);
+template shared_ptr<Variable<glm::mat4>> VarsHolder::setVar(const string& name, vector<glm::mat4> value);
+template shared_ptr<Variable<ofFloatColor>> VarsHolder::setVar(const string& name, vector<ofFloatColor> value);

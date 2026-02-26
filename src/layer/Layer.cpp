@@ -43,7 +43,7 @@ void Layer::oscCommand(const string& command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
         shared_ptr<Texture>& tex = shader.getDefaultTexture();
         bool isShared = false;
-        if (command == "/tex" || command == "/tex/choose" || tex == NULL) {
+        if (command == "/tex" || command == "/tex/choose" || tex == nullptr) {
             if (command == "/tex") {
                 string name = m.getArgAsString(1);
                 if (TexturePool::hasShared(name)) {
@@ -76,14 +76,14 @@ void Layer::oscCommand(const string& command, const ofxOscMessage &m) {
         if (command == "/geom" || command == "/geom/choose") {
             if (command == "/geom") {
                 string source = m.getArgAsString(1);
-                shared_ptr<Geom>& newGeom = GeomPool::getOrCreate(source, getId());
+                shared_ptr<Geom> newGeom = GeomPool::getOrCreate(source, getId());
                 setGeom(newGeom);
                 if (GeomPool::hasShared(source)) {
                     return;
                 }
             }
             else {
-                shared_ptr<Geom>& newGeom = GeomPool::getOrCreate(getId());
+                shared_ptr<Geom> newGeom = GeomPool::getOrCreate(getId());
                 newGeom->choose(m);
                 setGeom(newGeom);
             }
@@ -175,7 +175,7 @@ void Layer::layerCommand(const string& command, const ofxOscMessage& m) {
     }
 }
 
-void Layer::draw(const glm::vec3& pos, const glm::vec2& size) {
+void Layer::draw(const glm::vec3& pos, const glm::vec2& size, const Camera* camera) {
     //ofSetGlobalAmbientColor(ofFloatColor(1.0, 1.0, 1.0, 1.0));
     
     ofPushMatrix();
@@ -185,7 +185,7 @@ void Layer::draw(const glm::vec3& pos, const glm::vec2& size) {
     ofSetColor(getVarColor("tint") * getVar("bri"), getVar("alpha") * 255);
     
     if (hasGeom() || shader.isLoaded()) {
-        if (geom == NULL) {
+        if (geom == nullptr) {
             geom = GeomPool::getOrCreate(getId());
         }
         if (!geom->isLoaded()) {
@@ -203,7 +203,7 @@ void Layer::draw(const glm::vec3& pos, const glm::vec2& size) {
         ofScale(geom->getScale(data.getSize()));
         
         if (shader.isLoaded()) {
-            shader.begin(data, delay);
+            shader.begin(data, delay, camera);
             shader.setUniform1i("layer", index);
             shader.setUniform2f("offset", pos.x, pos.y);
             //shader.setUniformMaterial(material.get());
@@ -218,14 +218,14 @@ void Layer::draw(const glm::vec3& pos, const glm::vec2& size) {
     }
     else if (shader.hasDefaultTexture()) {
         doScale();
-        shader.getDefaultTexture()->draw(this);
+        shader.getDefaultTexture()->draw(*this);
     }
     
     ofPopStyle();
     ofPopMatrix();
 }
 
-void Layer::draw(int totalVisible) {
+void Layer::draw(int totalVisible, const Camera* camera) {
     if (shader.isLoaded() || shader.hasDefaultTexture() || hasGeom()) {
         if (getVarBool("visible")) {
             switch (data.blendMode) {
@@ -237,7 +237,7 @@ void Layer::draw(int totalVisible) {
                     break;
             }
             ofEnableBlendMode(data.blendMode);
-            draw(getVarVec3("pos"), data.getSize());
+            draw(getVarVec3("pos"), data.getSize(), camera);
             ofDisableBlendMode();
         }
         data.afterDraw(vars);
@@ -294,7 +294,7 @@ void Layer::doRotate(const glm::vec3& pos) {
 }
 
 void Layer::unload() {
-    geom = NULL;
+    geom = nullptr;
     GeomPool::clean(_id);
     glm::vec3 pos = getVarVec3("pos", glm::vec3());
     glm::vec3 size = getVarVec3("size", glm::vec3());

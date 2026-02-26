@@ -4,7 +4,7 @@
 #include <GL/gl.h>
 #include "../utils.h"
 
-ShaderPass::ShaderPass(Shader* shader) 
+ShaderPass::ShaderPass(const std::shared_ptr<Shader>& shader) 
     : shader(shader), allocated(false), outputSize(0, 0, 0), isArrayTexture(false) {
     // FBO will be allocated in update() when we know the actual size
     allocated = false;
@@ -15,7 +15,8 @@ ShaderPass::~ShaderPass() {
 }
 
 void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
-    if (shader == nullptr || !shader->isShaderLoaded()) {
+    std::shared_ptr<Shader> shaderPtr = shader.lock();
+    if (!shaderPtr || !shaderPtr->isShaderLoaded()) {
         return;
     }
 
@@ -33,12 +34,12 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
 
     // Get sizeMult from shader vars (default to 1.0 if not set)
     glm::vec3 sizeMult(1.0f, 1.0f, 1.0f);
-    if (shader->hasVar("sizeMult")) {
+    if (shaderPtr->hasVar("sizeMult")) {
         // Try different types for sizeMult
-        const Variable<float>* floatVar = dynamic_cast<const Variable<float>*>(shader->getVariable("sizeMult").get());
-        const Variable<int>* intVar = dynamic_cast<const Variable<int>*>(shader->getVariable("sizeMult").get());
-        const Variable<glm::vec2>* vec2Var = dynamic_cast<const Variable<glm::vec2>*>(shader->getVariable("sizeMult").get());
-        const Variable<glm::vec3>* vec3Var = dynamic_cast<const Variable<glm::vec3>*>(shader->getVariable("sizeMult").get());
+        const Variable<float>* floatVar = dynamic_cast<const Variable<float>*>(shaderPtr->getVariable("sizeMult").get());
+        const Variable<int>* intVar = dynamic_cast<const Variable<int>*>(shaderPtr->getVariable("sizeMult").get());
+        const Variable<glm::vec2>* vec2Var = dynamic_cast<const Variable<glm::vec2>*>(shaderPtr->getVariable("sizeMult").get());
+        const Variable<glm::vec3>* vec3Var = dynamic_cast<const Variable<glm::vec3>*>(shaderPtr->getVariable("sizeMult").get());
         
         if (floatVar != nullptr) {
             float mult = floatVar->get();
@@ -139,17 +140,17 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
             }
 
             ofClear(0, 0, 0, 0);
-            shader->begin(texData);
+            shaderPtr->begin(texData);
 
             glm::vec2 size = glm::vec2(outputSize.x, outputSize.y);
-            shader->setUniform2f("resolution", size.x, size.y);
+            shaderPtr->setUniform2f("resolution", size.x, size.y);
 
-            shader->setUniformTextureWithSize("srctex", inputTexture);
-            shader->setUniform1i("texIndex", layer);  // Pass layer index for shader to use
+            shaderPtr->setUniformTextureWithSize("srctex", inputTexture);
+            shaderPtr->setUniform1i("texIndex", layer);  // Pass layer index for shader to use
 
             getQuad(inputTexture, 0, 0, outputSize.x, outputSize.y).draw();
 
-            shader->end();
+            shaderPtr->end();
             fbo.end();
         }
     }
@@ -181,14 +182,14 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
         ofClear(0, 0, 0, 0);
 
         glm::vec2 size = glm::vec2(outputSize.x, outputSize.y);
-        shader->setUniform2f("resolution", size.x, size.y);
+        shaderPtr->setUniform2f("resolution", size.x, size.y);
 
-        shader->begin(texData);
-        shader->setUniformTextureWithSize("srctex", inputTexture);
+        shaderPtr->begin(texData);
+        shaderPtr->setUniformTextureWithSize("srctex", inputTexture);
 
         getQuad(inputTexture, 0, 0, outputSize.x, outputSize.y).draw();
 
-        shader->end();
+        shaderPtr->end();
         fbo.end();
     }
 }
@@ -212,5 +213,5 @@ void ShaderPass::clear() {
     arrayTexture.clear();
     allocated = false;
     isArrayTexture = false;
-    shader = nullptr;
+    shader.reset();
 }

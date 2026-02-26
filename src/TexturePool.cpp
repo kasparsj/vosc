@@ -8,14 +8,14 @@ bool TexturePool::hasShared(string name) {
     return sharedPool.find(name) != sharedPool.end();
 }
 
-shared_ptr<Texture>& TexturePool::getShared(string name, bool create) {
+shared_ptr<Texture> TexturePool::getShared(string name, bool create) {
     if (create && !hasShared(name)) {
         sharedPool[name] = make_shared<Texture>();
     }
     return sharedPool.at(name);
 }
 
-shared_ptr<Texture>& TexturePool::getOrCreate(string name, const VarsHolder* holder) {
+shared_ptr<Texture> TexturePool::getOrCreate(string name, const VarsHolder* holder) {
     map<string, shared_ptr<Texture>>& pool = getPool(holder);
     if (pool.find(name) == pool.end()) {
         pool[name] = make_shared<Texture>();
@@ -24,10 +24,10 @@ shared_ptr<Texture>& TexturePool::getOrCreate(string name, const VarsHolder* hol
 }
 
 map<string, shared_ptr<Texture>>& TexturePool::getPool(const VarsHolder* holder) {
-    if (holder == NULL) {
+    if (holder == nullptr) {
         return sharedPool;
     }
-    else if (dynamic_cast<const Shader*>(holder) != NULL) {
+    else if (dynamic_cast<const Shader*>(holder) != nullptr) {
         return shaderPool[holder->getId()];
     }
     throw "VariablePool::getPool incompatible holder: " + ofToString(holder);

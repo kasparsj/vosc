@@ -5,7 +5,6 @@
 #include "GeomPool.h"
 #include "ShaderTex.h"
 #include "Lights.h"
-#include "Inputs.hpp"
 #include "shader/ShaderPool.h"
 
 #if USE_OFX_HPVPLAYER
@@ -17,10 +16,9 @@
 
 void VOSC::setup(unsigned int port) {
     receiver.setup(port);
-    camera.setup();
+    runtime.camera.setup();
     setupLayers(INITIAL_LAYERS);
     setupCommandRouter();
-    tidal = std::unique_ptr<ofxTidalCycles>(new ofxTidalCycles(1));
     
     windowResized(ofGetWidth(), ofGetHeight());
     
@@ -38,7 +36,7 @@ void VOSC::setup(unsigned int port) {
 void VOSC::setupLayers(int numVisuals) {
     layers.resize(numVisuals);
     for (int i=0; i<layers.size(); i++) {
-        if (layers[i] == NULL) {
+        if (layers[i] == nullptr) {
             layers[i] = make_shared<Layer>();
         }
         layers[i]->setup(i);
@@ -66,26 +64,26 @@ void VOSC::resetLayers(const osc::LayersPayload& layersPayload) {
 }
 
 void VOSC::update() {
-    camera.preUpdate();
+    runtime.camera.preUpdate();
     parseMessages();
-    Inputs::get().update();
-    while (tidal->notes.size() > MAX_NOTES) {
-        tidal->notes.erase(tidal->notes.begin());
+    runtime.inputs.update();
+    while (runtime.tidal->notes.size() > MAX_NOTES) {
+        runtime.tidal->notes.erase(runtime.tidal->notes.begin());
     }
-    VariablePool::update(tidal->notes);
-    TexturePool::update(tidal->notes);
+    VariablePool::update(runtime.tidal->notes);
+    TexturePool::update(runtime.tidal->notes);
     GeomPool::update();
     for (int i = 0; i < layers.size(); i++) {
-        layers[i]->update(tidal->notes);
+        layers[i]->update(runtime.tidal->notes);
     }
-    camera.update();
+    runtime.camera.update();
 #if USE_OFX_HPVPLAYER
     HPV::Update();
 #endif
 #if USE_OFX_ULTRALIGHT
     ofxUltralight::update();
 #endif
-    if (pointLightPass != NULL) {
+    if (pointLightPass != nullptr) {
         // todo: fix
 //        pointLightPass->clear();
 //        const map<string, shared_ptr<Light>>& lights = Lights::get().all();
@@ -102,8 +100,8 @@ void VOSC::draw() {
     endDraw();
     
     if (showDebug) {
-        if (camera.isEnabled()) {
-            ofDrawBitmapString(ofToString(camera.getPosition()), 20, 20);
+        if (runtime.camera.isEnabled()) {
+            ofDrawBitmapString(ofToString(runtime.camera.getPosition()), 20, 20);
         }
         ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
 
@@ -113,20 +111,20 @@ void VOSC::draw() {
 
 void VOSC::beginDraw() {
     ofPushMatrix();
-    if (camera.isEnabled()) {
+    if (runtime.camera.isEnabled()) {
         if (deferredShading) {
             //ofEnableArbTex();
             
-            if (shadowLightPass != NULL) {
-                shadowLightPass->beginShadowMap(camera.getCamera());
+            if (shadowLightPass != nullptr) {
+                shadowLightPass->beginShadowMap(runtime.camera.getCamera());
                 doDraw();
-                if (pointLightPass != NULL) {
+                if (pointLightPass != nullptr) {
                     pointLightPass->drawLights();
                 }
                 shadowLightPass->endShadowMap();
             }
             
-            deferred.begin(camera.getCamera());
+            deferred.begin(runtime.camera.getCamera());
         }
         else {
             Lights::get().update();
@@ -134,7 +132,7 @@ void VOSC::beginDraw() {
             ofEnableDepthTest();
             ofEnableLighting();
 
-            post.begin(camera.getCamera());
+            post.begin(runtime.camera.getCamera());
         }
         if (deferredShading/* || cull_back_enabled*/) {
             glEnable(GL_CULL_FACE);
@@ -148,7 +146,7 @@ void VOSC::beginDraw() {
 }
 
 void VOSC::doDraw() {
-    if (camera.isEnabled()) {
+    if (runtime.camera.isEnabled()) {
         ofTranslate(-ofGetWidth()/2.f, -ofGetHeight()/2);
     }
     int totalVisible = 0;
@@ -158,14 +156,14 @@ void VOSC::doDraw() {
         }
     }
     for (int i=0; i<layers.size(); i++) {
-        layers[i]->draw(totalVisible);
+        layers[i]->draw(totalVisible, &runtime.camera);
     }
 
 }
 
 void VOSC::endDraw() {
     if (deferredShading) {
-        if (pointLightPass != NULL) {
+        if (pointLightPass != nullptr) {
             pointLightPass->drawLights();
         }
         glDisable(GL_CULL_FACE);
@@ -198,7 +196,7 @@ void VOSC::setupCommandRouter() {
     commandRouter.clear();
 
     commandRouter.registerHandler(osc::CommandType::INPUT, [this](const osc::Command& command) {
-        Inputs::get().oscCommand(command.input.commandPath, command.raw);
+        runtime.inputs.oscCommand(command.input.commandPath, command.raw);
         if (command.input.action == osc::InputAction::DATA && waitOnset == -1) {
             waitOnset = 1;
         }
@@ -210,7 +208,7 @@ void VOSC::setupCommandRouter() {
 
     commandRouter.registerHandler(osc::CommandType::DIRT_PLAY, [this](const osc::Command& command) {
         ofxOscMessage nonConstM = command.raw;
-        tidal->parse(nonConstM);
+        runtime.tidal->parse(nonConstM);
         if (waitOnset == -1) {
             waitOnset = 1;
         }
@@ -235,7 +233,7 @@ void VOSC::setupCommandRouter() {
     });
 
     commandRouter.registerHandler(osc::CommandType::CAMERA, [this](const osc::Command& command) {
-        camera.oscCommand(command.camera.commandPath, command.raw);
+        runtime.camera.oscCommand(command.camera.commandPath, command.raw);
     });
 
     commandRouter.registerHandler(osc::CommandType::LIGHT, [this](const osc::Command& command) {
@@ -275,11 +273,11 @@ void VOSC::handleMidi(const osc::Command& command) {
 
 bool VOSC::checkOnset() {
     bool isOnset;
-    if (tidal->notes.size()) {
+    if (runtime.tidal->notes.size()) {
         isOnset = true;
     }
     else {
-        isOnset = Inputs::get().checkOnset();
+        isOnset = runtime.inputs.checkOnset();
     }
     return isOnset;
 }
@@ -362,7 +360,7 @@ void VOSC::routeTargetedResource(const osc::Command& command) {
         const string& which = target.name;
         switch (command.resource.domain) {
             case osc::ResourceDomain::TEX: {
-                shared_ptr<Texture>& tex = TexturePool::getShared(which, true);
+                shared_ptr<Texture> tex = TexturePool::getShared(which, true);
                 tex->oscCommand(commandPath, m);
                 const glm::vec2& size = tex->data.getSize();
                 if (size.x == 0 && size.y == 0) {
@@ -553,8 +551,8 @@ void VOSC::createShadingPass(ofxPostProcessing& post, int passId) {
 void VOSC::applyShadingPasses(const vector<osc::ShadingPassSpec>& passes) {
     post.getPasses().clear();
     deferred.getPasses().clear();
-    shadowLightPass = NULL;
-    pointLightPass = NULL;
+    shadowLightPass = nullptr;
+    pointLightPass = nullptr;
 
     for (size_t i = 0; i < passes.size(); ++i) {
         if (passes[i].byName) {
@@ -651,7 +649,7 @@ void VOSC::windowResized(int w, int h) {
 
 void VOSC::exit() {
     VariablePool::setShuttingDown(true);
-    tidal.reset();
+    runtime.tidal.reset();
 #if USE_OFX_HPVPLAYER
     HPV::DestroyHPVEngine();
 #endif

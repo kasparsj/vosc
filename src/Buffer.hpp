@@ -6,7 +6,7 @@
 
 class Buffer {
 public:
-    Buffer(string name, const ofxOscMessage& m, int arg, VarsHolder* parent);
+    Buffer(string name, const ofxOscMessage& m, int arg, VarsHolder& parent);
     void update();
     const ofTexture& getTexture() const {
         return tex;

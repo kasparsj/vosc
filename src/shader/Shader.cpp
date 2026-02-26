@@ -165,9 +165,9 @@ ShaderPaths Shader::getShaderPaths(const string& path) {
 bool Shader::loadFromFileAndWatch(const string& path) {
     ShaderPaths paths = getShaderPaths(path);
     if (paths.isValid()) {
-        ofxAutoReloadedShader* autoShader = new ofxAutoReloadedShader();
+        std::shared_ptr<ofxAutoReloadedShader> autoShader = std::make_shared<ofxAutoReloadedShader>();
         if (autoShader->load(paths.vertPath, paths.fragPath, paths.geomPath)) {
-            shader = shared_ptr<ofShader>(autoShader);
+            shader = autoShader;
             shaderPath = ofFilePath::getFileName(paths.fragPath);
             return true;
         }
@@ -203,7 +203,7 @@ void Shader::oscCommand(const string& command, const ofxOscMessage& m) {
     }
 }
 
-void Shader::begin(TexData& data, int delay) {
+void Shader::begin(TexData& data, int delay, const Camera* camera) {
     if (isLoaded()) {
         // Reset texture location at the start of each begin call
         texLoc = 0;
@@ -219,9 +219,8 @@ void Shader::begin(TexData& data, int delay) {
         if (shadertoy == NULL) {
             beginShader(*shader);
             // todo: maybe set only for Layer shaders?
-            Camera& cam = Camera::get();
-            if (cam.isEnabled()) {
-                setUniformCameraMatrices(shader, cam.getCamera());
+            if (camera != nullptr && camera->isEnabled()) {
+                setUniformCameraMatrices(shader, camera->getCamera());
             }
         }
         else {
@@ -739,7 +738,7 @@ void Shader::setBuffer(const string& name, const ofxOscMessage& m, int arg) {
     if (buffers.find(name) != buffers.end()) {
         buffers.erase(name);
     }
-    buffers[name] = make_shared<Buffer>(name, m, arg, this);
+    buffers[name] = make_shared<Buffer>(name, m, arg, *this);
 }
 
 void Shader::setUniform1i(const string& name, int v1) {

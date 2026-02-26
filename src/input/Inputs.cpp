@@ -24,7 +24,7 @@ bool tryGetInputName(const ofxOscMessage& m, string& name) {
 
 void Inputs::oscCommand(string command, const ofxOscMessage &m) {
     if (command == "/input/list") {
-        Inputs::get().log();
+        log();
     }
     else {
         string name;

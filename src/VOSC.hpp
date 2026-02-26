@@ -2,9 +2,8 @@
 
 #include "ofMain.h"
 #include "ofxOsc.h"
-#include "ofxTidalCycles.h"
 #include "Layer.h"
-#include "Camera.hpp"
+#include "RuntimeContext.hpp"
 #include "ofxPostProcessing.h"
 #include "ofxMidi.h"
 #include "inspector/Inspector.hpp"
@@ -63,10 +62,9 @@ private:
     osc::CommandParser commandParser;
     osc::CommandRouter commandRouter;
     
-    Camera camera;
+    RuntimeContext runtime;
     vector<shared_ptr<Layer>> layers = {};
     Layout layout = Layout::STACK;
-    std::unique_ptr<ofxTidalCycles> tidal;
     ofxMidiIn midiIn;
     Inspector inspector;
     

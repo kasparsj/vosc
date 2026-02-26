@@ -7,14 +7,14 @@ bool ShaderPool::hasShared(string name) {
     return sharedPool.find(name) != sharedPool.end();
 }
 
-shared_ptr<Shader>& ShaderPool::getShared(string name, bool create) {
+shared_ptr<Shader> ShaderPool::getShared(string name, bool create) {
     if (create && !hasShared(name)) {
         sharedPool[name] = make_shared<Shader>();
     }
     return sharedPool.at(name);
 }
 
-shared_ptr<Shader>& ShaderPool::getOrCreate(string name) {
+shared_ptr<Shader> ShaderPool::getOrCreate(string name) {
     if (sharedPool.find(name) == sharedPool.end()) {
         sharedPool[name] = make_shared<Shader>();
     }
@@ -34,4 +34,3 @@ void ShaderPool::update(const vector<TidalNote> &notes) {
 void ShaderPool::clean() {
     sharedPool.clear();
 }
-

@@ -29,9 +29,7 @@ void FboPingPong::allocate( ofFbo::Settings _settings, ofColor _clearColor )
 	
 	fbo1.allocate( _settings);
 	fbo2.allocate( _settings );
-	
-	sourceBuffer = &fbo1;
-	destBuffer = &fbo2;
+	sourceIsFirst = true;
 	
 	clearSource();
 	clearDest();
@@ -42,13 +40,13 @@ void FboPingPong::allocate( ofFbo::Settings _settings, ofColor _clearColor )
 void FboPingPong::draw( glm::vec2 _pos, float _width, bool _drawBack )
 {
 	float desWidth = _width;
-	float desHeight = (source()->getWidth() / source()->getHeight()) * desWidth;
+	float desHeight = (source().getWidth() / source().getHeight()) * desWidth;
 	
-	source()->draw( _pos, desWidth, desHeight );
+	source().draw( _pos, desWidth, desHeight );
 	
 	if( _drawBack )
 	{
-		dest()->draw( _pos + ofVec2f(desWidth,0), desWidth, desHeight );
+		dest().draw( _pos + ofVec2f(desWidth,0), desWidth, desHeight );
 	}
 }
 
@@ -86,18 +84,18 @@ void FboPingPong::clearDest()
 //
 void FboPingPong::clearSource( ofColor _clearColor )
 {
-	source()->begin();
+	source().begin();
 		ofClear( _clearColor );
-	source()->end();
+	source().end();
 }
 
 // ------------------------------------------------------------------------------------
 //
 void FboPingPong::clearDest( ofColor _clearColor )
 {
-	dest()->begin();
+	dest().begin();
 		ofClear( _clearColor );
-	dest()->end();
+	dest().end();
 }
 
 // ------------------------------------------------------------------------------------
@@ -111,5 +109,5 @@ void FboPingPong::setClearColor( ofColor _color )
 //
 void FboPingPong::swap()
 {
-	std::swap(sourceBuffer, destBuffer);
+	sourceIsFirst = !sourceIsFirst;
 }

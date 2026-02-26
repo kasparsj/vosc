@@ -9,11 +9,10 @@
 
 class Texture : public VarsHolder {
 public:
-    Texture(shared_ptr<BaseTex> tex) : VarsHolder(), tex(tex) {
-        data.setup(this);
+    Texture(shared_ptr<BaseTex> tex) : VarsHolder(), tex(tex), data(*this) {
         reset();
     }
-    Texture() : Texture(NULL) {}
+    Texture() : Texture(nullptr) {}
     ~Texture() {
         unload();
     }
@@ -26,7 +25,7 @@ public:
     void clear();
     void update(const vector<TidalNote> &notes);
     void oscCommand(const string& command, const ofxOscMessage &m);
-    void draw(Layer* layer);
+    void draw(Layer& layer);
     void texDraw(const glm::vec2& pos, const glm::vec2 size);
     void reset();
     bool isFrameNew() const {
@@ -39,12 +38,12 @@ public:
     bool hasTexture(int delay = 0) const;
     ofPixels& getPixels() const;
     bool isLoaded() const {
-        return tex != NULL;
+        return tex != nullptr;
     }
     bool hasShader() const;
     void setLooper(const ofxOscMessage& m);
 
-    shared_ptr<BaseTex> tex = NULL;
+    shared_ptr<BaseTex> tex = nullptr;
     TexData data;
     int numFrames = 1;
     vector<ofFbo> frames;
@@ -71,5 +70,4 @@ private:
     ofTexture& getSingleFrameTexture(int att);
     
     std::unique_ptr<ofxLooper> looper;
-    ofTexture* render = NULL;
 };

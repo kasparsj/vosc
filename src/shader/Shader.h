@@ -20,6 +20,8 @@ struct ShaderPaths {
     bool isValid() const { return fragPath != ""; }
 };
 
+class Camera;
+
 class Shader : public VarsHolder {
 public:
     static map<string, ofxAutoReloadedShader> cache;
@@ -44,7 +46,7 @@ public:
     void reload();
     void update(const vector<TidalNote> &notes);
     void oscCommand(const string& command, const ofxOscMessage& m);
-    void begin(TexData& data, int delay = 0);
+    void begin(TexData& data, int delay = 0, const Camera* camera = nullptr);
     void end();
     void reset();
     void unload();
@@ -119,4 +121,3 @@ private:
     mutable map<string, GLenum> uniformTypes;
     int texLoc;
 };
-

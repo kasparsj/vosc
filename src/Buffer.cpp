@@ -1,7 +1,7 @@
 #include "Buffer.hpp"
 #include "VariablePool.h"
 
-Buffer::Buffer(string name, const ofxOscMessage& m, int arg, VarsHolder* parent) {
+Buffer::Buffer(string name, const ofxOscMessage& m, int arg, VarsHolder& parent) {
     shared_ptr<BaseVar> vartmp;
     if (m.getArgType(arg) == OFXOSC_TYPE_STRING) {
         string source = m.getArgAsString(arg);
@@ -9,8 +9,8 @@ Buffer::Buffer(string name, const ofxOscMessage& m, int arg, VarsHolder* parent)
             vartmp = VariablePool::getShared(source);
         }
     }
-    if (vartmp == NULL) {
-        vartmp = VariablePool::createOrUpdate(name, m, arg, parent);
+    if (vartmp == nullptr) {
+        vartmp = VariablePool::createOrUpdate(name, m, arg, &parent);
     }
     var = vartmp;
     buf.allocate();

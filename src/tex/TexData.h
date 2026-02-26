@@ -2,15 +2,13 @@
 
 #include "VarsHolder.h"
 #include "Config.h"
+#include <functional>
 
 class TexData {
 public:
-    TexData() {
+    explicit TexData(VarsHolder& parent)
+        : parent(parent) {
         randomSeed = ofRandom(1000);
-    }
-    
-    void setup(VarsHolder* parent) {
-        this->parent = parent;
     }
     void update(const vector<TidalNote> &notes);
     void oscCommand(const string& command, const ofxOscMessage &m);
@@ -23,7 +21,7 @@ public:
         return getVarVec3("size");
     }
     void setSize(float w, float h, float d = 0) {
-        parent->setVar("size", glm::vec3(w, h, d));
+        parent.get().setVar("size", glm::vec3(w, h, d));
         texData.width = w;
         texData.height = h;
 #if ALLOW_TEX_2D_ARRAY
@@ -82,25 +80,25 @@ public:
     void allocate(ofTexture& tex);
     void afterDraw(const map<string, shared_ptr<BaseVar>>& vars);
     const map<string, shared_ptr<BaseVar>>& getVars() const {
-        return parent->vars;
+        return parent.get().vars;
     }
     bool hasVar(const string& name) const {
-        return parent->hasVar(name);
+        return parent.get().hasVar(name);
     }
     float getVar(const string& name, int idx = 0) const {
-        return parent->getVar(name, idx);
+        return parent.get().getVar(name, idx);
     }
     float getVarPercent(const string& name, int idx = 0) const {
-        return parent->getVarPercent(name, idx);
+        return parent.get().getVarPercent(name, idx);
     }
     const vector<float>& getVarVec(const string& name) const {
-        return parent->getVarVec(name);
+        return parent.get().getVarVec(name);
     }
     glm::vec3 getVarVec3(const string& name) const {
-        return parent->getVarVec3(name);
+        return parent.get().getVarVec3(name);
     }
     ofFloatColor getVarColor(const string& name) const {
-        return parent->getVarColor(name);
+        return parent.get().getVarColor(name);
     }
     
     float time = 0;
@@ -111,7 +109,7 @@ public:
     int randomSeed = 0;
     
 protected:
-    VarsHolder* parent;
+    std::reference_wrapper<VarsHolder> parent;
     ofTextureData texData;
     ofFbo::Settings fboSettings;
 

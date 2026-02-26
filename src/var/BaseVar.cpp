@@ -31,33 +31,33 @@ shared_ptr<BaseVar> BaseVar::create(const string& command, const ofxOscMessage& 
         return var;
     }
     ofLogError() << "VariablePool::create command not recognized: " << m;
-    return NULL;
+    return nullptr;
 }
 
 shared_ptr<BaseVar> BaseVar::createVar(const ofxOscMessage& m, int idx, size_t size) {
     if (size == 2) {
-        Variable<glm::vec2>* var = new Variable<glm::vec2>();
+        auto var = std::make_shared<Variable<glm::vec2>>();
         var->set(m, idx);
-        return shared_ptr<BaseVar>(var);
+        return var;
     }
     else if (size == 3) {
-        Variable<glm::vec3>* var = new Variable<glm::vec3>();
+        auto var = std::make_shared<Variable<glm::vec3>>();
         var->set(m, idx);
-        return shared_ptr<BaseVar>(var);
+        return var;
     }
     else if (size == 4) {
-        Variable<ofFloatColor>* var = new Variable<ofFloatColor>();
+        auto var = std::make_shared<Variable<ofFloatColor>>();
         var->set(m, idx);
-        return shared_ptr<BaseVar>(var);
+        return var;
     }
     else if (size == 16) {
-        Variable<glm::mat4>* var = new Variable<glm::mat4>();
+        auto var = std::make_shared<Variable<glm::mat4>>();
         var->set(m, idx);
-        return shared_ptr<BaseVar>(var);
+        return var;
     }
     // todo: support vector<float>
     ofLogError() << "VariablePool::create not implemented for size: " << size;
-    return NULL;
+    return nullptr;
 }
 
 shared_ptr<BaseVar> BaseVar::createVar(const ofxOscMessage& m, int idx) {
@@ -98,7 +98,7 @@ shared_ptr<BaseVar> BaseVar::createVar(const ofxOscMessage& m, int idx) {
         }
         default:
             ofLogError() << "VariablePool::create type not implemented: " << type << m << idx;
-            return NULL;
+            return nullptr;
     }
 }
 
@@ -187,27 +187,27 @@ void BaseVar::updateVar(shared_ptr<BaseVar>& var, const ofxOscMessage& m, int id
         }
     }
     auto varInt = dynamic_cast<Variable<int>*>(var.get());
-    if (varInt != NULL) {
+    if (varInt != nullptr) {
         varInt->set(m, idx);
         return;
     }
     auto varFloat = dynamic_cast<Variable<float>*>(var.get());
-    if (varFloat != NULL) {
+    if (varFloat != nullptr) {
         varFloat->set(m, idx);
         return;
     }
     auto varVec2 = dynamic_cast<Variable<glm::vec2>*>(var.get());
-    if (varVec2 != NULL) {
+    if (varVec2 != nullptr) {
         varVec2->set(m, idx);
         return;
     }
     auto varVec3 = dynamic_cast<Variable<glm::vec3>*>(var.get());
-    if (varVec3 != NULL) {
+    if (varVec3 != nullptr) {
         varVec3->set(m, idx);
         return;
     }
     auto varColor = dynamic_cast<Variable<ofFloatColor>*>(var.get());
-    if (varColor != NULL) {
+    if (varColor != nullptr) {
         varColor->set(m, idx);
         return;
     }
@@ -218,7 +218,7 @@ void BaseVar::updateColorsScheme(const shared_ptr<BaseVar>& var, const ofxOscMes
     string schemeName = m.getArgAsString(idx);
     ofFloatColor primaryColor = Args::parse<ofFloatColor>(m, idx+1);
     shared_ptr<FloatColorWheelScheme> scheme = FloatColorWheelSchemes::get(schemeName);
-    if (scheme != NULL) {
+    if (scheme != nullptr) {
         scheme->setPrimaryColor(primaryColor);
         vector<ofFloatColor> colors = scheme->regenerate();
         if (m.getNumArgs() > (idx+2)) {

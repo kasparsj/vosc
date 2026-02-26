@@ -20,9 +20,9 @@ class FboPingPong
 		void allocate( int _w, int _h, int internalformat = GL_RGB, ofColor _clearColor = ofColor(255,255,255) );
 		void allocate( ofFbo::Settings _settings, ofColor _clearColor = ofColor(255,255,255) );
 	
-		ofFbo* source() { return sourceBuffer;	}
-        const ofFbo* source() const { return sourceBuffer;    }
-		ofFbo* dest()	{ return destBuffer;	}
+		ofFbo& source() { return sourceRef();	}
+        const ofFbo& source() const { return sourceRef();    }
+		ofFbo& dest()	{ return destRef();	}
 	
 		void draw( glm::vec2 _pos, float _width, bool _drawBack = false );
 	
@@ -40,12 +40,14 @@ class FboPingPong
 		void swap();
 		
 	private:
-	
-		ofFbo* sourceBuffer;
-		ofFbo* destBuffer;
-	
 		ofFbo fbo1;
 		ofFbo fbo2;
+		bool sourceIsFirst = true;
+		
+		ofFbo& sourceRef() { return sourceIsFirst ? fbo1 : fbo2; }
+        const ofFbo& sourceRef() const { return sourceIsFirst ? fbo1 : fbo2; }
+		ofFbo& destRef() { return sourceIsFirst ? fbo2 : fbo1; }
+        const ofFbo& destRef() const { return sourceIsFirst ? fbo2 : fbo1; }
 		
 		ofColor clearColor;
 };

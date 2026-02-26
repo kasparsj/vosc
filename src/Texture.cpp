@@ -47,7 +47,7 @@ void Texture::load(string source, const vector<float>& args) {
             }
         }
     }
-    if (tex == NULL && source != "") {
+    if (tex == nullptr && source != "") {
         ofLogError() << ("invalid source: " + source);
     }
 }
@@ -62,7 +62,7 @@ void Texture::load(const ofxOscMessage &m, int arg) {
 }
 
 void Texture::loadData(const ofxOscMessage &m, int arg) {
-    if (tex == NULL) {
+    if (tex == nullptr) {
         vector<float> args;
         tex = make_shared<Tex>("loadData", args);
     }
@@ -76,7 +76,7 @@ void Texture::loadData(const ofxOscMessage &m, int arg) {
     else {
         tex->getTexture().loadData(var->asBufferObject(), GL_RGBA, GL_FLOAT);
     }
-    var = NULL;
+    var = nullptr;
 }
 
 void Texture::choose(const ofxOscMessage& m) {
@@ -87,7 +87,7 @@ void Texture::choose(const ofxOscMessage& m) {
         args.push_back(m.getArgAsFloat(i));
     }
     tex = chooseTex(type, args);
-    if (tex == NULL) {
+    if (tex == nullptr) {
         ofLogError() << ("chooseTex: invalid source type " + type);
     }
 }
@@ -104,7 +104,7 @@ shared_ptr<BaseTex> Texture::chooseTex(string type, const vector<float>& args) {
 void Texture::_unload() {
     frames.clear();
     frames.resize(numFrames);
-    tex = NULL;
+    tex = nullptr;
     needsUpdate = true;
 }
 
@@ -115,7 +115,7 @@ void Texture::unload() {
 }
 
 void Texture::reload() {
-    if (tex != NULL) {
+    if (tex != nullptr) {
         tex->reload();
     }
     else {
@@ -124,7 +124,7 @@ void Texture::reload() {
 }
 
 void Texture::clear() {
-    if (tex != NULL) {
+    if (tex != nullptr) {
         tex->clear();
     }
     else {
@@ -146,7 +146,7 @@ void Texture::update(const vector<TidalNote> &notes) {
         tex->update(data);
         
         // Apply shader passes
-        render = &tex->getTexture();
+        ofTexture* render = &tex->getTexture();
         for (auto& pass : passes) {
             pass->update(*render, data);
             render = &pass->getTexture();
@@ -278,7 +278,7 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
             string shaderName = m.getArgAsString(idx);
             shared_ptr<Shader> shader = ShaderPool::getShared(shaderName, true);
             if (shader->isLoaded() || shader->load(shaderName)) {
-                shared_ptr<ShaderPass> pass = make_shared<ShaderPass>(shader.get());
+                shared_ptr<ShaderPass> pass = make_shared<ShaderPass>(shader);
                 passes.push_back(pass);
             }
             else {
@@ -305,18 +305,18 @@ void Texture::drawFrame() {
     fbo.end();
 }
 
-void Texture::draw(Layer* layer) {
-    const glm::vec3& pos = layer->getVarVec3("pos");
-    const glm::vec2& size = layer->data.getSize();
-    if (isLoaded() && layer->delay == 0) {
+void Texture::draw(Layer& layer) {
+    const glm::vec3& pos = layer.getVarVec3("pos");
+    const glm::vec2& size = layer.data.getSize();
+    if (isLoaded() && layer.delay == 0) {
         texDraw(pos, size);
         data.afterDraw(vars);
     }
-    else if (hasTexture(layer->delay)) {
+    else if (hasTexture(layer.delay)) {
         // todo: there is no way to multiply tints, therefore texture tint is disabled temporarily
         //ofPushStyle();
         //ofSetColor(getVarColor("tint"));
-        const ofTexture& tex = getTexture(layer->delay);
+        const ofTexture& tex = getTexture(layer.delay);
         if (data.aspectRatio) {
             if (tex.getWidth() > tex.getHeight()) {
                 tex.draw(pos, size.x, size.x/tex.getWidth() * tex.getHeight());
@@ -351,7 +351,7 @@ void Texture::setNumFrames(int value) {
 }
 
 void Texture::reset() {
-    if (tex != NULL) {
+    if (tex != nullptr) {
         tex->reset();
     }
     vars.clear();
@@ -362,7 +362,6 @@ void Texture::reset() {
     setVar("tint", ofFloatColor(1.f, 1.f));
     setVar("timePct", 0.f);
     // todo: who cleans up?
-    render = NULL;
     looper.reset();
 }
 
@@ -389,7 +388,7 @@ bool Texture::hasTexture(int delay) const {
 
 const ofTexture& Texture::getSingleFrameTexture(int att) const {
     if (!looper) {
-        return render != NULL ? *render : tex->getTexture(att);
+        return passes.empty() ? tex->getTexture(att) : passes.back()->getTexture();
     }
     else {
         return looper->getFbo().getTexture(att);
@@ -398,7 +397,7 @@ const ofTexture& Texture::getSingleFrameTexture(int att) const {
 
 ofTexture& Texture::getSingleFrameTexture(int att) {
     if (!looper) {
-        return render != NULL ? *render : tex->getTexture(att);
+        return passes.empty() ? tex->getTexture(att) : passes.back()->getTexture();
     }
     else {
         return looper->getFbo().getTexture(att);
@@ -461,6 +460,6 @@ void Texture::setLooper(const ofxOscMessage& m) {
 }
 
 bool Texture::hasShader() const {
-    if (tex == NULL) return false;
+    if (tex == nullptr) return false;
     return std::dynamic_pointer_cast<ShaderTex>(tex) != nullptr;
 }

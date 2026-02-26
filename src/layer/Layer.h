@@ -10,10 +10,11 @@
 #include "GeomPool.h"
 #include "Material.hpp"
 
+class Camera;
+
 class Layer : public VarsHolder {
 public:
-    Layer() : VarsHolder() {
-        data.setup(this);
+    Layer() : VarsHolder(), data(*this) {
         reset();
     }
     ~Layer() {
@@ -26,8 +27,8 @@ public:
     void layerCommand(const string& command, const ofxOscMessage& m);
     void materialCommand(const string& command, const ofxOscMessage& m);
     void drawToFbo();
-    void draw(const glm::vec3 &pos, const glm::vec2 &size);
-    void draw(int totalVisible);
+    void draw(const glm::vec3 &pos, const glm::vec2 &size, const Camera* camera = nullptr);
+    void draw(int totalVisible, const Camera* camera = nullptr);
     void doAlign();
     void doRotate(const glm::vec3& pos);
     void doScale();
@@ -36,9 +37,9 @@ public:
     void resetTransform();    
     void setShader(string path);
     bool hasGeom() {
-        return geom != NULL && geom->isLoaded();
+        return geom != nullptr && geom->isLoaded();
     }
-    void setGeom(shared_ptr<Geom>& value) {
+    void setGeom(const shared_ptr<Geom>& value) {
         geom = value;
     }
     

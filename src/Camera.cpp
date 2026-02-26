@@ -2,10 +2,7 @@
 #include "Args.h"
 #include "ofxFirstPersonCamera.h"
 
-Camera* Camera::instance = nullptr;
-
 void Camera::setup() {
-    instance = this;
     if (!camPos || !camLook || !camOrbit) {
         reset();
     }
