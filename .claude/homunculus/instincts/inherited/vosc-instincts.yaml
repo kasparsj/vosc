@@ -1,0 +1,637 @@
+# Instincts generated from https://github.com/kasparsj/vosc
+# Generated: 2026-05-02T20:50:44.740Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: vosc-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Commit Length
+
+## Action
+
+Keep commit messages concise (~25 characters)
+
+## Evidence
+
+- Average commit message length: 25 chars
+- Based on 200 commits
+
+---
+id: vosc-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Naming Files
+
+## Action
+
+Use PascalCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: PascalCase
+
+---
+id: vosc-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: vosc-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: vosc-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: vosc-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.ts
+
+## Evidence
+
+- File pattern: *.test.ts
+- Consistent across test files
+
+---
+id: vosc-workflow-feature-development
+trigger: "when implementing a new feature"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Workflow Feature Development
+
+## Action
+
+Follow the feature-development workflow:
+1. Add feature implementation
+2. Add tests for feature
+3. Update documentation
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: **/*.test.*
+
+---
+id: vosc-workflow-test-driven-development
+trigger: "when adding new functionality"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Workflow Test Driven Development
+
+## Action
+
+Follow the test-driven-development workflow:
+1. Write failing test
+2. Implement code to pass test
+3. Refactor if needed
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: **/*.test.*, **/*.spec.*, src/**/*
+
+---
+id: vosc-workflow-refactoring
+trigger: "when refactoring code"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Workflow Refactoring
+
+## Action
+
+Follow the refactoring workflow:
+1. Ensure tests pass before refactor
+2. Refactor code structure
+3. Verify tests still pass
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/**/*
+
+---
+id: vosc-workflow-shader-feature-development
+trigger: "when doing shader feature development"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Workflow Shader Feature Development
+
+## Action
+
+Follow the shader-feature-development workflow:
+1. Edit or create shader C++ files (src/shader/Shader.cpp, src/shader/Shader.h, src/shader/ShaderPass.cpp, src/shader/ShaderPass.h, etc.)
+2. Edit or add shader fragment files (bin/data/shaders/**/*.frag)
+3. Optionally update SuperCollider scripts for shader usage (SuperCollider/*.scd)
+4. Edit or update inspector files for shaders/textures (src/inspector/ShaderInspector.cpp, src/inspector/TextureInspector.cpp, etc.)
+5. Edit or update related texture or variable pool files if needed
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: src/shader/Shader.cpp, src/shader/Shader.h, src/shader/ShaderPass.cpp
+
+---
+id: vosc-workflow-documentation-migration-or-expansion
+trigger: "when doing documentation migration or expansion"
+confidence: 0.55
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Workflow Documentation Migration Or Expansion
+
+## Action
+
+Follow the documentation-migration-or-expansion workflow:
+1. Edit or add markdown files in docs/ (docs/*.md)
+2. Edit README.md
+3. Optionally add or update documentation scripts (scripts/*.sh, scripts/*.py)
+4. Optionally update CI workflows for doc generation (.github/workflows/*.yml)
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~1x per month
+- Files: README.md, docs/*.md, docs/_Sidebar.md
+
+---
+id: vosc-workflow-osc-command-parser-or-router-refactor
+trigger: "when doing osc command parser or router refactor"
+confidence: 0.55
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Workflow Osc Command Parser Or Router Refactor
+
+## Action
+
+Follow the osc-command-parser-or-router-refactor workflow:
+1. Edit or create OSC parser/router C++ files (src/osc/CommandParser.cpp, src/osc/CommandRouter.cpp, etc.)
+2. Edit or create related header files (src/osc/*.hpp)
+3. Edit or update main VOSC files to integrate changes (src/VOSC.cpp, src/VOSC.hpp)
+4. Update or add tests for OSC commands (tests/osc/*.cpp, tests/osc/README.md)
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~1x per month
+- Files: src/osc/CommandParser.cpp, src/osc/CommandParser.hpp, src/osc/CommandRouter.cpp
+
+---
+id: vosc-workflow-inspector-feature-development-or-bugfix
+trigger: "when doing inspector feature development or bugfix"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Workflow Inspector Feature Development Or Bugfix
+
+## Action
+
+Follow the inspector-feature-development-or-bugfix workflow:
+1. Edit or create inspector C++ files (src/inspector/*.cpp, src/inspector/*.hpp)
+2. Optionally update related shader, texture, or variable files
+3. Optionally update SuperCollider scripts for inspector testing
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/inspector/Inspector.cpp, src/inspector/Inspector.hpp, src/inspector/ShaderInspector.cpp
+
+---
+id: vosc-workflow-texture-or-variable-pool-extension
+trigger: "when doing texture or variable pool extension"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/kasparsj/vosc
+---
+
+# Vosc Workflow Texture Or Variable Pool Extension
+
+## Action
+
+Follow the texture-or-variable-pool-extension workflow:
+1. Edit or create pool C++ files (src/tex/*.cpp, src/tex/*.h, src/var/*.cpp, src/var/*.h)
+2. Edit or update main VOSC files or related shader/inspector files
+3. Optionally update SuperCollider scripts for pool usage
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/tex/TexData.cpp, src/tex/TexData.h, src/tex/BaseTex.cpp
+
+---
+id: vosc-instinct-file-naming-pascalcase
+trigger: "When creating a new file (source, header, or test)"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct File Naming Pascalcase
+
+## Action
+
+Name the file using PascalCase (e.g., ShaderInspector.cpp)
+
+## Evidence
+
+- Pattern in srcLayout and namingConventions: files are PascalCase
+- Files like ShaderInspector.cpp, TextureInspector.cpp
+
+---
+id: vosc-instinct-function-naming-camelcase
+trigger: "When defining a new function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Function Naming Camelcase
+
+## Action
+
+Name the function using camelCase (e.g., parseCommand, addTestCase)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions: functions are camelCase
+
+---
+id: vosc-instinct-class-naming-pascalcase
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Class Naming Pascalcase
+
+## Action
+
+Name the class using PascalCase (e.g., CommandParser, ShaderPool)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions: classes are PascalCase
+- Files like ShaderInspector.hpp, CommandParser.hpp
+
+---
+id: vosc-instinct-constant-naming-screaming-snake
+trigger: "When defining a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Constant Naming Screaming Snake
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE (e.g., DEFAULT_TIMEOUT)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions: constants are SCREAMING_SNAKE_CASE
+
+---
+id: vosc-instinct-import-style-relative
+trigger: "When importing modules in code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Import Style Relative
+
+## Action
+
+Use relative import paths
+
+## Evidence
+
+- Pattern in codeStyle.importStyle: relative
+
+---
+id: vosc-instinct-export-style-named
+trigger: "When exporting modules or functions"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Export Style Named
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in codeStyle.exportStyle: named
+
+---
+id: vosc-instinct-test-file-pattern
+trigger: "When creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Test File Pattern
+
+## Action
+
+Name the test file with the pattern *.test.ts
+
+## Evidence
+
+- Pattern in testing.filePattern: *.test.ts
+- Example: src/utils/validation.test.ts
+
+---
+id: vosc-instinct-test-type-unit
+trigger: "When writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Test Type Unit
+
+## Action
+
+Write unit tests for individual functions or modules
+
+## Evidence
+
+- Pattern in testing.testTypes: unit
+
+---
+id: vosc-instinct-tdd-sequence
+trigger: "When following test-driven development"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Tdd Sequence
+
+## Action
+
+First write a failing test, then implement code to pass it, then refactor if needed
+
+## Evidence
+
+- Workflow: test-driven-development
+- Commit sequence: Write failing test → Implement code → Refactor
+
+---
+id: vosc-instinct-commit-prefix-optional
+trigger: "When making a commit"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Commit Prefix Optional
+
+## Action
+
+Optionally use a prefix (e.g., docs:, test:, chore:, refactor:) to indicate the type of change
+
+## Evidence
+
+- Commits like 'docs: migrate wiki pages into docs folder', 'test: add OSC harness and sanitizer CI', 'refactor: split VOSC into core subsystems'
+- No strict enforcement, but common usage
+
+---
+id: vosc-instinct-commit-message-short
+trigger: "When writing a commit message"
+confidence: 0.8
+domain: git
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Commit Message Short
+
+## Action
+
+Keep the commit message concise, typically under 50 characters
+
+## Evidence
+
+- commits.averageLength: 25
+- Examples: 'add GenericTex', 'fixes for of_v12', 'Expand README with conceptual overview and quickstart example'
+
+---
+id: vosc-instinct-shader-feature-development
+trigger: "When someone wants to add or modify shader functionality (e.g., Shader, ShaderPass, shader fragment files, or shader inspectors)"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Shader Feature Development
+
+## Action
+
+Edit or create shader C++ files, shader fragment files, optionally update SuperCollider scripts and inspector files, and related texture/variable pool files if needed
+
+## Evidence
+
+- Workflow: shader-feature-development
+- Files: src/shader/Shader.cpp, bin/data/shaders/**/*.frag, src/inspector/ShaderInspector.cpp, SuperCollider/*.scd
+
+---
+id: vosc-instinct-documentation-migration-or-expansion
+trigger: "When someone wants to update, migrate, or generate documentation or reference material"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Documentation Migration Or Expansion
+
+## Action
+
+Edit or add markdown files in docs/, edit README.md, optionally update documentation scripts and CI workflows for doc generation
+
+## Evidence
+
+- Workflow: documentation-migration-or-expansion
+- Files: docs/*.md, README.md, scripts/generate_osc_reference.py, .github/workflows/*.yml
+
+---
+id: vosc-instinct-osc-command-parser-or-router-refactor
+trigger: "When someone wants to improve or extend the OSC command handling pipeline"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Osc Command Parser Or Router Refactor
+
+## Action
+
+Edit or create OSC parser/router C++ files and headers, update main VOSC files, update or add tests for OSC commands
+
+## Evidence
+
+- Workflow: osc-command-parser-or-router-refactor
+- Files: src/osc/CommandParser.cpp, src/osc/CommandRouter.cpp, tests/osc/CommandParserTests.cpp
+
+---
+id: vosc-instinct-inspector-feature-development-or-bugfix
+trigger: "When someone wants to add, improve, or fix inspector functionality"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Inspector Feature Development Or Bugfix
+
+## Action
+
+Edit or create inspector C++ files, optionally update related shader, texture, or variable files, and optionally update SuperCollider scripts for inspector testing
+
+## Evidence
+
+- Workflow: inspector-feature-development-or-bugfix
+- Files: src/inspector/Inspector.cpp, src/inspector/ShaderInspector.cpp, SuperCollider/*.scd
+
+---
+id: vosc-instinct-texture-or-variable-pool-extension
+trigger: "When someone wants to extend or fix texture/variable pool functionality"
+confidence: 0.8
+domain: workflow
+source: repo-analysis
+source_repo: kasparsj/vosc
+---
+
+# Vosc Instinct Texture Or Variable Pool Extension
+
+## Action
+
+Edit or create pool C++ files, update main VOSC or related shader/inspector files, optionally update SuperCollider scripts for pool usage
+
+## Evidence
+
+- Workflow: texture-or-variable-pool-extension
+- Files: src/tex/TexData.cpp, src/var/VariablePool.cpp, SuperCollider/*.scd
+
