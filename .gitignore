@@ -7,3 +7,4 @@ bin/data/videos
 bin/data/shaders/shadertoy
 log.txt
 tests/bin
+.claude/
