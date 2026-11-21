@@ -1,0 +1,30 @@
+{
+  "policy": "docs/Feedback-composition-contract.md",
+  "shaders": {
+    "attribution-a.frag": "b66719bf92f44e949e3c6b8886d8f1a17548a40681674ee96bd85dd5df0039b1",
+    "attribution-b.frag": "3965b1e2081cd107079b4e7060709976befac10f9a3b504d776e43d9b77978fd",
+    "demo.frag": "6ca4d40c30ba3e20641d363b88b8a62e310b474c74d8a581ad2337d5de6be1b5",
+    "gradient.frag": "57978fa5f647915276af55dc872b7b49b393fee00a311e42dce7b22cf0011054",
+    "spatial.frag": "44c4b01bfffacd55537b44ebfdc3914ebd71fec715f3e97bfd81f739ee1e8710",
+    "temporal.frag": "9a1adb99ec7310dcd418853e30c9fe76dc42bfc20c167704006bdcd4064681f5"
+  },
+  "demo_iterations": 16,
+  "attribution_iterations": [
+    2,
+    32
+  ],
+  "dimensions": [
+    800,
+    600
+  ],
+  "warmup_frames": 120,
+  "demo_pairs": 600,
+  "demo_seconds": 30,
+  "coverage": 0.95,
+  "p95_ms": 8,
+  "max_ms": 16,
+  "attribution_blocks": 3,
+  "attribution_order": "ABBA",
+  "attribution_pairs": 120,
+  "attribution_seconds": 10
+}

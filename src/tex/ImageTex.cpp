@@ -29,9 +29,11 @@ void ImageTex::update(TexData& data) {
                 absPath = ofToDataPath(absPath);
             }
         }
-        if (image.load(absPath)) {
+        const bool remote = absPath.substr(0, 7) == "http://" || absPath.substr(0, 8) == "https://";
+        const bool loaded = remote ? image.load(absPath) : image.load(ofBufferFromFile(absPath, true));
+        if (loaded) {
             prevPath = path;
-            data.setSize(image.getWidth(), image.getHeight());
+            if (!data.hasExplicitSize()) data.setSize(image.getWidth(), image.getHeight());
             isStatic = true;
             needsUpdate = false;
         }

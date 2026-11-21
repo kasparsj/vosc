@@ -1,0 +1,119 @@
+{
+  "sdks": {
+    "0.12.1": {
+      "url": "https://github.com/openframeworks/openFrameworks/releases/download/0.12.1/of_v0.12.1_osx_release.tar.gz",
+      "sha256": "e4a2dd6e75805320aac905f9f82f7b85e67a8b799137d47f35d40f7c4c195c9b",
+      "root": "of_v0.12.1_osx_release"
+    },
+    "0.11.1": {
+      "url": "https://openframeworks.cc/versions/v0.11.1/of_v0.11.1_osx_release.zip",
+      "sha256": "815d578512ee328aaa9592951298f88716abb6a7e4bbcb4993aa755f477ed004",
+      "root": "of_v0.11.1_osx_release"
+    }
+  },
+  "bundled_addons": {
+    "sdk_version": "0.11.1",
+    "names": [
+      "ofxAssimpModelLoader",
+      "ofxOsc"
+    ]
+  },
+  "addons": {
+    "ofxAutoReloadedShader": {
+      "url": "https://codeload.github.com/kasparsj/ofxAutoReloadedShader/tar.gz/9d2f690e7ceb3d6c956e78762c18649fb6836875",
+      "sha256": "42417ad66ebf8d4bbdc304ad8dbb7ecc264a963a3bf219cb5f3eae13e1eeb94a",
+      "repository": "https://github.com/kasparsj/ofxAutoReloadedShader",
+      "commit": "9d2f690e7ceb3d6c956e78762c18649fb6836875"
+    },
+    "ofxColorTheory": {
+      "url": "https://codeload.github.com/kasparsj/ofxColorTheory/tar.gz/a5e9015b9618d2e4e5cf94af52430e54e3239edd",
+      "sha256": "8926c519fb9bfd0534411f241e28c696fa15fc93176066db258f00d2aa59c55a",
+      "repository": "https://github.com/kasparsj/ofxColorTheory",
+      "commit": "a5e9015b9618d2e4e5cf94af52430e54e3239edd"
+    },
+    "ofxDeferredShading": {
+      "url": "https://codeload.github.com/nama-gatsuo/ofxDeferredShading/tar.gz/32c6cd872e89a3d5a977f5124bd47d444ea026db",
+      "sha256": "c494f974191449f90a912db3f65784678f4992f1ccae3e5a3a5807707b740e5d",
+      "repository": "https://github.com/nama-gatsuo/ofxDeferredShading",
+      "commit": "32c6cd872e89a3d5a977f5124bd47d444ea026db"
+    },
+    "ofxEasing": {
+      "url": "https://codeload.github.com/arturoc/ofxEasing/tar.gz/3a15beffb9cfdce26ffafb1f78e06e730b26c239",
+      "sha256": "6aa712974e242eff0d233fb5078b4dd8a927545affac1d319d18d940e2d1bb92",
+      "repository": "https://github.com/arturoc/ofxEasing",
+      "commit": "3a15beffb9cfdce26ffafb1f78e06e730b26c239"
+    },
+    "ofxExpr": {
+      "url": "https://codeload.github.com/kasparsj/ofxExpr/tar.gz/f497f958369a6a17c64e66e2a5c4604e80aba468",
+      "sha256": "2e1aa4a06441aa866acc8f6ff0f2a6db778d87423da3b7a8becfaeb6d157cd4c",
+      "repository": "https://github.com/kasparsj/ofxExpr",
+      "commit": "f497f958369a6a17c64e66e2a5c4604e80aba468"
+    },
+    "ofxHPVPlayer": {
+      "url": "https://codeload.github.com/vjacob/ofxHPVPlayer/tar.gz/ed2d0e94dbce14038bc6ac8bb2e25a8f0a300b4c",
+      "sha256": "de74552f32fdc98f149a96677ea9b9b2ac9488e908004b94239b04e2f7e44b1c",
+      "repository": "https://github.com/vjacob/ofxHPVPlayer",
+      "commit": "ed2d0e94dbce14038bc6ac8bb2e25a8f0a300b4c"
+    },
+    "ofxImGui": {
+      "url": "https://codeload.github.com/jvcleave/ofxImGui/tar.gz/330e1425a88de7babd53ceb2fb93f8109b61724c",
+      "sha256": "78878cce56c9bfd505a6c3b45bc590f8000f016cdc2001db4aa7d9e10ffc1398",
+      "repository": "https://github.com/jvcleave/ofxImGui",
+      "commit": "330e1425a88de7babd53ceb2fb93f8109b61724c"
+    },
+    "ofxLooper": {
+      "url": "https://codeload.github.com/kasparsj/ofxLooper/tar.gz/cff072464235a5b6e9c20f318038ecb9a4704665",
+      "sha256": "d4912c78ff878f2d19b6e634a6e1570ad650d089544485a8ae910fec30b284e1",
+      "repository": "https://github.com/kasparsj/ofxLooper",
+      "commit": "cff072464235a5b6e9c20f318038ecb9a4704665"
+    },
+    "ofxMidi": {
+      "url": "https://codeload.github.com/danomatika/ofxMidi/tar.gz/ccd63ca13cab263558409a09f49f08cee7b2d6da",
+      "sha256": "f30aaade961c80023fcc25741d467bfb8588813fab4c38e799591533276bfff0",
+      "repository": "https://github.com/danomatika/ofxMidi",
+      "commit": "ccd63ca13cab263558409a09f49f08cee7b2d6da"
+    },
+    "ofxPostProcessing": {
+      "url": "https://codeload.github.com/sketchbooks99/ofxPostProcessing/tar.gz/f7635a45441fda45eb3004a8f502500aa16b226a",
+      "sha256": "954a7a5ffde707a891a77c20c0cc7c2292b26fcee3d38154675940abca63653e",
+      "repository": "https://github.com/sketchbooks99/ofxPostProcessing",
+      "commit": "f7635a45441fda45eb3004a8f502500aa16b226a"
+    },
+    "ofxShadertoy": {
+      "url": "https://codeload.github.com/kasparsj/ofxShadertoy/tar.gz/663330916edba0e76fb32162f80d92ed00c29f90",
+      "sha256": "7e83df02d1c53600975328c9e3b9fd95626bf2b463437b4e12f576f710e8b330",
+      "repository": "https://github.com/kasparsj/ofxShadertoy",
+      "commit": "663330916edba0e76fb32162f80d92ed00c29f90"
+    },
+    "ofxTidalCycles": {
+      "url": "https://codeload.github.com/kasparsj/ofxTidalCycles/tar.gz/972372325d7045f66355bc114b0cd2c11d651aa3",
+      "sha256": "0faca4a8e6dc4aab4449cb1d4ce0a268758209ed1789b95275600247c8327969",
+      "repository": "https://github.com/kasparsj/ofxTidalCycles",
+      "commit": "972372325d7045f66355bc114b0cd2c11d651aa3"
+    },
+    "ofxUltralight": {
+      "url": "https://codeload.github.com/kasparsj/ofxUltralight/tar.gz/60e9d0a3f3786be0cc337066659bef4517d3e6bf",
+      "sha256": "760282bcdf5f710a6dd2d5998c7c51029d1f5774985ade1b52a3c1563bfe5013",
+      "repository": "https://github.com/kasparsj/ofxUltralight",
+      "commit": "60e9d0a3f3786be0cc337066659bef4517d3e6bf"
+    }
+  },
+  "muparser_source": {
+    "url": "https://codeload.github.com/kasparsj/muparser/tar.gz/b59d15f548d6e7256731c2a1ee843c931bdf78c9",
+    "sha256": "08f0ea8b4ee3d747bb49171d8696497adc57bfff54ffcaf22517093977ecb8fd",
+    "repository": "https://github.com/kasparsj/muparser",
+    "commit": "b59d15f548d6e7256731c2a1ee843c931bdf78c9",
+    "path": "ofxExpr/libs/muparser/src"
+  },
+  "arm64_libraries": [
+    "ofxAssimpModelLoader/libs/assimp/lib/osx/assimp.a",
+    "ofxAssimpModelLoader/libs/assimp/lib/osx/libIrrXML.a",
+    "ofxExpr/libs/muparser/lib/osx/libmuparser.a"
+  ],
+  "ultralight_libraries": [
+    "ofxUltralight/libs/lib/osx/libAppCore.dylib",
+    "ofxUltralight/libs/lib/osx/libUltralight.dylib",
+    "ofxUltralight/libs/lib/osx/libUltralightCore.dylib",
+    "ofxUltralight/libs/lib/osx/libWebCore.dylib"
+  ]
+}

@@ -1,11 +1,16 @@
 #include "ShaderTex.h"
 #include "Layer.h"
+#include <cmath>
 
 void ShaderTex::update(TexData& data) {
+    const auto dimensions = data.getSize();
+    if (!std::isfinite(dimensions.x) || !std::isfinite(dimensions.y) ||
+        dimensions.x <= 0 || dimensions.y <= 0) return;
     if (isStatic && !needsUpdate) return;
     needsUpdate = false;
 
     FboTex::update(data);
+    if (!fbo.isAllocated()) return;
     if (!isLoaded()) {
         if (load(path)) {
             prevPath = path;

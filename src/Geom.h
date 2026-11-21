@@ -44,9 +44,10 @@ public:
     bool isLoaded() const {
         return path != "";
     }
+    bool isCanonicalQuad() const;
     void set(const ofxOscMessage& m);
     
-    bool drawWireframe;
+    bool drawWireframe = false;
     int drawInstanced = 0;
 
 private:
@@ -67,5 +68,5 @@ private:
     mutable ofxAssimpModelLoader model;
     shared_ptr<ofMesh> mesh;
     BoundingBox boundingBox;
-    bool usingModel;
+    bool usingModel = false;
 };

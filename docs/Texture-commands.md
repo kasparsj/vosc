@@ -36,15 +36,16 @@ Arguments:
 `source` resolution:
 - explicit type: `type:value` (for example `webcam:0`)
 - file extension: `.frag`, `.jpg/.jpeg/.png`, `.mov/.mp4`, `.hpv`, `.html`
-- URL loads HTML texture
+- URL loads an HTML texture in builds with `USE_OFX_ULTRALIGHT`. Use
+  `image:https://…` for a remote image. HPV requires `USE_OFX_HPVPLAYER`.
 - hex color string (for example `0xff0000`)
 - sketch name
 
 Examples:
 ```supercollider
 ~visuals.sendMsg('/tex', 0, '0xff0000');
-~visuals.sendMsg('/tex', 0, 'images/pic.jpg');
-~visuals.sendMsg('/tex', 0, 'shaders/Water.frag');
+~visuals.sendMsg('/tex', 0, 'black_hole.jpg');
+~visuals.sendMsg('/tex', 0, 'shaders/color.frag');
 ~visuals.sendMsg('/tex', 0, 'webcam:0');
 ~visuals.sendMsg('/tex', 'sharedCam', 'webcam:0');
 ~visuals.sendMsg('/tex', 1, 'sharedCam');
@@ -132,7 +133,9 @@ Arguments:
 
 ## `/tex/seek`
 
-Set `timePct` var.
+Set the `timePct` variable. Video uses this value when opening a clip
+and while the texture's `onset` variable is nonzero. See the [video
+example](../SuperCollider/video.scd) for a seek during playback.
 
 Arguments:
 - `target`

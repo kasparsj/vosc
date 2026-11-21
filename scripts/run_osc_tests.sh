@@ -5,11 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="${BUILD_DIR:-$ROOT_DIR/tests/bin}"
 CXX="${CXX:-clang++}"
 SANITIZER="${SANITIZER:-}"
-OF_ROOT="${OF_ROOT:-}"
-
-if [[ -z "$OF_ROOT" && -f "$ROOT_DIR/config.make" ]]; then
-  OF_ROOT="$(sed -n 's/^[[:space:]]*OF_ROOT[[:space:]]*=[[:space:]]*//p' "$ROOT_DIR/config.make" | head -n 1 | xargs)"
-fi
+OF_ROOT="$(python3 "$ROOT_DIR/scripts/build_macos_profile.py" --sdk-root)"
 
 mkdir -p "$BUILD_DIR"
 

@@ -1,6 +1,8 @@
 #include "ofMain.h"
 #include "ofApp.h"
 #include "Config.h"
+#include "control/OscPort.hpp"
+#include <iostream>
 
 #define USE_PROGRAMMABLE_RENDERER
 
@@ -10,6 +12,13 @@
 
 //========================================================================
 int main( ){
+    // Reject invalid startup configuration before creating a window or OSC receiver.
+    try {
+        control::oscPortFromEnvironment();
+    } catch (const std::invalid_argument& error) {
+        std::cerr << error.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     
 #ifdef USE_PROGRAMMABLE_RENDERER
     ofGLWindowSettings settings;

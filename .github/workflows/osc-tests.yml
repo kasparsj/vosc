@@ -4,7 +4,39 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
+  scene-folder-tests:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify Python Tools and macOS Filesystem Behavior
+        run: python3 -m unittest discover -s tests -v
+
+  mcp-cpu-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+
+      - name: Install locked MCP dependencies
+        run: uv sync --locked --project mcp
+
+      - name: Run MCP peer and subprocess tests
+        run: uv run --locked --project mcp python -m unittest discover -s mcp/tests -v
+
   docs-checks:
     runs-on: ubuntu-latest
     steps:
@@ -16,6 +48,9 @@ jobs:
 
       - name: Verify Markdown Links
         run: bash scripts/check_md_links.sh
+
+      - name: Verify Python Tools
+        run: python3 -m unittest discover -s tests -v
 
   osc-tests:
     runs-on: ubuntu-latest
@@ -30,6 +65,15 @@ jobs:
 
       - name: Run Harness Tests
         run: ./scripts/run_osc_tests.sh
+
+      - name: Run Local Control Transport Tests
+        run: ./scripts/run_control_tests.sh
+
+      - name: Run Performance Telemetry Tests
+        run: ./scripts/run_performance_tests.sh
+
+      - name: Run Protected Shader Trial Policy Tests
+        run: ./scripts/run_trial_tests.sh
 
   osc-tests-sanitizers:
     runs-on: ubuntu-latest
@@ -50,3 +94,18 @@ jobs:
         env:
           SANITIZER: ${{ matrix.sanitizer }}
         run: ./scripts/run_osc_tests.sh
+
+      - name: Run Local Control Transport Tests (${{ matrix.sanitizer }})
+        env:
+          SANITIZER: ${{ matrix.sanitizer }}
+        run: ./scripts/run_control_tests.sh
+
+      - name: Run Performance Telemetry Tests (${{ matrix.sanitizer }})
+        env:
+          SANITIZER: ${{ matrix.sanitizer }}
+        run: ./scripts/run_performance_tests.sh
+
+      - name: Run Protected Shader Trial Policy Tests (${{ matrix.sanitizer }})
+        env:
+          SANITIZER: ${{ matrix.sanitizer }}
+        run: ./scripts/run_trial_tests.sh

@@ -2,8 +2,16 @@
 #include "../layer/Layer.h"
 #include "../var/VariablePool.h"
 #include "../light/Lights.h"
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <iomanip>
+#include <locale>
+#include <sstream>
 #include <regex>
 #include <exception>
+#include <limits>
+#include <stdexcept>
 #include <set>
 #include "../Camera.hpp"
 #include "../utils.h"
@@ -33,6 +41,52 @@ map<string, ofxAutoReloadedShader> loadShaderCache() {
 
 map<string, ofxAutoReloadedShader> Shader::cache = loadShaderCache();
 
+namespace {
+
+bool hasCompiledStage(const ofShader& shader, GLenum type) {
+    const GLuint shaderId = shader.getShader(type);
+    if (shaderId == 0) {
+        return false;
+    }
+
+    GLint status = GL_FALSE;
+    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &status);
+    return status == GL_TRUE;
+}
+
+bool hasLinkedProgram(const ofShader& shader) {
+    const GLuint program = shader.getProgram();
+    if (program == 0) {
+        return false;
+    }
+
+    GLint status = GL_FALSE;
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
+    return status == GL_TRUE;
+}
+
+bool isValidShaderProgram(const ofShader& shader, bool hasGeometryStage = false) {
+    if (!hasCompiledStage(shader, GL_VERTEX_SHADER) ||
+        !hasCompiledStage(shader, GL_FRAGMENT_SHADER)) {
+        return false;
+    }
+#ifndef TARGET_OPENGLES
+    if (hasGeometryStage && !hasCompiledStage(shader, GL_GEOMETRY_SHADER_EXT)) {
+        return false;
+    }
+#endif
+    return hasLinkedProgram(shader);
+}
+
+class ValidatedShadertoy : public ofxShadertoy {
+public:
+    bool hasValidMainShader() const {
+        return isValidShaderProgram(mainShader);
+    }
+};
+
+} // namespace
+
 string Shader::random() {
     auto it = cache.begin();
     advance(it, int(ofRandom(cache.size())));
@@ -40,7 +94,8 @@ string Shader::random() {
 }
 
 bool isSource(const string& path) {
-    return path.find("void main(") != string::npos;
+    static const std::regex mainFunction("\\bvoid\\s+main\\s*\\(");
+    return std::regex_search(path, mainFunction);
 }
 
 string parseShadertoy(const string& path) {
@@ -59,63 +114,224 @@ string parseShadertoy(const string& path) {
 }
 
 bool Shader::load(string path) {
-    unload();
+    if (path.empty()) {
+        unload();
+        return false;
+    }
+
     bool success = false;
     bool _isSource = isSource(path);
     string shadertoyId = parseShadertoy(path);
     bool _isFile = !_isSource && shadertoyId == "";
     if (_isSource) {
-        shaderPath = "source";
         success = loadFromSource(path);
         if (!success) {
             ofLogError() << ("could not load shader from source");
         }
     }
     else if (shadertoyId != "") {
-        shaderPath = "shadertoy/" + shadertoyId + ".frag";
-        try {
-            success = loadShadertoy(shadertoyId);
-            if (!success) {
-                ofLogError() << ("could not load shadertoy: " + shadertoyId);
-            }
-        }
-        catch (std::exception& ex) {
-            ofLogError() << ("could not load shadertoy: " + path + "(" + ex.what() + ")");
+        success = loadShadertoy(shadertoyId);
+        if (!success) {
+            ofLogError() << ("could not load shadertoy: " + shadertoyId);
         }
     }
-    else if (path.empty() == false) {
-        shaderPath = path;
+    else if (_isFile) {
         success = loadFromFileAndWatch(path);
         if (!success) {
             ofLogError() << ("could not load shader: " + path);
-            shaderPath = "";
         }
     }
     return success;
 }
 
 bool Shader::loadFromSource(const string& source) {
+    PreparedDirectSource prepared;
+    if (!prepareDirectSource(source, prepared)) return false;
+    shader = std::move(prepared.program);
+    shadertoy.reset();
+    shaderPath = "source";
+    directSource = prepared.source;
+    retainedSourcePath.clear();
+    // Preserve existing VarsHolder/VariablePool bindings. Ordinary source
+    // replacement has always kept them; detached bindings are trial-only.
+    uniformTypes.clear();
+    return true;
+}
+
+bool Shader::prepareDirectSource(const string& source, PreparedDirectSource& prepared) const {
     ofShaderSettings settings;
     settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
     settings.shaderSources[GL_FRAGMENT_SHADER] = source;
-    shader = make_shared<ofShader>();
-    return shader->setup(settings);
+    shared_ptr<ofShader> candidate = make_shared<ofShader>();
+    if (!candidate->setup(settings) || !isValidShaderProgram(*candidate)) {
+        return false;
+    }
+    prepared.program = std::move(candidate);
+    prepared.source = source;
+    GLint count = 0, maximum = 0;
+    glGetProgramiv(prepared.program->getProgram(), GL_ACTIVE_UNIFORMS, &count);
+    glGetProgramiv(prepared.program->getProgram(), GL_ACTIVE_UNIFORM_MAX_LENGTH, &maximum);
+    if (maximum > 0) {
+        vector<GLchar> name(static_cast<size_t>(maximum));
+        for (GLint index = 0; index < count; ++index) {
+            GLsizei length = 0;
+            GLint size = 0;
+            GLenum type = 0;
+            glGetActiveUniform(prepared.program->getProgram(), index, maximum, &length, &size, &type, name.data());
+            string reflected(name.data(), static_cast<size_t>(length));
+            auto bracket = reflected.find('[');
+            if (size > 1 || bracket != string::npos) prepared.arrayUniforms.insert(reflected.substr(0, bracket));
+            else prepared.uniformTypes[reflected] = type;
+        }
+    }
+    return true;
+}
+
+bool Shader::snapshotDirectSource(DirectSourceState& state, string& reason) const {
+    if (!isShaderLoaded() || shadertoy || shaderPath != "source") {
+        reason = "baseline shader must be a loaded direct-source program";
+        return false;
+    }
+    if (!textures.empty() || !buffers.empty()) {
+        reason = "baseline shader has texture or buffer bindings";
+        return false;
+    }
+    if (vars.size() > 64) {
+        reason = "baseline has more than 64 numeric bindings";
+        return false;
+    }
+    DirectSourceState candidate;
+    candidate.program = shader;
+    candidate.path = shaderPath;
+    candidate.source = directSource;
+    for (const auto& binding : vars) {
+        if (binding.first.empty() || binding.first.size() > 128) {
+            reason = "baseline binding name is outside supported bounds";
+            return false;
+        }
+        auto value = dynamic_pointer_cast<Variable<float>>(binding.second);
+        if (!value || !value->isConst() || value->size() < 1 || value->size() > 4) {
+            reason = "baseline bindings must be constant float vectors of one to four components";
+            return false;
+        }
+        // A normal holder-local binding is owned by Shader::vars and the
+        // VariablePool holder map (plus this temporary reference). Reject
+        // aliases rather than changing another holder's binding semantics.
+        if (value.use_count() > 3) {
+            reason = "aliased baseline bindings are outside protected-trial scope";
+            return false;
+        }
+        for (float component : value->getVec()) {
+            if (!std::isfinite(component) || component < -1000000.f || component > 1000000.f) {
+                reason = "baseline binding component is outside supported bounds";
+                return false;
+            }
+        }
+        candidate.bindings[binding.first] = value->getVec();
+    }
+    state = std::move(candidate);
+    return true;
+}
+
+void Shader::installDirectSource(PreparedDirectSource&& prepared,
+                                 const map<string, vector<float>>& bindings) {
+    shader = std::move(prepared.program);
+    shadertoy.reset();
+    shaderPath = "source";
+    directSource = prepared.source;
+    retainedSourcePath.clear();
+    // Reflect lazily through getUniformTypes so array uniforms remain visible
+    // to the ordinary inspection and managed-uniform paths.
+    uniformTypes.clear();
+    vars.clear();
+    auto& pool = VariablePool::getPool(this);
+    pool.clear();
+    for (const auto& binding : bindings) {
+        auto value = make_shared<Variable<float>>();
+        value->set(binding.second);
+        vars[binding.first] = value;
+        pool[binding.first] = value;
+    }
+}
+
+bool Shader::restoreDirectSource(const DirectSourceState& state) {
+    if (!state.program || !state.program->isLoaded()) return false;
+    PreparedDirectSource prepared;
+    prepared.program = state.program;
+    shader = prepared.program;
+    shadertoy.reset();
+    shaderPath = state.path;
+    directSource = state.source;
+    retainedSourcePath.clear();
+    uniformTypes.clear();
+    vars.clear();
+    auto& pool = VariablePool::getPool(this);
+    pool.clear();
+    for (const auto& binding : state.bindings) {
+        auto value = make_shared<Variable<float>>();
+        value->set(binding.second);
+        vars[binding.first] = value;
+        pool[binding.first] = value;
+    }
+    return true;
+}
+
+bool Shader::ownsProgram(GLuint program) const {
+    return isShaderLoaded() && shader->getProgram() == program;
 }
 
 bool Shader::loadShadertoy(const string& shadertoyId) {
-    ofHttpResponse resp = ofLoadURL("https://www.shadertoy.com/api/v1/shaders/" + shadertoyId + "?key=ft8tMh");
-    if (resp.status == 200) {
+    try {
+        ofHttpResponse resp;
+#ifdef VOSC_RECOVERY_TESTING
+        if (shadertoyId == "VoscOfflineFixture") {
+            const char* directory = std::getenv("VOSC_RECOVERY_TEST_DIR");
+            if (!directory || !*directory) return false;
+            resp.data = ofBufferFromFile(string(directory) + "/shadertoy-api.json");
+            resp.status = resp.data.size() ? 200 : 404;
+        } else
+#endif
+        {
+            resp = ofLoadURL("https://www.shadertoy.com/api/v1/shaders/" + shadertoyId + "?key=ft8tMh");
+        }
+        if (resp.status != 200) {
+            return false;
+        }
+
         ofJson json = ofJson::parse(resp.data.getText());
+        const string source = json["Shader"]["renderpass"][0]["code"].get<string>();
         string fragPath = "shaders/shadertoy/" + shadertoyId + ".frag";
         ofFile shaderFile;
-        shaderFile.open(fragPath, ofFile::WriteOnly);
-        shaderFile << json["Shader"]["renderpass"][0]["code"].get<string>();
+        if (!shaderFile.open(fragPath, ofFile::WriteOnly)) {
+            ofLogError() << ("could not write shadertoy shader: " + fragPath);
+            return false;
+        }
+        ofBuffer sourceBuffer;
+        sourceBuffer.set(source);
+        if (!shaderFile.writeFromBuffer(sourceBuffer)) {
+            ofLogError() << ("could not write shadertoy shader: " + fragPath);
+            shaderFile.close();
+            return false;
+        }
         shaderFile.close();
-        shadertoy = make_shared<ofxShadertoy>();
-        shadertoy->setUseAutoUpdate(true);
-        return shadertoy->load(fragPath);
+
+        shared_ptr<ValidatedShadertoy> candidate = make_shared<ValidatedShadertoy>();
+        if (!candidate->load(fragPath) || !candidate->hasValidMainShader()) {
+            return false;
+        }
+        candidate->setUseAutoUpdate(true);
+
+        shadertoy = candidate;
+        shader.reset();
+        shaderPath = "shadertoy/" + shadertoyId + ".frag";
+        directSource.clear();
+        uniformTypes.clear();
+        return true;
     }
-    return false;
+    catch (const std::exception& ex) {
+        ofLogError() << ("could not load shadertoy: " + shadertoyId + " (" + ex.what() + ")");
+        return false;
+    }
 }
 
 ShaderPaths Shader::getShaderPaths(const string& path) {
@@ -166,9 +382,16 @@ bool Shader::loadFromFileAndWatch(const string& path) {
     ShaderPaths paths = getShaderPaths(path);
     if (paths.isValid()) {
         std::shared_ptr<ofxAutoReloadedShader> autoShader = std::make_shared<ofxAutoReloadedShader>();
-        if (autoShader->load(paths.vertPath, paths.fragPath, paths.geomPath)) {
+        if (autoShader->load(paths.vertPath, paths.fragPath, paths.geomPath) &&
+            isValidShaderProgram(*autoShader, !paths.geomPath.empty())) {
+            const bool exportableStages = paths.geomPath.empty() && paths.vertPath == "shaders/passthru.vert";
+            ofBuffer retained = exportableStages ? ofBufferFromFile(paths.fragPath, true) : ofBuffer();
             shader = autoShader;
+            shadertoy.reset();
             shaderPath = ofFilePath::getFileName(paths.fragPath);
+            directSource = retained.size() > 0 && retained.size() <= 128 * 1024 ? retained.getText() : "";
+            retainedSourcePath = directSource.empty() ? "" : paths.fragPath;
+            uniformTypes.clear();
             return true;
         }
     }
@@ -178,6 +401,303 @@ bool Shader::loadFromFileAndWatch(const string& path) {
 void Shader::update(const vector<TidalNote> &notes) {
     for (map<string, shared_ptr<Buffer>>::const_iterator it=buffers.begin(); it!=buffers.end(); ++it) {
         it->second->update();
+    }
+}
+
+namespace {
+struct OrdinaryIntegerVector : Variable<int> {
+    explicit OrdinaryIntegerVector(size_t arity) : arrayArity(arity) {}
+    const size_t arrayArity;
+};
+
+size_t integerVectorArity(GLenum type) {
+    switch (type) {
+        case GL_INT_VEC2: return 2;
+        case GL_INT_VEC3: return 3;
+        case GL_INT_VEC4: return 4;
+        default: return 0;
+    }
+}
+
+size_t floatVectorArity(GLenum type) {
+    switch (type) {
+        case GL_FLOAT_VEC2: return 2;
+        case GL_FLOAT_VEC3: return 3;
+        case GL_FLOAT_VEC4: return 4;
+        default: return 0;
+    }
+}
+
+template<typename T>
+shared_ptr<BaseVar> makeFloatVector(const vector<Shader::FloatComponent>& components, const T& constant) {
+    auto variable = std::make_shared<Variable<T>>();
+    const bool hasExpression = std::any_of(components.begin(), components.end(), [](const auto& component) {
+        return std::holds_alternative<string>(component);
+    });
+    if (!hasExpression) {
+        variable->set(constant);
+        return variable;
+    }
+
+    vector<string> values;
+    vector<bool> expressions;
+    values.reserve(components.size());
+    expressions.reserve(components.size());
+    for (const auto& component : components) {
+        if (const auto* expression = std::get_if<string>(&component)) {
+            values.push_back(*expression);
+            expressions.push_back(true);
+        } else {
+            // Format the promoted float so the mixed setter's double parse preserves its bits.
+            std::ostringstream literal;
+            literal.imbue(std::locale::classic());
+            literal << std::setprecision(std::numeric_limits<double>::max_digits10)
+                    << static_cast<double>(std::get<float>(component));
+            values.push_back(literal.str());
+            expressions.push_back(false);
+        }
+    }
+
+    try {
+        variable->set(values, expressions);
+    } catch (const mu::Parser::exception_type&) {
+        throw std::invalid_argument("could not register float uniform expression dependencies");
+    }
+    if (!variable->validateComponentExpressions())
+        throw std::invalid_argument("could not initialize float uniform expression");
+    return variable;
+}
+
+}
+
+GLenum Shader::reflectedNonArrayUniformType(const string& name) const {
+    if (!isShaderLoaded()) return 0;
+    const GLuint program = shader->getProgram();
+    const GLchar* requested = name.c_str();
+    GLuint index = GL_INVALID_INDEX;
+    glGetUniformIndices(program, 1, &requested, &index);
+    if (index == GL_INVALID_INDEX || glGetUniformLocation(program, requested) < 0) return 0;
+
+    GLint maximum = 0;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maximum);
+    if (maximum <= 0) return 0;
+    vector<GLchar> reflected(static_cast<size_t>(maximum));
+    GLsizei length = 0;
+    GLint size = 0;
+    GLenum type = 0;
+    glGetActiveUniform(program, index, maximum, &length, &size, &type, reflected.data());
+    // A singleton GLSL array still has a reflected name ending in [0].
+    if (size != 1 || name != string(reflected.data(), length) || name.find('[') != string::npos)
+        return 0;
+    return type;
+}
+
+size_t Shader::reflectedIntegerVectorArity(const string& name) const {
+    return integerVectorArity(reflectedNonArrayUniformType(name));
+}
+
+size_t Shader::reflectedFloatVectorArity(const string& name) const {
+    return floatVectorArity(reflectedNonArrayUniformType(name));
+}
+
+bool Shader::handleLayerVectorWrite(const ofxOscMessage& message, int layerIndex) {
+    if (message.getNumArgs() != 3 || message.getArgType(1) != OFXOSC_TYPE_STRING) return false;
+    const auto payloadType = message.getArgType(2);
+    const bool isScalar = payloadType == OFXOSC_TYPE_INT32 || payloadType == OFXOSC_TYPE_FLOAT;
+    string payload;
+    if (!isScalar) {
+        if (payloadType != OFXOSC_TYPE_STRING) return false;
+        payload = message.getArgAsString(2);
+        const auto first = payload.find_first_not_of(" \t\r\n");
+        if (first == string::npos || payload[first] != '[') return false;
+    }
+
+    const auto name = message.getArgAsString(1);
+    const auto type = reflectedNonArrayUniformType(name);
+    const size_t arity = integerVectorArity(type);
+    const size_t floatArity = floatVectorArity(type);
+    if (!arity && !floatArity) return false;
+    auto reject = [&](const char* reason) {
+        ofLogError() << message.getAddress() << " rejected layer " << layerIndex << " uniform "
+                     << name << ": " << reason;
+        return true;
+    };
+
+    if (isScalar) {
+        if (floatArity) {
+            const float value = payloadType == OFXOSC_TYPE_FLOAT ? message.getArgAsFloat(2)
+                : static_cast<float>(message.getArgAsInt32(2));
+            if (!std::isfinite(value)) return reject("expected finite float32 scalar");
+            auto variable = std::make_shared<Variable<float>>();
+            variable->set(vector<float>(floatArity, value));
+            publishUniformBinding(name, variable);
+        } else {
+            if (payloadType != OFXOSC_TYPE_INT32) return reject("expected int32 scalar");
+            setIntegerVector(name, arity, vector<IntegerComponent>(arity, message.getArgAsInt32(2)));
+        }
+        return true;
+    }
+
+    if (floatArity && payload.find('\0') != string::npos) return reject("invalid array syntax");
+    ofJson array;
+    try {
+        array = ofJson::parse(payload);
+    } catch (const ofJson::out_of_range&) {
+        return reject(floatArity ? "component outside float32 range" : "component outside int32 range");
+    } catch (const ofJson::parse_error&) {
+        return reject("invalid array syntax");
+    }
+    if (floatArity) {
+        bool rgbShorthand = false;
+        if (floatArity == 4 && array.size() == 3) {
+            const auto found = vars.find(name);
+            if (found != vars.end()) {
+                const auto* previous = dynamic_cast<const OrdinaryIntegerVector*>(found->second.get());
+                rgbShorthand = dynamic_cast<const Variable<ofFloatColor>*>(found->second.get()) ||
+                               (previous && previous->arrayArity == 4);
+            }
+        }
+        if (!array.is_array() || (array.size() != floatArity && !rgbShorthand))
+            return reject("incorrect vector arity");
+
+        vector<FloatComponent> components;
+        components.reserve(floatArity);
+        bool allNumeric = true;
+        bool normalizeRgb = false;
+        for (const auto& field : array) {
+            if (field.is_string() && !field.get_ref<const string&>().empty()) {
+                components.emplace_back(field.get<string>());
+                allNumeric = false;
+                continue;
+            }
+
+            float rounded;
+            if (field.is_number_unsigned()) {
+                rounded = static_cast<float>(field.get<std::uint64_t>());
+            } else if (field.is_number_integer()) {
+                rounded = static_cast<float>(field.get<std::int64_t>());
+            } else if (field.is_number_float()) {
+                const double value = field.get<double>();
+                if (!std::isfinite(value) || std::abs(value) > std::numeric_limits<float>::max())
+                    return reject("component outside float32 range");
+                rounded = static_cast<float>(value);
+            } else {
+                return reject("expected float32 or expression components");
+            }
+            components.emplace_back(rounded);
+            normalizeRgb = normalizeRgb || rounded > 1.f;
+        }
+        if (rgbShorthand) {
+            if (allNumeric && normalizeRgb) {
+                for (auto& component : components) std::get<float>(component) /= 255.f;
+            }
+            components.emplace_back(1.f);
+        }
+
+        try {
+            setFloatVector(name, floatArity, components);
+        } catch (const std::exception& error) {
+            return reject(error.what());
+        }
+        return true;
+    }
+    if (!array.is_array() || array.size() != arity) return reject("incorrect vector arity");
+
+    vector<IntegerComponent> components;
+    components.reserve(arity);
+    for (const auto& field : array) {
+        if (field.is_string() && !field.get_ref<const string&>().empty()) {
+            components.emplace_back(field.get<string>());
+        } else if (field.is_number_unsigned()) {
+            const auto value = field.get<std::uint64_t>();
+            if (value > std::numeric_limits<std::int32_t>::max())
+                return reject("component outside int32 range");
+            components.emplace_back(static_cast<std::int32_t>(value));
+        } else if (field.is_number_integer()) {
+            const auto value = field.get<std::int64_t>();
+            if (value < std::numeric_limits<std::int32_t>::min() ||
+                value > std::numeric_limits<std::int32_t>::max())
+                return reject("component outside int32 range");
+            components.emplace_back(static_cast<std::int32_t>(value));
+        } else {
+            return reject("expected int32 or expression components");
+        }
+    }
+    try {
+        setIntegerVector(name, arity, components, std::make_shared<OrdinaryIntegerVector>(arity));
+    } catch (...) {
+        return reject("could not initialize integer vector");
+    }
+    return true;
+}
+
+void Shader::setFloatVector(const string& name, size_t arity, const vector<FloatComponent>& components) {
+    if (arity < 2 || arity > 4 || components.size() != arity)
+        throw std::invalid_argument("incorrect float uniform vector arity");
+
+    float values[4] = {};
+    for (size_t index = 0; index < arity; ++index) {
+        if (const auto* value = std::get_if<float>(&components[index])) {
+            if (!std::isfinite(*value))
+                throw std::invalid_argument("component outside float32 range");
+            values[index] = *value;
+        }
+    }
+
+    shared_ptr<BaseVar> variable;
+    if (arity == 2)
+        variable = makeFloatVector(components, glm::vec2(values[0], values[1]));
+    else if (arity == 3)
+        variable = makeFloatVector(components, glm::vec3(values[0], values[1], values[2]));
+    else
+        variable = makeFloatVector(components, ofFloatColor(values[0], values[1], values[2], values[3]));
+    publishUniformBinding(name, variable);
+}
+
+void Shader::setIntegerVector(const string& name, size_t arity, const vector<IntegerComponent>& components) {
+    setIntegerVector(name, arity, components, std::make_shared<Variable<int>>());
+}
+
+void Shader::setIntegerVector(const string& name, size_t arity, const vector<IntegerComponent>& components,
+                              const shared_ptr<Variable<int>>& variable) {
+    if (arity < 2 || arity > 4 || components.size() != arity)
+        throw std::invalid_argument("incorrect integer uniform vector arity");
+
+    const bool allIntegers = std::all_of(components.begin(), components.end(), [](const auto& component) {
+        return std::holds_alternative<std::int32_t>(component);
+    });
+    if (allIntegers) {
+        vector<int> values;
+        values.reserve(arity);
+        for (const auto& component : components) values.push_back(std::get<std::int32_t>(component));
+        variable->set(std::move(values));
+    } else {
+        vector<string> values;
+        vector<bool> expressions;
+        values.reserve(arity);
+        expressions.reserve(arity);
+        for (const auto& component : components) {
+            const auto* expression = std::get_if<string>(&component);
+            expressions.push_back(expression != nullptr);
+            values.push_back(expression ? *expression : std::to_string(std::get<std::int32_t>(component)));
+        }
+        variable->set(values, expressions);
+        if (!variable->validateComponentExpressions())
+            throw std::invalid_argument("could not initialize integer uniform expression");
+    }
+    publishUniformBinding(name, variable);
+}
+
+void Shader::publishUniformBinding(const string& name, const shared_ptr<BaseVar>& variable) {
+    auto& pool = VariablePool::getPool(this);
+    const auto poolEntry = pool.try_emplace(name);
+    try {
+        const auto shaderEntry = vars.try_emplace(name).first;
+        shaderEntry->second = variable;
+        poolEntry.first->second = variable;
+    } catch (...) {
+        if (poolEntry.second) pool.erase(poolEntry.first);
+        throw;
     }
 }
 
@@ -194,6 +714,27 @@ void Shader::oscCommand(const string& command, const ofxOscMessage& m) {
     }
     else if (command == "/shader/texture" || command == "/shader/tex") {
         setTexture(m);
+    }
+    else if (command == "/shader/texture/size" || command == "/shader/texture/speed" ||
+             command == "/shader/texture/set") {
+        const string name = m.getArgAsString(1);
+        auto found = textures.find(name);
+        if (found == textures.end() || !found->second) {
+            ofLogError() << "named texture not found: " << name;
+            return;
+        }
+        auto& texture = *found->second;
+        if (command == "/shader/texture/size") {
+            texture.data.setExplicitSize(m.getArgAsFloat(2), m.getArgAsFloat(3));
+        } else if (command == "/shader/texture/speed") {
+            texture.setVar("speed", m, 2);
+        } else {
+            const string property = m.getArgAsString(2);
+            const int value = m.getArgAsInt(3);
+            if (property == "aspectRatio") texture.data.aspectRatio = value != 0;
+            else if (property == "static") texture.isStatic = value != 0;
+            else if (property == "blendMode") texture.data.blendMode = static_cast<ofBlendMode>(value);
+        }
     }
     else if (command == "/shader/buffer" || command == "/shader/buf") {
         setBuffer(m);
@@ -639,12 +1180,14 @@ void Shader::setLights(shared_ptr<T>& shader) {
         lightPos.push_back(it->second->getVarVec3("pos"));
     }
     int numLights = MIN(MAX_LIGHTS, lightPos.size());
-    shader->setUniform3fv("lights", &lightPos[0][0], numLights);
+    if (numLights > 0) {
+        shader->setUniform3fv("lights", &lightPos[0][0], numLights);
+    }
     shader->setUniform1i("numLights", numLights);
 }
 
 template<typename T>
-void Shader::setUniformCameraMatrices(shared_ptr<T>& shader, ofCamera& cam, const string& prefix) {
+void Shader::setUniformCameraMatrices(shared_ptr<T>& shader, const ofCamera& cam, const string& prefix) {
     shader->setUniformMatrix4f(prefix + "ModelViewMatrix", cam.getModelViewMatrix() );
     shader->setUniformMatrix4f(prefix + "ProjectionMatrix", cam.getProjectionMatrix() );
     shader->setUniformMatrix4f(prefix + "ModelViewProjectionMatrix", cam.getModelViewProjectionMatrix() );
@@ -680,26 +1223,33 @@ void Shader::reset() {
 
 void Shader::unload() {
     shaderPath = "";
+    directSource.clear();
+    retainedSourcePath.clear();
     if (shader != NULL) {
-        try {
-            shared_ptr<ofxAutoReloadedShader> autoShader = std::static_pointer_cast<ofxAutoReloadedShader>(shader);
-            if (autoShader->isLoaded()) {
-                autoShader->unload();
-            }
+        if (shader->isLoaded()) {
+            shader->unload();
         }
-        catch (...) {
-            if (shader->isLoaded()) {
-                shader->unload();
-            }
-        }
-        shader = NULL;
+        shader.reset();
     }
-    else if (shadertoy != NULL) {
-//        if (shadertoy->isLoaded()) {
-//            shadertoy->unload();
-//        }
-        shadertoy = NULL;
+    shadertoy.reset();
+    uniformTypes.clear();
+}
+
+bool Shader::getExportSource(string& source, string& reason) const {
+    if (!isShaderLoaded() || directSource.empty()) {
+        reason = "loaded shader source provenance is unavailable";
+        return false;
     }
+    const string active = shader->getShaderSource(GL_FRAGMENT_SHADER);
+    if (active.empty() || active.size() > 128 * 1024) {
+        reason = "active fragment source is empty or exceeds the recipe bound";
+        return false;
+    }
+    // Query the program object rather than rereading the watched path. This is
+    // the exact source retained by the most recent successful compile and is
+    // truthful even across file-watch reloads and A->B->A disk changes.
+    source = active;
+    return true;
 }
 
 shared_ptr<Texture>& Shader::getDefaultTexture() {
@@ -726,6 +1276,11 @@ void Shader::setTexture(const string& name, const ofxOscMessage& m, int arg) {
     else {
         textures[name] = TexturePool::getOrCreate(name, this);
         textures[name]->load(m, arg);
+    }
+    const auto size = textures[name]->data.getSize();
+    if (size.x <= 0 || size.y <= 0) {
+        textures[name]->data.setSize(size.x > 0 ? size.x : std::max(1, ofGetWidth()),
+                                     size.y > 0 ? size.y : std::max(1, ofGetHeight()));
     }
 }
 
@@ -792,6 +1347,10 @@ void Shader::set(const ofxOscMessage& m) {
 }
 
 const map<string, GLenum>& Shader::getUniformTypes() const {
+    if (isShaderLoaded() && uniformTypesProgram != shader->getProgram()) {
+        uniformTypes.clear();
+        uniformTypesProgram = shader->getProgram();
+    }
     if (uniformTypes.empty() && isShaderLoaded()) {
         if (shadertoy == NULL && shader != NULL) {
             GLuint program = shader->getProgram();

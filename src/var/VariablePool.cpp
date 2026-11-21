@@ -61,10 +61,10 @@ const shared_ptr<Variable<T>> VariablePool::createOrUpdateShared(const string& n
         ofLogError() << "VariablePool::createOrUpdateShared called without active ResourceRegistry";
         return nullptr;
     }
-    if (!hasShared(name)) {
+    if (!hasShared(name) || !std::dynamic_pointer_cast<Variable<T>>(registry->variableSharedPool.at(name))) {
         registry->variableSharedPool[name] = make_shared<Variable<T>>();
     }
-    auto var = std::static_pointer_cast<Variable<T>>(registry->variableSharedPool.at(name));
+    auto var = std::dynamic_pointer_cast<Variable<T>>(registry->variableSharedPool.at(name));
     var->set(value);
     return var;
 }
@@ -88,10 +88,10 @@ shared_ptr<BaseVar> VariablePool::createOrUpdate(const string& name, const ofxOs
 template <typename T>
 const shared_ptr<Variable<T>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder) {
     auto& pool = getPool(holder);
-    if (pool.find(name) == pool.end()) {
+    if (pool.find(name) == pool.end() || !std::dynamic_pointer_cast<Variable<T>>(pool.at(name))) {
         pool[name] = make_shared<Variable<T>>();
     }
-    return std::static_pointer_cast<Variable<T>>(pool.at(name));
+    return std::dynamic_pointer_cast<Variable<T>>(pool.at(name));
 }
 
 map<string, shared_ptr<BaseVar>>& VariablePool::getPool(const VarsHolder* holder) {
@@ -141,6 +141,15 @@ void VariablePool::setShuttingDown(bool value) {
     registry->variablePoolShuttingDown = value;
 }
 
+void VariablePool::clearSceneShared() {
+    ResourceRegistry* registry = ResourceRegistry::current();
+    if (registry == nullptr) return;
+    for (auto it = registry->variableSharedPool.begin(); it != registry->variableSharedPool.end();) {
+        if (it->first == "camPos" || it->first == "camLook" || it->first == "camOrbit") ++it;
+        else it = registry->variableSharedPool.erase(it);
+    }
+}
+
 void VariablePool::cleanup(const VarsHolder* holder) {
     if (holder == nullptr) {
         return;
@@ -154,6 +163,7 @@ template const shared_ptr<Variable<glm::mat4>> VariablePool::createOrUpdateShare
 template const shared_ptr<Variable<ofFloatColor>> VariablePool::createOrUpdateShared(const string& name, ofFloatColor value);
 
 template const shared_ptr<Variable<float>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
+template const shared_ptr<Variable<int>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
 template const shared_ptr<Variable<glm::vec3>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
 template const shared_ptr<Variable<glm::mat4>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder);
 template const shared_ptr<Variable<ofFloatColor>> VariablePool::getOrCreate(const string& name, const VarsHolder* holder);

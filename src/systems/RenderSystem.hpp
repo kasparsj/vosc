@@ -13,7 +13,8 @@ public:
     void shutdown();
 
     void update(const vector<TidalNote>& notes);
-    void draw(Camera& camera, bool showDebug);
+    void draw(Camera& camera, bool showDebug, const std::function<void()>& afterCompose = {});
+    void resizeBacking(int w, int h);
     void windowResized(int w, int h);
 
     void applyLayersPayload(const osc::LayersPayload& layersPayload);
@@ -27,6 +28,20 @@ public:
         deferredShading = enabled;
     }
     void applyShadingPasses(const vector<osc::ShadingPassSpec>& passes);
+    void resetScenePipeline() {
+        deferredShading = false;
+        applyShadingPasses({});
+    }
+#ifdef VOSC_RECOVERY_TESTING
+    ofJson recoveryTestPipeline() {
+        return {{"deferred", deferredShading}, {"post_passes", post.getPasses().size()},
+                {"deferred_passes", deferred.getPasses().size()},
+                {"point_light_pass", bool(pointLightPass)}, {"shadow_light_pass", bool(shadowLightPass)}};
+    }
+#endif
+    bool supportsDirectShaderTrial();
+    bool supportsScenePersistence();
+    void replaceSceneLayers(vector<shared_ptr<Layer>> replacement, Layout replacementLayout);
 
     void allLayersCommand(const string& command, const ofxOscMessage& m);
     bool routeLayerByIndex(int idx, const string& command, const ofxOscMessage& m, osc::ResourceAction action);

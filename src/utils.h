@@ -3,6 +3,16 @@
 #include <glm/glm.hpp>
 #include <type_traits>
 #include "ofVboMesh.h"
+#include "ofTexture.h"
+#include "Config.h"
+
+inline int getTextureDepth(const ofTexture& texture) {
+#if ALLOW_TEX_2D_ARRAY
+    return texture.getDepth();
+#else
+    return 0;
+#endif
+}
 
 // Detect if T is a glm::vec<L, T, Q> type
 template<typename T>

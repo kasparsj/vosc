@@ -22,8 +22,7 @@
 ~visuals.send('/tex', 0, "noise.png");
 
 // set opengl textureWrap property to GL_REPEAT
-~visuals.send('/tex/set', 0, "wrapModeHorizontal", ~gl[\REPEAT]);
-~visuals.send('/tex/set', 0, "wrapModeVertical", ~gl[\REPEAT]);
+~visuals.send('/tex/set', 0, "wrapMode", ~gl[\REPEAT]);
 
 // set some shader variables
 ~visuals.send('/shader/var', 0, "fovYScale", (30.degrad/2).tan);

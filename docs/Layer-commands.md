@@ -2,11 +2,9 @@
 
 Layer commands are targeted resource commands.
 
-First argument is `target`:
-- `int` or numeric string: layer index
-- `"*"`, `"x"`, `"a"`: all layers
-
-Note: non-numeric string names are not supported for `/layer*` commands.
+The first argument selects a layer by nonnegative OSC `int32` or by a string
+containing only decimal digits within int32 range. The index must identify an
+existing layer. The strings `"*"`, `"x"`, and `"a"` select all layers.
 
 Supported commands:
 - `/layer/visible`
@@ -35,7 +33,11 @@ Arguments: `target`
 Behavior: hides all other layers and keeps target visible.
 
 ### `/layer/pos`
-Arguments: `target`, position payload (`x,y[,z]`, const/expression)
+Live position accepts `target` followed by separate `x, y[, z]` components
+(constants or expressions), or one JSON-array string containing exactly three
+finite numbers in float32 range or valid expression strings. OSCVisuals encodes
+a live Array as that string. Wrapped replay uses an OSC int32 layer index and
+three flattened typed components.
 
 ### `/layer/size`
 Arguments: `target`, size payload (`w,h[,d]`)
@@ -87,7 +89,10 @@ Currently stored on layer but not actively consumed by render logic.
 ### `/layer/reset`
 Arguments: `target`
 
-Resets transform, tint/alpha/bri defaults, shader/geom/vars owned by layer.
+Unloads the layer geometry, clears its variables, and resets its shader.
+Position and size are sampled and kept as values. Visibility, speed, tint,
+alpha, brightness, rotation, pivot, scale, and visibility/onset thresholds
+return to their defaults.
 
 ## Examples
 

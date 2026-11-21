@@ -11,7 +11,7 @@ At a high level, vosc gives you:
 
 It is mainly used from SuperCollider / TidalCycles, but any OSC client can drive it.
 
-See [docs/Home.md](docs/Home.md) for full docs and [SuperCollider](SuperCollider) for more scripts.
+See [docs/Home.md](docs/Home.md) for full docs, [SuperCollider examples](SuperCollider/README.md) for runnable sketches, and the [changelog](CHANGELOG.md) for recent changes.
 
 ## Good Fit Workflows
 
@@ -26,23 +26,117 @@ Compact hardware workflow:
 - In practice, feature availability/performance depends on GPU drivers/OpenGL support and enabled addons.
 - Heavier shader/post pipelines are better suited to desktop GPUs.
 
+## Building with Xcode (Apple Silicon)
+
+Use the macOS release of openFrameworks [0.11.1](https://openframeworks.cc/versions/v0.11.1/)
+or [0.12.1](https://github.com/openframeworks/openFrameworks/releases/tag/0.12.1).
+The Xcode build targets Apple Silicon and macOS 12.6 or later and uses Python 3.10 or later.
+
+### Set up a local SDK and addons
+
+From a VOSC checkout on Apple Silicon, with native Python 3.10 or later
+and Xcode selected, run:
+
+```bash
+python3 scripts/setup_macos.py
+```
+
+This prepares openFrameworks 0.12.1 and the pinned VOSC addons under
+`.vosc-macos/`. Run the printed command to build the Debug app. For setup
+directories inside the checkout, build output goes under
+`~/Library/Caches/VOSC/builds/`. For setup directories outside the checkout,
+build output goes in the destination's `build/` directory.
+Use `--version 0.11.1` for the older SDK or `--dest PATH` for another setup
+directory. For MCP, follow the [live authoring setup](docs/Live-authoring.md#start-the-renderer).
+
+```bash
+python3 scripts/setup_macos.py --sdk-only --version 0.11.1
+python3 scripts/setup_macos.py --addons-only --of-root /path/to/openFrameworks
+```
+
+SDK-only prints the follow-up command for staging addons. Addon-only reads
+the SDK version from the supplied installation, leaves it untouched, and
+prints the build command. Setup reuses matching files on reruns. If a
+destination contains a changed or unmanaged dependency tree, choose another
+`--dest`.
+
+### Build with an existing installation
+
+To use the default make and Xcode paths, clone VOSC three levels below the
+openFrameworks root.
+
+```bash
+cd apps/myApps
+git clone https://github.com/kasparsj/vosc
+cd vosc
+```
+
+Install the dependencies listed in [addons.make](addons.make) under the same
+openFrameworks installation's `addons/` directory. The project uses the
+0.11.1 layout of `ofxOsc` and `ofxAssimpModelLoader` for both builds. For 0.12.1,
+use those addon sources from the 0.11.1 release, with their macOS libraries.
+Use Apple Silicon builds of the libraries used by enabled addons. In particular,
+`ofxExpr` needs its macOS muparser archive. Keep the `ofxUltralight` headers and
+dylibs in the addon tree for the Xcode project.
+
+From the VOSC checkout, build with either command.
+
+```bash
+make Debug
+make Release
+```
+
+The build reads the SDK version from its headers and selects C++17 for 0.11.1
+or C++23 for 0.12.1. It prepares a private core and compiler overlays in Xcode's
+build directory. Debug produces `bin/voscDebug.app` and Release produces
+`bin/vosc.app`. Use `make RunDebug` or `make RunRelease` from the checkout to launch it.
+
+For the Xcode GUI, open `vosc.xcodeproj` and select `vosc Debug` or
+`vosc Release`. The project uses 0.12.1 settings by default. For 0.11.1, add
+this line to the ignored `Project.local.xcconfig` at the VOSC root before
+opening the project.
+
+```xcconfig
+#include "scripts/OpenFrameworks011.xcconfig"
+```
+
+For a separate build directory, run
+`python3 scripts/build_macos_profile.py --configuration Release --output /path/to/build`.
+For a standalone run, put the runtime assets from `bin/data` next to the app
+and copy `ofxDeferredShading/data/shaders/deferred` from the addon tree into
+`data/shaders`. With the setup script, the addon tree is under
+`.vosc-macos/addon-sdks/of-VERSION/addons/` by default. The
+[authoring build](docs/Live-authoring.md) copies these assets into its
+private output directory.
+
+For a checkout outside the SDK, put an `OF_PATH` assignment in the ignored
+`Project.local.xcconfig`. Add `VOSC_ADDON_SDK` only if a different installation
+supplies the addons. Use plain, unquoted absolute paths.
+
+```xcconfig
+OF_PATH = /path/to/openFrameworks
+VOSC_ADDON_SDK = /path/to/addon-installation
+```
+
+For a one-off command-line build, use `make Debug OF_ROOT=/path/to/openFrameworks`
+or the Python builder's `--of-root` option. Both look for addons in the selected
+SDK unless you also supply `VOSC_ADDON_SDK` or `--addon-sdk`, respectively.
+
 ## Quickstart (Local + SuperCollider)
 
-Default OSC receive port in this app is `33333` (`src/ofApp.h`).
+The renderer listens on UDP port `33333` by default.
 
 1. Build and run `vosc`.
-2. Open SuperCollider and run:
+2. Open SuperCollider and evaluate this block against a renderer you own:
 
 ```supercollider
 (
 ~v = NetAddr("127.0.0.1", 33333);
 
-~v.sendMsg("/layers", 4, "grid");         // 4 layers in grid layout
-~v.sendMsg("/tex/choose", "*", "image");  // random image source on all layers
-~v.sendMsg("/layer/alpha", "*", 0.8);     // set opacity
-~v.sendMsg("/cam", "easy");               // enable easy camera
-~v.sendMsg("/shading", "deferred");       // optional: switch shading mode
-~v.sendMsg("/shading/passes", "bloom", "fxaa");
+~v.sendMsg("/onset", 0);                 // apply edits immediately
+~v.sendMsg("/layers/reset", 4, "grid");    // create four fresh layers
+~v.sendMsg("/tex", "*", "black_hole.jpg"); // use the bundled image
+~v.sendMsg("/layer/alpha", "*", 0.8);      // set opacity
 )
 ```
 
@@ -53,7 +147,8 @@ Default OSC receive port in this app is `33333` (`src/ofApp.h`).
 
 Next steps:
 - browse [docs/OSC-reference.md](docs/OSC-reference.md),
-- try richer examples in [SuperCollider/intro.scd](SuperCollider/intro.scd) and [SuperCollider/test.scd](SuperCollider/test.scd).
+- export a portable editable composition with [scene recipes](docs/Editable-scene-contract.md),
+- try the [SuperCollider example collection](SuperCollider/README.md) and the [Organic Trails shader](examples/organic-trails/README.md).
 
 ## Testing
 

@@ -1,5 +1,7 @@
 #include "Args.h"
 #include "ofxExpr.hpp"
+#include <cerrno>
+#include <cstdlib>
 #include <regex>
 
 bool Args::isHexColor(const string& str) {
@@ -75,23 +77,11 @@ float Args::parse(const ofxOscMessage& m, int idx) {
             if (trimmed.empty()) {
                 throw "string not float: empty string";
             }
-            value = ofToFloat(trimmed);
-            // Check if conversion was successful (not NaN and not infinity)
-            // Allow 0.0 as a valid value - check if value is 0 and string represents 0
-            if (std::isnan(value) || std::isinf(value)) {
+            char* end = nullptr;
+            errno = 0;
+            value = std::strtof(trimmed.c_str(), &end);
+            if (end != trimmed.c_str() + trimmed.size() || errno == ERANGE || !std::isfinite(value))
                 throw "string not float: " + str;
-            }
-            // Additional validation: if value is 0, verify the string actually represents 0
-            // This prevents cases where ofToFloat returns 0 for invalid strings
-            if (value == 0.0f) {
-                // Check if the trimmed string represents zero
-                bool isZero = (trimmed == "0" || trimmed == "0.0" || trimmed == "-0" || trimmed == "-0.0" || 
-                              trimmed == "+0" || trimmed == "+0.0");
-                // If not explicitly zero, check if it contains at least one digit
-                if (!isZero && trimmed.find_first_of("0123456789") == string::npos) {
-                    throw "string not float: " + str;
-                }
-            }
             break;
         }
         case OFXOSC_TYPE_INT32:

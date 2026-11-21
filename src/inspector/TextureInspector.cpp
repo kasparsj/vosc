@@ -1,5 +1,6 @@
 #include "TextureInspector.hpp"
 #include "../tex/ShaderTex.h"
+#include "../utils.h"
 
 TextureInspector::TextureInspector() : backButton(20, 20, 100, 30),
                                        shaderButton(0, 0, 320, 30),
@@ -116,7 +117,7 @@ void TextureInspector::drawTextureInfo() {
     if (texture != nullptr) {
         int width = texture->getWidth();
         int height = texture->getHeight();
-        int depth = texture->getDepth();
+        int depth = getTextureDepth(*texture);
         
         int yOffset = 0;
         if (textureObj != nullptr && textureObj->hasShader()) {
@@ -189,7 +190,7 @@ void TextureInspector::drawShaderPasses() {
     
     for (size_t i = 0; i < textureObj->passes.size(); i++) {
         int yPos = startY + 20 + (i * 20);
-        string passPath = textureObj->passes[i]->getShader().getShaderPath();
+        string passPath = textureObj->passes[i]->getShader()->getShaderPath();
         // Extract just the filename from the path
         string filename = ofFilePath::getFileName(passPath);
         if (filename == "") {
@@ -220,7 +221,7 @@ void TextureInspector::drawTexturePreview() {
     ofSetColor(255);
     
     // If texture has depth > 1, use tex_array shader to display specific layer
-    int depth = texture->getDepth();
+    int depth = getTextureDepth(*texture);
     if (depth > 1) {
         drawArrayTexture(previewX, previewY, scaledWidth, scaledHeight);
     } else {
@@ -268,7 +269,7 @@ void TextureInspector::drawLargeTexture() {
     // Draw texture name and layer info
     ofSetColor(255);
     string displayName = textureName;
-    int depth = texture->getDepth();
+    int depth = getTextureDepth(*texture);
     if (depth > 1) {
         displayName += " (Layer " + ofToString(currentLayerIndex) + " / " + ofToString(depth - 1) + ")";
         displayName += " - Click to cycle layers";
@@ -370,7 +371,7 @@ void TextureInspector::mousePressed(int x, int y, int button) {
                 if (x >= centerX && x <= centerX + scaledWidth &&
                     y >= centerY && y <= centerY + scaledHeight) {
                     // Cycle through layers if texture has depth > 1
-                    int depth = texture->getDepth();
+                    int depth = getTextureDepth(*texture);
                     if (depth > 1) {
                         currentLayerIndex = (currentLayerIndex + 1) % depth;
                     }

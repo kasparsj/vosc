@@ -2,7 +2,7 @@
 // create visuals sender
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
-// initialize 1 layer
+// Create four layers and try both layouts.
 ~visuals.send('/layers', 4);
 ~visuals.send('/layers/layout', "stack");
 ~visuals.send('/layers/layout', "grid");
@@ -13,25 +13,22 @@
 // load a random image in layer 1
 ~visuals.send('/tex/choose', 1, "image");
 
-// rotate layer 1
-~visuals.send('/layer/pivot', "*", ["center", "center", 0]);
+// Center the rotation pivot on every layer.
+~visuals.send('/layer/pivot', "*", [0.5, 0.5, 0]);
 ~visuals.send('/layer/rot', "*", [0, 0, 0]);
 
 // initialize a grid of 4 layers
 ~visuals.send('/layers/layout', "grid");
 
-// load a random image in layer 1
+// Load a random image in layer 3.
 ~visuals.send('/tex/choose', 3, "image");
 
-// load a random video in layer 2
-~visuals.send('/tex/choose', 2, "video");
-
-// load a random video in layer 3
+// reset layer 3
 ~visuals.send('/layer/reset', 3);
 
 (
-z.stop;
-z = {
+~scaleCycle.stop;
+~scaleCycle = {
 	inf.do { |i|
 		~visuals.send('/layer/scale', "*", 2.0.rand);
 		1.wait;
@@ -39,19 +36,20 @@ z = {
 }.fork;
 )
 
+~scaleCycle.stop;
 ~visuals.send('/layer/scale', "*", 1);
 
 ~visuals.send('/layer/tint', "*", [0, 255, 0]);
 
 ~visuals.send('/layer/tint', "*", 1.0);
 
-// load a random sketch in layer 4
+// Load a random sketch in layer 3.
 ~visuals.send('/tex/choose', 3, "sketch");
 
-// hide layer 1
+// hide layer 3
 ~visuals.send('/layer/visible', 3, false);
 
-// show layer 1
+// show layer 3
 ~visuals.send('/layer/visible', 3, true);
 
 (
@@ -68,26 +66,28 @@ void main() {
 ");
 )
 
-// load shaders from shadertoy
-~visuals.send('/shader', 0, "https://www.shadertoy.com/api/v1/shaders/XsyXzw?key=ft8tMh");
-~visuals.send('/shader', 2, "https://www.shadertoy.com/view/MtSBDc");
+// Load a bundled rainbow shader.
+~visuals.send('/tex', 2, "shader:100fragments/RotRainbow.frag");
 
-// solo layer 2
+// solo layer 2 (zero-based index)
 ~visuals.send('/layer/solo', 2);
 
 // show all layers
 ~visuals.send('/layer/visible', "*", true);
 
-// unload all layers
-~visuals.send('/tex', "*", "");
+// Unload layer textures and remove the custom shader.
+~visuals.send('/tex/unload', "*");
+~visuals.send('/shader/reset', 3);
 
-// intialize 1 layer
+// Create nine fresh layers in the current layout
 ~visuals.send('/layers/reset');
 
-// initialize Microphone
-~visuals.send('/input', 0, "Microphone");
-~visuals.send('/input/set', 0, "maxAmp", 0.17);
+// Feed a test amplitude to slot 0. To use a microphone, replace setup
+// with /input 0 followed by the device name shown by /input/list.
+~visuals.send('/onset', 0); // Apply edits immediately while testing input.
+~visuals.send('/input', 0);
+~visuals.send('/input/data', 0, 0.65);
 
-// run Spiral sketch with stroke alpha mapped to mic's amplitude
-~visuals.send('/tex/choose', 0, "shader");
+// Load an image and map layer opacity to input slot 0.
+~visuals.send('/tex', 0, "black_hole.jpg");
 ~visuals.send('/layer/alpha', 0, "in_0");

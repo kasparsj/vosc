@@ -166,6 +166,7 @@ public:
     }
 
     double getArgAsDouble(std::size_t index) const {
+        if (getArgType(index) == OFXOSC_TYPE_DOUBLE) return _args[index].doubleValue;
         return static_cast<double>(getArgAsFloat(index));
     }
 

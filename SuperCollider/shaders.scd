@@ -6,31 +6,29 @@
 // initialize 1 layer
 ~visuals.send('/layers', 1, "stack");
 
-// load RotStringsH shader into layer 1
+// load RotStringsV shader into layer 1
 ~visuals.send('/tex', 0, "shaders/100fragments/RotStringsV.frag");
 ~visuals.send('/tex/var', 0, "glow", 1);
 
 // map glow shader var (uniform) to sine function
 ~visuals.send('/tex/var', 0, "glow", "sin(t*10)");
 
-// initialize Microphone
-~visuals.send('/input', 0, "Microphone");
-~visuals.send('/input/set', 0, "maxAmp", 0.17);
+// Feed a test amplitude to slot 0. To use a microphone, replace setup
+// with /input 0 followed by the device name shown by /input/list.
+~visuals.send('/onset', 0); // Apply edits immediately while testing input.
+~visuals.send('/input', 0);
+~visuals.send('/input/data', 0, 0.65);
 
-// map glow shader var (uniform) to mic 1 amplitude
+// map glow shader var (uniform) to input slot 0 amplitude
 ~visuals.send('/tex/var', 0, "glow", "in_0");
 
-// animate shader color to blue in 10 seconds
+// set shader color to blue
 ~visuals.send('/tex/color', 0, [0, 0, 1.0]);
 
 ~visuals.send('/tex/color', 0, [1.0, 1.0, 0.0]);
 
-// map shader color blue channel to mic 1 amplitude
+// map shader color blue channel to input slot 0 amplitude
 ~visuals.send('/tex/color', 0, [0.0, 1.0, "in_0"]);
-
-// todo: tidal not working
-// map shader color red channel to tidal
-// ~visuals.send('/tex/color', 0, ["tidal:0", 1.0, 1.0]);
 
 // unload shader
 ~visuals.send('/tex', "*", "");
@@ -38,7 +36,8 @@
 // change layout to 9 layers grid
 ~visuals.send('/layers', 9, "grid");
 
-// load random shaders into all 9 layers
-~visuals.send('/tex/choose', "*", "shader");
+// Load the same bundled example into all nine layers.
+~visuals.send('/tex', "*", "shader:100fragments/RotStringsV.frag");
+~visuals.send('/tex/var', "*", "glow", 1.0);
 
 ~visuals.send('/input/list');

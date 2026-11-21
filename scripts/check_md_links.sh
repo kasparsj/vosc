@@ -11,7 +11,9 @@ from pathlib import Path
 root = Path(sys.argv[1])
 
 files = [root / "README.md"]
-files.extend(sorted((root / "docs").glob("*.md")))
+for directory in ("docs", "examples", "SuperCollider"):
+    files.extend(sorted((root / directory).rglob("*.md")))
+files.append(root / "mcp" / "README.md")
 
 link_re = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 head_re = re.compile(r"^#{1,6}\s+(.+?)\s*$")

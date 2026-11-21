@@ -13,6 +13,7 @@ public:
     }
     shared_ptr<Light>& create(const ofxOscMessage& m);
     void remove(const ofxOscMessage& m);
+    void clear() { lights.clear(); }
     void update();
     
 private:

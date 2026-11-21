@@ -2,12 +2,12 @@
 
 2D/3D OSC VJing software built on openFrameworks.
 
-This documentation tracks the current typed OSC router in `main`.
+This documentation tracks the current OSC and local authoring interfaces in `main`.
 
 ## Installation
 
-- macOS: precompiled alpha build is available at [releases/alpha](https://github.com/kasparsj/vosc/releases/tag/alpha).
-- other OS: clone into your openFrameworks `apps` folder, run project generator, then build.
+- macOS: follow the [current Xcode build and quickstart](../README.md#building-with-xcode-apple-silicon).
+- Run the [SuperCollider examples](../SuperCollider/README.md) or use [local MCP authoring](Live-authoring.md).
 
 ## Keyboard shortcuts
 
@@ -15,10 +15,8 @@ This documentation tracks the current typed OSC router in `main`.
 - `c` toggle console window
 - `TAB` toggle debug inspector
 - `r` reload textures on all layers
-- `u` reset all layers
+- `u` apply the layer reset action to each layer
 - `w` toggle wireframe on all geometries
-- `1..9` set blend mode on all layers (when debug view is off)
-- `0` disable blend mode on all layers (when debug view is off)
 
 ## Command overview
 
@@ -35,6 +33,8 @@ This documentation tracks the current typed OSC router in `main`.
 - full command surface: [OSC reference](OSC-reference.md)
 - migration map: [Command migration](Command-migration.md)
 - runtime ownership/flow: [Architecture](Architecture.md)
+- graphics backend options and migration assessment: [GPU backend research](GPU-backend-research.md)
+- local authoring control: [Engine API](Engine-api.md)
 
 ## Core transport commands
 

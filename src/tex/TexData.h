@@ -45,6 +45,7 @@ public:
         setSize(size.x, size.y, size.z);
     }
     void setSize(const ofxOscMessage& m) {
+        explicitSize = true;
         switch (m.getNumArgs()) {
             case 4:
                 setSize(m.getArgAsFloat(1), m.getArgAsFloat(2), m.getArgAsFloat(3));
@@ -62,6 +63,11 @@ public:
                 break;
         }
     }
+    void setExplicitSize(float w, float h, float d = 0) {
+        explicitSize = true;
+        setSize(w, h, d);
+    }
+    bool hasExplicitSize() const { return explicitSize; }
     void setTextureWrap(GLint wrapModeHorizontal, GLint wrapModeVertical);
     void set(const ofxOscMessage& m);
 
@@ -79,6 +85,28 @@ public:
     void allocate(ofFbo& fbo);
     void allocate(ofTexture& tex);
     void afterDraw(const map<string, shared_ptr<BaseVar>>& vars);
+    bool hasDefaultStorageSettings() const {
+        ofTextureData defaults;
+        ofFbo::Settings fboDefaults;
+        return texData.textureID == 0 && texData.textureTarget == defaults.textureTarget &&
+            texData.glInternalFormat == defaults.glInternalFormat && texData.tex_t == 0 && texData.tex_u == 0 &&
+            texData.tex_w == 0 && texData.tex_h == 0 && !texData.bFlipTexture &&
+            texData.compressionType == OF_COMPRESS_NONE && !texData.bAllocated &&
+            texData.minFilter == defaults.minFilter && texData.magFilter == defaults.magFilter &&
+            texData.wrapModeHorizontal == defaults.wrapModeHorizontal &&
+            texData.wrapModeVertical == defaults.wrapModeVertical && texData.bufferId == 0 &&
+            fboSettings.numColorbuffers == fboDefaults.numColorbuffers &&
+            fboSettings.colorFormats == fboDefaults.colorFormats && fboSettings.useDepth == fboDefaults.useDepth &&
+            fboSettings.useStencil == fboDefaults.useStencil &&
+            fboSettings.depthStencilAsTexture == fboDefaults.depthStencilAsTexture &&
+            fboSettings.textureTarget == fboDefaults.textureTarget &&
+            fboSettings.internalformat == fboDefaults.internalformat &&
+            fboSettings.depthStencilInternalFormat == fboDefaults.depthStencilInternalFormat &&
+            fboSettings.wrapModeHorizontal == fboDefaults.wrapModeHorizontal &&
+            fboSettings.wrapModeVertical == fboDefaults.wrapModeVertical &&
+            fboSettings.minFilter == fboDefaults.minFilter && fboSettings.maxFilter == fboDefaults.maxFilter &&
+            fboSettings.numSamples == fboDefaults.numSamples;
+    }
     const map<string, shared_ptr<BaseVar>>& getVars() const {
         return parent.get().vars;
     }
@@ -112,5 +140,6 @@ protected:
     std::reference_wrapper<VarsHolder> parent;
     ofTextureData texData;
     ofFbo::Settings fboSettings;
+    bool explicitSize = false;
 
 };

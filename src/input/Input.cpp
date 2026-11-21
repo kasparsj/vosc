@@ -1,4 +1,11 @@
 #include "Input.h"
+#include "VariablePool.h"
+
+Input::~Input() {
+    soundStream.close();
+    vars.clear();
+    VariablePool::cleanup(getId());
+}
 
 void Input::update() {
     ampHist.push_back( ampScaled );
@@ -10,6 +17,9 @@ void Input::update() {
 void Input::setupStream(const ofxOscMessage& m) {
     string name = m.getArgAsString(1);
     int numInputChannels = m.getNumArgs() > 2 ? m.getArgAsInt(2) : 1;
+    requestedDevice = name;
+    requestedChannels = numInputChannels;
+    requestedBufferSize = m.getNumArgs() > 3 ? m.getArgAsInt(3) : 256;
     if (numInputChannels > 0) {
         //instNum = m.getArgAsInt(0);
         auto devices = soundStream.getMatchingDevices(name);
@@ -23,7 +33,7 @@ void Input::setupStream(const ofxOscMessage& m) {
         settings.sampleRate = 44100;
         settings.numOutputChannels = 0;
         settings.numInputChannels = numInputChannels;
-        settings.bufferSize = m.getNumArgs() > 3 ? m.getArgAsInt(3) : 256;
+        settings.bufferSize = requestedBufferSize;
         soundStream.setup(settings);
         soundStream.start();
     }

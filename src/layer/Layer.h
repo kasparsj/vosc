@@ -9,6 +9,8 @@
 #include "LayerShader.h"
 #include "GeomPool.h"
 #include "Material.hpp"
+#include <array>
+#include <variant>
 
 class Camera;
 
@@ -17,13 +19,13 @@ public:
     Layer() : VarsHolder(), data(*this) {
         reset();
     }
-    ~Layer() {
-        unload();
-    }
+    ~Layer();
     void setup(int index);
     void layout(Layout layout, int layoutIndex, int layoutTotal);
     void update(const vector<TidalNote> &notes);
     void oscCommand(const string& command, const ofxOscMessage &m);
+    using Position = std::array<std::variant<float, std::string>, 3>;
+    void setPosition(const Position& components);
     void layerCommand(const string& command, const ofxOscMessage& m);
     void materialCommand(const string& command, const ofxOscMessage& m);
     void drawToFbo();
@@ -47,8 +49,8 @@ public:
     shared_ptr<Geom> geom;
     TexData data;
     LayerShader shader;
-    ofAlignHorz alignH;
-    ofAlignVert alignV;
+    ofAlignHorz alignH = OF_ALIGN_HORZ_IGNORE;
+    ofAlignVert alignV = OF_ALIGN_VERT_IGNORE;
     int behaviour = -1;
     uint8_t delay = 0;
     Material material;

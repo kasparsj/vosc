@@ -23,14 +23,14 @@ ParseError ArgReader::wrongType(int index, ofxOscArgType expected) const {
     return err;
 }
 
-Result<string> ArgReader::requireString(int index) const {
+Result<std::string> ArgReader::requireString(int index) const {
     if (!has(index)) {
-        return Result<string>::fail(missingArg(index));
+        return Result<std::string>::fail(missingArg(index));
     }
     if (_message.getArgType(index) != OFXOSC_TYPE_STRING) {
-        return Result<string>::fail(wrongType(index, OFXOSC_TYPE_STRING));
+        return Result<std::string>::fail(wrongType(index, OFXOSC_TYPE_STRING));
     }
-    return Result<string>::ok(_message.getArgAsString(index));
+    return Result<std::string>::ok(_message.getArgAsString(index));
 }
 
 Result<int> ArgReader::requireInt(int index) const {
@@ -47,7 +47,7 @@ Result<int> ArgReader::requireInt(int index) const {
         case OFXOSC_TYPE_DOUBLE:
             return Result<int>::ok(static_cast<int>(_message.getArgAsFloat(index)));
         case OFXOSC_TYPE_STRING: {
-            const string str = ofTrim(_message.getArgAsString(index));
+            const std::string str = ofTrim(_message.getArgAsString(index));
             if (str.empty()) {
                 return Result<int>::fail(wrongType(index, OFXOSC_TYPE_INT32));
             }
@@ -72,7 +72,7 @@ Result<float> ArgReader::requireFloat(int index) const {
         case OFXOSC_TYPE_DOUBLE:
             return Result<float>::ok(_message.getArgAsFloat(index));
         case OFXOSC_TYPE_STRING: {
-            const string str = ofTrim(_message.getArgAsString(index));
+            const std::string str = ofTrim(_message.getArgAsString(index));
             if (str.empty()) {
                 return Result<float>::fail(wrongType(index, OFXOSC_TYPE_FLOAT));
             }
@@ -101,7 +101,7 @@ Result<bool> ArgReader::requireBool(int index) const {
         case OFXOSC_TYPE_DOUBLE:
             return Result<bool>::ok(_message.getArgAsFloat(index) != 0.f);
         case OFXOSC_TYPE_STRING: {
-            const string val = ofToLower(ofTrim(_message.getArgAsString(index)));
+            const std::string val = ofToLower(ofTrim(_message.getArgAsString(index)));
             if (val == "1" || val == "true" || val == "yes" || val == "on") {
                 return Result<bool>::ok(true);
             }
@@ -115,9 +115,9 @@ Result<bool> ArgReader::requireBool(int index) const {
     }
 }
 
-Result<string> ArgReader::optionalString(int index, const string& fallback) const {
+Result<std::string> ArgReader::optionalString(int index, const std::string& fallback) const {
     if (!has(index)) {
-        return Result<string>::ok(fallback);
+        return Result<std::string>::ok(fallback);
     }
     return requireString(index);
 }

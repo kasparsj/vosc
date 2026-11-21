@@ -1,7 +1,6 @@
 #include "ShaderPass.h"
 #include "Shader.h"
 #include "../var/Variable.h"
-#include <GL/gl.h>
 #include "../utils.h"
 
 ShaderPass::ShaderPass(const std::shared_ptr<Shader>& shader) 
@@ -29,7 +28,7 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
 #endif
 
     // Check if input texture is an array texture
-    int inputDepth = inputTexture.getDepth();
+    int inputDepth = getTextureDepth(inputTexture);
     bool inputIsArray = (inputDepth > 1);
 
     // Get sizeMult from shader vars (default to 1.0 if not set)
@@ -78,6 +77,7 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
 #endif
 
     // Handle array textures
+#if ALLOW_TEX_2D_ARRAY
     if (inputIsArray && outputSize.z > 1) {
         isArrayTexture = true;
 
@@ -154,7 +154,9 @@ void ShaderPass::update(ofTexture& inputTexture, TexData& texData) {
             fbo.end();
         }
     }
-    else {
+    else
+#endif
+    {
         // Regular 2D texture handling
         isArrayTexture = false;
 

@@ -98,9 +98,9 @@ void main(){
     // STEP 2: Sample the sieve texture to get offset information
     // -------------------------------------------------------------------------
 
-    // Normalize position to 0-1 range for texture sampling
-    vec2 sievePos = position / vec2(sievedim);
-    vec4 sievePix = texture(sieve, sievePos);
+    // Tile the lookup and read its encoded offsets without filtering.
+    ivec2 sievePixel = ivec2(mod(floor(position), vec2(sievedim)));
+    vec4 sievePix = texelFetch(sieve, sievePixel, 0);
 
     // Extract x, y offsets from blue and green channels
     // Channels store normalized values (0-1), convert to pixel coordinates (0-255)
