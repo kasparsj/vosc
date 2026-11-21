@@ -224,7 +224,8 @@ class RendererCleanupError(RuntimeError):
 
 
 class OwnedRenderer:
-    def __init__(self, binary: Path, output: Path, name: str, port: int, sanitizers: list[str]):
+    def __init__(self, binary: Path, output: Path, name: str, port: int, sanitizers: list[str],
+                 *, arguments=(), cwd: Path | None = None):
         self.binary, self.port = binary, port
         self.runtime = Path(tempfile.mkdtemp(prefix=f"vosc-recipe-{name}-", dir="/tmp"))
         self.runtime.chmod(0o700)
@@ -237,7 +238,7 @@ class OwnedRenderer:
             environment["ASAN_OPTIONS"] = "abort_on_error=1:halt_on_error=1:detect_leaks=0"
         if "undefined" in sanitizers:
             environment["UBSAN_OPTIONS"] = "halt_on_error=1:print_stacktrace=1"
-        self.process = subprocess.Popen([str(binary)], cwd=binary.parents[3],
+        self.process = subprocess.Popen([str(binary), *map(str, arguments)], cwd=cwd or binary.parents[3],
             env=environment,
             stdout=self.stream, stderr=subprocess.STDOUT, start_new_session=True)
         try:
@@ -256,7 +257,8 @@ class OwnedRenderer:
         self.hooks_enabled = (self.runtime / "events.jsonl").is_file()
         self.owner = {"pid": self.process.pid, "binary": str(binary),
             "binary_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
-            "control_socket": str(self.socket), "osc_port": port, "sanitizers_expected": sanitizers}
+            "control_socket": str(self.socket), "osc_port": port, "sanitizers_expected": sanitizers,
+                      "arguments": list(map(str, arguments)), "cwd": str(cwd or binary.parents[3])}
         self.owner["recovery_test_hooks"] = self.hooks_enabled
 
     def client(self) -> Client:
@@ -405,8 +407,8 @@ def applied(client: Client, method: str, params: dict) -> dict:
     return final
 
 
-def capture(client: Client, path: Path) -> tuple[int, int, list[tuple[int, int, int, int]], dict]:
-    response = client.call("capture_preview", {"max_width": 800})
+def capture(client: Client, path: Path, *, max_width=800) -> tuple[int, int, list[tuple[int, int, int, int]], dict]:
+    response = client.call("capture_preview", {"max_width": max_width})
     final = client.wait(response["id"], timeout=15)
     if not final.get("ok") or final.get("status") != "captured":
         raise RuntimeError(f"capture failed: {final}")
@@ -527,8 +529,9 @@ def prepare_scene_endpoint(text: str, renderer_port: int) -> tuple[str, str]:
 
 def run_sclang(sclang: Path, scene: Path, output: Path, renderer_port: int, label: str,
                visuals_quark: Path | None = None, *, ordinary: bool = False,
-               ordinary_marker: str = "VOSC_POSITION_SEND_COMPLETE") -> dict:
-    text, endpoint_mode = prepare_scene_endpoint(scene.read_text(), renderer_port)
+               ordinary_marker: str = "VOSC_POSITION_SEND_COMPLETE",
+               prepare_endpoint=prepare_scene_endpoint) -> dict:
+    text, endpoint_mode = prepare_endpoint(scene.read_text(), renderer_port)
     quark = quark_checkout_path(visuals_quark)
     before = quark_source_identity(quark)
     scene.write_text(text)

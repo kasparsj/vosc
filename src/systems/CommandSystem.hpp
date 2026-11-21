@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../RuntimeContext.hpp"
+#include "../scene/SceneFile.hpp"
+#include <functional>
 #include "../osc/CommandParser.hpp"
 #include "../osc/CommandRouter.hpp"
 #include "InputSystem.hpp"
@@ -17,12 +19,20 @@ public:
         , renderSystem(renderSystem)
         , inputSystem(inputSystem) {}
 
+    using ScenePrograms = std::map<size_t, Shader::PreparedDirectSource>;
+    using SceneResult = std::function<void(int frame, const std::string& detail)>;
+    static void validateStartupScene(const scene::File& scene, const ScenePrograms* programs = nullptr);
+    static ScenePrograms prepareStartupScene(const scene::File& scene);
+    void applyStartupScene(const scene::File& scene, ScenePrograms& programs, SceneResult result);
+    bool startupScenePending() const { return static_cast<bool>(startupSceneResult); }
+
     void setup();
     void update();
     bool didOpenGateThisUpdate() const { return gateOpened; }
     bool isGateEnabled() const { return waitOnset >= 1; }
     int onsetGateValue() const { return waitOnset; }
 #ifdef VOSC_RECOVERY_TESTING
+    static void traceStartupBoundary(const char* event);
     bool recoveryTestSceneReplayEnded() const { return sceneReplay && sceneReplay->ended; }
 #endif
     bool validateSceneRecipeCommands(const ofJson& commands, const ofJson& assets, std::string& reason) const;
@@ -51,9 +61,13 @@ private:
     void failSceneReplay(const std::string& detail);
     void sendSceneReply(const std::string& host, int port, const std::string& token,
                         const std::string& status, int frame, const std::string& detail) const;
-    bool routeSceneCommand(const ofxOscMessage& wrapped);
-    bool validateSceneCommand(const ofxOscMessage& wrapped, SceneReplay& state) const;
+    bool routeSceneCommand(const ofxOscMessage& wrapped, Shader::PreparedDirectSource* program = nullptr);
+    static bool validateSceneCommand(const ofxOscMessage& wrapped, SceneReplay& state,
+                                     const Shader::Uniforms* uniforms = nullptr);
+    const Shader::Uniforms* liveSceneUniforms(const ofxOscMessage& wrapped) const;
+    void completeSceneReplay(const std::string& status, int frame, const std::string& detail);
     void resetScene(int width, int height);
+    void verifyStartupImage(const ofxOscMessage& message, const std::string& path);
     bool finishFeedbackSetup(const SceneReplay& state, std::string& reason) const;
 
     struct SceneReplay {
@@ -99,6 +113,7 @@ private:
     bool forceOnset = false;
     bool gateOpened = false;
     std::optional<SceneReplay> sceneReplay;
+    SceneResult startupSceneResult;
 public:
     std::function<uint64_t()> currentConfigurationSerial;
 };

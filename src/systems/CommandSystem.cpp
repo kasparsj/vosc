@@ -2,16 +2,22 @@
 #include "../GeomPool.h"
 #include "../light/Lights.h"
 #include "../TexturePool.h"
+#include "../tex/ImageTex.h"
 #include "../tex/ShaderPingPongTex.h"
 #include "../shader/ShaderPool.h"
 #include "../var/VariablePool.h"
 #include "../ResourceRegistry.hpp"
 #include "../Logger.h"
 #include "ofAppGLFWWindow.h"
+#ifdef VOSC_RECOVERY_TESTING
+#include "ofBufferObject.h"
+#endif
 #include "ofxOscSender.h"
 #include <arpa/inet.h>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
+#include <iostream>
 #include <limits>
 #include <iomanip>
 #include <locale>
@@ -19,6 +25,7 @@
 #include <map>
 #include <regex>
 #include <set>
+#include <stdexcept>
 
 namespace {
 double replayNow() {
@@ -43,6 +50,20 @@ bool recipeAddress(const std::string& value) {
 
 bool integerUniformType(GLenum type) {
     return type == GL_INT || type == GL_INT_VEC2 || type == GL_INT_VEC3 || type == GL_INT_VEC4;
+}
+
+bool hasImageStorage(const Texture& texture, const ofPixels& pixels) {
+    if (!pixels.isAllocated() || !texture.hasTexture(0)) return false;
+    const auto& data = texture.getTexture().getTextureData();
+    if (data.textureTarget != GL_TEXTURE_2D || glIsTexture(data.textureID) != GL_TRUE)
+        return false;
+    GLint previous = 0, width = 0, height = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous);
+    glBindTexture(GL_TEXTURE_2D, data.textureID);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+    glBindTexture(GL_TEXTURE_2D, previous);
+    return width == pixels.getWidth() && height == pixels.getHeight();
 }
 
 int uniformComponentCount(GLenum type) {
@@ -247,9 +268,11 @@ void CommandSystem::setup() {
 }
 
 void CommandSystem::update() {
-    inputSystem.forEachOscMessage([this](const ofxOscMessage& m) {
-        parseMessage(m);
-    });
+    if (!startupScenePending()) {
+        inputSystem.forEachOscMessage([this](const ofxOscMessage& m) {
+            parseMessage(m);
+        });
+    }
 
     gateOpened = waitOnset < 1 || forceOnset || checkOnset();
     if (gateOpened) {
@@ -350,7 +373,7 @@ bool CommandSystem::handleSceneEnvelope(const ofxOscMessage& message) {
                 message.getArgType(1) == OFXOSC_TYPE_INT32 && message.getArgType(2) == OFXOSC_TYPE_STRING &&
                 sceneReplay->nextSequence <= 2048 && message.getArgAsInt(1) == sceneReplay->nextSequence &&
                 recipeAddress(message.getArgAsString(2)) &&
-                validateSceneCommand(message, validated) && routeSceneCommand(message);
+                validateSceneCommand(message, validated, liveSceneUniforms(message)) && routeSceneCommand(message);
         } catch (const std::exception&) {
             routed = false;
         } catch (...) {
@@ -387,7 +410,17 @@ bool CommandSystem::handleSceneEnvelope(const ofxOscMessage& message) {
     return true;
 }
 
-bool CommandSystem::validateSceneCommand(const ofxOscMessage& m, SceneReplay& state) const {
+const Shader::Uniforms* CommandSystem::liveSceneUniforms(const ofxOscMessage& wrapped) const {
+    if (wrapped.getArgAsString(2) != "/shader/var" || !recipeType(wrapped, 0, OFXOSC_TYPE_INT32))
+        return nullptr;
+    const int layer = wrapped.getArgAsInt32(3);
+    const auto& layers = renderSystem.getLayers();
+    if (layer < 0 || static_cast<size_t>(layer) >= layers.size() || !layers[layer]) return nullptr;
+    return &layers[layer]->shader.getUniforms();
+}
+
+bool CommandSystem::validateSceneCommand(const ofxOscMessage& m, SceneReplay& state,
+                                        const Shader::Uniforms* uniforms) {
     const std::string address = m.getArgAsString(2);
     const int count = m.getNumArgs() - 3;
     auto intAt = [&](int index) { return m.getArgAsInt32(index + 3); };
@@ -501,12 +534,13 @@ bool CommandSystem::validateSceneCommand(const ofxOscMessage& m, SceneReplay& st
             if (recipeType(m, i, OFXOSC_TYPE_STRING) && !expressionAt(i)) return false;
         }
         if ((sawInt && sawFloat) || !addComponents(count - 2)) return false;
-        const auto& uniformTypes = renderSystem.getLayers().at(index)->shader.getUniforms();
-        const auto reflected = uniformTypes.find(stringAt(1));
-        if (reflected != uniformTypes.end()) {
-            if (uniformComponentCount(reflected->second.type) != count - 2) return false;
-            if (integerUniformType(reflected->second.type) && sawFloat) return false;
-            if (!integerUniformType(reflected->second.type) && sawInt) return false;
+        if (uniforms) {
+            const auto reflected = uniforms->find(stringAt(1));
+            if (reflected != uniforms->end()) {
+                if (uniformComponentCount(reflected->second.type) != count - 2) return false;
+                if (integerUniformType(reflected->second.type) && sawFloat) return false;
+                if (!integerUniformType(reflected->second.type) && sawInt) return false;
+            }
         }
         return addBinding(index, "uniform:" + stringAt(1));
     }
@@ -620,11 +654,9 @@ bool CommandSystem::validateSceneRecipeCommands(const ofJson& commands, const of
                 !arg["type"].is_string()) { reason = "recipe argument descriptor shape is invalid"; return false; }
             const std::string type = arg["type"].get<std::string>();
             const auto& value = arg["value"];
-            if (type == "i" && value.is_number_integer()) wrapped.addIntArg(value.get<int>());
-            else if (type == "f" && value.is_number_float()) wrapped.addFloatArg(value.get<float>());
-            else if ((type == "s" || type == "asset") && value.is_string()) {
+            if (type == "asset" && value.is_string()) {
                 std::string source = value.get<std::string>();
-                if (type == "asset") {
+                {
                     auto asset = std::find_if(assets.begin(), assets.end(), [&](const ofJson& item) { return item.value("name", std::string()) == source; });
                     if (asset == assets.end()) { reason = "undeclared recipe asset"; return false; }
                     const auto kind = asset->value("kind", std::string());
@@ -637,9 +669,11 @@ bool CommandSystem::validateSceneRecipeCommands(const ofJson& commands, const of
                 }
                 wrapped.addStringArg(source);
             }
-            else { reason = "recipe argument type/value is invalid"; return false; }
+            else if (!scene::appendOscValue(wrapped, type, value)) {
+                reason = "recipe argument type/value is invalid"; return false;
+            }
         }
-        if (!validateSceneCommand(wrapped, state)) {
+        if (!validateSceneCommand(wrapped, state, liveSceneUniforms(wrapped))) {
             reason = "native frozen command validation rejected " + address;
             return false;
         }
@@ -660,9 +694,187 @@ bool CommandSystem::validateSceneRecipeCommands(const ofJson& commands, const of
     return true;
 }
 
-bool CommandSystem::routeSceneCommand(const ofxOscMessage& wrapped) {
+void CommandSystem::validateStartupScene(const scene::File& file, const ScenePrograms* programs) {
+    SceneReplay state;
+    for (size_t i = 0; i < file.commands.size(); ++i) {
+        const auto& message = file.commands[i].message;
+        if ((i == 0 && message.getArgAsString(2) != "/layers/reset") || !validateSceneCommand(message, state))
+            throw std::runtime_error(scene::commandContext(i, message) +
+                                     ": invalid argument types, values, target, or setup order");
+        if (i == 0 && state.layerCount == 0)
+            throw std::runtime_error(scene::commandContext(i, message) + ": expected at least one layer");
+        ++state.received;
+    }
+    if (!programs) return;
+
+    // Scene v1 can change these layer variables but cannot introduce new ones.
+    static const std::set<std::string> layerUniforms = {
+        "pos", "size", "visible", "speed", "tint", "visibleThresh", "onsetThresh",
+        "alpha", "bri", "rotation", "pivot", "scale"};
+    std::map<int, const Shader::PreparedDirectSource*> byLayer;
+    for (size_t i = 0; i < file.commands.size(); ++i) {
+        const auto& message = file.commands[i].message;
+        const auto address = message.getArgAsString(2);
+        auto fail = [&](const std::string& detail) {
+            throw std::runtime_error(scene::commandContext(i, message) + ": " + detail);
+        };
+        if (address == "/shader") byLayer[message.getArgAsInt32(3)] = &programs->at(i);
+        if (address == "/shader/var" || address == "/shader/texture") {
+            const int layer = message.getArgAsInt32(3);
+            const auto& program = *byLayer.at(layer);
+            const auto name = message.getArgAsString(4);
+            const bool textureSize = name.size() > 4 && name.compare(name.size() - 4, 4, "Size") == 0 &&
+                state.namedTextures.count({layer, name.substr(0, name.size() - 4)});
+            if (Shader::isRendererUniform(name) || layerUniforms.count(name) || textureSize)
+                fail("renderer-managed shader uniform: " + name);
+            const auto uniform = program.uniforms.find(name);
+            if (uniform == program.uniforms.end() || uniform->second.isArray())
+                fail("expected active non-array shader uniform: " + name);
+            if (glGetUniformLocation(program.program->getProgram(), name.c_str()) < 0)
+                fail("shader uniform has no writable location: " + name);
+            const auto type = uniform->second.type;
+            if (address == "/shader/texture") {
+                if (type != GL_SAMPLER_2D) fail("expected sampler2D: " + name);
+                // The renderer supplies a vec2 size alongside each bound image.
+                const auto sizeName = name + "Size";
+                const auto size = program.uniforms.find(sizeName);
+                if (size != program.uniforms.end() &&
+                    (size->second.type != GL_FLOAT_VEC2 || size->second.isArray() ||
+                     glGetUniformLocation(program.program->getProgram(), sizeName.c_str()) < 0))
+                    fail("renderer-managed texture size requires a writable vec2: " + sizeName);
+            } else {
+                const int arity = uniformComponentCount(type);
+                const bool integer = type == GL_INT || type == GL_INT_VEC2 ||
+                    type == GL_INT_VEC3 || type == GL_INT_VEC4;
+                const bool floating = type == GL_FLOAT || type == GL_FLOAT_VEC2 ||
+                    type == GL_FLOAT_VEC3 || type == GL_FLOAT_VEC4;
+                if ((!integer && !floating) || arity != message.getNumArgs() - 5)
+                    fail("shader uniform arity or shape mismatch: " + name);
+                for (int arg = 5; arg < message.getNumArgs(); ++arg)
+                    if (message.getArgType(arg) != (integer ? OFXOSC_TYPE_INT32 : OFXOSC_TYPE_FLOAT))
+                        fail("shader uniform " + name + (integer ? " requires int32" : " requires float32"));
+            }
+        }
+    }
+}
+
+#ifdef VOSC_RECOVERY_TESTING
+void CommandSystem::traceStartupBoundary(const char* event) {
+    if (std::getenv("VOSC_TEST_TRACE_SCENE"))
+        std::cerr << "VOSC_TEST_SCENE " << event << std::endl;
+}
+#endif
+
+CommandSystem::ScenePrograms CommandSystem::prepareStartupScene(const scene::File& file) {
+#ifdef VOSC_RECOVERY_TESTING
+    traceStartupBoundary("preflight");
+#endif
+    ScenePrograms programs;
+    for (size_t i = 0; i < file.commands.size(); ++i) {
+        const auto& command = file.commands[i];
+        if (command.asset.empty()) continue;
+        if (!scene::assetMatches(command))
+            throw std::runtime_error(scene::commandContext(i, command.message) +
+                                     ": asset changed since preflight: " + command.asset.string());
+        if (command.message.getArgAsString(2) == "/shader") {
+            if (!Shader::prepareDirectSource(command.assetBytes, programs[i]))
+                throw std::runtime_error(scene::commandContext(i, command.message) +
+                                         ": shader compilation or linking failed: " + command.asset.string());
+        }
+    }
+    validateStartupScene(file, &programs);
+    return programs;
+}
+
+void CommandSystem::applyStartupScene(const scene::File& file, ScenePrograms& programs, SceneResult result) {
+    for (size_t i = 0; i < file.commands.size(); ++i) {
+        const auto& command = file.commands[i];
+        if (command.message.getArgAsString(2) == "/shader/texture" && !scene::assetMatches(command))
+            throw std::runtime_error(scene::commandContext(i, command.message) +
+                                     ": image changed since preflight: " + command.asset.string());
+    }
+    startupSceneResult = std::move(result);
+    sceneReplay.emplace();
+    auto& state = *sceneReplay;
+    state.width = file.width;
+    state.height = file.height;
+    state.finalGate = -1;
+    state.deadline = replayNow() + 12.0;
+    state.diagnosticStart = replayLogger() ? replayLogger()->latestSequence() : 0;
+    resetScene(file.width, file.height);
+    for (size_t i = 0; i < file.commands.size(); ++i) {
+        const auto& command = file.commands[i];
+        const auto& message = command.message;
+        auto program = programs.find(i);
+        try {
+            if (!routeSceneCommand(message, program == programs.end() ? nullptr : &program->second))
+                throw std::runtime_error("command routing failed");
+            if (message.getArgAsString(2) == "/shader/texture")
+                verifyStartupImage(message, command.asset.string());
+        } catch (const std::exception& error) {
+            failSceneReplay(scene::commandContext(i, message) + ": " + error.what());
+            return;
+        }
+    }
+    state.ended = true;
+    state.configurationSerial = currentConfigurationSerial ? currentConfigurationSerial() : 0;
+}
+
+void CommandSystem::verifyStartupImage(const ofxOscMessage& message, const std::string& path) {
+    const auto& bindings = renderSystem.getLayers().at(message.getArgAsInt32(3))->shader.getTextures();
+    const auto binding = bindings.find(message.getArgAsString(4));
+    auto fail = [&](const std::string& detail) {
+        throw std::runtime_error("image upload failed: " + path + ": " + detail);
+    };
+    if (binding == bindings.end() || !binding->second ||
+        !std::dynamic_pointer_cast<ImageTex>(binding->second->tex))
+        fail("image texture was not created");
+    auto& image = *binding->second;
+    const auto channel = replayLogger();
+    const auto diagnosticStart = channel ? channel->latestSequence() : 0;
+    for (int i = 0; i < 16 && glGetError() != GL_NO_ERROR; ++i) {}
+#ifdef VOSC_RECOVERY_TESTING
+    ofBufferObject blockedUpload;
+    GLint previousUnpack = 0;
+    if (std::getenv("VOSC_TEST_FAIL_SCENE_UPLOAD")) {
+        // A zero-byte unpack buffer forces the real texture transfer to fail.
+        glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &previousUnpack);
+        blockedUpload.allocate(0, GL_STATIC_DRAW);
+        blockedUpload.bind(GL_PIXEL_UNPACK_BUFFER);
+        if (!blockedUpload.isAllocated() || glGetError() != GL_NO_ERROR)
+            throw std::runtime_error("could not arm test upload failure");
+    }
+#endif
+    image.update({});
+#ifdef VOSC_RECOVERY_TESTING
+    if (blockedUpload.isAllocated()) glBindBuffer(GL_PIXEL_UNPACK_BUFFER, previousUnpack);
+#endif
+    const auto uploadError = glGetError();
+    if (uploadError != GL_NO_ERROR) fail("OpenGL error " + std::to_string(uploadError));
+    const bool usable = hasImageStorage(image, image.getPixels());
+    if (glGetError() != GL_NO_ERROR || !usable) fail("no usable GPU texture storage");
+    if (channel) {
+        bool gap = false;
+        uint64_t latest = 0;
+        const auto entries = channel->entriesSince(diagnosticStart, 512, gap, &latest);
+        if (gap || (!entries.empty() && entries.back().sequence != latest))
+            fail("upload diagnostic scope overflowed");
+        for (const auto& entry : entries)
+            if (entry.level == OF_LOG_ERROR || entry.level == OF_LOG_FATAL_ERROR)
+                fail(entry.message.substr(0, 440));
+    }
+}
+
+bool CommandSystem::routeSceneCommand(const ofxOscMessage& wrapped, Shader::PreparedDirectSource* program) {
+#ifdef VOSC_RECOVERY_TESTING
+    traceStartupBoundary("command");
+#endif
     ofxOscMessage ordinary;
     const std::string address = wrapped.getArgAsString(2);
+    if (program) {
+        renderSystem.getLayers().at(wrapped.getArgAsInt32(3))->shader.installDirectSource(std::move(*program), {});
+        return true;
+    }
     if (address == "/tex/var") {
         ShaderPingPongTex::invalidateFeedbackGeneration();
         auto& holder = *renderSystem.getLayers().at(wrapped.getArgAsInt32(3))->shader.getDefaultTexture();
@@ -916,6 +1128,9 @@ bool CommandSystem::finishFeedbackSetup(const SceneReplay& state, std::string& r
 }
 
 void CommandSystem::resetScene(int width, int height) {
+#ifdef VOSC_RECOVERY_TESTING
+    traceStartupBoundary("reset");
+#endif
     messageQueue.clear();
     runtime.tidal->notes.clear();
     osc::LayersPayload empty;
@@ -967,9 +1182,19 @@ void CommandSystem::sendSceneReply(const std::string& host, int port, const std:
 
 void CommandSystem::failSceneReplay(const std::string& detail) {
     if (!sceneReplay) return;
-    const auto replay = *sceneReplay;
+    completeSceneReplay("failed", -1, detail);
+}
+
+void CommandSystem::completeSceneReplay(const std::string& status, int frame, const std::string& detail) {
+    const auto replay = std::move(*sceneReplay);
     sceneReplay.reset();
-    sendSceneReply(replay.host, replay.replyPort, replay.token, "failed", -1, detail);
+    if (startupSceneResult) {
+        auto result = std::move(startupSceneResult);
+        startupSceneResult = nullptr;
+        result(frame, detail);
+    } else {
+        sendSceneReply(replay.host, replay.replyPort, replay.token, status, frame, detail);
+    }
 }
 
 void CommandSystem::afterComposedDraw() {
@@ -1027,10 +1252,9 @@ void CommandSystem::afterComposedDraw() {
             return;
         }
     }
-    sceneReplay.reset();
     waitOnset = replay.finalGate;
-    sendSceneReply(replay.host, replay.replyPort, replay.token, "applied",
-                   static_cast<int>(ofGetFrameNum()), "setup processed and composed draw completed");
+    completeSceneReplay("applied", static_cast<int>(ofGetFrameNum()),
+                        "setup processed and composed draw completed");
 }
 
 bool CommandSystem::handleReplayWindowResized(int width, int height) {

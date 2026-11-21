@@ -22,9 +22,16 @@ VOSC::VOSC()
     , commandSystem(runtime, renderSystem, inputSystem)
     , engineControl(renderSystem, commandSystem, runtime) {}
 
-void VOSC::setup(unsigned int port) {
-    inputSystem.setup(port);
+void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::ScenePrograms& programs,
+                 CommandSystem::SceneResult result) {
     resourceSystem.setup();
+    initialized = true;
+#ifdef VOSC_RECOVERY_TESTING
+    if (!scene && std::getenv("VOSC_TEST_FAIL_NO_ARG_SETUP"))
+        throw std::runtime_error("forced no-argument setup failure");
+    CommandSystem::traceStartupBoundary("receiver");
+#endif
+    inputSystem.setup(port);
     runtime.camera.setup();
     renderSystem.setup(INITIAL_LAYERS);
     commandSystem.setup();
@@ -36,6 +43,10 @@ void VOSC::setup(unsigned int port) {
     renderSystem.windowResized(ofGetWidth(), ofGetHeight());
     settledWindowWidth = ofGetWidth();
     settledWindowHeight = ofGetHeight();
+    if (scene) {
+        commandSystem.applyStartupScene(*scene, programs, std::move(result));
+        if (!commandSystem.startupScenePending()) return;
+    }
     engineControl.setup();
 #ifdef VOSC_RECOVERY_TESTING
     if (const char* directory = std::getenv("VOSC_RECOVERY_TEST_DIR")) {
@@ -63,7 +74,7 @@ void VOSC::update() {
 #endif
     runtime.camera.preUpdate();
     commandSystem.update();
-    engineControl.update();
+    if (!commandSystem.startupScenePending()) engineControl.update();
     runtime.inputs.update();
     while (runtime.tidal->notes.size() > MAX_NOTES) {
         runtime.tidal->notes.erase(runtime.tidal->notes.begin());
@@ -225,6 +236,7 @@ void VOSC::recoveryTestUpdate(bool beforeDraw) {
 #endif
 
 void VOSC::exit() {
+    if (!initialized) return;
     inputSystem.shutdown();
 #ifdef VOSC_RECOVERY_TESTING
     recoveryTestRecord({{"event", "input_stopped"}});

@@ -1,0 +1,404 @@
+#!/usr/bin/env python3
+"""Verify native scene startup and original SC parity using owned processes."""
+
+from __future__ import annotations
+
+import argparse
+from contextlib import closing
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import struct
+import subprocess
+import tempfile
+import time
+import zlib
+
+from test_scene_recipe import (
+    ROOT, OwnedRenderer, arm_recovery_hook, capture, collect_cleanup, free_udp_port, run_sclang, sc_escape,
+)
+
+SIEVE_IMAGE = "black_hole-2048.png"
+SIEVE_MARKER = "VOSC_SIEVE_SEND_COMPLETE"
+
+
+def require(condition, detail):
+    if not condition:
+        raise RuntimeError(detail)
+
+
+def redirect_sc(text, port, *, sieve, derivative=None):
+    require(0 < port < 65536 and port != 33333, "expected owned private UDP port")
+    if sieve:
+        original = 'OSCVisuals("127.0.0.1", 33333, reset: true)'
+        owned = f'OSCVisuals("127.0.0.1", {port}, reset: true)'
+        original_image = '"black_hole.jpg"'
+        if derivative is not None:
+            require(text.count(original_image) == 1, "Sieve source image is ambiguous")
+            text = text.replace(original_image, f'"{sc_escape(derivative)}"', 1)
+        require(text.rstrip().endswith(")"), "expected trailing Sieve block")
+        text = text.rstrip()[:-1] + f'"{SIEVE_MARKER}".postln;\n)\n'
+    else:
+        original = "var rendererPort = 43333;"
+        owned = f"var rendererPort = {port};"
+        require(text.count("OSCVisuals(rendererHost, rendererPort)") == 1 and
+                text.count('var rendererHost = "127.0.0.1";') == 1, "unexpected Editable Scene endpoint")
+    require(text.count(original) == 1, "original endpoint is ambiguous")
+    return text.replace(original, owned, 1), "verified-owned-example"
+
+
+def read_state(client):
+    response = client.call("get_scene")
+    require(response.get("ok"), response)
+    return response["result"]
+
+
+def comparable_state(state):
+    return {
+        "layout": state["layout"],
+        "layers": [
+            {
+                **{key: layer[key] for key in ("alpha", "visible", "size", "geometry_loaded")},
+                "shader_loaded": layer["shader"]["loaded"],
+                "uniforms": {
+                    key: (value["gl_type"], value.get("rendered_value"))
+                    for key, value in layer["shader"]["uniforms"].items()
+                    if key in ("dim", "sievedim", "multiplier", "vColor", "hColor", "globalColor")
+                },
+                "samplers": {key: value["loaded"] for key, value in layer["shader"]["textures"].items()},
+            }
+            for layer in state["layers"]
+        ],
+    }
+
+
+def observe(renderer, output, label, size, *, native=False, sieve=False):
+    with closing(renderer.client()) as client:
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            if renderer.process.poll() is not None:
+                raise RuntimeError(renderer.log.read_text(errors="replace"))
+            lines = renderer.log.read_text(errors="replace").splitlines()
+            ready = [line for line in lines if line.startswith("VOSC_SCENE_READY ")]
+            state = read_state(client)
+            layers = state.get("layers", [])
+            if any(line.startswith("[ error ]") for line in lines):
+                raise RuntimeError(f"{label} reported a renderer error. See {renderer.log}")
+            if len(layers) == 1 and layers[0]["shader"]["loaded"] and (not native or len(ready) == 1):
+                textures = layers[0]["shader"]["textures"]
+                if not sieve or all(textures.get(name, {}).get("loaded") and textures[name]["source"]
+                                    for name in ("sieve", "srctex")):
+                    break
+            time.sleep(0.05)
+        else:
+            raise RuntimeError(f"{label} did not settle")
+        image = output / f"{label}.png"
+        width, height, pixels, receipt = capture(client, image, max_width=size[0])
+        require((width, height) == size, f"{label}: expected capture {size}, got {(width, height)}")
+        state = read_state(client)
+    receipt.pop("data_base64", None)
+    observation = {"capture": receipt, "image": str(image), "ready": ready, "state": state}
+    return pixels, observation
+
+
+def compare(output, label, size, left, right):
+    deltas = [tuple(abs(a - b) for a, b in zip(first, second)) for first, second in zip(left, right)]
+    width, height = size
+    require(len(left) == len(right) == len(deltas) == width * height, f"{label}: bad dimensions")
+    changed = sum(any(pixel) for pixel in deltas)
+    stats = {
+        "changed_pixels": changed, "total_pixels": len(deltas),
+        "mean_channel_error": sum(map(sum, deltas)) / (4 * len(deltas)),
+        "max_channel_error": max(map(max, deltas)),
+    }
+    if changed:
+        def chunk(kind, payload):
+            return (struct.pack(">I", len(payload)) + kind + payload +
+                    struct.pack(">I", zlib.crc32(kind + payload)))
+
+        pixels = bytes(channel for pixel in deltas
+                       for channel in (min(255, 8 * max(pixel)),) * 3 + (255,))
+        stride = width * 4
+        raw = b"".join(b"\0" + pixels[start:start + stride] for start in range(0, len(pixels), stride))
+        diff = output / f"{label}-diff.png"
+        diff.write_bytes(b"\x89PNG\r\n\x1a\n" +
+                         chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)) +
+                         chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+        stats["diff_image"] = str(diff)
+        # The lookup repeats every six pixels. A residue never changing anywhere
+        # in the frame indicates a lookup/tint branch unaffected by resampling.
+        residues = {(index % width % 6, (index // width) % 6)
+                    for index, delta in enumerate(deltas) if any(delta)}
+        stats["changed_lookup_residues"] = sorted(residues)
+    return stats
+
+
+def run_owned(binary, output, label, port, callback, evidence, **options):
+    renderer = OwnedRenderer(binary, output, label, port, [], **options)
+    node = evidence.setdefault("renders", {})[label] = {"owner": renderer.owner}
+    try:
+        return callback(renderer, node)
+    finally:
+        if renderer.hooks_enabled and renderer.process.poll() is None:
+            arm_recovery_hook(renderer, {"id": "native-scene-cleanup", "operation": "shutdown"})
+            try:
+                renderer.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                pass
+        node["cleanup"], error = collect_cleanup(renderer)
+        require(not error, f"{label} cleanup failed: {error}")
+
+
+def run_port(args, output, file, label, size, cwd, evidence, *, sieve):
+    def run(renderer, node):
+        pixels, observation = observe(renderer, output, label, size, native=True, sieve=sieve)
+        node.update(observation)
+        return pixels, comparable_state(observation["state"])
+
+    return run_owned(args.binary, output, label, 0, run, evidence, arguments=("--scene", file), cwd=cwd)
+
+
+def run_original(args, output, origin, label, size, evidence, *, sieve, derivative=None):
+    file = output / f"{label}.scd"
+    file.write_bytes(origin.read_bytes())
+    if not sieve:
+        shutil.copytree(origin.parent / "assets", output / "assets")
+
+    def run(renderer, node):
+        node["sclang"] = run_sclang(
+            args.sclang, file, output, renderer.port, label, args.visuals_quark,
+            ordinary=sieve, ordinary_marker=SIEVE_MARKER,
+            prepare_endpoint=lambda text, port: redirect_sc(text, port, sieve=sieve, derivative=derivative),
+        )
+        pixels, observation = observe(renderer, output, label, size, sieve=sieve)
+        node.update(observation)
+        return pixels, comparable_state(observation["state"])
+
+    return run_owned(args.binary, output, label, free_udp_port(), run, evidence)
+
+
+def negative(binary, output, label, argv, expected, *, trace=(), inject=None):
+    with tempfile.TemporaryDirectory(prefix="vosc-cli-negative-", dir="/tmp") as runtime:
+        socket = Path(runtime) / "control.sock"
+        environment = {**os.environ, "VOSC_OSC_PORT": "0",
+                       "VOSC_CONTROL_SOCKET": str(socket),
+                       "VOSC_RECOVERY_TEST_DIR": runtime, "VOSC_TEST_TRACE_SCENE": "1"}
+        if inject:
+            environment[inject] = "1"
+        command = [str(binary), *map(str, argv)]
+        log = output / f"negative-{label}.log"
+        try:
+            run = subprocess.run(command, cwd=binary.parents[3], env=environment,
+                                 capture_output=True, text=True, timeout=20, start_new_session=True)
+        except subprocess.TimeoutExpired as error:
+            log.write_bytes((error.stdout or b"") + (error.stderr or b""))
+            raise
+        log.write_text(run.stdout + run.stderr)
+        require(run.returncode > 0 and expected in run.stderr and "VOSC_SCENE_READY" not in run.stdout,
+                f"{label}: wanted nonzero exit with {expected!r}. See {log}")
+        observed = tuple(line.removeprefix("VOSC_TEST_SCENE ") for line in run.stderr.splitlines()
+                         if line.startswith("VOSC_TEST_SCENE "))
+        require(observed == trace, f"{label}: expected scene boundaries {trace}, saw {observed}. See {log}")
+        require(not socket.exists() and not (Path(runtime) / "events.jsonl").exists(),
+                f"{label}: initialized control endpoint or left a socket for invalid input")
+        require(trace or "GPU :" not in run.stdout, f"{label}: initialized renderer during CPU preflight failure")
+        return {"argv": command, "exit": run.returncode, "stderr": run.stderr, "log": str(log),
+                "scene_boundaries": observed, "control_socket_exists": socket.exists()}
+
+
+def run_negatives(args, output, evidence):
+    results = evidence.setdefault("negative", {})
+    work = output / "invalid-fixtures"
+    shutil.copytree(ROOT / "examples/sieve", work)
+    base = work / "scene.vosc.json"
+
+    for label, argv in (("missing-argument", ["--scene"]), ("repeated-argument", ["--scene", base, "--scene", base])):
+        results[label] = negative(args.binary, output, label, argv, "Usage:")
+    help_run = subprocess.run([str(args.binary), "--help"], capture_output=True, text=True, timeout=10)
+    require(help_run.returncode == 0 and "--scene" in help_run.stdout, "wrong --help output")
+    evidence["help"] = help_run.stdout
+
+    def fixture(label, change, expected, *, trace=()):
+        file = work / f"{label}.json"
+        value = json.loads(base.read_text())
+        change(value)
+        file.write_text(json.dumps(value))
+        results[label] = negative(args.binary, output, label, ["--scene", file], expected, trace=trace)
+
+    malformed = work / "malformed.json"
+    malformed.write_text("{ broken")
+    results["malformed"] = negative(args.binary, output, "malformed", ["--scene", malformed], "parse error")
+    raw_cases = {
+        "duplicate-key": ('{"version":1,"version":1}', "duplicate JSON key: version"),
+        "raw-nul": ('{}\0{}', "scene file contains NUL"),
+        "double-underflow": ('{"value":1e-999}', "nonzero JSON number underflows float32"),
+    }
+    for label, (content, expected) in raw_cases.items():
+        file = work / f"{label}.json"
+        file.write_bytes(content.encode())
+        results[label] = negative(args.binary, output, label, ["--scene", file], expected)
+    fixture("version", lambda data: data.update(version=2), "unsupported scene version")
+    fixture("address", lambda data: data["commands"][-1].update(address="/bogus"), "command 9 /bogus")
+    fixture("arity", lambda data: data["commands"][-1]["args"].clear(), "command 9 /shader/var")
+    fixture("order", lambda data: data["commands"].reverse(), "command 1 /shader/var")
+    fixture("integer-overflow", lambda data: data["commands"][4]["args"][2].update(value=2147483648),
+            "command 5 /shader/var")
+    require((args.binary.parents[3] / "data/images/black_hole.jpg").is_file(),
+            "private build data must contain a matching basename for the missing-asset case")
+    fixture("missing", lambda data: data["commands"][2]["args"][2].update(value="black_hole.jpg"), "black_hole.jpg")
+    fixture("traversal", lambda data: data["commands"][2]["args"][2].update(value="../outside.png"),
+            "scene-relative asset path")
+    (work / "assets/escape.png").symlink_to(ROOT / "bin/data/images/square_3x3.png")
+    fixture("symlink", lambda data: data["commands"][2]["args"][2].update(value="assets/escape.png"),
+            "inside the scene folder")
+    (work / "assets/corrupt.png").write_bytes(b"not an image")
+    fixture("corrupt", lambda data: data["commands"][2]["args"][2].update(value="assets/corrupt.png"),
+            "invalid image header")
+    shutil.copy2(ROOT / "bin/data/images/black_hole.jpg", work / "assets/oversized.jpg")
+    fixture("oversized", lambda data: data["commands"][2]["args"][2].update(value="assets/oversized.jpg"),
+            "2048-pixel")
+    (work / "assets/include.frag").write_text('#version 400\n#pragma include "foreign.glsl"\n')
+    fixture("shader-include", lambda data: data["commands"][1]["args"][1].update(value="assets/include.frag"),
+            "shader includes are outside scene v1")
+    (work / "assets/broken.frag").write_text("#version 400\nvoid main(){BROKEN}\n")
+    fixture("bad-glsl", lambda data: data["commands"][1]["args"][1].update(value="assets/broken.frag"),
+            "command 2 /shader: shader compilation", trace=("window", "preflight"))
+
+    def bad_uniform(data):
+        command = data["commands"].pop(4)
+        for arg in command["args"][2:]:
+            arg.update(type="f", value=float(arg["value"]))
+        data["commands"].append(command)
+
+    fixture("bad-uniform", bad_uniform, "command 9 /shader/var: shader uniform dim requires int32",
+            trace=("window", "preflight"))
+
+    (work / "assets/managed.frag").write_text(
+        "#version 400\nuniform int layer;\nout vec4 color;\n"
+        "void main(){color = layer == 17 ? vec4(0,1,0,1) : vec4(1,0,0,1);}\n")
+
+    def uniform_probe(data, shader_path, name, kind, value):
+        reset, shader = data["commands"][:2]
+        shader["args"][1]["value"] = shader_path
+        data["commands"] = [reset, shader, {"address": "/shader/var", "args": [
+            {"type": "i", "value": 0}, {"type": "s", "value": name}, {"type": kind, "value": value}]}]
+
+    fixture("managed-uniform", lambda data: uniform_probe(data, "assets/managed.frag", "layer", "i", 17),
+            "command 3 /shader/var: renderer-managed shader uniform: layer",
+            trace=("window", "preflight"))
+
+    (work / "assets/uniform-block.frag").write_text(
+        "#version 400\nlayout(std140) uniform Config { float amount; };\nout vec4 color;\n"
+        "void main(){color = vec4(amount,0,0,1);}\n")
+    fixture("uniform-block", lambda data: uniform_probe(data, "assets/uniform-block.frag", "amount", "f", 0.75),
+            "command 3 /shader/var: shader uniform has no writable location: amount",
+            trace=("window", "preflight"))
+
+    (work / "assets/managed-size.frag").write_text(
+        "#version 400\nuniform sampler2D srctex;\nuniform vec2 srctexSize;\nout vec4 color;\n"
+        "void main(){color = texture(srctex, gl_FragCoord.xy / srctexSize);}\n")
+
+    def managed_texture_size(data):
+        reset, shader, texture = data["commands"][:3]
+        shader["args"][1]["value"] = "assets/managed-size.frag"
+        size = {"address": "/shader/var", "args": [
+            {"type": "i", "value": 0}, {"type": "s", "value": "srctexSize"},
+            {"type": "f", "value": 8.0}, {"type": "f", "value": 8.0}]}
+        data["commands"] = [reset, shader, size, texture]
+
+    fixture("managed-texture-size", managed_texture_size,
+            "command 3 /shader/var: renderer-managed shader uniform: srctexSize", trace=("window", "preflight"))
+
+    asset = work / "assets" / SIEVE_IMAGE
+    results["upload-failure"] = negative(
+        args.binary, output, "upload-failure", ["--scene", base],
+        f"command 3 /shader/texture: image upload failed: {asset}: OpenGL error 1282",
+        trace=("window", "preflight", "receiver", "reset", "command", "command", "command"), inject="VOSC_TEST_FAIL_SCENE_UPLOAD")
+
+    (work / "assets/invalid-texture-size.frag").write_text(
+        "#version 400\nuniform sampler2D srctex;\nuniform int srctexSize;\nout vec4 color;\n"
+        "void main(){color = texture(srctex, gl_FragCoord.xy / float(max(srctexSize, 1)));}\n")
+
+    def bad_texture_size_type(data):
+        data["commands"] = data["commands"][:3]
+        data["commands"][1]["args"][1]["value"] = "assets/invalid-texture-size.frag"
+
+    fixture("invalid-texture-size-type", bad_texture_size_type,
+            "command 3 /shader/texture: renderer-managed texture size requires a writable vec2: srctexSize",
+            trace=("window", "preflight"))
+
+    results["no-arg-setup-failure"] = negative(
+        args.binary, output, "no-arg-setup-failure", [], "forced no-argument setup failure",
+        trace=("window",), inject="VOSC_TEST_FAIL_NO_ARG_SETUP")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--binary", type=Path, required=True)
+    parser.add_argument("--sclang", type=Path, required=True)
+    parser.add_argument("--visuals-quark", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    args.binary, args.sclang, output = (path.resolve() for path in (args.binary, args.sclang, args.output))
+    output.mkdir(parents=True, exist_ok=False)
+    evidence = {"binary_sha256": hashlib.sha256(args.binary.read_bytes()).hexdigest()}
+    try:
+        run_negatives(args, output, evidence)
+        run_owned(args.binary, output, "no-arg-shutdown", 0, lambda renderer, node: None, evidence)
+        records = evidence["comparisons"] = {}
+        cwd = output / "unrelated"
+        cwd.mkdir()
+        for folder, size, source in (
+            ("editable-scene", (640, 480), "editable-scene-example.scd"),
+            ("sieve", (1024, 768), "sieve.scd"),
+        ):
+            sieve = folder == "sieve"
+            repo_example = ROOT / "examples" / folder
+            origin = output / f"{folder}-staged"
+            relocated = output / f"{folder} déplacé"
+            shutil.copytree(repo_example, origin)
+            native = run_port(args, output, origin / "scene.vosc.json", f"{folder}-native", size,
+                              args.binary.parents[3], evidence, sieve=sieve)
+            origin.rename(relocated)
+            require(not origin.exists(), "staged origin remained after relocation")
+            moved = run_port(args, output, relocated / "scene.vosc.json", f"{folder}-relocated", size,
+                             cwd, evidence, sieve=sieve)
+            key = f"{folder}-relocation"
+            records[key] = compare(output, key, size, native[0], moved[0])
+            require(records[key]["changed_pixels"] == 0 and native[1] == moved[1], key)
+            sc_source = ROOT / "SuperCollider" / source
+            original = run_original(args, output, sc_source, f"{folder}-original", size, evidence, sieve=sieve)
+            reference = original
+            if sieve:
+                reference = run_original(args, output, sc_source, "sieve-original-derivative", size, evidence,
+                                         sieve=True, derivative=str(relocated / "assets" / SIEVE_IMAGE))
+                for name, pair in (("sieve-resize-only", reference), ("sieve-original-vs-native", native)):
+                    records[name] = compare(output, name, size, original[0], pair[0])
+                resize = records["sieve-resize-only"]
+                image_residues = [(x, y) for x in (1, 2, 4, 5) for y in (1, 2, 4, 5)]
+                require(resize["changed_pixels"] > 0 and resize["changed_lookup_residues"] == image_residues,
+                        "Sieve resize differences must stay in the image-sampled pixels of the lookup grid")
+                require(original[1] == reference[1], f"Sieve resize changed state: {original[1]} vs {reference[1]}")
+                uniforms = native[1]["layers"][0]["uniforms"]
+                require(uniforms["dim"] == (0x8B53, "[1024, 768]") and
+                        uniforms["sievedim"] == (0x8B53, "[6, 6]") and uniforms["multiplier"][0] == 0x8B50,
+                        f"incorrect Sieve uniform types or values: {uniforms}")
+            key = f"{folder}-sc-parity"
+            records[key] = compare(output, key, size, reference[0], native[0])
+            require(records[key]["changed_pixels"] == 0 and reference[1] == native[1],
+                    f"{key} differs in pixels or state. See {output / 'evidence.json'}")
+        evidence["status"] = "passed"
+        print(f"PASS native scene CLI; evidence: {output}")
+        return 0
+    except Exception as error:
+        evidence.update(status="failed", error=str(error))
+        raise
+    finally:
+        (output / "evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -128,6 +128,38 @@ For a one-off command-line build, use `make Debug OF_ROOT=/path/to/openFramework
 or the Python builder's `--of-root` option. Both look for addons in the selected
 SDK unless you also supply `VOSC_ADDON_SDK` or `--addon-sdk`, respectively.
 
+## Run a native scene
+
+Pass a scene file to the renderer binary to load its setup and assets.
+
+```sh
+vosc --scene /path/to/examples/editable-scene/scene.vosc.json
+vosc --scene /path/to/examples/sieve/scene.vosc.json
+```
+
+Use the actual executable inside `Contents/MacOS/` for a macOS app bundle.
+Each example folder can be moved with its assets. Version 1 scene files contain
+`version`, `title`, `size` (width and height), and an ordered `commands` array.
+Each command has an OSC `address` and an `args` array of `type`/`value` pairs.
+Use `i` for integer values, `f` for floating-point values such as `1.0`, `s` for
+strings, and `asset` for a path relative to the scene file. Vector components
+are consecutive typed arguments. Start with `/layers/reset` and use
+`/shader`, `/shader/texture`, `/shader/var`, and the static layer controls shown
+in the examples. A successful launch prints `VOSC_SCENE_READY` after the first
+composed frame.
+
+Sieve uses a 2048×1193 derivative of the original 4000×2330 JPEG to fit the
+2048-pixel image limit. The lookup PNG and fragment shader are byte-for-byte
+copies. Use FFmpeg 8.1.1 and Lanczos resampling to recreate the derivative.
+
+```sh
+ffmpeg -i bin/data/images/black_hole.jpg -vf scale=2048:1193:flags=lanczos \
+  -frames:v 1 examples/sieve/assets/black_hole-2048.png
+```
+
+- Original SHA-256 `93653fe5774613d1a8d308b42a3b217ef045ca0fa2f776cb5ef9b12989f9fb3d`
+- Derivative SHA-256 `4220b601a03857f97e8bc574cb97babbbe29fd0e236efc332bb42bcd3b47f89c`
+
 ## Quickstart (Local + SuperCollider)
 
 The renderer listens on UDP port `33333` by default.

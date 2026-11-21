@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "title": "Editable Scene",
+  "size": [640, 480],
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 1}, {"type": "s", "value": "stack"}]},
+    {"address": "/shader", "args": [{"type": "i", "value": 0}, {"type": "asset", "value": "assets/solid.frag"}]},
+    {"address": "/layer/pos", "args": [{"type": "i", "value": 0}, {"type": "f", "value": 0.0}, {"type": "f", "value": 0.0}, {"type": "f", "value": 0.0}]},
+    {"address": "/layer/size", "args": [{"type": "i", "value": 0}, {"type": "f", "value": 640.0}, {"type": "f", "value": 480.0}, {"type": "f", "value": 0.0}]},
+    {"address": "/layer/tint", "args": [{"type": "i", "value": 0}, {"type": "f", "value": 0.35}, {"type": "f", "value": 0.6}, {"type": "f", "value": 1.0}, {"type": "f", "value": 1.0}]},
+    {"address": "/layer/alpha", "args": [{"type": "i", "value": 0}, {"type": "f", "value": 0.85}]},
+    {"address": "/layer/visible", "args": [{"type": "i", "value": 0}, {"type": "i", "value": 1}]}
+  ]
+}

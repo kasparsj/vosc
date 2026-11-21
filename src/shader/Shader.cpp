@@ -184,7 +184,7 @@ bool Shader::loadFromSource(const string& source) {
     return true;
 }
 
-bool Shader::prepareDirectSource(const string& source, PreparedDirectSource& prepared) const {
+bool Shader::prepareDirectSource(const string& source, PreparedDirectSource& prepared) {
     ofShaderSettings settings;
     settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
     settings.shaderSources[GL_FRAGMENT_SHADER] = source;
@@ -739,6 +739,14 @@ void Shader::oscCommand(const string& command, const ofxOscMessage& m) {
     else if (command == "/shader/reset") {
         reset();
     }
+}
+
+bool Shader::isRendererUniform(const string& name) {
+    return name == "time" || name == "resolution" || name == "random" ||
+           name == "numLights" || name == "lights" || name == "offset" || name == "layer" ||
+           name == "globalColor" || name == "usingTexture" || name == "usingColors" ||
+           name == "projectionMatrix" || name == "modelViewMatrix" ||
+           name == "modelViewProjectionMatrix" || name == "textureMatrix";
 }
 
 void Shader::begin(TexData& data, int delay, const Camera* camera) {
