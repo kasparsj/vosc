@@ -25,4 +25,4 @@
 ### Build, reliability, and examples
 
 - The macOS build creates a private openFrameworks core and compatibility overlays in its build directory. Fixed integer color construction, improved scene resource cleanup, and made shutdown join the OSC receiver before releasing renderer state. [Build instructions](README.md#building-with-xcode-on-macos) · [OSC receiver](vendor/ofxOsc/README.md)
-- Refreshed SuperCollider examples for the current OSC commands and added an editable-scene example and the Organic Trails shader. [SuperCollider examples](SuperCollider/README.md) · [Organic Trails](examples/organic-trails/README.md)
+- Refreshed SuperCollider examples for the current OSC commands and added an editable-scene example and the Organic Trails shader. [SuperCollider examples](examples/README.md) · [Organic Trails](examples/organic-trails/README.md)

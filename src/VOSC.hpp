@@ -30,6 +30,7 @@ public:
     bool showDebug = false;
 
 private:
+    void setupControl();
 #ifdef VOSC_RECOVERY_TESTING
     void recoveryTestUpdate(bool beforeDraw = false);
     void recoveryTestRecord(const ofJson& event);

@@ -102,12 +102,32 @@ void Texture::loadData(const ofxOscMessage &m, int arg) {
 }
 
 void Texture::choose(const ofxOscMessage& m) {
-    _unload();
     string type = m.getNumArgs() > 1 ? m.getArgAsString(1) : "";
+    if (type == "image" && m.getNumArgs() > 2 && m.getArgType(2) == OFXOSC_TYPE_STRING) {
+        const int count = m.getNumArgs() - 2;
+        if (count > 64) {
+            ofLogError() << "/tex/choose image pool exceeds 64 paths";
+            return;
+        }
+        for (int i = 2; i < m.getNumArgs(); ++i) {
+            const auto candidate = m.getArgAsString(i);
+            const auto extension = ofToLower(ofFilePath::getFileExt(candidate));
+            if (m.getArgType(i) != OFXOSC_TYPE_STRING || !ofFilePath::isAbsolute(candidate) ||
+                (extension != "jpg" && extension != "jpeg" && extension != "png") || !ofFile(candidate).isFile()) {
+                ofLogError() << "/tex/choose expects existing absolute image paths";
+                return;
+            }
+        }
+        const int index = std::min(count - 1, static_cast<int>(ofRandom(count)));
+        _unload();
+        tex = BaseTex::factory("image", m.getArgAsString(index + 2), {});
+        return;
+    }
     vector<float> args;
     for (int i=2; i<m.getNumArgs(); i++) {
         args.push_back(m.getArgAsFloat(i));
     }
+    _unload();
     tex = chooseTex(type, args);
     if (tex == nullptr) {
         ofLogError() << ("chooseTex: invalid source type " + type);

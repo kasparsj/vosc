@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "title": "Clouds",
+  "size": [1024, 768],
+  "onset_gate": 0,
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 1}, {"type": "s", "value": "stack"}]},
+    {"address": "/cam", "args": [{"type": "s", "value": "easy"}]},
+    {"address": "/cam/pos", "args": [{"type": "f", "value": 0.1}, {"type": "i", "value": 2}, {"type": "f", "value": 3.5}]},
+    {"address": "/cam/look", "args": [{"type": "i", "value": 0}, {"type": "i", "value": 0}, {"type": "i", "value": 0}]},
+    {"address": "/cam/set", "args": [{"type": "s", "value": "nearClip"}, {"type": "f", "value": 0.0001}]},
+    {"address": "/cam/set", "args": [{"type": "s", "value": "farClip"}, {"type": "i", "value": 1024}]},
+    {"address": "/tex", "args": [{"type": "layer", "value": 0}, {"type": "source", "value": {"kind": "image", "path": "assets/noise.png"}}]},
+    {"address": "/tex/set", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "wrapMode"}, {"type": "i", "value": 10497}]},
+    {"address": "/shader", "args": [{"type": "layer", "value": 0}, {"type": "source", "value": {"kind": "stages", "stages": {"fragment": "assets/clouds/RayMarchingCloudsVolumeofCamera.frag", "vertex": "assets/clouds/RayMarchingCloudsVolumeofCamera.vert"}}}]},
+    {"address": "/shader/var", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "fovYScale"}, {"type": "f", "value": 0.2679491924311227}]},
+    {"address": "/shader/var", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "frequency"}, {"type": "f", "value": 10.0}]},
+    {"address": "/shader/var", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "cloudBaseColor"}, {"type": "vector", "value": [{"type": "f", "value": 1.0}, {"type": "f", "value": 0.0}, {"type": "f", "value": 0.0}, {"type": "f", "value": 1.0}]}]}
+  ]
+}

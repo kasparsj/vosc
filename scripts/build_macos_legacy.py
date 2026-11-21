@@ -128,7 +128,7 @@ def prepare_project(output):
     text = text.replace("path = Project.xcconfig;", f'path = "{config}";')
     # SOURCE_ROOT and <group> roots resolve from PROJECT_DIR in Xcode's
     # project graph, independently of the command-line SRCROOT override.
-    text = re.sub(r"path = (src(?:/[^;]+)?|bin/data|SuperCollider|Rules);",
+    text = re.sub(r"path = (src(?:/[^;]+)?|bin/data|Rules);",
                   lambda match: "path = " + json.dumps(str(ROOT / match.group(1))) + ";", text)
     text = re.sub(r"^(\s+)(src(?:/[^,\n]+)?),$",
                   lambda match: match.group(1) + json.dumps(str(ROOT / match.group(2))) + ",",

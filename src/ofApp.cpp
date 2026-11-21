@@ -36,6 +36,7 @@ void ofApp::setup(){
                     return;
                 }
             }
+            finishStartup();
             std::cout << "VOSC_SCENE_READY frame=" << frame
                       << " title=" << startupScene->title << std::endl;
             startupScene.reset();
@@ -49,6 +50,7 @@ void ofApp::failStartup(const std::string& detail) {
     std::cerr << "vosc: ";
     if (startupScene) std::cerr << startupScene->path.string() << ": ";
     std::cerr << detail << std::endl;
+    finishStartup();
     startupFailed = true;
     ofExit(EXIT_FAILURE);
 }

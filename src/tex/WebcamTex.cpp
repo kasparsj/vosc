@@ -19,17 +19,39 @@ int WebcamTex::random() {
 }
 
 void WebcamTex::update(TexData& data) {
+    aspectRatio = data.aspectRatio;
     if (!vidGrabber.isInitialized()) {
+        observedFrame = false;
+        startupError.clear();
         vidGrabber.setDeviceID(stoi(path));
-        vidGrabber.setup(args.size() > 0 ? args[0] : 1920,
-                         args.size() > 1 ? args[1] : 1080);
+        if (!vidGrabber.setup(args.size() > 0 ? args[0] : 1920,
+                              args.size() > 1 ? args[1] : 1080)) {
+            startupError = "could not initialize camera device " + path +
+                "; check device availability and Camera permission";
+            return;
+        }
         data.setSize(vidGrabber.getWidth(), vidGrabber.getHeight());
     }
     vidGrabber.update();
-    aspectRatio = data.aspectRatio;
+    if (!observedFrame && vidGrabber.isFrameNew() && vidGrabber.isInitialized() &&
+        vidGrabber.getTexture().isAllocated() && vidGrabber.getWidth() > 0 &&
+        vidGrabber.getHeight() > 0) {
+        observedFrame = true;
+        if (!data.hasExplicitSize()) {
+            const auto& frame = vidGrabber.getTexture();
+            if (frame.getWidth() != data.getSize().x || frame.getHeight() != data.getSize().y) {
+                data.setSize(frame.getWidth(), frame.getHeight());
+            }
+        }
+    }
+}
+
+bool WebcamTex::startupFrameReady() const {
+    return observedFrame && vidGrabber.isInitialized() && vidGrabber.getTexture().isAllocated();
 }
 
 void WebcamTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
+    if (!vidGrabber.isInitialized() || vidGrabber.getWidth() <= 0 || vidGrabber.getHeight() <= 0) return;
     if (aspectRatio) {
         if (vidGrabber.getWidth() > vidGrabber.getHeight()) {
             vidGrabber.draw(pos, size.x, size.x/vidGrabber.getWidth() * vidGrabber.getHeight());

@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "title": "Webcam Delay",
+  "size": [1024, 768],
+  "onset_gate": 0,
+  "inputs": {"camera": {"kind": "camera", "default": 0}},
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 9}, {"type": "s", "value": "grid"}]},
+    {"address": "/tex", "args": [{"type": "s", "value": "t_webcam"}, {"type": "source", "value": {"kind": "camera", "input": "camera"}}, {"type": "i", "value": 640}, {"type": "i", "value": 480}]},
+    {"address": "/tex", "args": [{"type": "layer", "value": 0}, {"type": "ref", "value": "t_webcam"}]},
+    {"address": "/tex/set", "args": [{"type": "ref", "value": "t_webcam"}, {"type": "s", "value": "numFrames"}, {"type": "i", "value": 120}]},
+    {"address": "/tex/set", "args": [{"type": "ref", "value": "t_webcam"}, {"type": "s", "value": "aspectRatio"}, {"type": "i", "value": 0}]},
+    {"address": "/tex", "args": [{"type": "layer", "value": "*"}, {"type": "ref", "value": "t_webcam"}]},
+    {"address": "/layer/delay", "args": [{"type": "layer", "value": 0}, {"type": "i", "value": 0}]},
+    {"address": "/layer/delay", "args": [{"type": "layer", "value": 1}, {"type": "i", "value": 13}]},
+    {"address": "/layer/delay", "args": [{"type": "layer", "value": 2}, {"type": "i", "value": 26}]},
+    {"address": "/layer/delay", "args": [{"type": "layer", "value": 3}, {"type": "i", "value": 39}]},
+    {"address": "/layer/delay", "args": [{"type": "layer", "value": 4}, {"type": "i", "value": 52}]},
+    {"address": "/layer/delay", "args": [{"type": "layer", "value": 5}, {"type": "i", "value": 65}]},
+    {"address": "/layer/delay", "args": [{"type": "layer", "value": 6}, {"type": "i", "value": 78}]},
+    {"address": "/layer/delay", "args": [{"type": "layer", "value": 7}, {"type": "i", "value": 91}]},
+    {"address": "/layer/delay", "args": [{"type": "layer", "value": 8}, {"type": "i", "value": 104}]}
+  ]
+}

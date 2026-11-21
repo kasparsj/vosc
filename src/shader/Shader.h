@@ -80,6 +80,7 @@ public:
     bool ownsProgram(GLuint program) const;
     bool loadShadertoy(const string& shadertoyId);
     static ShaderPaths getShaderPaths(const string& path);  // Returns vert, frag, and geom paths
+    bool loadNativeStages(const ShaderPaths& paths);
     bool loadFromFileAndWatch(const string& path);  // Instance method that loads into this shader
     void reload();
     void update(const vector<TidalNote> &notes);

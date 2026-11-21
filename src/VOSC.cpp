@@ -43,19 +43,18 @@ void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::Sce
     renderSystem.windowResized(ofGetWidth(), ofGetHeight());
     settledWindowWidth = ofGetWidth();
     settledWindowHeight = ofGetHeight();
-    if (scene) {
-        commandSystem.applyStartupScene(*scene, programs, std::move(result));
-        if (!commandSystem.startupScenePending()) return;
+    if (scene && scene->version == 2) {
+        commandSystem.applyStartupScene(*scene, programs, [this, result = std::move(result)](int frame, const std::string& detail) {
+            if (frame >= 0) setupControl();
+            result(frame, detail);
+        });
+    } else {
+        if (scene) {
+            commandSystem.applyStartupScene(*scene, programs, std::move(result));
+            if (!commandSystem.startupScenePending()) return;
+        }
+        setupControl();
     }
-    engineControl.setup();
-#ifdef VOSC_RECOVERY_TESTING
-    if (const char* directory = std::getenv("VOSC_RECOVERY_TEST_DIR")) {
-        recoveryTestDirectory = directory;
-        recoveryTestCommandPath = recoveryTestDirectory + "/command.json";
-        recoveryTestEventsPath = recoveryTestDirectory + "/events.jsonl";
-        recoveryTestRecord({{"event", "started"}, {"snapshot", engineControl.recoveryTestSnapshot()}});
-    }
-#endif
 
 #if defined(__arm64__) || defined(__aarch64__)
     ofLog() << "ARM64: Yes";
@@ -66,6 +65,19 @@ void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::Sce
     ofLog() << ("GPU : " + ofToString(glGetString(GL_RENDERER)));
     ofLog() << ("OpenGL ver. " + ofToString(glGetString(GL_VERSION)));
     ofLog() << ("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+}
+
+void VOSC::setupControl() {
+    engineControl.setup();
+#ifdef VOSC_RECOVERY_TESTING
+    if (const char* directory = std::getenv("VOSC_RECOVERY_TEST_DIR")) {
+        recoveryTestDirectory = directory;
+        recoveryTestCommandPath = recoveryTestDirectory + "/command.json";
+        recoveryTestEventsPath = recoveryTestDirectory + "/events.jsonl";
+        recoveryTestRecord({{"event", "started"}, {"snapshot", engineControl.recoveryTestSnapshot()}});
+    }
+#endif
+
 }
 
 void VOSC::update() {

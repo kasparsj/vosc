@@ -3,6 +3,7 @@
 #include "ofJson.h"
 #include "ofxOscMessage.h"
 #include <filesystem>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -22,16 +23,28 @@ struct Command {
     bool feedback = false;
 };
 
+struct NativeCommand {
+    ofxOscMessage message;
+    std::string sourceKind;
+    std::map<std::string, std::filesystem::path> stages;
+};
+
 struct File {
     std::filesystem::path path;
+    int version = 1;
     std::string title;
     int width = 0;
     int height = 0;
     int onsetGate = -1;
     std::vector<Command> commands;
+    std::vector<NativeCommand> nativeCommands;
+    std::map<std::filesystem::path, std::string> nativeAssets;
+    std::string mediaInput;
 };
 
-File load(const std::filesystem::path& path);
+using Inputs = std::map<std::string, std::string>;
+File load(const std::filesystem::path& path, const Inputs& inputs = {});
+void verifyNativeAssets(const File& file);
 std::string commandContext(size_t index, const ofxOscMessage& message);
 bool appendOscValue(ofxOscMessage& message, const std::string& type, const ofJson& value);
 bool assetMatches(const Command& command);

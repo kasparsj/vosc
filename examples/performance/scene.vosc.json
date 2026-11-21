@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "title": "Performance Cues",
+  "size": [1024, 768],
+  "onset_gate": 0,
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 3}, {"type": "s", "value": "stack"}]},
+    {"address": "/tex", "args": [{"type": "layer", "value": 0}, {"type": "source", "value": {"kind": "sketch", "name": "NoisySpirals"}}]},
+    {"address": "/tex", "args": [{"type": "layer", "value": 1}, {"type": "source", "value": {"kind": "sketch", "name": "WaveClock"}}]},
+    {"address": "/tex", "args": [{"type": "layer", "value": 2}, {"type": "source", "value": {"kind": "fragment", "path": "assets/100fragments/OscCircle.frag"}}]},
+    {"address": "/layer/tint", "args": [{"type": "layer", "value": 0}, {"type": "vector", "value": [{"type": "f", "value": 0.15}, {"type": "f", "value": 0.75}, {"type": "f", "value": 1.0}]}]},
+    {"address": "/layer/tint", "args": [{"type": "layer", "value": 1}, {"type": "vector", "value": [{"type": "f", "value": 1.0}, {"type": "f", "value": 0.45}, {"type": "f", "value": 0.0}]}]},
+    {"address": "/layer/alpha", "args": [{"type": "layer", "value": "*"}, {"type": "i", "value": 0}]},
+    {"address": "/layer/alpha", "args": [{"type": "layer", "value": 0}, {"type": "i", "value": 1}]}
+  ]
+}

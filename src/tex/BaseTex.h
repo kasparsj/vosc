@@ -22,6 +22,9 @@ public:
     virtual bool isFrameNew() {
         return true;
     }
+    // Native startup needs proof of an uploaded media frame, independent of OSC looper cadence.
+    virtual bool startupFrameReady() const { return false; }
+    const string& startupFailure() const { return startupError; }
     void setUseTexture(bool bUseTex) override {
         
     }
@@ -56,5 +59,8 @@ public:
     ofPixels pixels;
     bool isStatic = false;
     bool needsUpdate = true;
+
+protected:
+    string startupError;
 };
 

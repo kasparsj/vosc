@@ -10,6 +10,7 @@ public:
     VideoTex(string name, const vector<float>& args) : BaseTex(name, args) {}
     ~VideoTex() {}
     void update(TexData& data) override;
+    bool startupFrameReady() const override;
     void seek(float pct);
     void draw(const glm::vec2 &pos, const glm::vec2 &size) override;
     void choose() override;
@@ -30,5 +31,6 @@ public:
     }
     
 private:
+    bool observedFrame = false;
     ofVideoPlayer videoPlayer;
 };

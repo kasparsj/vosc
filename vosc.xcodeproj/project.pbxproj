@@ -396,24 +396,6 @@
 		2B629E4DB07A45391A420283 /* importerdesc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = importerdesc.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/importerdesc.h"; sourceTree = VOSC_ADDONS; };
 		2B6C21032B66FA87004C7B00 /* Inputs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Inputs.cpp; path = input/Inputs.cpp; sourceTree = "<group>"; };
 		2B6C21042B66FA87004C7B00 /* Inputs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Inputs.hpp; path = input/Inputs.hpp; sourceTree = "<group>"; };
-		2B7546602EC0BEFD00494ADF /* buffer.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = buffer.scd; sourceTree = "<group>"; };
-		2B7546612EC0BEFD00494ADF /* camera.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = camera.scd; sourceTree = "<group>"; };
-		2B7546622EC0BEFD00494ADF /* clouds.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = clouds.scd; sourceTree = "<group>"; };
-		2B7546632EC0BEFD00494ADF /* deferred.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = deferred.scd; sourceTree = "<group>"; };
-		2B7546642EC0BEFD00494ADF /* geom.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = geom.scd; sourceTree = "<group>"; };
-		2B7546652EC0BEFD00494ADF /* grass.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = grass.scd; sourceTree = "<group>"; };
-		2B7546662EC0BEFD00494ADF /* intro.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = intro.scd; sourceTree = "<group>"; };
-		2B7546672EC0BEFD00494ADF /* particles-gpu.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = "particles-gpu.scd"; sourceTree = "<group>"; };
-		2B7546682EC0BEFD00494ADF /* performance.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = performance.scd; sourceTree = "<group>"; };
-		2B7546692EC0BEFD00494ADF /* shaders.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = shaders.scd; sourceTree = "<group>"; };
-		2B75466A2EC0BEFD00494ADF /* sieve.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = "../examples/sieve/scene.scd"; sourceTree = "<group>"; };
-		2B75466B2EC0BEFD00494ADF /* sketches.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = sketches.scd; sourceTree = "<group>"; };
-		2B75466C2EC0BEFD00494ADF /* sound-data.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = "../examples/sound-data/scene.scd"; sourceTree = "<group>"; };
-		2B75466D2EC0BEFD00494ADF /* test.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = test.scd; sourceTree = "<group>"; };
-		2B75466E2EC0BEFD00494ADF /* ultralight.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = ultralight.scd; sourceTree = "<group>"; };
-		2B75466F2EC0BEFD00494ADF /* video.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = video.scd; sourceTree = "<group>"; };
-		2B7546702EC0BEFD00494ADF /* webcam-delay.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = "webcam-delay.scd"; sourceTree = "<group>"; };
-		2B7546712EC0BEFD00494ADF /* webcam-looper.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = "webcam-looper.scd"; sourceTree = "<group>"; };
 		2B7546732EC0C26F00494ADF /* BaseTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BaseTex.h; path = tex/BaseTex.h; sourceTree = "<group>"; };
 		2B7546742EC0C26F00494ADF /* BaseTex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BaseTex.cpp; path = tex/BaseTex.cpp; sourceTree = "<group>"; };
 		2BE782D7AEC00E59BE1F567F /* VerticalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VerticalTiltShifPass.h; path = "ofxPostProcessing/src/VerticalTiltShifPass.h"; sourceTree = VOSC_ADDONS; };
@@ -1351,31 +1333,6 @@
 				2B56C4CB294E45940094681D /* RayMarchingCloudsVolumeofCamera.vert */,
 			);
 			path = clouds;
-			sourceTree = "<group>";
-		};
-		2B7546722EC0BEFD00494ADF /* SuperCollider */ = {
-			isa = PBXGroup;
-			children = (
-				2B7546602EC0BEFD00494ADF /* buffer.scd */,
-				2B7546612EC0BEFD00494ADF /* camera.scd */,
-				2B7546622EC0BEFD00494ADF /* clouds.scd */,
-				2B7546632EC0BEFD00494ADF /* deferred.scd */,
-				2B7546642EC0BEFD00494ADF /* geom.scd */,
-				2B7546652EC0BEFD00494ADF /* grass.scd */,
-				2B7546662EC0BEFD00494ADF /* intro.scd */,
-				2B7546672EC0BEFD00494ADF /* particles-gpu.scd */,
-				2B7546682EC0BEFD00494ADF /* performance.scd */,
-				2B7546692EC0BEFD00494ADF /* shaders.scd */,
-				2B75466A2EC0BEFD00494ADF /* sieve.scd */,
-				2B75466B2EC0BEFD00494ADF /* sketches.scd */,
-				2B75466C2EC0BEFD00494ADF /* sound-data.scd */,
-				2B75466D2EC0BEFD00494ADF /* test.scd */,
-				2B75466E2EC0BEFD00494ADF /* ultralight.scd */,
-				2B75466F2EC0BEFD00494ADF /* video.scd */,
-				2B7546702EC0BEFD00494ADF /* webcam-delay.scd */,
-				2B7546712EC0BEFD00494ADF /* webcam-looper.scd */,
-			);
-			path = SuperCollider;
 			sourceTree = "<group>";
 		};
 		2BEBE6B72B67FBC300C88BDD /* shaders_todo */ = {
@@ -2520,7 +2477,6 @@
 		E4B69B4A0A3A1720003C02F2 = {
 			isa = PBXGroup;
 			children = (
-				2B7546722EC0BEFD00494ADF /* SuperCollider */,
 				2B56C43C294E45940094681D /* data */,
 				E4B6FCAD0C3E899E008CF71C /* openFrameworks-Info.plist */,
 				E4EB6923138AFD0F00A09F29 /* Project.xcconfig */,

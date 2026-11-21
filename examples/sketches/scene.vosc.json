@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "title": "Sketches",
+  "size": [1024, 768],
+  "onset_gate": 0,
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 1}, {"type": "s", "value": "stack"}]},
+    {"address": "/tex", "args": [{"type": "layer", "value": 0}, {"type": "source", "value": {"kind": "sketch", "name": "Spiral"}}]},
+    {"address": "/tex/var", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "strokeAlpha"}, {"type": "s", "value": "0.5+0.5*sin(t)"}]}
+  ]
+}

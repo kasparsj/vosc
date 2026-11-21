@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "title": "Shader Buffers",
+  "size": [1024, 768],
+  "onset_gate": 0,
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 9}, {"type": "s", "value": "stack"}]},
+    {"address": "/cam", "args": [{"type": "s", "value": "easy"}]},
+    {"address": "/cam/set", "args": [{"type": "s", "value": "nearClip"}, {"type": "f", "value": 0.1}]},
+    {"address": "/cam/set", "args": [{"type": "s", "value": "farClip"}, {"type": "i", "value": 5000}]},
+    {"address": "/geom", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "box"}]},
+    {"address": "/geom/set", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "drawInstanced"}, {"type": "i", "value": 4356}]},
+    {"address": "/var/colors/scheme", "args": [{"type": "s", "value": "colors"}, {"type": "s", "value": "tetrad"}, {"type": "s", "value": "#FF00FF"}, {"type": "i", "value": 54}]},
+    {"address": "/var", "args": [{"type": "s", "value": "nodes"}, {"type": "vector", "value": [{"type": "s", "value": "(-66/2+(i%66))*(10+5)"}, {"type": "s", "value": "(66/2-(i/66))*(10+5)"}, {"type": "s", "value": "0"}]}, {"type": "vector", "value": [{"type": "s", "value": "(1.0-noise(0, i)*2.0)*t*60"}, {"type": "s", "value": "(1.0-noise(1, i)*2.0)*t*60"}, {"type": "s", "value": "(1.0-noise(2, i)*2.0)*t*60"}]}, {"type": "s", "value": "0.1"}, {"type": "i", "value": 4356}]},
+    {"address": "/shader", "args": [{"type": "layer", "value": 0}, {"type": "source", "value": {"kind": "stages", "stages": {"fragment": "assets/instanced/lightShader.frag", "vertex": "assets/instanced/lightShader.vert"}}}]},
+    {"address": "/shader/buffer", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "colors"}, {"type": "ref", "value": "colors"}]},
+    {"address": "/shader/buffer", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "tex"}, {"type": "ref", "value": "nodes"}]},
+    {"address": "/shader/var", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "lightLocation"}, {"type": "vector", "value": [{"type": "f", "value": -50.0}, {"type": "f", "value": -20.0}, {"type": "f", "value": 200.0}]}]},
+    {"address": "/light", "args": [{"type": "i", "value": 0}, {"type": "vector", "value": [{"type": "i", "value": -50}, {"type": "i", "value": -20}, {"type": "i", "value": 200}]}]}
+  ]
+}

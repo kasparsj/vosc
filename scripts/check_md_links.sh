@@ -11,7 +11,7 @@ from pathlib import Path
 root = Path(sys.argv[1])
 
 files = [root / "README.md"]
-for directory in ("docs", "examples", "SuperCollider"):
+for directory in ("docs", "examples"):
     files.extend(sorted((root / directory).rglob("*.md")))
 files.append(root / "mcp" / "README.md")
 

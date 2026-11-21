@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "title": "Video",
+  "size": [1024, 768],
+  "onset_gate": 0,
+  "inputs": {"clip": {"kind": "video"}},
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 1}, {"type": "s", "value": "stack"}]},
+    {"address": "/tex", "args": [{"type": "layer", "value": 0}, {"type": "source", "value": {"kind": "video", "input": "clip"}}]}
+  ]
+}

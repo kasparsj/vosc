@@ -3,6 +3,10 @@
 #include "Config.h"
 #include "control/OscPort.hpp"
 #include <charconv>
+#include <condition_variable>
+#include <cstdio>
+#include <mutex>
+#include <thread>
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
@@ -19,10 +23,11 @@
 #endif
 
 namespace {
-constexpr auto usage = "Usage: vosc [--scene <path/to/scene.vosc.json>] [--size WIDTHxHEIGHT] [--fps FPS]";
+constexpr auto usage = "Usage: vosc [--scene <path/to/scene.vosc.json>] [--size WIDTHxHEIGHT] [--fps FPS] [--scene-input name=value]";
 
 struct StartupOptions {
     std::string scenePath;
+    scene::Inputs inputs;
     std::optional<std::pair<int, int>> size;
     std::optional<int> fps;
 };
@@ -41,13 +46,19 @@ StartupOptions parseOptions(int argc, char** argv) {
     StartupOptions options;
     for (int i = 1; i < argc; ++i) {
         const std::string_view flag = argv[i];
-        if (flag != "--scene" && flag != "--size" && flag != "--fps")
+        if (flag != "--scene" && flag != "--size" && flag != "--fps" && flag != "--scene-input")
             throw std::invalid_argument("unknown option " + std::string(flag));
         if (i + 1 == argc || std::string_view(argv[i + 1]).rfind("--", 0) == 0 || !argv[i + 1][0])
             throw std::invalid_argument("missing value for " + std::string(flag));
         const std::string_view value = argv[++i];
         if (flag == "--scene" && options.scenePath.empty()) {
             options.scenePath = value;
+        } else if (flag == "--scene-input") {
+            const auto separator = value.find('=');
+            if (separator == 0 || separator == std::string_view::npos || separator == value.size() - 1)
+                throw std::invalid_argument("--scene-input expects name=value");
+            if (!options.inputs.emplace(value.substr(0, separator), value.substr(separator + 1)).second)
+                throw std::invalid_argument("duplicate scene input " + std::string(value.substr(0, separator)));
         } else if (flag == "--size" && !options.size) {
             const auto separator = value.find('x');
             if (separator == std::string_view::npos)
@@ -60,8 +71,42 @@ StartupOptions parseOptions(int argc, char** argv) {
             throw std::invalid_argument("duplicate option " + std::string(flag));
         }
     }
+    if (!options.inputs.empty() && options.scenePath.empty())
+        throw std::invalid_argument("--scene-input requires --scene");
     return options;
 }
+
+class StartupDeadline {
+public:
+    explicit StartupDeadline(const scene::File& file)
+        : thread([this, path = file.path.string(), input = file.mediaInput] {
+              std::unique_lock lock(mutex);
+              if (condition.wait_for(lock, std::chrono::seconds(15), [this] { return finished; })) return;
+              std::fprintf(stderr, "vosc: %s: %s%sstartup timed out before composition\n",
+                           path.c_str(), input.c_str(), input.empty() ? "" : ": ");
+              std::fflush(stderr);
+              // A synchronous backend may have blocked the window thread.
+              // Exiting the owned CLI process also releases its OS resources.
+              std::_Exit(EXIT_FAILURE);
+          }) {}
+
+    ~StartupDeadline() { stop(); }
+
+    void stop() {
+        {
+            std::lock_guard lock(mutex);
+            finished = true;
+        }
+        condition.notify_one();
+        if (thread.joinable()) thread.join();
+    }
+
+private:
+    std::mutex mutex;
+    std::condition_variable condition;
+    bool finished = false;
+    std::thread thread;
+};
 }
 
 int main(int argc, char** argv) {
@@ -82,7 +127,7 @@ int main(int argc, char** argv) {
     try {
         oscPort = control::oscPortFromEnvironment();
         if (!options.scenePath.empty()) {
-            startupScene = scene::load(options.scenePath);
+            startupScene = scene::load(options.scenePath, options.inputs);
             CommandSystem::validateStartupScene(*startupScene);
             if (options.size) {
                 // Keep window creation and startup replay on the same effective size.
@@ -102,6 +147,8 @@ int main(int argc, char** argv) {
     CommandSystem::traceStartupBoundary("window");
 #endif
 
+    std::optional<StartupDeadline> deadline;
+    if (startupScene && startupScene->version == 2) deadline.emplace(*startupScene);
 #ifdef USE_PROGRAMMABLE_RENDERER
     ofGLWindowSettings settings;
     settings.setGLVersion(GL_VERSION_MAJOR, GL_VERSION_MINOR);
@@ -123,7 +170,9 @@ int main(int argc, char** argv) {
 #endif
     
     bool startupFailed = false;
-    const int status = ofRunApp(new ofApp(oscPort, std::move(startupScene), startupFailed, options.fps.value_or(60)));
+    const int status = ofRunApp(new ofApp(oscPort, std::move(startupScene), startupFailed, options.fps.value_or(60), [&] {
+        if (deadline) deadline->stop();
+    }));
     if (startupFailed) return EXIT_FAILURE;
     return options.scenePath.empty() ? EXIT_SUCCESS : status;
 

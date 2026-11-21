@@ -25,6 +25,8 @@ string VideoTex::random() {
 
 void VideoTex::update(TexData& data) {
     if (!videoPlayer.isLoaded()) {
+        observedFrame = false;
+        startupError.clear();
         videoPlayer.close();
         string absPath = path;
         if (!ofFilePath::isAbsolute(absPath)) {
@@ -42,7 +44,8 @@ void VideoTex::update(TexData& data) {
             data.setSize(videoPlayer.getWidth(), videoPlayer.getHeight());
         }
         else {
-            ofLogError() << ("could not load video: " + path);
+            startupError = "could not load video: " + path;
+            ofLogError() << startupError;
             path = prevPath;
             return;
         }
@@ -53,6 +56,18 @@ void VideoTex::update(TexData& data) {
     aspectRatio = data.aspectRatio;
     videoPlayer.setSpeed(data.getVar("speed"));
     videoPlayer.update();
+    if (!observedFrame && videoPlayer.isFrameNew() && videoPlayer.isInitialized() &&
+        videoPlayer.getTexture().isAllocated() && videoPlayer.getWidth() > 0 &&
+        videoPlayer.getHeight() > 0) {
+        observedFrame = true;
+        if (!data.hasExplicitSize() && (data.getSize().x <= 0 || data.getSize().y <= 0)) {
+            data.setSize(videoPlayer.getWidth(), videoPlayer.getHeight());
+        }
+    }
+}
+
+bool VideoTex::startupFrameReady() const {
+    return observedFrame && videoPlayer.isInitialized() && videoPlayer.getTexture().isAllocated();
 }
 
 void VideoTex::seek(float pct) {

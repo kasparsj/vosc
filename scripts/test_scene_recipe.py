@@ -617,7 +617,7 @@ def swap_layer_order(source: Path, destination: Path) -> Path:
 def source_snapshot(visuals_quark: Path | None = None) -> dict:
     digest = hashlib.sha256()
     count = 0
-    roots = ["src", "mcp", "scripts", "tests", "SuperCollider", "examples"]
+    roots = ["src", "mcp", "scripts", "tests", "examples"]
     for root_name in roots:
         for path in sorted((ROOT / root_name).rglob("*")):
             # Finder view metadata is not an executable/fixture input. Preserve it,

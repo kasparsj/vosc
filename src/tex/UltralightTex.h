@@ -14,6 +14,7 @@ public:
         _unload();
     }
     void update(TexData& data) override;
+    bool startupFrameReady() const override;
     void draw(const glm::vec2 &pos, const glm::vec2 &size) override;
     void choose() override {
         ofLogError() << "UltralightTex::choose not implemented";
@@ -45,9 +46,14 @@ private:
 #if USE_OFX_ULTRALIGHT
         if (ulId > -1) {
             ofxUltralight::removeView(ulId);
+            ulId = -1;
+            view = nullptr;
         }
 #endif
     }
     
     int ulId = -1;
+#if USE_OFX_ULTRALIGHT
+    ofxUltralight::ViewAsset* view = nullptr;
+#endif
 };

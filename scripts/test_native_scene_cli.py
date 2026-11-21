@@ -314,7 +314,7 @@ def run_negatives(args, output, evidence):
         file = work / f"{label}.json"
         file.write_bytes(content.encode())
         results[label] = negative(args.binary, output, label, ["--scene", file], expected)
-    fixture("version", lambda data: data.update(version=2), "unsupported scene version")
+    fixture("version", lambda data: data.update(version=3), "unsupported scene version")
     fixture("onset-gate", lambda data: data.update(onset_gate=2), "onset_gate must be an integer in -1..1")
     fixture("address", lambda data: data["commands"][-1].update(address="/bogus"), "command 9 /bogus")
     fixture("arity", lambda data: data["commands"][-1]["args"].clear(), "command 9 /shader/var")

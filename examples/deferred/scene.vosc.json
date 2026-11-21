@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "title": "Deferred Shading",
+  "size": [1024, 768],
+  "onset_gate": 0,
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 9}, {"type": "s", "value": "stack"}]},
+    {"address": "/geom", "args": [{"type": "layer", "value": 0}, {"type": "s", "value": "box"}, {"type": "vector", "value": [{"type": "s", "value": "rand(-50, 50)"}, {"type": "s", "value": "rand(-50, 50)"}, {"type": "s", "value": "rand(-50, 50)"}]}, {"type": "vector", "value": [{"type": "i", "value": 0}, {"type": "i", "value": 0}, {"type": "i", "value": 0}]}, {"type": "vector", "value": [{"type": "f", "value": 0.55}, {"type": "f", "value": 0.1}, {"type": "f", "value": 0.1}]}, {"type": "i", "value": 20}]},
+    {"address": "/cam", "args": [{"type": "s", "value": "easy"}]},
+    {"address": "/shading", "args": [{"type": "s", "value": "deferred"}]},
+    {"address": "/shading/passes", "args": [{"type": "s", "value": "bg"}, {"type": "s", "value": "edge"}, {"type": "s", "value": "ssao"}, {"type": "s", "value": "shadowlight"}, {"type": "s", "value": "pointlight"}, {"type": "s", "value": "bloom"}]},
+    {"address": "/light", "args": [{"type": "i", "value": 0}, {"type": "vector", "value": [{"type": "i", "value": -50}, {"type": "i", "value": -20}, {"type": "i", "value": 200}]}]}
+  ]
+}

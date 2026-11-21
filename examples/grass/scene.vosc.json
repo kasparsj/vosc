@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "title": "Grass",
+  "size": [1024, 768],
+  "onset_gate": 0,
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 2}, {"type": "s", "value": "stack"}]},
+    {"address": "/cam", "args": [{"type": "s", "value": "default"}]},
+    {"address": "/cam/pos", "args": [{"type": "i", "value": 0}, {"type": "i", "value": 400}, {"type": "i", "value": 900}]},
+    {"address": "/cam/look", "args": [{"type": "i", "value": 0}, {"type": "i", "value": 50}, {"type": "i", "value": 0}]},
+    {"address": "/cam/set", "args": [{"type": "s", "value": "nearClip"}, {"type": "f", "value": 0.01}]},
+    {"address": "/tex", "args": [{"type": "layer", "value": 0}, {"type": "source", "value": {"kind": "grid-plane"}}, {"type": "i", "value": 1}, {"type": "i", "value": 21}, {"type": "i", "value": 0}]},
+    {"address": "/layer/rot", "args": [{"type": "layer", "value": 0}, {"type": "vector", "value": [{"type": "i", "value": 0}, {"type": "i", "value": 0}, {"type": "i", "value": -90}]}]},
+    {"address": "/geom", "args": [{"type": "layer", "value": 1}, {"type": "s", "value": "grass"}, {"type": "i", "value": 60}, {"type": "i", "value": 2}, {"type": "f", "value": 1.0}, {"type": "i", "value": 0}]},
+    {"address": "/shader/set", "args": [{"type": "layer", "value": 1}, {"type": "s", "value": "geomInputType"}, {"type": "i", "value": 1}]},
+    {"address": "/shader/set", "args": [{"type": "layer", "value": 1}, {"type": "s", "value": "geomOutputType"}, {"type": "i", "value": 5}]},
+    {"address": "/shader/set", "args": [{"type": "layer", "value": 1}, {"type": "s", "value": "geomOutputCount"}, {"type": "i", "value": 14}]},
+    {"address": "/shader", "args": [{"type": "layer", "value": 1}, {"type": "source", "value": {"kind": "stages", "stages": {"fragment": "assets/grass/Grass.frag", "geometry": "assets/grass/Grass.geom"}}}]},
+    {"address": "/shader/var", "args": [{"type": "layer", "value": 1}, {"type": "s", "value": "stalkHalfWidth"}, {"type": "f", "value": 0.05}]},
+    {"address": "/shader/var", "args": [{"type": "layer", "value": 1}, {"type": "s", "value": "stalkHeight"}, {"type": "f", "value": 1.0}]},
+    {"address": "/shader/var", "args": [{"type": "layer", "value": 1}, {"type": "s", "value": "animationTimeMaxDifference"}, {"type": "f", "value": 1.0}]},
+    {"address": "/shader/var", "args": [{"type": "layer", "value": 1}, {"type": "s", "value": "stalkSwayingMaxAngle"}, {"type": "f", "value": 0.17453292519943295}]},
+    {"address": "/shader/var", "args": [{"type": "layer", "value": 1}, {"type": "s", "value": "grassSwayingTimeScale"}, {"type": "f", "value": 1.0}]},
+    {"address": "/shader/var", "args": [{"type": "layer", "value": 1}, {"type": "s", "value": "grassSwayingNoiseFrequency"}, {"type": "f", "value": 0.1}]}
+  ]
+}

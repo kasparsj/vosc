@@ -3,6 +3,7 @@
 #include "../light/Lights.h"
 #include "../TexturePool.h"
 #include "../tex/ImageTex.h"
+#include "../tex/ShaderTex.h"
 #include "../tex/ShaderPingPongTex.h"
 #include "../shader/ShaderPool.h"
 #include "../var/VariablePool.h"
@@ -12,6 +13,7 @@
 #include <GLFW/glfw3.h>
 #ifdef VOSC_RECOVERY_TESTING
 #include "ofBufferObject.h"
+#include <thread>
 #endif
 #include "ofxOscSender.h"
 #include <arpa/inet.h>
@@ -727,6 +729,7 @@ bool CommandSystem::validateSceneRecipeCommands(const ofJson& commands, const of
 }
 
 void CommandSystem::validateStartupScene(const scene::File& file, const ScenePrograms* programs) {
+    if (file.version == 2) return; // Already validated by the native-only decoder.
     SceneReplay state;
     for (size_t i = 0; i < file.commands.size(); ++i) {
         const auto& message = file.commands[i].message;
@@ -800,6 +803,10 @@ CommandSystem::ScenePrograms CommandSystem::prepareStartupScene(const scene::Fil
     traceStartupBoundary("preflight");
 #endif
     ScenePrograms programs;
+    if (file.version == 2) {
+        scene::verifyNativeAssets(file);
+        return programs;
+    }
     for (size_t i = 0; i < file.commands.size(); ++i) {
         const auto& command = file.commands[i];
         if (command.asset.empty()) continue;
@@ -817,6 +824,20 @@ CommandSystem::ScenePrograms CommandSystem::prepareStartupScene(const scene::Fil
 }
 
 void CommandSystem::applyStartupScene(const scene::File& file, ScenePrograms& programs, SceneResult result) {
+    if (file.version == 2) {
+        startupSceneResult = std::move(result);
+        nativeStartup.emplace(NativeStartup{file});
+        auto& startup = *nativeStartup;
+        startup.diagnosticStart = replayLogger() ? replayLogger()->latestSequence() : 0;
+        resetScene(file.width, file.height);
+        while (startup.nextCommand < file.nativeCommands.size()) {
+            const auto& command = file.nativeCommands[startup.nextCommand];
+            if (command.message.getAddress() == "/tex/set" && command.message.getArgAsString(1) == "numFrames") break;
+            applyNativeCommand(command);
+            ++startup.nextCommand;
+        }
+        return;
+    }
     for (size_t i = 0; i < file.commands.size(); ++i) {
         const auto& command = file.commands[i];
         if (!command.asset.empty() && !scene::assetMatches(command))
@@ -1259,7 +1280,209 @@ void CommandSystem::completeSceneReplay(const std::string& status, int frame, co
     }
 }
 
+void CommandSystem::applyNativeCommand(const scene::NativeCommand& command) {
+    auto& startup = *nativeStartup;
+    const auto& message = command.message;
+    const auto& address = message.getAddress();
+    auto fail = [&](const std::string& reason) {
+        throw std::runtime_error("command " + std::to_string(startup.nextCommand + 1) + " " + address + ": " + reason);
+    };
+    auto& layers = renderSystem.getLayers();
+    auto targetTexture = [&]() {
+        if (message.getArgType(0) == OFXOSC_TYPE_STRING)
+            return TexturePool::getShared(message.getArgAsString(0));
+        return layers.at(message.getArgAsInt32(0))->shader.getDefaultTexture();
+    };
+    auto stages = [&]() {
+        ShaderPaths paths;
+        paths.fragPath = command.stages.at("fragment").string();
+        paths.vertPath = command.stages.count("vertex") ? command.stages.at("vertex").string() : "shaders/passthru.vert";
+        if (command.stages.count("geometry")) paths.geomPath = command.stages.at("geometry").string();
+        return paths;
+    };
+    if (address == "/shader") {
+        auto& shader = layers.at(message.getArgAsInt32(0))->shader;
+        if (!shader.loadNativeStages(stages())) fail("shader compilation or linking failed");
+        return;
+    }
+    if (address == "/shader/set") {
+        // Geometry shader topology is part of its GLSL layout. Validate the
+        // explicit startup declaration against the linked program after setup.
+        return;
+    }
+    if (address == "/shader/var") {
+        const auto& shader = layers.at(message.getArgAsInt32(0))->shader;
+        const auto name = message.getArgAsString(1);
+        const auto& uniforms = shader.getUniforms();
+        const auto found = uniforms.find(name);
+        if (const char* error = Shader::sceneUniformError(uniforms, name))
+            fail(std::string(error) + ": " + name);
+        if (uniformComponentCount(found->second.type) != message.getNumArgs() - 2)
+            fail("uniform type or width mismatch: " + name);
+        const auto type = integerUniformType(found->second.type) ? OFXOSC_TYPE_INT32 : OFXOSC_TYPE_FLOAT;
+        for (int i = 2; i < message.getNumArgs(); ++i)
+            if (message.getArgType(i) != type) fail("uniform scalar type mismatch: " + name);
+        ofxOscMessage wrapped;
+        wrapped.addStringArg("");
+        wrapped.addInt32Arg(0);
+        wrapped.addStringArg(address);
+        wrapped.addInt32Arg(message.getArgAsInt32(0));
+        wrapped.addStringArg(name);
+        for (int i = 2; i < message.getNumArgs(); ++i) {
+            if (message.getArgType(i) == OFXOSC_TYPE_INT32) wrapped.addInt32Arg(message.getArgAsInt32(i));
+            else wrapped.addFloatArg(message.getArgAsFloat(i));
+        }
+        if (!routeSceneCommand(wrapped)) fail("uniform routing failed");
+        return;
+    }
+    if (address == "/shader/buffer") {
+        const auto& shader = layers.at(message.getArgAsInt32(0))->shader;
+        const auto name = message.getArgAsString(1);
+        const auto& uniforms = shader.getUniforms();
+        const auto binding = uniforms.find(name);
+        if (binding == uniforms.end() || binding->second.type != GL_SAMPLER_BUFFER ||
+            !VariablePool::getShared(message.getArgAsString(2)))
+            fail("shader buffer binding mismatch: " + name);
+    }
+    if (address == "/tex/set" && message.getArgAsString(1) == "numFrames") {
+        const auto texture = targetTexture();
+        if (!texture || texture != startup.media) fail("history requires the ready shared camera");
+        const auto& storage = texture->data.getFboSettings();
+        // Bound conservatively at RGBA8 plus a depth/stencil reservation and
+        // a 256-byte row alignment. The default history needs one color FBO.
+        const size_t pitch = (static_cast<size_t>(std::max(storage.width, 0)) * 8 + 255) & ~size_t(255);
+        if (storage.width <= 0 || storage.width > 640 || storage.height <= 0 || storage.height > 480 ||
+            storage.numSamples != 0 || storage.numColorbuffers != 1 || !storage.colorFormats.empty() ||
+            pitch * storage.height * 120 > 300u * 1024u * 1024u)
+            fail("camera history exceeds bounded storage");
+    }
+
+    const auto parsed = commandParser.parse(message);
+    if (!parsed.isOk() || !routeLegacyCommand(parsed.value())) fail("command routing failed");
+
+    if (address == "/tex" && !command.sourceKind.empty()) {
+        const auto texture = targetTexture();
+        if (!texture || !texture->tex) fail("texture source could not be created");
+        const bool isMedia = command.sourceKind == "video" || command.sourceKind == "camera" || command.sourceKind == "html";
+        if (isMedia) {
+            startup.media = texture;
+#ifdef VOSC_RECOVERY_TESTING
+            if (std::getenv("VOSC_TEST_NATIVE_STALL_OPEN")) {
+                std::cerr << "VOSC_TEST_NATIVE stall-open" << std::endl;
+                std::this_thread::sleep_for(std::chrono::seconds(30));
+            }
+#endif
+        } else {
+            if (auto* shader = dynamic_cast<Shader*>(texture->tex.get()); shader && !command.stages.empty()) {
+                if (!shader->loadNativeStages(stages())) fail("texture shader compilation or linking failed");
+            }
+            startup.textures.push_back(texture);
+        }
+    } else if (address == "/geom") {
+        if (message.getArgType(0) == OFXOSC_TYPE_INT32) {
+            if (!layers.at(message.getArgAsInt32(0))->hasGeom()) fail("geometry could not be created");
+        } else if (message.getArgAsString(0) == "*") {
+            for (const auto& layer : layers)
+                if (!layer->hasGeom()) fail("geometry could not be created");
+        } else {
+            auto geom = GeomPool::getShared(message.getArgAsString(0));
+            if (!geom || !geom->isLoaded()) fail("model could not be loaded");
+        }
+    } else if (address == "/tex/set" && message.getArgAsString(1) == "wrapMode") {
+        // Image storage has to exist before setting wrap. The OSC handler
+        // updates both sampler state and the holder's creation settings.
+        auto texture = targetTexture();
+        if (texture && std::dynamic_pointer_cast<ImageTex>(texture->tex)) {
+            texture->update({});
+            if (!texture->hasTexture(0)) fail("image upload failed before configuring wrap");
+            texture->getTexture().setTextureWrap(message.getArgAsInt32(2), message.getArgAsInt32(2));
+        }
+    }
+}
+
+void CommandSystem::finishNativeStartup(int frame, const std::string& detail) {
+    if (frame >= 0) waitOnset = nativeStartup->file.onsetGate;
+    nativeStartup.reset();
+    auto callback = std::move(startupSceneResult);
+    startupSceneResult = nullptr;
+    callback(frame, detail);
+}
+
+void CommandSystem::afterNativeDraw() {
+    auto& startup = *nativeStartup;
+    try {
+        if (startup.media) {
+            const auto& media = *startup.media->tex;
+            if (const auto error = media.startupFailure(); !error.empty())
+                throw std::runtime_error("scene input " + startup.file.mediaInput + ": " + error);
+            if (!media.startupFrameReady()) return;
+#ifdef VOSC_RECOVERY_TESTING
+            if (std::getenv("VOSC_TEST_NATIVE_NO_FRAME")) {
+                if (!startup.suppressedMediaFrame) {
+                    std::cerr << "VOSC_TEST_NATIVE no-frame" << std::endl;
+                    startup.suppressedMediaFrame = true;
+                }
+                return;
+            }
+#endif
+        }
+        if (startup.nextCommand < startup.file.nativeCommands.size()) {
+            while (startup.nextCommand < startup.file.nativeCommands.size()) {
+                applyNativeCommand(startup.file.nativeCommands[startup.nextCommand]);
+                ++startup.nextCommand;
+            }
+            return; // History and new bindings still need an update and draw.
+        }
+        if (const auto log = replayLogger()) {
+            bool gap = false;
+            uint64_t latest = 0;
+            const auto entries = log->entriesSince(startup.diagnosticStart, 512, gap, &latest);
+            if (gap || (!entries.empty() && entries.back().sequence != latest))
+                throw std::runtime_error("native startup diagnostics overflowed before composition");
+            for (const auto& entry : entries)
+                if (entry.level == OF_LOG_ERROR || entry.level == OF_LOG_FATAL_ERROR)
+                    throw std::runtime_error("renderer reported an error: " + entry.message.substr(0, 440));
+        }
+        for (const auto& texture : startup.textures)
+            if (!texture->hasTexture(0)) throw std::runtime_error("native texture allocation failed");
+        if (startup.media) {
+            bool usedMedia = false;
+            for (const auto& layer : renderSystem.getLayers()) {
+                if (layer->shader.getDefaultTexture() != startup.media) continue;
+                usedMedia = true;
+                if (layer->delay && !startup.media->hasTexture(layer->delay)) return;
+            }
+            if (!usedMedia) throw std::runtime_error("scene input has no composed layer");
+        }
+        for (const auto& command : startup.file.nativeCommands) {
+            const auto& message = command.message;
+            if (message.getAddress() != "/shader/set") continue;
+            auto& shader = renderSystem.getLayers().at(message.getArgAsInt32(0))->shader;
+            if (!shader.isShaderLoaded()) throw std::runtime_error("geometry stage is not linked");
+            const auto name = message.getArgAsString(1);
+            const GLenum pname = name == "geomInputType" ? GL_GEOMETRY_INPUT_TYPE :
+                name == "geomOutputType" ? GL_GEOMETRY_OUTPUT_TYPE : GL_GEOMETRY_VERTICES_OUT;
+            GLint actual = -1;
+            glGetProgramiv(shader.getShader().getProgram(), pname, &actual);
+            if (actual != message.getArgAsInt32(2)) throw std::runtime_error("linked geometry topology differs from manifest");
+        }
+        const auto& file = startup.file;
+        if (ofGetWidth() != file.width || ofGetHeight() != file.height ||
+            replayFramebufferSize() != std::pair(file.width, file.height))
+            throw std::runtime_error("window dimensions did not settle before draw");
+        scene::verifyNativeAssets(file);
+    } catch (const std::exception& error) {
+        finishNativeStartup(-1, error.what());
+        return;
+    }
+    finishNativeStartup(static_cast<int>(ofGetFrameNum()), "native v2 scene composed");
+}
+
 void CommandSystem::afterComposedDraw() {
+    if (nativeStartup) {
+        afterNativeDraw();
+        return;
+    }
     if (!sceneReplay || !sceneReplay->ended) return;
     const auto replay = *sceneReplay;
     const auto framebuffer = replayFramebufferSize();
@@ -1321,6 +1544,11 @@ void CommandSystem::afterComposedDraw() {
 }
 
 bool CommandSystem::handleReplayWindowResized(int width, int height) {
+    if (nativeStartup) {
+        if (width != nativeStartup->file.width || height != nativeStartup->file.height) return false;
+        renderSystem.resizeBacking(width, height);
+        return true;
+    }
     if (!sceneReplay || width != sceneReplay->width || height != sceneReplay->height) return false;
     // A native callback caused by this replay's own reset must not run the
     // ordinary external-resize layout over the explicit transforms that may

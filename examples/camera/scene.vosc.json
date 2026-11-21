@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "title": "Camera",
+  "size": [1024, 768],
+  "onset_gate": 0,
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 1}, {"type": "s", "value": "stack"}]},
+    {"address": "/cam", "args": [{"type": "s", "value": "default"}]},
+    {"address": "/cam/pos", "args": [{"type": "i", "value": 0}, {"type": "i", "value": 0}, {"type": "i", "value": 1200}]},
+    {"address": "/cam/look", "args": [{"type": "i", "value": 0}, {"type": "i", "value": 0}, {"type": "i", "value": 0}]},
+    {"address": "/geom", "args": [{"type": "s", "value": "penguin"}, {"type": "source", "value": {"kind": "model", "path": "assets/penguin/penguin.dae"}}]},
+    {"address": "/geom", "args": [{"type": "layer", "value": "*"}, {"type": "ref", "value": "penguin"}]},
+    {"address": "/light", "args": [{"type": "i", "value": 0}, {"type": "i", "value": 0}, {"type": "i", "value": 0}, {"type": "i", "value": 1200}]}
+  ]
+}

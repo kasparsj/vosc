@@ -389,6 +389,20 @@ ShaderPaths Shader::getShaderPaths(const string& path) {
     return paths;
 }
 
+bool Shader::loadNativeStages(const ShaderPaths& paths) {
+    auto candidate = std::make_shared<ofShader>();
+    if (!candidate->load(paths.vertPath, paths.fragPath, paths.geomPath) ||
+        !isValidShaderProgram(*candidate, !paths.geomPath.empty()))
+        return false;
+    shader = std::move(candidate);
+    shadertoy.reset();
+    shaderPath = ofFilePath::getFileName(paths.fragPath);
+    directSource.clear();
+    watchedSourcePath.clear();
+    clearUniforms();
+    return true;
+}
+
 bool Shader::loadFromFileAndWatch(const string& path) {
     ShaderPaths paths = getShaderPaths(path);
     if (paths.isValid()) {

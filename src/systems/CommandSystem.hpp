@@ -67,10 +67,25 @@ private:
     const Shader::Uniforms* liveSceneUniforms(const ofxOscMessage& wrapped) const;
     void completeSceneReplay(const std::string& status, int frame, const std::string& detail);
     void resetScene(int width, int height);
+    void applyNativeCommand(const scene::NativeCommand& command);
+    void afterNativeDraw();
+    void finishNativeStartup(int frame, const std::string& detail);
     void verifyStartupImage(const ofxOscMessage& message, const std::string& path);
     static bool validateFeedbackSettings(const SceneReplay& state, std::string& reason);
     bool finishFeedbackSetup(const SceneReplay& state, std::string& reason) const;
     bool finishFeedbackTexture(int layer, std::string& reason) const;
+
+    struct NativeStartup {
+        const scene::File& file;
+        size_t nextCommand = 0;
+        uint64_t diagnosticStart = 0;
+        std::vector<std::shared_ptr<Texture>> textures;
+        std::shared_ptr<Texture> media;
+#ifdef VOSC_RECOVERY_TESTING
+        bool suppressedMediaFrame = false;
+#endif
+    };
+    std::optional<NativeStartup> nativeStartup;
 
     struct SceneReplay {
         std::string token;

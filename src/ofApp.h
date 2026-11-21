@@ -11,8 +11,10 @@
 class ofApp : public ofBaseApp {
 
 public:
-    ofApp(unsigned int oscPort, std::optional<scene::File> startupScene, bool& startupFailed, int frameRate)
-        : oscPort(oscPort), startupScene(std::move(startupScene)), startupFailed(startupFailed), frameRate(frameRate) {}
+    ofApp(unsigned int oscPort, std::optional<scene::File> startupScene, bool& startupFailed,
+          int frameRate, std::function<void()> finishStartup)
+        : oscPort(oscPort), startupScene(std::move(startupScene)), startupFailed(startupFailed),
+          frameRate(frameRate), finishStartup(std::move(finishStartup)) {}
 
 	void setup();
 	void update();
@@ -40,6 +42,7 @@ private:
     std::optional<scene::File> startupScene;
     bool& startupFailed;
     int frameRate;
+    std::function<void()> finishStartup;
 
     bool showConsole = false;
     std::shared_ptr<Logger> console;

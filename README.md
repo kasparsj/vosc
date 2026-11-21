@@ -170,7 +170,9 @@ vosc --scene /path/to/examples/sieve/scene.vosc.json
 ```
 
 Use the actual executable inside `Contents/MacOS/` for a macOS app bundle.
-Keep the manifest and its assets together when moving a folder. Version 1
+Keep the manifest and its assets together when moving a folder.
+The [native V2 format](docs/Native-scene-v2.md) covers built-in sources,
+geometry, and media. Version 1
 scene files contain `version`, `title`, `size` (width and height), and an
 ordered `commands` array. Exported manifests also include `onset_gate`
 (`-1`, `0`, or `1`). Hand-authored files may omit it to use `-1`.

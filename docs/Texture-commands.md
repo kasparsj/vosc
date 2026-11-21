@@ -68,6 +68,11 @@ Arguments:
 - `type` (optional string from [Source types](Constants.md#source-types)); empty means random type
 - optional numeric args for selected texture type
 
+For an explicit image pool, send `target`, `"image"`, followed by up to 64
+absolute paths to existing PNG or JPEG files on the renderer host. The
+renderer picks from that pool for this cue. With no pool, it uses the
+bundled image directory.
+
 ## `/tex/reload`, `/tex/unload`, `/tex/clear`
 
 Lifecycle commands.
@@ -135,7 +140,7 @@ Arguments:
 
 Set the `timePct` variable. Video uses this value when opening a clip
 and while the texture's `onset` variable is nonzero. See the [video
-example](../SuperCollider/video.scd) for a seek during playback.
+example](../examples/video/scene.scd) for a seek during playback.
 
 Arguments:
 - `target`
