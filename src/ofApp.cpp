@@ -1,6 +1,6 @@
 #include "ofApp.h"
 #include "Config.h"
-#include "control/OscPort.hpp"
+#include <iostream>
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -16,16 +16,51 @@ void ofApp::setup(){
     console = std::make_shared<Logger>();
     ofSetLoggerChannel(console);
     
-    vosc.setup(control::oscPortFromEnvironment());
+    try {
+        CommandSystem::ScenePrograms programs;
+        if (startupScene) {
+            programs = CommandSystem::prepareStartupScene(*startupScene);
+            ofSetWindowTitle(startupScene->title);
+        }
+        vosc.setup(oscPort, startupScene ? &*startupScene : nullptr, programs,
+                   [this](int frame, const std::string& detail) {
+            if (frame < 0) {
+                failStartup(detail);
+                return;
+            }
+            for (size_t i = 0; i < startupScene->commands.size(); ++i) {
+                const auto& command = startupScene->commands[i];
+                if (command.message.getArgAsString(2) == "/shader/texture" && !scene::assetMatches(command)) {
+                    failStartup(scene::commandContext(i, command.message) +
+                                ": image changed during setup: " + command.asset.string());
+                    return;
+                }
+            }
+            std::cout << "VOSC_SCENE_READY frame=" << frame
+                      << " title=" << startupScene->title << std::endl;
+            startupScene.reset();
+        });
+    } catch (const std::exception& error) {
+        failStartup(error.what());
+    }
+}
+
+void ofApp::failStartup(const std::string& detail) {
+    std::cerr << "vosc: ";
+    if (startupScene) std::cerr << startupScene->path.string() << ": ";
+    std::cerr << detail << std::endl;
+    startupFailed = true;
+    ofExit(EXIT_FAILURE);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    vosc.update();
+    if (!startupFailed) vosc.update();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+    if (startupFailed) return;
     vosc.draw();
     drawConsole();
 }

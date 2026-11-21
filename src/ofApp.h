@@ -14,6 +14,9 @@
 class ofApp : public ofBaseApp {
 
 public:
+    ofApp(unsigned int oscPort, std::optional<scene::File> startupScene, bool& startupFailed)
+        : oscPort(oscPort), startupScene(std::move(startupScene)), startupFailed(startupFailed) {}
+
 	void setup();
 	void update();
 	void draw();
@@ -34,6 +37,12 @@ public:
     
     VOSC vosc;
     
+private:
+    void failStartup(const std::string& detail);
+    unsigned int oscPort;
+    std::optional<scene::File> startupScene;
+    bool& startupFailed;
+
     bool showConsole = false;
     std::shared_ptr<Logger> console;
 #if USE_OFX_IMGUI

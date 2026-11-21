@@ -51,6 +51,7 @@ public:
 
     static map<string, ofxAutoReloadedShader> cache;
     static string random();
+    static bool isRendererUniform(const string& name);
     
     Shader() : VarsHolder(), texLoc(0) {
     }
@@ -66,7 +67,7 @@ public:
     bool load(string path);
     bool loadFromSource(const string& source);
     bool snapshotDirectSource(DirectSourceState& state, string& reason) const;
-    bool prepareDirectSource(const string& source, PreparedDirectSource& prepared) const;
+    static bool prepareDirectSource(const string& source, PreparedDirectSource& prepared);
     void installDirectSource(PreparedDirectSource&& prepared,
                              const map<string, vector<float>>& bindings);
     bool restoreDirectSource(const DirectSourceState& state);

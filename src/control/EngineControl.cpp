@@ -113,11 +113,7 @@ bool managedUniform(const Layer& layer, const std::string& name) {
     for (const auto& binding : layer.shader.getBuffers()) {
         if (name == binding.first + "Size") return true;
     }
-    return name == "time" || name == "resolution" || name == "random" ||
-           name == "numLights" || name == "lights" || name == "offset" || name == "layer" ||
-           name == "globalColor" || name == "usingTexture" || name == "usingColors" ||
-           name == "projectionMatrix" || name == "modelViewMatrix" ||
-           name == "modelViewProjectionMatrix" || name == "textureMatrix" ||
+    return Shader::isRendererUniform(name) ||
            layer.vars.count(name) || name.find('[') != std::string::npos;
 }
 

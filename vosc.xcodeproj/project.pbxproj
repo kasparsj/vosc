@@ -157,6 +157,7 @@
 		F0CC8EC812D9864680C703B1 /* LayerShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 788B25E9947816B8DFDCAF81 /* LayerShader.cpp */; };
 		F7D4F1045C3F5CE0000DE92F /* Material.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB551F763F5655B9681EABB4 /* Material.cpp */; };
 		2E6C8A8EBD1D878477D6C1F3 /* CommandSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0DFB0E8C46F4052A7C81A462 /* CommandSystem.cpp */; };
+		7ECB28564F164B77A7586889 /* SceneFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7ECB28564F164B77A758688A /* SceneFile.cpp */; };
 		6B12CF6CEB568B4460ABF472 /* InputSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CDDECA1B67C1577B46340145 /* InputSystem.cpp */; };
 		D529A33E32747AE71EABC237 /* RenderSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3B941D47EF943799850CB514 /* RenderSystem.cpp */; };
 		8E55DF986DC3CBE24959777F /* ResourceSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 02C21C819F32DADBEC5BBD5F /* ResourceSystem.cpp */; };
@@ -964,6 +965,8 @@
 		FE960CC357E122F0C4FF2170 /* Defines.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Defines.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/Defines.h"; sourceTree = VOSC_ADDONS; };
 		FF2B018E24837032A4878576 /* ofxEasing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxEasing.h; path = "ofxEasing/src/ofxEasing.h"; sourceTree = VOSC_ADDONS; };
 		0DFB0E8C46F4052A7C81A462 /* CommandSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandSystem.cpp; path = src/systems/CommandSystem.cpp; sourceTree = SOURCE_ROOT; };
+		7ECB28564F164B77A758688A /* SceneFile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/scene/SceneFile.cpp; sourceTree = SOURCE_ROOT; };
+		7ECB28564F164B77A758688B /* SceneFile.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/scene/SceneFile.hpp; sourceTree = SOURCE_ROOT; };
 		CDDECA1B67C1577B46340145 /* InputSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = InputSystem.cpp; path = src/systems/InputSystem.cpp; sourceTree = SOURCE_ROOT; };
 		3B941D47EF943799850CB514 /* RenderSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = RenderSystem.cpp; path = src/systems/RenderSystem.cpp; sourceTree = SOURCE_ROOT; };
 		02C21C819F32DADBEC5BBD5F /* ResourceSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ResourceSystem.cpp; path = src/systems/ResourceSystem.cpp; sourceTree = SOURCE_ROOT; };
@@ -2663,6 +2666,8 @@
 			isa = PBXGroup;
 			children = (
 				0DFB0E8C46F4052A7C81A462 /* CommandSystem.cpp */,
+				7ECB28564F164B77A758688A /* SceneFile.cpp */,
+				7ECB28564F164B77A758688B /* SceneFile.hpp */,
 				511486E1AD47926A5EAFC1FE /* CommandSystem.hpp */,
 				CDDECA1B67C1577B46340145 /* InputSystem.cpp */,
 				8B75D4A4E03920920C7F5691 /* InputSystem.hpp */,
@@ -2796,6 +2801,7 @@
 				D529A33E32747AE71EABC237 /* RenderSystem.cpp in Sources */,
 				6B12CF6CEB568B4460ABF472 /* InputSystem.cpp in Sources */,
 				2E6C8A8EBD1D878477D6C1F3 /* CommandSystem.cpp in Sources */,
+				7ECB28564F164B77A7586889 /* SceneFile.cpp in Sources */,
 				2BF8BE282EC39AC100CB0DE9 /* VarsInspector.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
 				2BF8BE312EC39AC900CB0DE9 /* ShaderPass.cpp in Sources */,

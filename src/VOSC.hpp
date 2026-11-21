@@ -16,7 +16,8 @@ class VOSC {
 public:
     VOSC();
 
-    void setup(unsigned int port);
+    void setup(unsigned int port, const scene::File* scene, CommandSystem::ScenePrograms& programs,
+               CommandSystem::SceneResult result);
     void update();
     void draw();
     void exit();
@@ -42,6 +43,7 @@ private:
     RenderSystem renderSystem;
     CommandSystem commandSystem;
     control::EngineControl engineControl;
+    bool initialized = false;
     int settledWindowWidth = 0;
     int settledWindowHeight = 0;
 };
