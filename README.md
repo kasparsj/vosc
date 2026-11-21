@@ -47,7 +47,7 @@ directories inside the checkout, build output goes under
 `~/Library/Caches/VOSC/builds/`. For setup directories outside the checkout,
 build output goes in the destination's `build/` directory.
 Use `--version 0.11.1` for the older SDK or `--dest PATH` for another setup
-directory.
+directory. For MCP, follow the [live authoring setup](docs/Live-authoring.md#start-the-renderer).
 
 ```bash
 python3 scripts/setup_macos.py --sdk-only --version 0.11.1

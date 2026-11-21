@@ -1,8 +1,9 @@
 # Repository-controlled ofxOsc receiver
 
-The receiver header/source are derived from the installed openFrameworks 0.11.1
-ofxOsc addon, retaining its copyright notices. All message decoding remains
-unchanged. The supported macOS builder overlays both files for every consumer.
+The receiver header and source derive from the openFrameworks 0.11.1 ofxOsc
+addon and retain their original file notices. See the accompanying
+[openFrameworks MIT license](LICENSE). The supported macOS builder overlays both
+files for every consumer and preserves the original message decoding.
 Do not mix this header with the installed receiver object, or vice versa.
 
 Original source SHA-256 (before this repair):

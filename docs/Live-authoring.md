@@ -1,16 +1,26 @@
 # Everyday live authoring
 
-This workflow runs the renderer independently of the agent. Closing a chat does
-not stop the visual. The launcher uses the openFrameworks 0.11.1 or 0.12.1 SDK containing
-this checkout under `apps/myApps/vosc`. See the [installation guide](../README.md#building-with-xcode-apple-silicon).
+This workflow runs the renderer independently of the agent. Closing a chat
+leaves the visual running.
 
 ## Start the renderer
 
-From the repository root:
+From a standalone checkout on Apple Silicon, prepare the pinned openFrameworks
+SDK and addons, then export both paths in the terminal that will run the launcher:
 
 ```bash
+python3 scripts/setup_macos.py
+export OF_ROOT="$PWD/.vosc-macos/sdks/of-0.12.1"
+export VOSC_ADDON_SDK="$PWD/.vosc-macos/addon-sdks/of-0.12.1"
 ./scripts/run_authoring.sh
 ```
+
+For openFrameworks 0.11.1, pass `--version 0.11.1` to setup and use
+`of-0.11.1` in both paths. If you use `--dest`, replace `$PWD/.vosc-macos`
+with that directory's absolute path. If your checkout is already under
+`apps/myApps/vosc` in a configured installation, run the launcher directly.
+See the [build instructions](../README.md#building-with-xcode-apple-silicon)
+for details on using an existing installation.
 
 The first launch builds into `~/Library/Caches/vosc-authoring/build-of-<version>`
 if no binary exists. Subsequent launches reuse the build for that SDK version.
@@ -80,8 +90,13 @@ are separate creative capabilities. Use `get_scene` before edits and fresh reque
 IDs. Follow uncertain mutation outcomes with receipt/scene inspection rather than
 blindly resending. Use preview revision/frame metadata to tie an image to an edit.
 
-Call the read-only `export_scene` tool through
-`python3 scripts/scene_recipe.py --socket "$VOSC_CONTROL_SOCKET" export NEW_DIRECTORY`.
+From a separate terminal, export through the renderer's control socket:
+
+```bash
+python3 scripts/scene_recipe.py --socket "$HOME/.local/share/vosc/control.sock" export NEW_DIRECTORY
+```
+
+If you launched with a socket override, use that path here.
 The helper validates the strict descriptor and atomically publishes a readable
 `scene.scd`, copied fragment/image assets, and README. Move or edit that folder,
 then evaluate `scene.scd` in SuperCollider with VisualsQuark scene replay API 1.
