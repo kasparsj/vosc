@@ -1,6 +1,6 @@
 # SuperCollider examples
 
-Build and start VOSC using the [project quickstart](../README.md#building-with-xcode-apple-silicon).
+Build and start VOSC using the [project quickstart](../README.md#building-with-xcode-on-macos).
 Install [VisualsQuark](https://github.com/kasparsj/VisualsQuark) in SuperCollider
 and recompile the class library for examples that use `OSCVisuals`. Open each
 file in SuperCollider so relative helper paths resolve. Evaluate one

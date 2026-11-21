@@ -19,7 +19,7 @@ For openFrameworks 0.11.1, pass `--version 0.11.1` to setup and use
 `of-0.11.1` in both paths. If you use `--dest`, replace `$PWD/.vosc-macos`
 with that directory's absolute path. If your checkout is already under
 `apps/myApps/vosc` in a configured installation, run the launcher directly.
-See the [build instructions](../README.md#building-with-xcode-apple-silicon)
+See the [build instructions](../README.md#building-with-xcode-on-macos)
 for details on using an existing installation.
 
 The first launch builds into `~/Library/Caches/vosc-authoring/build-of-<version>`

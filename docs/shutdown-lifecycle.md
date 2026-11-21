@@ -1,6 +1,6 @@
 # OSC receiver shutdown
 
-The macOS builders compile vendor/ofxOsc/ofxOscReceiver.{h,cpp} through a mandatory compiler overlay. Shared openFrameworks sources remain unchanged. The standard macOS build applies the repair. The diagnostic builders below use openFrameworks 0.11.1. Run them from the [standard installation layout](../README.md#building-with-xcode-apple-silicon) or set `--of-root` to a 0.11.1 SDK.
+The macOS builders compile vendor/ofxOsc/ofxOscReceiver.{h,cpp} through a mandatory compiler overlay. Shared openFrameworks sources remain unchanged. The standard macOS build applies the repair. The diagnostic builders below use openFrameworks 0.11.1. Run them from the [standard installation layout](../README.md#building-with-xcode-on-macos) or set `--of-root` to a 0.11.1 SDK.
 
 Lifecycle setup/start/stop/copy calls belong to one owner thread; never call stop from a receive callback. The worker owns a socket and multiplexer. A 10 ms timer reads an atomic stop request and calls Break on the worker thread. stop joins before destroying the receive state or message channel. This avoids oscpack's cross-thread volatile flag and startup reset race, at a cost of approximately 100 idle wakeups per second. The timer interval is not a hard real-time guarantee. Failed workers become inactive; restart first joins and discards the previous state.
 

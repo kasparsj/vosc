@@ -4,7 +4,7 @@
 
 ### Breaking changes
 
-- **macOS builds support openFrameworks 0.11.1 and 0.12.1.** Run `python3 scripts/setup_macos.py` to obtain the SDK and pinned addons. The command-line builders select the SDK version automatically. An ignored `Project.local.xcconfig` supports other layouts. [Build instructions](README.md#building-with-xcode-apple-silicon)
+- **macOS builds support openFrameworks 0.11.1 and 0.12.1.** Run `python3 scripts/setup_macos.py` to obtain the SDK and pinned addons. The command-line builders select the SDK version automatically. An ignored `Project.local.xcconfig` supports other layouts. [Build instructions](README.md#building-with-xcode-on-macos)
 - **Configure OSC input slots before sending samples or calibration.** Send `/input <target>` for an OSC-fed slot, then send `/input/data` or `/input/set`. Both ignore unknown slots. `/input/set` requires one finite OSC float for `maxAmp` or `maxLoud`. Wildcard `/input` setup requires explicit device, channel count, and buffer size. [Input commands](docs/Setup-commands.md#input)
 - **Layer and material selectors reject previously coerced values.** Use a nonnegative OSC int32, a string containing only decimal digits within int32 range, or one of the wildcards `*`, `x`, and `a`. Strings such as `1fx` no longer select layer 1 for `/layer*` or `/mat*`. [Layer commands](docs/Layer-commands.md) · [Material commands](docs/Material-commands.md)
 - **Layer layout commands reject extra arguments and invalid layout values.** Use `stack`, `grid`, `col`, `row`, or their numeric enum values 1–4. `/layers/layout` takes exactly one layout argument. `/layers` and `/layers/reset` take an optional count and layout. [Setup commands](docs/Setup-commands.md#layers)
@@ -24,5 +24,5 @@
 
 ### Build, reliability, and examples
 
-- The macOS build creates a private openFrameworks core and compatibility overlays in its build directory. Fixed integer color construction, improved scene resource cleanup, and made shutdown join the OSC receiver before releasing renderer state. [Build instructions](README.md#building-with-xcode-apple-silicon) · [OSC receiver](vendor/ofxOsc/README.md)
+- The macOS build creates a private openFrameworks core and compatibility overlays in its build directory. Fixed integer color construction, improved scene resource cleanup, and made shutdown join the OSC receiver before releasing renderer state. [Build instructions](README.md#building-with-xcode-on-macos) · [OSC receiver](vendor/ofxOsc/README.md)
 - Refreshed SuperCollider examples for the current OSC commands and added an editable-scene example and the Organic Trails shader. [SuperCollider examples](SuperCollider/README.md) · [Organic Trails](examples/organic-trails/README.md)

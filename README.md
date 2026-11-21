@@ -26,11 +26,14 @@ Compact hardware workflow:
 - In practice, feature availability/performance depends on GPU drivers/OpenGL support and enabled addons.
 - Heavier shader/post pipelines are better suited to desktop GPUs.
 
-## Building with Xcode (Apple Silicon)
+## Building with Xcode on macOS
 
 Use the macOS release of openFrameworks [0.11.1](https://openframeworks.cc/versions/v0.11.1/)
 or [0.12.1](https://github.com/openframeworks/openFrameworks/releases/tag/0.12.1).
-The Xcode build targets Apple Silicon and macOS 12.6 or later and uses Python 3.10 or later.
+With openFrameworks 0.12.1, the Release build targets Apple Silicon and Intel
+(`arm64` and `x86_64`) in a single Universal app. Debug builds and the
+openFrameworks 0.11.1 profile target Apple Silicon. The build targets macOS
+12.6 or later and uses Python 3.10 or later.
 
 ### Set up a local SDK and addons
 
@@ -75,9 +78,10 @@ Install the dependencies listed in [addons.make](addons.make) under the same
 openFrameworks installation's `addons/` directory. The project uses the
 0.11.1 layout of `ofxOsc` and `ofxAssimpModelLoader` for both builds. For 0.12.1,
 use those addon sources from the 0.11.1 release, with their macOS libraries.
-Use Apple Silicon builds of the libraries used by enabled addons. In particular,
-`ofxExpr` needs its macOS muparser archive. Keep the `ofxUltralight` headers and
-dylibs in the addon tree for the Xcode project.
+Use libraries with both architecture slices for a Universal build. In particular,
+`ofxExpr` needs its macOS muparser archive. The Universal Release excludes
+the optional Ultralight addon. Keep its headers and dylibs in the addon tree
+for the Apple Silicon Debug and openFrameworks 0.11.1 builds.
 
 From the VOSC checkout, build with either command.
 
@@ -102,6 +106,8 @@ opening the project.
 
 For a separate build directory, run
 `python3 scripts/build_macos_profile.py --configuration Release --output /path/to/build`.
+Verify the Release executable with
+`lipo -archs /path/to/build/of-0.12.1/Release/products/vosc.app/Contents/MacOS/vosc`.
 For a standalone run, put the runtime assets from `bin/data` next to the app
 and copy `ofxDeferredShading/data/shaders/deferred` from the addon tree into
 `data/shaders`. With the setup script, the addon tree is under

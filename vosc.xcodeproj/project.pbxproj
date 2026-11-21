@@ -3791,6 +3791,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = "$(VOSC_RELEASE_EXCLUDED_SOURCES)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/System/Library/Frameworks,
@@ -3946,12 +3947,7 @@
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx/libIrrXML.a",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx/assimp.a",
 					"$(VOSC_ADDONS)/ofxExpr/libs/muparser/lib/osx/libmuparser.a",
-					"$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libWebCore.dylib",
-					"$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libUltralightCore.dylib",
-					"$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libUltralight.dylib",
-					"$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libAppCore.dylib",
-					"-rpath",
-					"$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx",
+					"$(VOSC_RELEASE_ULTRALIGHT_FLAGS)",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
