@@ -30,9 +30,9 @@ void ofApp::setup(){
             }
             for (size_t i = 0; i < startupScene->commands.size(); ++i) {
                 const auto& command = startupScene->commands[i];
-                if (command.message.getArgAsString(2) == "/shader/texture" && !scene::assetMatches(command)) {
+                if (!command.asset.empty() && !scene::assetMatches(command)) {
                     failStartup(scene::commandContext(i, command.message) +
-                                ": image changed during setup: " + command.asset.string());
+                                ": asset changed during setup: " + command.asset.string());
                     return;
                 }
             }

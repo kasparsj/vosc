@@ -55,6 +55,11 @@ void Texture::load(string source, const vector<float>& args) {
     }
 }
 
+void Texture::loadSceneAsset(const std::string& path, bool feedback) {
+    _unload();
+    tex = BaseTex::factory(feedback ? "shader_pp" : "image", path, {});
+}
+
 void Texture::load(const ofxOscMessage &m, int arg) {
     string newPath = m.getArgAsString(arg);
     vector<float> args;

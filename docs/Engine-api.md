@@ -276,6 +276,7 @@ legacy/UI edits interrupt the trial before applying the newer edit.
 
 Call `export_scene` with empty params. The read-only operation returns a
 versioned descriptor for supported scenes and rejects unsupported retained
-state. Use [the scene folder exporter](Editable-scene-contract.md) to write an
-editable SuperCollider program with its assets. For the bounded feedback
-extension, see [its contract](Feedback-composition-contract.md).
+state. Use [the scene folder exporter](Editable-scene-contract.md) to write a
+native JSON manifest and its assets, with an optional SuperCollider companion.
+See the [feedback contract](Feedback-composition-contract.md) for supported
+feedback scenes.

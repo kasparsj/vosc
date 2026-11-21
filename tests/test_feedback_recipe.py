@@ -81,7 +81,7 @@ class FeedbackCliPublicationTests(unittest.TestCase):
         receipts = []
         cases = ('success', 'existing', 'symlink', 'unsafe_asset', 'shared_parent',
                  'feedback_write', 'scene_write', 'readme_write', 'feedback_partial',
-                 'scene_partial', 'readme_partial', 'rename', 'race')
+                 'scene_partial', 'readme_partial', 'rename', 'race', 'exchange_timeout')
         bootstrap = r'''
 import importlib.util,sys
 from pathlib import Path
@@ -108,7 +108,8 @@ def checked_rename(source,target,**kwargs):
         target.mkdir();(target/'foreign.txt').write_text('concurrent foreign data')
     return real_rename(source,target,**kwargs)
 Path.open=checked_open;cli._rename_exclusive=checked_rename
-sys.argv=[sys.argv[1],'--socket',sys.argv[3],'export',str(destination)]
+if mode=='exchange_timeout':cli.EXPORT_EXCHANGE_TIMEOUT=0.2
+sys.argv=[sys.argv[1],'--socket',sys.argv[3],'export',str(destination),'--scd']
 raise SystemExit(cli.main())
 '''
         for case in cases:
@@ -140,6 +141,10 @@ raise SystemExit(cli.main())
                         connection,_ = server.accept()
                         with connection:
                             stream=connection.makefile('rb'); request=json.loads(stream.readline());requests.append(request)
+                            if case == 'exchange_timeout':
+                                connection.settimeout(2)
+                                self.assertEqual(stream.read(1), b'')
+                                return
                             response={'id':request['id'],'ok':True,'status':'ok','revision':1,'frame':2,'external_epoch':0,'result':{'recipe':descriptor_value}}
                             connection.sendall(json.dumps(response).encode()+b'\n')
                     except BaseException as error: errors.append(repr(error))
@@ -152,6 +157,7 @@ raise SystemExit(cli.main())
                 self.assertEqual(run.returncode,0 if case=='success' else 2,run.stdout+run.stderr)
                 if case in ('feedback_write','scene_write','readme_write','feedback_partial','scene_partial','readme_partial','rename'):
                     self.assertIn('injected '+case,run.stdout)
+                if case=='exchange_timeout':self.assertIn('local receipt wait expired',run.stdout)
                 after=inventory()
                 for name,value in before.items():self.assertEqual(after[name],value)
                 self.assertFalse(any('.staging-' in name for name in after))

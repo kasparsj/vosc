@@ -68,7 +68,9 @@ private:
     void completeSceneReplay(const std::string& status, int frame, const std::string& detail);
     void resetScene(int width, int height);
     void verifyStartupImage(const ofxOscMessage& message, const std::string& path);
+    static bool validateFeedbackSettings(const SceneReplay& state, std::string& reason);
     bool finishFeedbackSetup(const SceneReplay& state, std::string& reason) const;
+    bool finishFeedbackTexture(int layer, std::string& reason) const;
 
     struct SceneReplay {
         std::string token;

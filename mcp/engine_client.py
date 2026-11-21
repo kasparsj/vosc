@@ -18,6 +18,7 @@ REQUEST_LIMIT = 262_144
 RESPONSE_LIMIT = 8_388_608
 MAX_DEPTH = 64
 EXCHANGE_TIMEOUT = 2.0
+EXPORT_EXCHANGE_TIMEOUT = 15.0
 SLOT_TIMEOUT = 0.1
 REQUIRED_OPERATIONS = frozenset(
     {
@@ -169,7 +170,8 @@ class EngineClient:
     ) -> dict[str, Any]:
         request_id = query_id()
         payload = canonical_request(request_id, method, params)
-        replies = await self._exchange([(request_id, payload, False)], timeout=timeout)
+        limit = EXPORT_EXCHANGE_TIMEOUT if method == "export_scene" else EXCHANGE_TIMEOUT
+        replies = await self._exchange([(request_id, payload, False)], timeout=timeout, exchange_limit=limit)
         return replies[0]
 
     async def submit(
@@ -190,9 +192,10 @@ class EngineClient:
         *,
         require_compatible: bool = False,
         timeout: float = EXCHANGE_TIMEOUT,
+        exchange_limit: float = EXCHANGE_TIMEOUT,
     ) -> list[dict[str, Any]]:
         wrote_mutation = False
-        deadline = time.monotonic() + min(EXCHANGE_TIMEOUT, max(0.0, timeout))
+        deadline = time.monotonic() + min(exchange_limit, max(0.0, timeout))
 
         async def run() -> list[dict[str, Any]]:
             nonlocal wrote_mutation
@@ -277,7 +280,7 @@ class EngineClient:
                 ) from error
             raise EngineClientError(
                 "adapter_protocol_error",
-                "engine exchange exceeded 2 seconds",
+                f"engine exchange exceeded {min(timeout, exchange_limit):g} seconds",
                 wrote_mutation=wrote_mutation,
             ) from error
         except EngineClientError as error:

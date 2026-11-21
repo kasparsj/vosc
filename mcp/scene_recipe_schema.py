@@ -18,6 +18,7 @@ MAX_ASSETS = 64
 MAX_FRAGMENT = 128 * 1024
 MAX_FRAGMENTS = 1024 * 1024
 MAX_IMAGES = 4 * 1024 * 1024
+MAX_DECODED_IMAGES = 64 * 1024 * 1024
 MAX_STRING = 2048
 MAX_COMPONENTS = 1024
 MAX_BUNDLE = 61_440
@@ -84,7 +85,7 @@ def _identifier(value: Any, label: str, *, reserved: bool = False) -> str:
 
 def _asset_name(value: Any, kind: str) -> str:
     value = _string(value, "asset name")
-    if "\\" in value or not value.startswith("assets/"):
+    if "\\" in value or ":" in value or not value.startswith("assets/"):
         raise RecipeValidationError("asset name must be a relative POSIX path under assets/")
     raw_parts = value.split("/")
     if any(part in {"", ".", ".."} for part in raw_parts):
@@ -98,7 +99,7 @@ def _asset_name(value: Any, kind: str) -> str:
     return value
 
 
-def _validate_png(data: bytes) -> None:
+def _validate_png(data: bytes) -> int:
     if not data.startswith(b"\x89PNG\r\n\x1a\n"):
         raise RecipeValidationError("image asset is not a PNG")
     offset, width, height, compressed, ended, saw_idat, idat_closed = 8, 0, 0, bytearray(), False, False, False
@@ -154,6 +155,7 @@ def _validate_png(data: bytes) -> None:
     stride = 1 + width * channels
     if any(raw[row * stride] > 4 for row in range(height)):
         raise RecipeValidationError("image PNG uses an invalid row filter")
+    return width * height * 4
 
 
 def _arg(arg: Any, label: str) -> tuple[str, Any]:
@@ -240,6 +242,7 @@ def validate_descriptor(value: Any) -> dict[str, Any]:
     if not isinstance(assets, list) or len(assets) > MAX_ASSETS:
         raise RecipeValidationError("assets must be a bounded array")
     declared: dict[str, tuple[str, bytes]] = {}
+    image_costs: dict[str, int] = {}
     fragment_total = image_total = 0
     for index, raw in enumerate(assets):
         asset = _exact(raw, {"name", "kind", "encoding", "data"}, f"asset {index}")
@@ -268,7 +271,7 @@ def validate_descriptor(value: Any) -> dict[str, Any]:
             except (binascii.Error, ValueError) as error:
                 raise RecipeValidationError("image data is invalid base64") from error
             image_total += len(decoded)
-            _validate_png(decoded)
+            image_costs[name] = _validate_png(decoded)
         declared[name] = (kind, decoded)
     if fragment_total > MAX_FRAGMENTS or image_total > MAX_IMAGES:
         raise RecipeValidationError("aggregate asset bound exceeded")
@@ -277,7 +280,7 @@ def validate_descriptor(value: Any) -> dict[str, Any]:
     if not isinstance(commands, list) or not 1 <= len(commands) <= MAX_COMMANDS:
         raise RecipeValidationError("commands must be a nonempty bounded array")
     normalized: list[tuple[str, list[tuple[str, Any]]]] = []
-    components = 0
+    components = decoded_image_bytes = 0
     for index, raw in enumerate(commands):
         command = _exact(raw, {"address", "args"}, f"command {index}")
         address = _string(command["address"], "command address")
@@ -285,6 +288,9 @@ def validate_descriptor(value: Any) -> dict[str, Any]:
             raise RecipeValidationError("command args must be an array")
         args = [_arg(item, f"command {index} arg {position}") for position, item in enumerate(command["args"])]
         components += _component_count(address, args)
+        decoded_image_bytes += sum(image_costs.get(value, 0) for kind, value in args if kind == "asset")
+        if decoded_image_bytes > MAX_DECODED_IMAGES:
+            raise RecipeValidationError("scene exceeds the 64 MiB decoded image budget")
         normalized.append((address, args))
     if components > MAX_COMPONENTS:
         raise RecipeValidationError("recipe exceeds scalar component bound")
@@ -456,7 +462,8 @@ def _validate_command(address: str, args: list[tuple[str, Any]], count: int,
             feedback[layer] = {"controls": set(), "settings": set()}
         elif kind != expected: raise RecipeValidationError("asset kind mismatch")
         target = shaders if address == "/shader" else defaults
-        if layer in target: raise RecipeValidationError("duplicate source declaration")
+        if layer in target or (address == "/tex" and (layer, "tex") in samplers):
+            raise RecipeValidationError("duplicate source declaration")
         target.add(layer); return
     if address == "/tex/var":
         if layer not in feedback or not 2 <= len(tail) <= 5 or tail[0][0] != "s":
@@ -486,7 +493,8 @@ def _validate_command(address: str, args: list[tuple[str, Any]], count: int,
             raise RecipeValidationError("invalid /shader/texture signature")
         name = _identifier(tail[0][1], "sampler name")
         key = (layer, name)
-        if key in samplers or tail[1][1] not in assets or assets[tail[1][1]][0] != "image":
+        if (key in samplers or (name == "tex" and layer in defaults) or
+                tail[1][1] not in assets or assets[tail[1][1]][0] != "image"):
             raise RecipeValidationError("invalid or duplicate sampler asset")
         samplers.add(key); return
     if address in {"/tex/size", "/tex/speed", "/tex/set"}:

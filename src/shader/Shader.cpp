@@ -96,8 +96,9 @@ Shader::Uniforms reflectUniforms(GLuint program) {
         string reflected(name.data(), static_cast<size_t>(length));
         const auto bracket = reflected.find('[');
         // The driver reports singleton arrays with a [0] suffix as well.
-        uniforms.insert_or_assign(reflected.substr(0, bracket),
-                                  Shader::UniformInfo{type, size, bracket != string::npos});
+        const auto key = reflected.substr(0, bracket);
+        uniforms.insert_or_assign(key, Shader::UniformInfo{type, size, bracket != string::npos,
+                                                          glGetUniformLocation(program, key.c_str())});
     }
     return uniforms;
 }
@@ -749,6 +750,38 @@ bool Shader::isRendererUniform(const string& name) {
            name == "modelViewProjectionMatrix" || name == "textureMatrix";
 }
 
+const char* Shader::sceneUniformError(const Uniforms& uniforms, const string& name) {
+    if (name == "layer" || name == "offset" || name == "numLights") return "renderer-owned shader uniform";
+    const auto found = uniforms.find(name);
+    if (found == uniforms.end()) return "shader binding is absent from the active program";
+    const auto& info = found->second;
+    // Layer data uploads follow explicit layer-shader bindings in begin().
+    static const std::set<string> layerScalars = {"alpha", "bri", "speed", "visible", "visibleThresh", "onsetThresh"};
+    static const std::set<string> layerVectors = {"pos", "size", "rotation", "pivot", "scale"};
+    const bool layerOwned =
+        ((info.type == GL_FLOAT || info.type == GL_INT) && layerScalars.count(name)) ||
+        ((info.type == GL_FLOAT_VEC2 || info.type == GL_FLOAT_VEC3) && layerVectors.count(name)) ||
+        ((info.type == GL_FLOAT_VEC3 || info.type == GL_FLOAT_VEC4) && name == "tint");
+    if (layerOwned) return "layer-owned shader uniform";
+    if (info.isArray() && !(info.size == 1 && info.type == GL_FLOAT))
+        return "unsupported shader uniform array";
+    if (info.location < 0) return "shader uniform has no writable location";
+    return nullptr;
+}
+
+std::string Shader::sceneTextureError(const Uniforms& uniforms, const string& name,
+                                      bool explicitSize) {
+    const auto writable = [&](const string& key, GLenum type) {
+        const auto found = uniforms.find(key);
+        return found == uniforms.end() || (found->second.type == type && !found->second.isArray() &&
+                                           found->second.location >= 0);
+    };
+    if (!writable(name, GL_SAMPLER_2D)) return "expected a writable sampler2D: " + name;
+    if (!explicitSize && !writable(name + "Size", GL_FLOAT_VEC2))
+        return "renderer-managed texture size requires a writable vec2: " + name + "Size";
+    return {};
+}
+
 void Shader::begin(TexData& data, int delay, const Camera* camera) {
     if (isLoaded()) {
         // Reset texture location at the start of each begin call
@@ -797,11 +830,20 @@ void Shader::end() {
 
 void Shader::setUniformTextureWithSize(const string& name, ofTexture& tex, int loc) {
     setUniformTexture(name, tex, loc >= 0 ? loc : getNextTextureLocation());
+    const auto sizeName = name + "Size";
     if (shadertoy == NULL) {
-        shader->setUniform2f(name + "Size", tex.getWidth(), tex.getHeight());
+        // An explicitly bound scalar can use this name. Avoid the incompatible
+        // automatic vec2 write before uploading the scalar in setUniforms().
+        if (vars.count(sizeName)) {
+            const auto& types = getUniforms();
+            const auto found = types.find(sizeName);
+            if (found != types.end() && (found->second.type != GL_FLOAT_VEC2 || found->second.isArray()))
+                return;
+        }
+        shader->setUniform2f(sizeName, tex.getWidth(), tex.getHeight());
     }
     else {
-        shadertoy->setUniform2f(name + "Size", tex.getWidth(), tex.getHeight());
+        shadertoy->setUniform2f(sizeName, tex.getWidth(), tex.getHeight());
     }
 }
 
@@ -1263,6 +1305,17 @@ shared_ptr<Texture> Shader::getDefaultTexture() const {
 
 void Shader::setDefaultTexture(shared_ptr<Texture>& tex) {
     textures[DEFAULT_TEX] = tex;
+}
+
+shared_ptr<Texture> Shader::loadSceneTexture(const string& name, const string& path, bool feedback,
+                                             const glm::vec2& defaultSize) {
+    auto texture = TexturePool::getOrCreate(name, this);
+    textures[name] = texture;
+    const auto size = texture->data.getSize();
+    if (size.x <= 0 || size.y <= 0)
+        texture->data.setSize(size.x > 0 ? size.x : defaultSize.x, size.y > 0 ? size.y : defaultSize.y);
+    texture->loadSceneAsset(path, feedback);
+    return texture;
 }
 
 void Shader::setTexture(const ofxOscMessage& m) {

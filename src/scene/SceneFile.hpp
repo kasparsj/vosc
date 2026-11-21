@@ -9,6 +9,9 @@
 namespace scene {
 
 inline constexpr int MaxImageSide = 4096;
+// The export exchange is below 8 MiB. Allow 1 MiB for JSON number spellings,
+// the escaped title, and the native manifest header.
+inline constexpr size_t MaxManifestBytes = 9 * 1024 * 1024;
 inline constexpr size_t MaxDecodedImageBytes = 64 * 1024 * 1024;
 inline constexpr size_t MaxImagePixels = 10'000'000;
 
@@ -16,6 +19,7 @@ struct Command {
     ofxOscMessage message;
     std::filesystem::path asset;
     std::string assetBytes;
+    bool feedback = false;
 };
 
 struct File {

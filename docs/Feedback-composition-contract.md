@@ -2,9 +2,10 @@
 
 [Editable scene export](Editable-scene-contract.md) supports one holder-local
 default shader feedback texture. The folder copies the retained fragment shader
-and contains an editable `/tex` call with a `shader_pp:` asset. Replay requires
-VisualsQuark feedback replay API 1 and initializes both buffers to white before
-the first update.
+and references it from an editable `/tex` command in `scene.vosc.json`.
+Native and SuperCollider replay initialize both buffers to white before the
+first update. The optional `scene.scd` uses a `shader_pp:` asset prefix and
+requires VisualsQuark feedback replay API 1.
 
 ## Supported feedback configuration
 

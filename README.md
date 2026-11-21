@@ -138,24 +138,26 @@ vosc --scene /path/to/examples/sieve/scene.vosc.json
 ```
 
 Use the actual executable inside `Contents/MacOS/` for a macOS app bundle.
-Each example folder can be moved with its assets. Version 1 scene files contain
-`version`, `title`, `size` (width and height), and an ordered `commands` array. The optional
-`onset_gate` accepts `-1` (automatic), `0` (off), or `1` (on).
+Keep the manifest and its assets together when moving a folder. Version 1
+scene files contain `version`, `title`, `size` (width and height), and an
+ordered `commands` array. Exported manifests also include `onset_gate`
+(`-1`, `0`, or `1`). Hand-authored files may omit it to use `-1`.
+
 Each command has an OSC `address` and an `args` array of `type`/`value` pairs.
-Use `i` for integer values, `f` for floating-point values such as `1.0`, `s` for
-strings, and `asset` for a path relative to the scene file. Vector components
-are consecutive typed arguments. Start with `/layers/reset` and use
-`/shader`, `/shader/texture`, `/shader/var`, and the static layer controls shown
-in the examples. A successful launch prints `VOSC_SCENE_READY` after the first
-composed frame.
+Use `i` for integers, `f` for floating-point values such as `1.0`, `s` for
+strings and expressions, and `asset` for a path relative to the scene file.
+Vector components are consecutive typed arguments. Start with `/layers/reset`.
+A successful launch prints `VOSC_SCENE_READY` after the first composed frame.
 
 Native manifests accept PNG and JPEG images up to 4096 pixels per side and
 10 million pixels per image, with a 64 MiB decoded image budget per scene.
 Export and wrapped SuperCollider replay retain their 2048-pixel image limit.
 
+Use the [scene exporter](docs/Editable-scene-contract.md) to capture a running
+renderer as a native JSON scene. Add `--scd` for a SuperCollider companion.
+
 Use `--size WIDTHxHEIGHT` to override the initial window size. See the
-[examples index](examples/README.md) for assets, SuperCollider companions,
-and prerequisites.
+[examples index](examples/README.md) for scene assets, companions, and prerequisites.
 
 ## Quickstart (Local + SuperCollider)
 

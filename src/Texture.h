@@ -17,6 +17,7 @@ public:
         unload();
     }
     void load(string source, const vector<float>& args);
+    void loadSceneAsset(const std::string& path, bool feedback);
     void load(const ofxOscMessage& m, int arg = 1);
     void loadData(const ofxOscMessage& m, int arg = 1);
     void choose(const ofxOscMessage& m);

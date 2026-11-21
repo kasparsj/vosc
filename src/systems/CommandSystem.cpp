@@ -499,7 +499,8 @@ bool CommandSystem::validateSceneCommand(const ofxOscMessage& m, SceneReplay& st
     if (address == "/shader" || address == "/tex") {
         if (count != 2 || !recipeType(m, 1, OFXOSC_TYPE_STRING) || !recipeString(stringAt(1))) return false;
         auto& declared = address == "/shader" ? state.shaders : state.defaultTextures;
-        if (declared.count(index)) return false;
+        if (declared.count(index) ||
+            (address == "/tex" && state.namedTextures.count({index, DEFAULT_TEX}))) return false;
         if (address == "/shader" && stringAt(1).find(':') != std::string::npos) return false;
         if (address == "/tex" && stringAt(1).rfind("shader_pp:", 0) == 0) {
             if (state.feedbackLayer >= 0 || stringAt(1).size() <= 10) return false;
@@ -547,7 +548,8 @@ bool CommandSystem::validateSceneCommand(const ofxOscMessage& m, SceneReplay& st
     if (address == "/shader/texture") {
         if (count != 3 || !state.shaders.count(index) || !recipeType(m, 1, OFXOSC_TYPE_STRING) ||
             !recipeIdentifier(stringAt(1)) || !recipeType(m, 2, OFXOSC_TYPE_STRING) || !recipeString(stringAt(2))) return false;
-        if (!state.namedTextures.insert({index, stringAt(1)}).second) return false;
+        if ((stringAt(1) == DEFAULT_TEX && state.defaultTextures.count(index)) ||
+            !state.namedTextures.insert({index, stringAt(1)}).second) return false;
         return addBinding(index, "sampler:" + stringAt(1));
     }
     const bool named = address.rfind("/shader/texture/", 0) == 0;
@@ -679,83 +681,69 @@ bool CommandSystem::validateSceneRecipeCommands(const ofJson& commands, const of
         }
         ++state.received;
     }
-    if (state.feedbackLayer >= 0) {
-        static const std::set<std::string> required = {"size", "speed", "aspectRatio", "blendMode",
-            "internalformat", "textureTarget", "static"};
-        for (const auto& field : required) if (!state.feedbackSettings.count(field)) {
-            reason = "feedback setup is incomplete"; return false;
-        }
-        const bool filter = state.feedbackSettings.count("filter");
-        const bool split = state.feedbackSettings.count("minFilter") && state.feedbackSettings.count("magFilter");
-        if (filter == split || (filter && (state.feedbackSettings.count("minFilter") || state.feedbackSettings.count("magFilter")))) {
-            reason = "feedback filter setup is incomplete or duplicated"; return false;
-        }
-    }
-    return true;
+    return validateFeedbackSettings(state, reason);
 }
 
 void CommandSystem::validateStartupScene(const scene::File& file, const ScenePrograms* programs) {
     SceneReplay state;
     for (size_t i = 0; i < file.commands.size(); ++i) {
         const auto& message = file.commands[i].message;
-        if ((i == 0 && message.getArgAsString(2) != "/layers/reset") || !validateSceneCommand(message, state))
+        if (!recipeAddress(message.getArgAsString(2)) || !validateSceneCommand(message, state))
             throw std::runtime_error(scene::commandContext(i, message) +
                                      ": invalid argument types, values, target, or setup order");
-        if (i == 0 && state.layerCount == 0)
-            throw std::runtime_error(scene::commandContext(i, message) + ": expected at least one layer");
         ++state.received;
     }
+    std::string reason;
+    if (!validateFeedbackSettings(state, reason)) throw std::runtime_error(reason);
     if (!programs) return;
 
-    // Scene v1 can change these layer variables but cannot introduce new ones.
-    static const std::set<std::string> layerUniforms = {
-        "pos", "size", "visible", "speed", "tint", "visibleThresh", "onsetThresh",
-        "alpha", "bri", "rotation", "pivot", "scale"};
     std::map<int, const Shader::PreparedDirectSource*> byLayer;
+    std::set<std::pair<int, std::string>> explicitUniforms;
+    std::map<std::string, int> feedbackControls;
+    std::optional<size_t> feedbackCommand;
     for (size_t i = 0; i < file.commands.size(); ++i) {
         const auto& message = file.commands[i].message;
         const auto address = message.getArgAsString(2);
+        if (address == "/shader") byLayer[message.getArgAsInt32(3)] = &programs->at(i);
+        if (address == "/shader/var") explicitUniforms.emplace(message.getArgAsInt32(3), message.getArgAsString(4));
+        if (file.commands[i].feedback) feedbackCommand = i;
+        if (address == "/tex/var")
+            feedbackControls.emplace(message.getArgAsString(4), message.getNumArgs() - 5);
+    }
+    for (size_t i = 0; i < file.commands.size(); ++i) {
+        const auto& message = file.commands[i].message;
+        const auto address = message.getArgAsString(2);
+        if (address != "/shader/var" && address != "/shader/texture" && address != "/tex") continue;
+        const int layer = message.getArgAsInt32(3);
+        const auto source = byLayer.find(layer);
+        if (source == byLayer.end()) continue;
+        const auto& program = *source->second;
+        const auto name = address == "/tex" ? DEFAULT_TEX : message.getArgAsString(4);
         auto fail = [&](const std::string& detail) {
             throw std::runtime_error(scene::commandContext(i, message) + ": " + detail);
         };
-        if (address == "/shader") byLayer[message.getArgAsInt32(3)] = &programs->at(i);
-        if (address == "/shader/var" || address == "/shader/texture") {
-            const int layer = message.getArgAsInt32(3);
-            const auto& program = *byLayer.at(layer);
-            const auto name = message.getArgAsString(4);
-            const bool textureSize = name.size() > 4 && name.compare(name.size() - 4, 4, "Size") == 0 &&
-                state.namedTextures.count({layer, name.substr(0, name.size() - 4)});
-            if (Shader::isRendererUniform(name) || layerUniforms.count(name) || textureSize)
-                fail("renderer-managed shader uniform: " + name);
-            const auto uniform = program.uniforms.find(name);
-            if (uniform == program.uniforms.end() || uniform->second.isArray())
-                fail("expected active non-array shader uniform: " + name);
-            if (glGetUniformLocation(program.program->getProgram(), name.c_str()) < 0)
-                fail("shader uniform has no writable location: " + name);
-            const auto type = uniform->second.type;
-            if (address == "/shader/texture") {
-                if (type != GL_SAMPLER_2D) fail("expected sampler2D: " + name);
-                // The renderer supplies a vec2 size alongside each bound image.
-                const auto sizeName = name + "Size";
-                const auto size = program.uniforms.find(sizeName);
-                if (size != program.uniforms.end() &&
-                    (size->second.type != GL_FLOAT_VEC2 || size->second.isArray() ||
-                     glGetUniformLocation(program.program->getProgram(), sizeName.c_str()) < 0))
-                    fail("renderer-managed texture size requires a writable vec2: " + sizeName);
-            } else {
-                const int arity = uniformComponentCount(type);
-                const bool integer = type == GL_INT || type == GL_INT_VEC2 ||
-                    type == GL_INT_VEC3 || type == GL_INT_VEC4;
-                const bool floating = type == GL_FLOAT || type == GL_FLOAT_VEC2 ||
-                    type == GL_FLOAT_VEC3 || type == GL_FLOAT_VEC4;
-                if ((!integer && !floating) || arity != message.getNumArgs() - 5)
-                    fail("shader uniform arity or shape mismatch: " + name);
-                for (int arg = 5; arg < message.getNumArgs(); ++arg)
-                    if (message.getArgType(arg) != (integer ? OFXOSC_TYPE_INT32 : OFXOSC_TYPE_FLOAT))
-                        fail("shader uniform " + name + (integer ? " requires int32" : " requires float32"));
-            }
+        if (address != "/shader/var") {
+            const bool explicitSize = explicitUniforms.count({layer, name + "Size"});
+            const auto error = Shader::sceneTextureError(program.uniforms, name, explicitSize);
+            if (!error.empty()) fail(error);
+            continue;
         }
+        if (const char* error = Shader::sceneUniformError(program.uniforms, name))
+            fail(std::string(error) + ": " + name);
+        const auto type = program.uniforms.at(name).type;
+        const int arity = uniformComponentCount(type);
+        const bool integer = integerUniformType(type);
+        if (arity == 0 || arity != message.getNumArgs() - 5)
+            fail("shader uniform arity or shape mismatch: " + name);
+        for (int arg = 5; arg < message.getNumArgs(); ++arg)
+            if (message.getArgType(arg) != (integer ? OFXOSC_TYPE_INT32 : OFXOSC_TYPE_FLOAT) &&
+                message.getArgType(arg) != OFXOSC_TYPE_STRING)
+                fail("shader uniform " + name + (integer ? " requires int32" : " requires float32"));
     }
+    if (feedbackCommand && !ShaderPingPongTex::validateUniforms(
+            programs->at(*feedbackCommand).uniforms, feedbackControls, reason))
+        throw std::runtime_error(scene::commandContext(*feedbackCommand, file.commands[*feedbackCommand].message) +
+                                 ": " + reason);
 }
 
 #ifdef VOSC_RECOVERY_TESTING
@@ -776,7 +764,7 @@ CommandSystem::ScenePrograms CommandSystem::prepareStartupScene(const scene::Fil
         if (!scene::assetMatches(command))
             throw std::runtime_error(scene::commandContext(i, command.message) +
                                      ": asset changed since preflight: " + command.asset.string());
-        if (command.message.getArgAsString(2) == "/shader") {
+        if (command.message.getArgAsString(2) == "/shader" || command.feedback) {
             if (!Shader::prepareDirectSource(command.assetBytes, programs[i]))
                 throw std::runtime_error(scene::commandContext(i, command.message) +
                                          ": shader compilation or linking failed: " + command.asset.string());
@@ -789,9 +777,9 @@ CommandSystem::ScenePrograms CommandSystem::prepareStartupScene(const scene::Fil
 void CommandSystem::applyStartupScene(const scene::File& file, ScenePrograms& programs, SceneResult result) {
     for (size_t i = 0; i < file.commands.size(); ++i) {
         const auto& command = file.commands[i];
-        if (command.message.getArgAsString(2) == "/shader/texture" && !scene::assetMatches(command))
+        if (!command.asset.empty() && !scene::assetMatches(command))
             throw std::runtime_error(scene::commandContext(i, command.message) +
-                                     ": image changed since preflight: " + command.asset.string());
+                                     ": asset changed since preflight: " + command.asset.string());
     }
     startupSceneResult = std::move(result);
     sceneReplay.emplace();
@@ -803,14 +791,49 @@ void CommandSystem::applyStartupScene(const scene::File& file, ScenePrograms& pr
     state.diagnosticStart = replayLogger() ? replayLogger()->latestSequence() : 0;
     resetScene(file.width, file.height);
     for (size_t i = 0; i < file.commands.size(); ++i) {
-        const auto& command = file.commands[i];
-        const auto& message = command.message;
+        const auto& message = file.commands[i].message;
         auto program = programs.find(i);
         try {
-            if (!routeSceneCommand(message, program == programs.end() ? nullptr : &program->second))
+            const auto& command = file.commands[i];
+            const auto address = message.getArgAsString(2);
+            if (address == "/tex" || address == "/shader/texture") {
+#ifdef VOSC_RECOVERY_TESTING
+                traceStartupBoundary("command");
+#endif
+                auto& layer = *renderSystem.getLayers().at(message.getArgAsInt32(3));
+                const auto name = address == "/tex" ? DEFAULT_TEX : message.getArgAsString(4);
+                const auto size = address == "/tex" ? layer.data.getSize() :
+                    glm::vec2(std::max(1, ofGetWidth()), std::max(1, ofGetHeight()));
+                auto texture = layer.shader.loadSceneTexture(name, command.asset.string(), command.feedback, size);
+                if (command.feedback) {
+                    auto feedback = std::dynamic_pointer_cast<ShaderPingPongTex>(texture->tex);
+                    if (!feedback) throw std::runtime_error("could not create feedback texture");
+                    texture->feedbackSetupPending = true;
+                    feedback->replayBounded = true;
+                    feedback->installDirectSource(std::move(program->second), {});
+                    if (!feedback->prepareFeedback()) throw std::runtime_error("could not prepare feedback texture");
+                }
+            } else if (!routeSceneCommand(message, program == programs.end() ? nullptr : &program->second)) {
                 throw std::runtime_error("command routing failed");
-            if (message.getArgAsString(2) == "/shader/texture")
+            }
+        } catch (const std::exception& error) {
+            failSceneReplay(scene::commandContext(i, message) + ": " + error.what());
+            return;
+        }
+    }
+    // Apply holder settings before the first upload of a static image.
+    for (size_t i = 0; i < file.commands.size(); ++i) {
+        const auto& command = file.commands[i];
+        if (command.asset.empty()) continue;
+        const auto& message = command.message;
+        try {
+            if (command.feedback) {
+                std::string reason;
+                if (!finishFeedbackTexture(message.getArgAsInt32(3), reason))
+                    throw std::runtime_error(reason);
+            } else if (!programs.count(i)) {
                 verifyStartupImage(message, command.asset.string());
+            }
         } catch (const std::exception& error) {
             failSceneReplay(scene::commandContext(i, message) + ": " + error.what());
             return;
@@ -821,8 +844,9 @@ void CommandSystem::applyStartupScene(const scene::File& file, ScenePrograms& pr
 }
 
 void CommandSystem::verifyStartupImage(const ofxOscMessage& message, const std::string& path) {
-    const auto& bindings = renderSystem.getLayers().at(message.getArgAsInt32(3))->shader.getTextures();
-    const auto binding = bindings.find(message.getArgAsString(4));
+    const auto& shader = renderSystem.getLayers().at(message.getArgAsInt32(3))->shader;
+    const auto& bindings = shader.getTextures();
+    const auto binding = bindings.find(message.getArgAsString(2) == "/tex" ? DEFAULT_TEX : message.getArgAsString(4));
     auto fail = [&](const std::string& detail) {
         throw std::runtime_error("image upload failed: " + path + ": " + detail);
     };
@@ -871,7 +895,7 @@ bool CommandSystem::routeSceneCommand(const ofxOscMessage& wrapped, Shader::Prep
 #endif
     ofxOscMessage ordinary;
     const std::string address = wrapped.getArgAsString(2);
-    if (program) {
+    if (program && address == "/shader") {
         renderSystem.getLayers().at(wrapped.getArgAsInt32(3))->shader.installDirectSource(std::move(*program), {});
         return true;
     }
@@ -1086,7 +1110,7 @@ bool CommandSystem::routeSceneCommand(const ofxOscMessage& wrapped, Shader::Prep
     return true;
 }
 
-bool CommandSystem::finishFeedbackSetup(const SceneReplay& state, std::string& reason) const {
+bool CommandSystem::validateFeedbackSettings(const SceneReplay& state, std::string& reason) {
     if (state.feedbackLayer < 0) return true;
     static const std::set<std::string> required = {"size", "speed", "aspectRatio", "blendMode",
         "internalformat", "textureTarget", "static"};
@@ -1098,26 +1122,22 @@ bool CommandSystem::finishFeedbackSetup(const SceneReplay& state, std::string& r
         (filter && (state.feedbackSettings.count("minFilter") || state.feedbackSettings.count("magFilter")))) {
         reason = "feedback setup requires every bounded storage and holder setting"; return false;
     }
-    auto& texture = *renderSystem.getLayers().at(state.feedbackLayer)->shader.getDefaultTexture();
+    return true;
+}
+
+bool CommandSystem::finishFeedbackSetup(const SceneReplay& state, std::string& reason) const {
+    return validateFeedbackSettings(state, reason) &&
+           (state.feedbackLayer < 0 || finishFeedbackTexture(state.feedbackLayer, reason));
+}
+
+bool CommandSystem::finishFeedbackTexture(int layer, std::string& reason) const {
+    auto& texture = *renderSystem.getLayers().at(layer)->shader.getDefaultTexture();
     auto feedback = std::dynamic_pointer_cast<ShaderPingPongTex>(texture.tex);
-    if (!feedback || !feedback->prepareFeedback() || !feedback->validateConfiguration(texture.data, reason)) return false;
-    const auto& types = feedback->getUniforms();
-    for (const auto& name : state.feedbackControls) {
-        auto found = types.find(name);
-        if (found == types.end() || integerUniformType(found->second.type) ||
-            !uniformComponentCount(found->second.type)) {
-            reason = "feedback control is not a reflected scalar/vector constant"; return false;
-        }
-        int components = 0;
-        const auto& value = texture.vars.at(name);
-        if (auto scalar = std::dynamic_pointer_cast<Variable<float>>(value)) components = scalar->getVec().size();
-        else if (std::dynamic_pointer_cast<Variable<glm::vec2>>(value)) components = 2;
-        else if (std::dynamic_pointer_cast<Variable<glm::vec3>>(value)) components = 3;
-        else if (std::dynamic_pointer_cast<Variable<ofFloatColor>>(value)) components = 4;
-        if (components != uniformComponentCount(found->second.type)) {
-            reason = "feedback control arity disagrees with reflected uniform"; return false;
-        }
+    if (!feedback || !feedback->prepareFeedback()) {
+        reason = "feedback program could not be prepared";
+        return false;
     }
+    if (!feedback->validateConfiguration(texture.data, reason)) return false;
     if (texture.numFrames != 1 || !texture.passes.empty() || texture.hasLooper() ||
         !feedback->getTextures().empty() || !feedback->getBuffers().empty() || !feedback->vars.empty()) {
         reason = "feedback auxiliary resources are unsupported"; return false;

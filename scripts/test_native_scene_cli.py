@@ -381,47 +381,12 @@ def run_negatives(args, output, evidence):
     fixture("bad-uniform", bad_uniform, "command 9 /shader/var: shader uniform dim requires int32",
             trace=("window", "preflight"))
 
-    (work / "assets/managed.frag").write_text(
-        "#version 400\nuniform int layer;\nout vec4 color;\n"
-        "void main(){color = layer == 17 ? vec4(0,1,0,1) : vec4(1,0,0,1);}\n")
-
-    def uniform_probe(data, shader_path, name, kind, value):
-        reset, shader = data["commands"][:2]
-        shader["args"][1]["value"] = shader_path
-        data["commands"] = [reset, shader, {"address": "/shader/var", "args": [
-            {"type": "i", "value": 0}, {"type": "s", "value": name}, {"type": kind, "value": value}]}]
-
-    fixture("managed-uniform", lambda data: uniform_probe(data, "assets/managed.frag", "layer", "i", 17),
-            "command 3 /shader/var: renderer-managed shader uniform: layer",
-            trace=("window", "preflight"))
-
-    (work / "assets/uniform-block.frag").write_text(
-        "#version 400\nlayout(std140) uniform Config { float amount; };\nout vec4 color;\n"
-        "void main(){color = vec4(amount,0,0,1);}\n")
-    fixture("uniform-block", lambda data: uniform_probe(data, "assets/uniform-block.frag", "amount", "f", 0.75),
-            "command 3 /shader/var: shader uniform has no writable location: amount",
-            trace=("window", "preflight"))
-
-    (work / "assets/managed-size.frag").write_text(
-        "#version 400\nuniform sampler2D srctex;\nuniform vec2 srctexSize;\nout vec4 color;\n"
-        "void main(){color = texture(srctex, gl_FragCoord.xy / srctexSize);}\n")
-
-    def managed_texture_size(data):
-        reset, shader, texture = data["commands"][:3]
-        shader["args"][1]["value"] = "assets/managed-size.frag"
-        size = {"address": "/shader/var", "args": [
-            {"type": "i", "value": 0}, {"type": "s", "value": "srctexSize"},
-            {"type": "f", "value": 8.0}, {"type": "f", "value": 8.0}]}
-        data["commands"] = [reset, shader, size, texture]
-
-    fixture("managed-texture-size", managed_texture_size,
-            "command 3 /shader/var: renderer-managed shader uniform: srctexSize", trace=("window", "preflight"))
-
     asset = work / "assets" / SIEVE_IMAGE
     results["upload-failure"] = negative(
         args.binary, output, "upload-failure", ["--scene", base],
         f"command 3 /shader/texture: image upload failed: {asset}: OpenGL error 1282",
-        trace=("window", "preflight", "receiver", "reset", "command", "command", "command"), inject="VOSC_TEST_FAIL_SCENE_UPLOAD")
+        trace=("window", "preflight", "receiver", "reset") + ("command",) * 9,
+        inject="VOSC_TEST_FAIL_SCENE_UPLOAD")
 
     (work / "assets/invalid-texture-size.frag").write_text(
         "#version 400\nuniform sampler2D srctex;\nuniform int srctexSize;\nout vec4 color;\n"

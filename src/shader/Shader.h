@@ -38,6 +38,7 @@ public:
         GLenum type;
         GLint size;
         bool indexed;
+        GLint location;
 
         bool isArray() const { return indexed || size != 1; }
     };
@@ -52,6 +53,11 @@ public:
     static map<string, ofxAutoReloadedShader> cache;
     static string random();
     static bool isRendererUniform(const string& name);
+    static const char* sceneUniformError(const Uniforms& uniforms, const string& name);
+    static std::string sceneTextureError(const Uniforms& uniforms, const string& name,
+                                         bool explicitSize);
+    shared_ptr<Texture> loadSceneTexture(const string& name, const string& path, bool feedback,
+                                         const glm::vec2& defaultSize);
     
     Shader() : VarsHolder(), texLoc(0) {
     }

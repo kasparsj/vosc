@@ -227,6 +227,10 @@ bool ShaderPingPongTex::prepareFeedback() {
     return true;
 }
 
+namespace {
+const std::set<std::string> holderBuiltins = {"size", "speed", "color", "tint", "timePct"};
+}
+
 bool ShaderPingPongTex::validateConfiguration(TexData& data, std::string& reason) const {
     std::string retainedSource;
     if (!getExportSource(retainedSource, reason)) return false;
@@ -280,30 +284,9 @@ bool ShaderPingPongTex::validateConfiguration(TexData& data, std::string& reason
         }
     }
     if (!isShaderLoaded()) { reason = "feedback shader is not compiled"; return false; }
-    const auto& types = getUniforms();
-    for (const auto& entry : types) {
-        if (entry.second.isArray()) {
-            reason = "feedback uniform arrays are unsupported"; return false;
-        }
-    }
-    static const std::set<std::string> holderBuiltins = {"size", "speed", "color", "tint", "timePct"};
-    static const std::map<std::string, GLenum> shaderBuiltins = {{"time", GL_FLOAT}, {"resolution", GL_FLOAT_VEC2},
-        {"random", GL_INT}, {"srctex", GL_SAMPLER_2D}, {"projectionMatrix", GL_FLOAT_MAT4},
-        {"modelViewMatrix", GL_FLOAT_MAT4}, {"modelViewProjectionMatrix", GL_FLOAT_MAT4}, {"textureMatrix", GL_FLOAT_MAT4}};
-    size_t controls = 0;
+    std::map<std::string, int> controls;
     for (const auto& item : data.getVars()) {
         if (holderBuiltins.count(item.first)) continue;
-        if (++controls > 64 || shaderBuiltins.count(item.first)) {
-            reason = "feedback controls exceed bounds or override a built-in"; return false;
-        }
-        const auto reflected = types.find(item.first);
-        int expected = 0;
-        if (reflected != types.end()) {
-            if (reflected->second.type == GL_FLOAT) expected = 1;
-            else if (reflected->second.type == GL_FLOAT_VEC2) expected = 2;
-            else if (reflected->second.type == GL_FLOAT_VEC3) expected = 3;
-            else if (reflected->second.type == GL_FLOAT_VEC4) expected = 4;
-        }
         int actual = 0;
         std::vector<float> components;
         if (auto value = std::dynamic_pointer_cast<Variable<float>>(item.second)) {
@@ -316,8 +299,41 @@ bool ShaderPingPongTex::validateConfiguration(TexData& data, std::string& reason
             if (value->isConst() && value->size() == 1) { actual = 4; components = {value->get().r, value->get().g, value->get().b, value->get().a}; }
         }
         for (float component : components) if (!std::isfinite(component) || std::abs(component) > 1000000.f) actual = 0;
-        if (!expected || actual != expected) {
+        controls.emplace(item.first, actual);
+    }
+    return validateUniforms(getUniforms(), controls, reason);
+}
+
+bool ShaderPingPongTex::validateUniforms(const Uniforms& types, const std::map<std::string, int>& controls,
+                                        std::string& reason) {
+    for (const auto& entry : types) {
+        if (entry.second.isArray()) {
+            reason = "feedback uniform arrays are unsupported"; return false;
+        }
+    }
+    static const std::map<std::string, GLenum> shaderBuiltins = {{"time", GL_FLOAT}, {"resolution", GL_FLOAT_VEC2},
+        {"random", GL_INT}, {"srctex", GL_SAMPLER_2D}, {"projectionMatrix", GL_FLOAT_MAT4},
+        {"modelViewMatrix", GL_FLOAT_MAT4}, {"modelViewProjectionMatrix", GL_FLOAT_MAT4}, {"textureMatrix", GL_FLOAT_MAT4}};
+    if (controls.size() > 64) {
+        reason = "feedback controls exceed bounds"; return false;
+    }
+    for (const auto& control : controls) {
+        if (shaderBuiltins.count(control.first) || control.first == "numLights") {
+            reason = "feedback control overrides a built-in"; return false;
+        }
+        const auto reflected = types.find(control.first);
+        int expected = 0;
+        if (reflected != types.end()) {
+            if (reflected->second.type == GL_FLOAT) expected = 1;
+            else if (reflected->second.type == GL_FLOAT_VEC2) expected = 2;
+            else if (reflected->second.type == GL_FLOAT_VEC3) expected = 3;
+            else if (reflected->second.type == GL_FLOAT_VEC4) expected = 4;
+        }
+        if (!expected || control.second != expected) {
             reason = "feedback controls require exact reflected float scalar/vector arity"; return false;
+        }
+        if (reflected->second.location < 0) {
+            reason = "feedback control has no writable location: " + control.first; return false;
         }
     }
     for (const auto& uniform : types) {
@@ -326,7 +342,7 @@ bool ShaderPingPongTex::validateConfiguration(TexData& data, std::string& reason
             if (uniform.second.type != builtin->second) { reason = "feedback built-in uniform type mismatch"; return false; }
             continue;
         }
-        if (!data.getVars().count(uniform.first)) {
+        if (!controls.count(uniform.first) && !holderBuiltins.count(uniform.first)) {
             reason = "feedback has unsupported or unbound uniforms"; return false;
         }
     }

@@ -412,7 +412,7 @@ def scalar_export_and_trial(renderer, client, output):
     original, _ = observe(client, output, "scalar-export-original")
     expect_binding(original, expected)
     exported = client.call("export_scene", {})
-    write_folder(output / "scalar-export", exported["result"]["recipe"])
+    write_folder(output / "scalar-export", exported["result"]["recipe"], scd=True)
 
     session = Session(renderer.socket, output)
     baseline = session.capture("scalar-trial-baseline.png", session.scene()["revision"])

@@ -24,7 +24,7 @@ class FeedbackSclangTests(unittest.TestCase):
     def test_generated_relocated_feedback_wire(self):
         with tempfile.TemporaryDirectory(prefix='vosc-feedback-sc-') as temp:
             original=Path(temp)/'original'
-            cli.write_folder(original,feedback_descriptor())
+            cli.write_folder(original,feedback_descriptor(),scd=True)
             relocated=Path(temp)/'Unicode ā space'
             original.rename(relocated)
             scene=relocated/'scene.scd'
@@ -46,7 +46,7 @@ class FeedbackSclangTests(unittest.TestCase):
     def test_generated_feedback_distinct_renderer_root(self):
         import json
         with tempfile.TemporaryDirectory(prefix='vosc-feedback-roots-') as temp:
-            folder=Path(temp)/'local ā space';cli.write_folder(folder,feedback_descriptor())
+            folder=Path(temp)/'local ā space';cli.write_folder(folder,feedback_descriptor(),scd=True)
             renderer_root='/private/renderer separate λ root'
             scene=folder/'scene.scd'
             scene.write_text(scene.read_text().replace('var rendererRoot = sceneRoot;',f'var rendererRoot = {json.dumps(renderer_root,ensure_ascii=False)};'))
@@ -76,7 +76,7 @@ class FeedbackSclangTests(unittest.TestCase):
                 self.assertEqual(count,1);main.write_text(source);cases.append((label,fixture,False))
             for label,quark,stock in cases:
                 with self.subTest(case=label):
-                    folder=root/('scene-'+label);cli.write_folder(folder,feedback_descriptor())
+                    folder=root/('scene-'+label);cli.write_folder(folder,feedback_descriptor(),scd=True)
                     with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as listener:
                         listener.bind(('127.0.0.1',0));listener.settimeout(.15)
                         code,output,_=_run_scene(folder/'scene.scd',listener.getsockname()[1],quark=quark,stock_only=stock)

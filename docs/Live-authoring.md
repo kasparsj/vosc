@@ -97,15 +97,17 @@ python3 scripts/scene_recipe.py --socket "$HOME/.local/share/vosc/control.sock" 
 ```
 
 If you launched with a socket override, use that path here.
-The helper validates the strict descriptor and atomically publishes a readable
-`scene.scd`, copied fragment/image assets, and README. Move or edit that folder,
-then evaluate `scene.scd` in SuperCollider with VisualsQuark scene replay API 1.
-The source uses `OSCVisuals.replay`; the folder README describes the required
-Quark version. Export does not install or recompile classes. Expressions retain runtime `t`/`f`,
-iteration `i`/`total`, shared controls and input mappings. Replay uses ordinary ordered OSC;
-runtime failure may leave earlier commands applied and is reported without
-rollback. The [feedback extension](Feedback-composition-contract.md) supports a bounded
-shader feedback texture and requires VisualsQuark feedback replay API 1.
+The helper validates the descriptor and publishes `scene.vosc.json`, its
+referenced assets, and replay instructions together. Keep the files together
+when moving or editing the folder. Launch with
+`vosc --scene NEW_DIRECTORY/scene.vosc.json`.
+
+Add `--scd` to generate the SuperCollider companion. It uses
+`OSCVisuals.replay` with VisualsQuark scene replay API 1. The
+[feedback extension](Feedback-composition-contract.md) supports a bounded
+shader feedback texture and requires VisualsQuark feedback replay API 1 for
+SuperCollider replay. Expressions retain runtime `t`/`f`, iteration
+`i`/`total`, shared controls, and input mappings.
 Unsupported state such as video, custom geometry, camera, effects, buffers and
 object aliases causes the whole export to fail with a reason.
 

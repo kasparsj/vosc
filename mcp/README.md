@@ -120,11 +120,9 @@ local helper to validate it and atomically publish a new scene folder:
 python3 scripts/scene_recipe.py --socket "$VOSC_CONTROL_SOCKET" export "My scene"
 ```
 
-Edit or relocate `scene.scd` and its `assets/`, then evaluate it with
-SuperCollider with VisualsQuark scene replay API 1 (`OSCVisuals.replay`). File
-generation needs no Quark; execution needs the updated class library. No classes
-are installed or recompiled automatically. Recipes with a supported feedback texture
-also require VisualsQuark feedback replay API 1. The replay preflights files
-and bundle size before sending one ordered immediate bundle. Runtime failure is sequential and may leave partial state; no hidden JSON
-snapshot, rollback, or automatic resend is involved. See the
-[editable scene contract](../docs/Editable-scene-contract.md).
+Launch the exported JSON with `vosc --scene "My scene/scene.vosc.json"`.
+Keep its referenced assets alongside the manifest when moving the folder.
+Add `--scd` to also generate an editable SuperCollider companion. Evaluate it
+with VisualsQuark scene replay API 1 (`OSCVisuals.replay`). Feedback scenes
+also require VisualsQuark feedback replay API 1 for SuperCollider replay.
+See the [editable scene contract](../docs/Editable-scene-contract.md).

@@ -18,8 +18,8 @@
 
 ### Editable scenes and OSC
 
-- Added export of portable scene folders containing editable SuperCollider source and assets. Supported recipes preserve layer settings, shader source, expressions, images, and input calibration. Replay clears obsolete scene-owned resources and queued commands before rebuilding the composition. [Editable scene contract](docs/Editable-scene-contract.md)
-- Added export and replay for a single supported default ping-pong shader texture. Replay starts both feedback buffers from white. Recipes with feedback require VisualsQuark feedback replay API 1. [Feedback composition](docs/Feedback-composition-contract.md) · [Editable scene folders](mcp/README.md#editable-scene-folders)
+- Scene export writes portable `scene.vosc.json` and assets by default. Add `--scd` to include editable SuperCollider source. Open the JSON with `vosc --scene`. Supported recipes preserve layer settings, shader source, expressions, images, and input calibration. Replay clears obsolete scene-owned resources and queued commands before rebuilding the composition. [Editable scene contract](docs/Editable-scene-contract.md)
+- Added export and replay for a single supported default ping-pong shader texture. Replay starts both feedback buffers from white. SuperCollider replay of feedback requires VisualsQuark feedback replay API 1. [Feedback composition](docs/Feedback-composition-contract.md) · [Editable scene folders](mcp/README.md#editable-scene-folders)
 - Added layout-name shorthand for `/layers` and `/layers/reset`, amplitude-only `/input/data`, three-component JSON arrays for `/layer/pos`, and reflected float and integer vector bindings for layer shaders. Added `/layer/blend`, `/layer/speed`, and shader texture size, speed, and settings commands. [OSC reference](docs/OSC-reference.md)
 
 ### Build, reliability, and examples

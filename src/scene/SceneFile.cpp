@@ -42,8 +42,6 @@ fs::path resolveAsset(const fs::path& root, const std::string& name) {
     const auto relation = resolved.lexically_relative(root);
     if (relation.empty() || *relation.begin() == ".." || !fs::is_regular_file(resolved))
         throw std::runtime_error("asset must be a regular file inside the scene folder: " + name);
-    if (!validString(resolved.string()) || resolved.string().find(':') != std::string::npos)
-        throw std::runtime_error("resolved asset path is outside OSC path bounds: " + name);
     return resolved;
 }
 
@@ -137,15 +135,8 @@ bool objectShape(const ofJson& value, std::initializer_list<const char*> keys) {
     return std::all_of(keys.begin(), keys.end(), [&](auto key) { return value.count(key) == 1; });
 }
 
-bool sceneAddress(const std::string& address) {
-    static const std::set<std::string> allowed{
-        "/layers/reset", "/input", "/shader", "/shader/texture", "/shader/var", "/layer/pos",
-        "/layer/size", "/layer/tint", "/layer/alpha", "/layer/visible"};
-    return allowed.count(address) != 0;
-}
-
 int assetIndex(const std::string& address) {
-    if (address == "/shader") return 1;
+    if (address == "/shader" || address == "/tex") return 1;
     if (address == "/shader/texture") return 2;
     return -1;
 }
@@ -185,7 +176,7 @@ File load(const fs::path& path) {
     File result;
     result.path = fs::canonical(path);
     if (!fs::is_regular_file(result.path)) throw std::runtime_error("scene must be a regular file");
-    const auto bytes = readBounded(result.path, MiB);
+    const auto bytes = readBounded(result.path, MaxManifestBytes);
     if (bytes.find('\0') != std::string::npos) throw std::runtime_error("scene file contains NUL");
     checkJsonNumbers(bytes);
     std::vector<std::set<std::string>> objectKeys;
@@ -230,7 +221,6 @@ File load(const fs::path& path) {
             throw std::runtime_error(prefix + ": expected address and args");
         const auto address = entry["address"].get<std::string>();
         try {
-            if (!sceneAddress(address)) throw std::runtime_error("address is outside scene v1");
             const auto& args = entry["args"];
             if (args.size() > 6) throw std::runtime_error("too many arguments");
             Command command;
@@ -249,10 +239,12 @@ File load(const fs::path& path) {
                     if (type != "asset" || !value.is_string() || !validString(value.get<std::string>()))
                         throw std::runtime_error("expected a scene-relative asset argument");
                     command.asset = resolveAsset(result.path.parent_path(), value.get<std::string>());
+                    command.feedback = address == "/tex" && command.asset.extension() == ".frag";
+                    const auto source = (command.feedback ? "shader_pp:" : "") + value.get<std::string>();
                     assets.insert(command.asset);
                     if (assets.size() > 64) throw std::runtime_error("scene exceeds 64 distinct assets");
                     try {
-                        const bool fragment = address == "/shader";
+                        const bool fragment = address == "/shader" || command.feedback;
                         auto& total = fragment ? shaderBytes : imageBytes;
                         const auto remaining = (fragment ? MiB : 64 * MiB) - total;
                         command.assetBytes = readBounded(command.asset,
@@ -263,11 +255,8 @@ File load(const fs::path& path) {
                     } catch (const std::exception& error) {
                         throw std::runtime_error(command.asset.string() + ": " + error.what());
                     }
-                    command.message.addStringArg(command.asset.string());
-                } else if ((type == "s" && index > 0 &&
-                            ((address.rfind("/layer/", 0) == 0 && address != "/layer/alpha") ||
-                             (address == "/shader/var" && index > 1))) ||
-                           !appendOscValue(command.message, type, value)) {
+                    command.message.addStringArg(source);
+                } else if (!appendOscValue(command.message, type, value)) {
                     throw std::runtime_error("invalid type or value for argument " + std::to_string(index + 1));
                 }
             }

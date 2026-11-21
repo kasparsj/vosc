@@ -71,7 +71,7 @@ def capture_step(renderer,client,step,path):
 
 def export_folder(renderer,folder):
     result=subprocess.run([sys.executable,str(ROOT/'scripts/scene_recipe.py'),'--socket',
-        str(renderer.socket),'export',str(folder)],cwd=ROOT,capture_output=True,text=True,timeout=30)
+        str(renderer.socket),'export',str(folder),'--scd'],cwd=ROOT,capture_output=True,text=True,timeout=30)
     if result.returncode: raise RuntimeError(f'CLI export failed: {result.stdout}\n{result.stderr}')
     return {'return_code':result.returncode,'stdout':result.stdout,'stderr':result.stderr}
 

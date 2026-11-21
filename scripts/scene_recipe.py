@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export an editable VOSC OSC/SuperCollider scene folder."""
+"""Export a portable VOSC scene folder."""
 
 from __future__ import annotations
 
@@ -17,9 +17,14 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "mcp"))
-from engine_client import EngineClient, EngineClientError  # noqa: E402
-from scene_recipe_schema import (RecipeValidationError, validate_descriptor,
+from engine_client import EXPORT_EXCHANGE_TIMEOUT, RESPONSE_LIMIT, EngineClient, EngineClientError  # noqa: E402
+from scene_recipe_schema import (MAX_BUNDLE, MAX_STRING, RecipeValidationError, validate_descriptor,
                                  validate_export_reply)  # noqa: E402
+
+
+# The engine response includes all commands. One extra MiB covers the escaped
+# title, native header, and at most 2048 * 6 different numeric spellings.
+MAX_MANIFEST_BYTES = RESPONSE_LIMIT + 1024 * 1024
 
 
 def _sc_string(value: str) -> str:
@@ -141,8 +146,45 @@ def render_scene(descriptor: dict) -> str:
     return "\n".join(lines)
 
 
-def render_readme(descriptor: dict) -> str:
-    return f"""# Editable VOSC scene
+def render_manifest(descriptor: dict, title: str) -> str:
+    try:
+        title_bytes = title.encode("utf-8")
+    except UnicodeError as error:
+        raise ValueError("scene title must be valid UTF-8") from error
+    if (not title.strip(" \t\r\n") or any(ch in title for ch in "\0\r\n") or
+            len(title_bytes) > MAX_STRING):
+        raise ValueError("scene title must be a bounded nonempty single-line string")
+
+    resolution = descriptor["resolution"]
+    settings = {
+        "version": 1,
+        "title": title,
+        "size": [resolution["width"], resolution["height"]],
+        "onset_gate": descriptor["onset_gate"],
+    }
+    header = json.dumps(settings, indent=2, ensure_ascii=False)
+    commands = ",\n".join(
+        "    " + json.dumps(command, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+        for command in descriptor["commands"])
+    return header[:-2] + ',\n  "commands": [\n' + commands + "\n  ]\n}\n"
+
+
+def render_readme(descriptor: dict, *, scd: bool) -> str:
+    native = f"""# Editable VOSC scene
+
+Launch with `vosc --scene scene.vosc.json`. Edit the typed commands in
+`scene.vosc.json` and keep any referenced files in `assets/` alongside it
+when moving the folder.
+
+This recipe captures configuration. Runtime inputs, animation phase, and
+feedback history are recreated at replay.
+
+Recipe contains {len(descriptor['commands'])} setup commands and {len(descriptor['assets'])} assets.
+"""
+    if not scd:
+        return native
+    return native + """
+## SuperCollider
 
 Edit `scene.scd` and the files in `assets/`, then evaluate the whole saved file in SuperCollider 3.14.1.
 This scene uses `OSCVisuals` from VisualsQuark with scene replay API 1:
@@ -157,16 +199,13 @@ Runtime shader/image failures can leave earlier commands applied; there is no ro
 
 The default endpoint is local port 33333. For a private or remote renderer, edit `rendererHost`,
 `rendererPort`, and `rendererRoot` near the top of `scene.scd`. Remote assets must already be copied
-to a path visible to the renderer. No JSON snapshot is required. After replay reports `applied`, use
+to a path visible to the renderer. After replay reports `applied`, use
 `~exportedScene.send(...)` for ordinary immediate live changes. Live Array arguments use the ordinary
 OSCVisuals JSON-string representation; replay keeps typed flattened OSC components.
 
 The Quark and scene body are trusted executable SuperCollider source. A retained callback recorder
 expires when its callback returns. The ordinary OSCVisuals instance remains usable after success,
-failure or timeout and never retries automatically. Shader/image files remain in the exported folder;
-no separate sender helper or JSON snapshot is required.
-
-Recipe: {len(descriptor['commands'])} setup commands, {len(descriptor['assets'])} assets.
+failure or timeout and never retries automatically.
 """
 
 
@@ -190,11 +229,49 @@ def _rename_exclusive(source: Path, destination: Path, *, parent_fd: int | None 
         raise OSError(code, os.strerror(code), str(destination))
 
 
-def write_folder(destination: Path, descriptor: dict) -> None:
+def validate_companion(descriptor: dict, destination: Path) -> None:
+    # OSCVisualsReplay resolves each asset and sends one immediate OSC bundle.
+    root = str(destination)
+    if descriptor["assets"] and ":" in root:
+        raise ValueError("SuperCollider replay cannot use an asset folder containing a colon")
+    feedback = {asset["name"] for asset in descriptor["assets"] if asset["kind"] == "feedback_fragment"}
+
+    def osc_string(value):
+        return (len(value.encode("utf-8")) + 4) & ~3
+
+    token = "0" * 32
+
+    def message(address, args):
+        return 4 + osc_string(address) + osc_string("," + "i" * len(args)) + sum(
+            osc_string(arg) if isinstance(arg, str) else 4 for arg in args)
+
+    size = 16 + message("/scene/reset", [token, 0, 0, 0])
+    size += message("/scene/replay/end", [token, 0, 0, 0])
+    for command in descriptor["commands"]:
+        args = []
+        for arg in command["args"]:
+            value = arg["value"]
+            if arg["type"] == "asset":
+                prefix = "shader_pp:" if value in feedback else ""
+                value = prefix + str(destination / value)
+                if len(value.encode("utf-8")) > MAX_STRING:
+                    raise ValueError("SuperCollider replay asset path exceeds its OSC string limit")
+            args.append(value)
+        size += message("/scene/command", [token, 0, command["address"], *args])
+    if size > MAX_BUNDLE:
+        raise ValueError(f"SuperCollider replay bundle exceeds {MAX_BUNDLE} bytes")
+
+
+def write_folder(destination: Path, descriptor: dict, *, scd: bool = False) -> None:
     validate_descriptor(descriptor)
     if destination.name in {"", ".", ".."}:
         raise ValueError("destination must name a new directory")
+    manifest = render_manifest(descriptor, destination.name)
+    if len(manifest.encode("utf-8")) > MAX_MANIFEST_BYTES:
+        raise ValueError(f"scene manifest exceeds {MAX_MANIFEST_BYTES} bytes")
     parent = destination.parent.resolve(strict=False)
+    if scd:
+        validate_companion(descriptor, parent / destination.name)
     parent.mkdir(parents=True, exist_ok=True)
     parent = parent.resolve(strict=True)
     destination = parent / destination.name
@@ -216,8 +293,10 @@ def write_folder(destination: Path, descriptor: dict) -> None:
             data = asset["data"].encode("utf-8") if asset["encoding"] == "utf8" else __import__("base64").b64decode(asset["data"], validate=True)
             with path.open("xb") as stream:
                 stream.write(data); stream.flush(); os.fsync(stream.fileno())
-        (staging / "scene.scd").write_text(render_scene(descriptor), encoding="utf-8", newline="\n")
-        (staging / "README.md").write_text(render_readme(descriptor), encoding="utf-8", newline="\n")
+        (staging / "scene.vosc.json").write_text(manifest, encoding="utf-8", newline="\n")
+        if scd:
+            (staging / "scene.scd").write_text(render_scene(descriptor), encoding="utf-8", newline="\n")
+        (staging / "README.md").write_text(render_readme(descriptor, scd=scd), encoding="utf-8", newline="\n")
         parent_info = os.fstat(parent_fd)
         current_parent = parent.stat()
         if (parent_info.st_dev, parent_info.st_ino) != (current_parent.st_dev, current_parent.st_ino):
@@ -245,14 +324,15 @@ def write_folder(destination: Path, descriptor: dict) -> None:
 
 
 async def run(args: argparse.Namespace) -> int:
-    reply = await EngineClient(args.socket).query("export_scene", {})
+    reply = await EngineClient(args.socket).query("export_scene", {}, timeout=EXPORT_EXCHANGE_TIMEOUT)
     validate_export_reply(reply)
     if reply["ok"] is False:
         print(json.dumps(reply, ensure_ascii=False, sort_keys=True))
         return 2
     descriptor = reply["result"]["recipe"]
-    write_folder(args.directory, descriptor)
+    write_folder(args.directory, descriptor, scd=args.scd)
     print(json.dumps({"status": "exported", "directory": str(args.directory),
+                      "manifest": str(args.directory / "scene.vosc.json"),
                       "commands": len(descriptor["commands"]), "assets": len(descriptor["assets"])},
                      ensure_ascii=False, sort_keys=True))
     return 0
@@ -262,7 +342,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--socket", required=True, type=Path)
     sub = parser.add_subparsers(dest="command", required=True)
-    export = sub.add_parser("export"); export.add_argument("directory", type=Path)
+    export = sub.add_parser("export", help="write scene.vosc.json and referenced assets")
+    export.add_argument("directory", type=Path)
+    export.add_argument("--scd", action="store_true", help="also write a SuperCollider scene.scd companion")
     args = parser.parse_args()
     if not args.socket.is_absolute(): parser.error("--socket must be absolute")
     if args.command != "export": parser.error("unsupported command")

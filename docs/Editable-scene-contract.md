@@ -6,12 +6,33 @@ Export a supported scene from the local engine socket into a new folder:
 python3 scripts/scene_recipe.py --socket "$VOSC_CONTROL_SOCKET" export "My scene"
 ```
 
-The folder contains readable `scene.scd`, a README, and copies of the fragment
-shaders and images needed for replay. The exporter validates the whole scene
-before creating the folder. Choose a new destination each time. Folder export
-uses Python 3.11 or later and macOS exclusive rename.
+The folder contains an editable `scene.vosc.json`, the referenced fragment
+shaders and images in `assets/`, and replay instructions. Choose a new
+destination each time. The exporter validates the recipe and publishes the
+whole folder together. Folder export uses Python 3.11 or later and macOS
+exclusive rename.
+
+```sh
+vosc --scene "My scene/scene.vosc.json"
+```
+
+The JSON uses the [native scene format](../README.md#run-a-native-scene).
+The manifest is bounded to 9 MiB. Image assets retain the 4 MiB encoded
+export limit and share a 64 MiB decoded budget, counted per texture binding.
+Exported images are limited to 2,048 pixels per side.
+Native replay supports colon-containing folder paths. The folder CLI allows up
+to 15 seconds for its read-only export exchange.
+
+Keep the manifest and assets together when moving the folder. Startup reports
+`VOSC_SCENE_READY` after the saved configuration composes its first frame.
 
 ## Replay in SuperCollider
+
+Add `--scd` to the export command to include an editable `scene.scd`
+alongside the JSON. Both files start with the same scene configuration and
+share the exported assets. For asset-bearing SuperCollider exports, use a
+colon-free destination path and keep the replay bundle within 61,440 bytes.
+The exporter reports these companion limits before publishing the folder.
 
 Use [VisualsQuark at the tested revision](https://github.com/kasparsj/VisualsQuark/tree/33837286c11299bc940bb8bfed286a1cd6294d16)
 or a revision that exposes `OSCVisuals.sceneReplayVersion == 1`. Open and
@@ -61,9 +82,13 @@ earlier commands applied. After an `applied` result the retained
   or OSC input mappings and calibration.
 - [One bounded default feedback texture](Feedback-composition-contract.md).
 
-Unsupported state fails the export with a reason. Examples include webcam or
-video, custom geometry and shader stages, camera, lights and effects, buffers,
-and shared resource aliases. The recipe captures configuration. Animation phase,
+Unsupported state fails the export with a reason. Bindings that cannot be
+written through a shader uniform location, plus renderer-owned `layer`,
+`offset`, and `numLights` bindings, fail export and native preflight.
+The same applies when a layer setting overwrites a shader assignment in the
+draw path. Other unsupported state includes webcam or video, custom geometry
+and shader stages, camera, lights and effects, buffers, and shared resource
+aliases. The recipe captures configuration. Animation phase,
 input samples, and live feedback history are recreated by running the scene.
 
 See the [engine API](Engine-api.md#editable-scene-export) for descriptor access

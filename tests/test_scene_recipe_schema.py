@@ -249,11 +249,35 @@ class DescriptorTests(unittest.TestCase):
 
 @unittest.skipUnless(sys.platform == "darwin", "scene-folder publication requires macOS atomic rename")
 class FolderTests(unittest.TestCase):
-    def test_atomic_folder_contains_only_editable_artifacts(self):
+    def test_default_folder_contains_native_manifest(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            destination = Path(temporary) / "Native scene ü"
+            value = descriptor()
+            cli.write_folder(destination, value)
+            self.assertEqual({"README.md", "scene.vosc.json", "assets"},
+                             {path.name for path in destination.iterdir()})
+            expected = {
+                "version": 1,
+                "title": destination.name,
+                "size": [value["resolution"]["width"], value["resolution"]["height"]],
+                "onset_gate": value["onset_gate"],
+                "commands": value["commands"],
+            }
+            manifest = json.loads((destination / "scene.vosc.json").read_text())
+            self.assertEqual(expected, manifest)
+            self.assertNotIn("SuperCollider", (destination / "README.md").read_text())
+            companion = Path(temporary) / "companion" / destination.name
+            cli.write_folder(companion, value, scd=True)
+            self.assertEqual((destination / "scene.vosc.json").read_bytes(),
+                             (companion / "scene.vosc.json").read_bytes())
+            self.assertEqual((destination / "assets/layer-0.frag").read_bytes(),
+                             (companion / "assets/layer-0.frag").read_bytes())
+
+    def test_optional_supercollider_companion(self):
         with tempfile.TemporaryDirectory() as temporary:
             destination = Path(temporary) / "moved scene ü"
-            cli.write_folder(destination, descriptor())
-            self.assertEqual({"README.md", "scene.scd", "assets"},
+            cli.write_folder(destination, descriptor(), scd=True)
+            self.assertEqual({"README.md", "scene.vosc.json", "scene.scd", "assets"},
                              {path.name for path in destination.iterdir()})
             text = (destination / "scene.scd").read_text()
             self.assertIn("thisProcess.nowExecutingPath", text)
@@ -268,7 +292,7 @@ class FolderTests(unittest.TestCase):
             with self.assertRaises(FileExistsError): cli.write_folder(destination, descriptor())
 
     def test_scene_and_readme_write_failures_clean_owned_staging(self):
-        for filename in ("scene.scd", "README.md"):
+        for filename in ("scene.vosc.json", "scene.scd", "README.md"):
             with self.subTest(filename=filename), tempfile.TemporaryDirectory() as temporary:
                 parent = Path(temporary)
                 destination = parent / "scene"
@@ -284,7 +308,7 @@ class FolderTests(unittest.TestCase):
 
                 with mock.patch.object(Path, "open", fail_output):
                     with self.assertRaisesRegex(OSError, "injected output write failure"):
-                        cli.write_folder(destination, descriptor())
+                        cli.write_folder(destination, descriptor(), scd=True)
                 self.assertEqual(1, len(failures))
                 self.assertFalse(destination.exists())
                 self.assertEqual([], list(parent.iterdir()))
@@ -294,7 +318,7 @@ class FolderTests(unittest.TestCase):
             destination = Path(temporary) / "scene"
             with mock.patch.dict("os.environ", {"VISUALS_QUARK_PATH": "/absent/VisualsQuark"}), \
                     mock.patch.object(Path, "read_bytes", side_effect=AssertionError("export must not read client source")):
-                cli.write_folder(destination, descriptor())
+                cli.write_folder(destination, descriptor(), scd=True)
             self.assertFalse((destination / "support").exists())
             self.assertIn("VisualsQuark", (destination / "README.md").read_text())
             self.assertIn("OSCVisuals(rendererHost, rendererPort)", (destination / "scene.scd").read_text())
@@ -335,7 +359,7 @@ class FolderTests(unittest.TestCase):
                 cli.write_folder(link / "scene", descriptor())
             finally:
                 cli._rename_exclusive = real_rename
-            self.assertTrue((original / "scene/scene.scd").is_file())
+            self.assertTrue((original / "scene/scene.vosc.json").is_file())
             self.assertFalse((redirected / "scene").exists())
 
     def test_replaced_staging_inode_rejects_and_is_not_deleted(self):
@@ -344,14 +368,14 @@ class FolderTests(unittest.TestCase):
             real_readme = cli.render_readme
             replacement: Path | None = None
 
-            def replace_staging(value):
+            def replace_staging(value, *, scd):
                 nonlocal replacement
                 staging = next(parent.glob(".scene.staging-*"))
                 staging.rename(parent / "owned-original")
                 staging.mkdir()
                 (staging / "foreign-marker").write_text("preserve")
                 replacement = staging
-                return real_readme(value)
+                return real_readme(value, scd=scd)
 
             cli.render_readme = replace_staging
             try:
@@ -387,7 +411,7 @@ class CliReplyTests(unittest.TestCase):
         class FailedClient:
             def __init__(self, _socket): pass
 
-            async def query(self, method, params):
+            async def query(self, method, params, *, timeout):
                 self.method = method; self.params = params
                 return failure
 

@@ -20,6 +20,8 @@ public:
     bool trialCandidate = false;
     bool prepareFeedback();
     bool getExportSource(std::string& source, std::string& reason) const;
+    static bool validateUniforms(const Uniforms& uniforms, const std::map<std::string, int>& controls,
+                                 std::string& reason);
     bool validateConfiguration(TexData& data, std::string& reason) const;
     std::shared_ptr<ShaderPingPongTex> prepareTrial(TexData& data, const std::string& source,
                                                    std::string& code, std::string& reason);

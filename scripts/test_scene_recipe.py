@@ -1499,7 +1499,7 @@ def main() -> int:
         original = configure_scene(first, source_image, edited=False)
         exported = output / "Exported scene"
         cli = subprocess.run([sys.executable, str(ROOT / "scripts/scene_recipe.py"), "--socket", str(first.socket),
-                              "export", str(exported)], cwd=ROOT, capture_output=True, text=True, timeout=30)
+                              "export", str(exported), "--scd"], cwd=ROOT, capture_output=True, text=True, timeout=30)
         if cli.returncode != 0:
             raise RuntimeError(f"real CLI export failed: {cli.stdout}\n{cli.stderr}")
         relocated = output / "Relocated scene ü with spaces"

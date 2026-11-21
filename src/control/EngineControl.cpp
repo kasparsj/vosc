@@ -438,7 +438,7 @@ Json exportRecipe(RenderSystem& render, const RuntimeContext& runtime, const Com
     for (const auto& name : expressionOrder)
         commands.push_back(recipeCommand("/var", Json::array({recipeArg("s", name), sharedExpressions.at(name)})));
 
-    size_t fragmentBytes = 0, imageBytes = 0;
+    size_t fragmentBytes = 0, imageBytes = 0, decodedImageBytes = 0;
     for (size_t index = 0; index < render.getLayers().size(); ++index) {
         try {
             const auto& layerPtr = render.getLayers()[index];
@@ -475,13 +475,22 @@ Json exportRecipe(RenderSystem& render, const RuntimeContext& runtime, const Com
             for (const auto& binding : layer.shader.vars) {
                 const auto& types = layer.shader.getUniforms();
                 const auto reflected = types.find(binding.first);
-                if (reflected == types.end() || !recipeUniformComponents(reflected->second.type))
-                    throw Invalid("scene_unsupported", "shader binding is absent or has an unsupported reflected type: " + binding.first);
+                if (!layer.shader.isShaderLoaded())
+                    throw Invalid("scene_unsupported", "shader binding has no active program: " + binding.first);
+                if (const char* error = Shader::sceneUniformError(types, binding.first))
+                    throw Invalid("scene_unsupported", std::string(error) + ": " + binding.first);
+                if (!recipeUniformComponents(reflected->second.type))
+                    throw Invalid("scene_unsupported", "unsupported reflected shader uniform type: " + binding.first);
                 Json args = Json::array({recipeArg("i", int(index)), recipeArg("s", binding.first)});
                 for (const auto& item : describeVariable(binding.second, recipeUniformComponents(reflected->second.type))) args.push_back(item);
                 commands.push_back(recipeCommand("/shader/var", args));
             }
             for (const auto& binding : layer.shader.getTextures()) {
+                if (layer.shader.isShaderLoaded()) {
+                    const auto error = Shader::sceneTextureError(layer.shader.getUniforms(),
+                        binding.first, layer.shader.vars.count(binding.first + "Size"));
+                    if (!error.empty()) throw Invalid("scene_unsupported", error);
+                }
                 const auto& texture = binding.second;
                 auto feedback = texture ? dynamic_cast<ShaderPingPongTex*>(texture->tex.get()) : nullptr;
                 if (feedback) {
@@ -550,8 +559,13 @@ Json exportRecipe(RenderSystem& render, const RuntimeContext& runtime, const Com
                     !std::isfinite(configuredSize.x) || !std::isfinite(configuredSize.y) || configuredSize.x <= 0 ||
                     configuredSize.y <= 0 || configuredSize.x > 2048 || configuredSize.y > 2048)
                     throw Invalid("scene_unsupported", "texture size must be constant bounded 2D data and timePct must remain zero");
+                const auto& pixels = texture->getPixels();
+                const size_t decodedBytes = pixels.getWidth() * pixels.getHeight() * 4;
+                if (decodedBytes > scene::MaxDecodedImageBytes - decodedImageBytes)
+                    throw Invalid("scene_unsupported", "scene exceeds the 64 MiB decoded image budget");
+                decodedImageBytes += decodedBytes;
                 ofBuffer png;
-                if (!ofSaveImage(texture->getPixels(), png, OF_IMAGE_FORMAT_PNG))
+                if (!ofSaveImage(pixels, png, OF_IMAGE_FORMAT_PNG))
                     throw Invalid("scene_unsupported", "image PNG capture failed");
                 const std::string imageName = "assets/layer-" + std::to_string(index) + "-" + binding.first + ".png";
                 appendAsset(assets, imageName, "image", "base64", base64(png), fragmentBytes, imageBytes);
@@ -652,7 +666,10 @@ std::string EngineControl::handle(const std::string& line) {
         keys(request, {"id", "method"}, {"params"});
         text(id, 64, "id");
         text(request["method"], 64, "method");
-        return dispatch(request).dump();
+        auto response = dispatch(request).dump();
+        if (request["method"] == "export_scene" && response.size() >= 8 * 1024 * 1024)
+            throw Invalid("scene_unsupported", "scene exceeds the 8 MiB export response limit");
+        return response;
     } catch (const Invalid& error) {
         ofLogWarning("control") << error.what();
         return failure(id.is_string() ? id : Json(), error.code, error.what()).dump();
