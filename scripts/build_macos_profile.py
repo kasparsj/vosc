@@ -122,10 +122,11 @@ def build_xcode_inputs(sdk, addon_sdk, output, configuration, version):
     prepare_output(output, sdk, addon_sdk)
     compiled = prepare_core(sdk, output)
     core_configuration = "Debug" if configuration == "Debug" else "Release"
+    architectures = "arm64 x86_64" if configuration == "Release" else "arm64"
     command = [
         "xcodebuild", "-project", str(compiled / "project/osx/openFrameworksLib.xcodeproj"),
         "-target", "openFrameworks", "-configuration", core_configuration, f"OF_PATH={sdk}",
-        "ARCHS=arm64", "ONLY_ACTIVE_ARCH=YES", "MACOSX_DEPLOYMENT_TARGET=12.6",
+        f"ARCHS={architectures}", "ONLY_ACTIVE_ARCH=NO", "MACOSX_DEPLOYMENT_TARGET=12.6",
         "CODE_SIGNING_ALLOWED=NO", "-jobs", "6", "build",
     ]
     overlay = prepare_addon_overlay(addon_sdk, output)

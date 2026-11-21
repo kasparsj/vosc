@@ -6,7 +6,7 @@ This documentation tracks the current OSC and local authoring interfaces in `mai
 
 ## Installation
 
-- macOS: follow the [current Xcode build and quickstart](../README.md#building-with-xcode-apple-silicon).
+- macOS: follow the [current Xcode build and quickstart](../README.md#building-with-xcode-on-macos).
 - Run the [SuperCollider examples](../SuperCollider/README.md) or use [local MCP authoring](Live-authoring.md).
 
 ## Keyboard shortcuts

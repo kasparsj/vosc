@@ -1,5 +1,12 @@
 // Version-specific Xcode settings for openFrameworks 0.11.1.
 VOSC_OF_VERSION = 0.11.1
+ARCHS = arm64
+VOSC_RELEASE_EXCLUDED_SOURCES =
+VOSC_RELEASE_ULTRALIGHT_FLAGS = "$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libWebCore.dylib" \
+    "$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libUltralightCore.dylib" \
+    "$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libUltralight.dylib" \
+    "$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libAppCore.dylib" \
+    -rpath "$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx"
 
 // CoreOF.xcconfig uses SDK-relative inputs. Xcode include paths do not
 // expand OF_PATH, so list the 0.11.1 headers and libraries here.

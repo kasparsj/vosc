@@ -1,4 +1,6 @@
 #include "InputSystem.hpp"
+#include "ofxMidi.h"
+#include <exception>
 
 void InputSystem::setup(unsigned int port) {
     receiver.setup(port);
@@ -17,9 +19,14 @@ void InputSystem::forEachOscMessage(const std::function<void(const ofxOscMessage
 }
 
 void InputSystem::listMidiPorts() {
-    vector<string> inPorts = midiIn.getInPortList();
-    ofLog() << "MIDI in ports:";
-    for (int i = 0; i < inPorts.size(); i++) {
-        ofLog() << (ofToString(i) + ": " + inPorts[i]);
+    try {
+        ofxMidiIn midiIn;
+        const auto inPorts = midiIn.getInPortList();
+        ofLog() << "MIDI in ports:";
+        for (std::size_t i = 0; i < inPorts.size(); i++) {
+            ofLog() << (ofToString(i) + ": " + inPorts[i]);
+        }
+    } catch (const std::exception& error) {
+        ofLogWarning("MIDI") << "Could not list input ports: " << error.what();
     }
 }
