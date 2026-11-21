@@ -8,14 +8,11 @@
 #include "Logger.h"
 #include "VOSC.hpp"
 
-#define PORT 33333
-#define FRAME_RATE 60
-
 class ofApp : public ofBaseApp {
 
 public:
-    ofApp(unsigned int oscPort, std::optional<scene::File> startupScene, bool& startupFailed)
-        : oscPort(oscPort), startupScene(std::move(startupScene)), startupFailed(startupFailed) {}
+    ofApp(unsigned int oscPort, std::optional<scene::File> startupScene, bool& startupFailed, int frameRate)
+        : oscPort(oscPort), startupScene(std::move(startupScene)), startupFailed(startupFailed), frameRate(frameRate) {}
 
 	void setup();
 	void update();
@@ -42,6 +39,7 @@ private:
     unsigned int oscPort;
     std::optional<scene::File> startupScene;
     bool& startupFailed;
+    int frameRate;
 
     bool showConsole = false;
     std::shared_ptr<Logger> console;

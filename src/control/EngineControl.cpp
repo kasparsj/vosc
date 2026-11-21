@@ -10,6 +10,7 @@
 #include "../tex/ShaderPingPongTex.h"
 #include "../light/Lights.h"
 #include "ofAppGLFWWindow.h"
+#include <GLFW/glfw3.h>
 #include <algorithm>
 #include <chrono>
 #include <cctype>
@@ -1382,6 +1383,7 @@ Json EngineControl::recoveryTestSnapshot() const {
             {"managed_camera", managedCamera}, {"inputs", runtime.inputs.all().size()},
             {"input_samples", inputSamples},
             {"camera_values", cameraValues}, {"render_pipeline", render.recoveryTestPipeline()},
+            {"render_targets", render.recoveryTestTargets()},
             {"lights", Lights::get().all().size()}, {"tidal_notes", runtime.tidal->notes.size()},
             {"legacy_pending", commands.pendingCount()},
             {"frame", frame}, {"width", ofGetWidth()}, {"height", ofGetHeight()},

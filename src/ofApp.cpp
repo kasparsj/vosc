@@ -4,7 +4,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-	ofSetFrameRate(FRAME_RATE);
+	ofSetFrameRate(frameRate);
 	ofSetVerticalSync(true);
 	ofBackground(0);
     

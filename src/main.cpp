@@ -7,6 +7,10 @@
 #include <stdexcept>
 #include <string_view>
 #include <utility>
+#ifdef VOSC_RECOVERY_TESTING
+#include "ofAppGLFWWindow.h"
+#include <cstdlib>
+#endif
 
 #define USE_PROGRAMMABLE_RENDERER
 
@@ -15,11 +19,12 @@
 #endif
 
 namespace {
-constexpr auto usage = "Usage: vosc [--scene <path/to/scene.vosc.json>] [--size WIDTHxHEIGHT]";
+constexpr auto usage = "Usage: vosc [--scene <path/to/scene.vosc.json>] [--size WIDTHxHEIGHT] [--fps FPS]";
 
 struct StartupOptions {
     std::string scenePath;
     std::optional<std::pair<int, int>> size;
+    std::optional<int> fps;
 };
 
 int positiveInteger(std::string_view value, int maximum, const char* option) {
@@ -36,7 +41,7 @@ StartupOptions parseOptions(int argc, char** argv) {
     StartupOptions options;
     for (int i = 1; i < argc; ++i) {
         const std::string_view flag = argv[i];
-        if (flag != "--scene" && flag != "--size")
+        if (flag != "--scene" && flag != "--size" && flag != "--fps")
             throw std::invalid_argument("unknown option " + std::string(flag));
         if (i + 1 == argc || std::string_view(argv[i + 1]).rfind("--", 0) == 0 || !argv[i + 1][0])
             throw std::invalid_argument("missing value for " + std::string(flag));
@@ -49,6 +54,8 @@ StartupOptions parseOptions(int argc, char** argv) {
                 throw std::invalid_argument("--size expects WIDTHxHEIGHT");
             options.size = {{positiveInteger(value.substr(0, separator), 8192, "--size"),
                              positiveInteger(value.substr(separator + 1), 8192, "--size")}};
+        } else if (flag == "--fps" && !options.fps) {
+            options.fps = positiveInteger(value, 1000, "--fps");
         } else {
             throw std::invalid_argument("duplicate option " + std::string(flag));
         }
@@ -102,13 +109,21 @@ int main(int argc, char** argv) {
     settings.setProfile(GL_PROFILE);
 #endif
     settings.setSize(width, height);
+#ifdef VOSC_RECOVERY_TESTING
+    const char* testSamples = std::getenv("VOSC_TEST_WINDOW_SAMPLES");
+    if (testSamples && (std::string_view(testSamples) == "0" || std::string_view(testSamples) == "4")) {
+        ofGLFWWindowSettings testSettings(settings);
+        testSettings.numSamples = testSamples[0] - '0';
+        ofCreateWindow(testSettings);
+    } else
+#endif
     ofCreateWindow(settings);
 #else
     ofSetupOpenGL(width, height, OF_WINDOW);
 #endif
     
     bool startupFailed = false;
-    const int status = ofRunApp(new ofApp(oscPort, std::move(startupScene), startupFailed));
+    const int status = ofRunApp(new ofApp(oscPort, std::move(startupScene), startupFailed, options.fps.value_or(60)));
     if (startupFailed) return EXIT_FAILURE;
     return options.scenePath.empty() ? EXIT_SUCCESS : status;
 

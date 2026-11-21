@@ -1,5 +1,52 @@
 #include "RenderSystem.hpp"
 #include "../light/Lights.h"
+#include <algorithm>
+
+namespace {
+bool hasDirectFramebuffer() {
+    GLint framebuffer = -1;
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &framebuffer);
+    if (framebuffer != 0) return false;
+
+    // The legacy offscreen target is single-sample. Disabling multisample
+    // rasterization leaves the framebuffer sample count visible to shaders.
+    GLint samples = -1;
+    glGetIntegerv(GL_SAMPLES, &samples);
+    if (samples != 0) return false;
+
+    for (GLenum component : {GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE, GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE,
+                             GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE, GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE}) {
+        GLint bits = 0;
+        glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_BACK_LEFT, component, &bits);
+        if (bits != 8) return false;
+    }
+    GLint depthBits = 0;
+    glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_DEPTH,
+                                          GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE, &depthBits);
+    return depthBits >= 24;
+}
+
+bool isPostPass(PostPass pass) {
+    return pass >= PostPass::BLOOM && pass <= PostPass::LIMBDARKENING;
+}
+
+bool isDeferredPass(PostPass pass) {
+    switch (pass) {
+        case PostPass::BG:
+        case PostPass::EDGE:
+        case PostPass::SSAO:
+        case PostPass::SHADOWLIGHT:
+        case PostPass::POINTLIGHT:
+        case PostPass::FXAA:
+        case PostPass::FOG:
+        case PostPass::DOF:
+        case PostPass::BLOOM:
+            return true;
+        default:
+            return false;
+    }
+}
+}
 
 void RenderSystem::setup(int initialLayers) {
     setupLayers(initialLayers);
@@ -7,10 +54,7 @@ void RenderSystem::setup(int initialLayers) {
 
 void RenderSystem::shutdown() {
     layers.clear();
-    post.getPasses().clear();
-    deferred.getPasses().clear();
-    pointLightPass = nullptr;
-    shadowLightPass = nullptr;
+    resetScenePipeline();
 }
 
 void RenderSystem::setupLayers(int numLayers) {
@@ -45,42 +89,75 @@ void RenderSystem::update(const vector<TidalNote>& notes) {
     for (int i = 0; i < layers.size(); i++) {
         layers[i]->update(notes);
     }
+}
 
-    if (pointLightPass != nullptr) {
-        // todo: fix deferred point light synchronization
+void RenderSystem::releaseTargets() {
+    post.reset();
+#if USE_OFX_DEFERRED_SHADING
+    shadowLightPass.reset();
+    pointLightPass.reset();
+    deferred.reset();
+#endif
+}
+
+void RenderSystem::prepareTargets(bool cameraEnabled) {
+    const int width = ofGetWidth();
+    const int height = ofGetHeight();
+#if USE_OFX_DEFERRED_SHADING
+    if (cameraEnabled && deferredShading) {
+        post.reset();
+        if (!deferred) {
+            deferred = std::make_unique<ofxDeferredProcessing>();
+            ofEnableArbTex();
+            deferred->init(width, height);
+            ofDisableArbTex();
+            for (auto pass : shadingPasses) createShadingPass(*deferred, pass);
+        }
+        return;
+    }
+    shadowLightPass.reset();
+    pointLightPass.reset();
+    deferred.reset();
+#endif
+    if (!directFramebufferSupported) directFramebufferSupported = hasDirectFramebuffer();
+    // Keep the forward camera's projection and depth target. The direct resolve
+    // assumes the window has the same precision and blend as the offscreen pass.
+    if (cameraEnabled || !*directFramebufferSupported || ofGetStyle().blendingMode != OF_BLENDMODE_ALPHA ||
+        std::any_of(shadingPasses.begin(), shadingPasses.end(), isPostPass)) {
+        if (!post) {
+            post = std::make_unique<ofxPostProcessing>();
+            post->init(width, height);
+            for (auto pass : shadingPasses) createShadingPass(*post, pass);
+        }
+    } else {
+        post.reset();
     }
 }
 
 void RenderSystem::beginDraw(Camera& camera) {
     ofPushMatrix();
+#if USE_OFX_DEFERRED_SHADING
+    if (deferred) {
+        if (shadowLightPass) {
+            shadowLightPass->beginShadowMap(camera.getCamera());
+            doDraw(camera);
+            if (pointLightPass) pointLightPass->drawLights();
+            shadowLightPass->endShadowMap();
+        }
+        deferred->begin(camera.getCamera());
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+    } else
+#endif
     if (camera.isEnabled()) {
-        if (deferredShading) {
-            if (shadowLightPass != nullptr) {
-                shadowLightPass->beginShadowMap(camera.getCamera());
-                doDraw(camera);
-                if (pointLightPass != nullptr) {
-                    pointLightPass->drawLights();
-                }
-                shadowLightPass->endShadowMap();
-            }
-
-            deferred.begin(camera.getCamera());
-        }
-        else {
-            Lights::get().update();
-
-            ofEnableDepthTest();
-            ofEnableLighting();
-
-            post.begin(camera.getCamera());
-        }
-        if (deferredShading) {
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_BACK);
-        }
-    }
-    else {
-        post.begin();
+        Lights::get().update();
+        ofEnableDepthTest();
+        ofEnableLighting();
+        post->begin(camera.getCamera());
+    } else if (post) {
+        post->begin();
+    } else {
+        ofPushStyle();
     }
     ofClear(0, 0, 0, 0);
 }
@@ -101,15 +178,29 @@ void RenderSystem::doDraw(Camera& camera) {
 }
 
 void RenderSystem::endDraw() {
-    if (deferredShading) {
-        if (pointLightPass != nullptr) {
-            pointLightPass->drawLights();
-        }
+#if USE_OFX_DEFERRED_SHADING
+    if (deferred) {
+        if (pointLightPass) pointLightPass->drawLights();
         glDisable(GL_CULL_FACE);
-        deferred.end();
-    }
-    else {
-        post.end();
+        deferred->end();
+    } else
+#endif
+    if (post) {
+        post->end();
+    } else {
+        ofPopStyle();
+        ofDisableDepthTest();
+        ofPushStyle();
+        ofFill();
+        ofSetRectMode(OF_RECTMODE_CORNER);
+        ofSetColor(255);
+        ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+        // Apply the former alpha-over-black presentation using the accumulated
+        // window alpha. RGB becomes dst.rgb * dst.a, and alpha becomes
+        // dst.a * dst.a + 1 - dst.a.
+        glBlendFuncSeparate(GL_ZERO, GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA);
+        ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
+        ofPopStyle();
     }
     ofDisableLighting();
     ofDisableDepthTest();
@@ -117,6 +208,7 @@ void RenderSystem::endDraw() {
 }
 
 void RenderSystem::draw(Camera& camera, bool showDebug, const std::function<void()>& afterCompose) {
+    prepareTargets(camera.isEnabled());
     beginDraw(camera);
     doDraw(camera);
     endDraw();
@@ -133,11 +225,8 @@ void RenderSystem::draw(Camera& camera, bool showDebug, const std::function<void
 
 void RenderSystem::resizeBacking(int w, int h) {
     if (w > 0 && h > 0) {
-        ofEnableArbTex();
-        deferred.init(ofGetWidth(), ofGetHeight());
-        ofDisableArbTex();
-
-        post.init(ofGetWidth(), ofGetHeight());
+        directFramebufferSupported.reset();
+        releaseTargets();
     }
 }
 
@@ -169,6 +258,7 @@ bool RenderSystem::routeLayerByIndex(int idx, const string& command, const ofxOs
     return true;
 }
 
+#if USE_OFX_DEFERRED_SHADING
 void RenderSystem::createShadingPass(ofxDeferredProcessing& processor, PostPass passId) {
     ofEnableArbTex();
     switch (passId) {
@@ -206,13 +296,7 @@ void RenderSystem::createShadingPass(ofxDeferredProcessing& processor, PostPass 
     ofDisableArbTex();
 }
 
-void RenderSystem::createShadingPass(ofxDeferredProcessing& processor, const string& passName) {
-    createShadingPass(processor, PostPassMap.at(passName));
-}
-
-void RenderSystem::createShadingPass(ofxDeferredProcessing& processor, int passId) {
-    createShadingPass(processor, static_cast<PostPass>(passId));
-}
+#endif
 
 void RenderSystem::createShadingPass(ofxPostProcessing& processor, PostPass passId) {
     switch (passId) {
@@ -287,44 +371,90 @@ void RenderSystem::createShadingPass(ofxPostProcessing& processor, PostPass pass
     }
 }
 
-void RenderSystem::createShadingPass(ofxPostProcessing& processor, const string& passName) {
-    if (PostPassMap.find(passName) != PostPassMap.end()) {
-        createShadingPass(processor, PostPassMap.at(passName));
-    }
-    else {
-        ofLogError("shading pass: " + passName + " does not exist");
-    }
-}
-
-void RenderSystem::createShadingPass(ofxPostProcessing& processor, int passId) {
-    createShadingPass(processor, static_cast<PostPass>(passId));
+void RenderSystem::setDeferredShading(bool enabled) {
+#if !USE_OFX_DEFERRED_SHADING
+    if (enabled) return;
+#endif
+    if (deferredShading == enabled) return;
+    deferredShading = enabled;
+    releaseTargets();
 }
 
 void RenderSystem::applyShadingPasses(const vector<osc::ShadingPassSpec>& passes) {
-    post.getPasses().clear();
-    deferred.getPasses().clear();
-    shadowLightPass = nullptr;
-    pointLightPass = nullptr;
-
-    for (size_t i = 0; i < passes.size(); ++i) {
-        if (passes[i].byName) {
-            createShadingPass(post, passes[i].name);
-            createShadingPass(deferred, passes[i].name);
+    vector<PostPass> requested;
+    requested.reserve(passes.size());
+    for (const auto& spec : passes) {
+        PostPass pass = static_cast<PostPass>(spec.id);
+        if (spec.byName) {
+            const auto found = PostPassMap.find(spec.name);
+            if (found == PostPassMap.end()) {
+                ofLogError("shading") << "unknown pass " << spec.name;
+                return;
+            }
+            pass = found->second;
         }
-        else {
-            createShadingPass(post, passes[i].id);
-            createShadingPass(deferred, passes[i].id);
-        }
+        if (isPostPass(pass) || isDeferredPass(pass)) requested.push_back(pass);
     }
+    shadingPasses = std::move(requested);
+    releaseTargets();
 }
 
+#if !USE_OFX_DEFERRED_SHADING
+std::string RenderSystem::excludedShadingFeature(const osc::Command& command) {
+    if (command.type == osc::CommandType::SHADING_MODE && command.shadingMode == "deferred")
+        return "deferred shading";
+    if (command.type == osc::CommandType::SHADING_PASSES) {
+        for (const auto& spec : command.shadingPasses) {
+            PostPass pass = static_cast<PostPass>(spec.id);
+            if (spec.byName) {
+                const auto found = PostPassMap.find(spec.name);
+                if (found == PostPassMap.end()) continue;
+                pass = found->second;
+            }
+            if (!isPostPass(pass) && isDeferredPass(pass))
+                return "deferred pass " + (spec.byName ? spec.name : std::to_string(spec.id));
+        }
+    }
+    return {};
+}
+#endif
+
+void RenderSystem::resetScenePipeline() {
+    deferredShading = false;
+    shadingPasses.clear();
+    releaseTargets();
+}
+
+#ifdef VOSC_RECOVERY_TESTING
+ofJson RenderSystem::recoveryTestPipeline() const {
+    const auto postCount = std::count_if(shadingPasses.begin(), shadingPasses.end(), isPostPass);
+#if USE_OFX_DEFERRED_SHADING
+    const auto deferredCount = std::count_if(shadingPasses.begin(), shadingPasses.end(), isDeferredPass);
+    return {{"deferred", deferredShading}, {"post_passes", postCount},
+            {"deferred_passes", deferredCount}, {"point_light_pass", bool(pointLightPass)},
+            {"shadow_light_pass", bool(shadowLightPass)}};
+#else
+    return {{"deferred", false}, {"post_passes", postCount}, {"deferred_passes", 0},
+            {"point_light_pass", false}, {"shadow_light_pass", false}};
+#endif
+}
+
+ofJson RenderSystem::recoveryTestTargets() const {
+    return {{"post", bool(post)},
+#if USE_OFX_DEFERRED_SHADING
+            {"deferred", bool(deferred)}};
+#else
+            {"deferred", false}};
+#endif
+}
+#endif
+
 bool RenderSystem::supportsDirectShaderTrial() {
-    return layers.size() == 1 && layers.front() && !deferredShading &&
-           post.getPasses().empty() && deferred.getPasses().empty();
+    return layers.size() == 1 && layers.front() && supportsScenePersistence();
 }
 
 bool RenderSystem::supportsScenePersistence() {
-    return !deferredShading && post.getPasses().empty() && deferred.getPasses().empty();
+    return !deferredShading && shadingPasses.empty();
 }
 
 void RenderSystem::replaceSceneLayers(vector<shared_ptr<Layer>> replacement, Layout replacementLayout) {

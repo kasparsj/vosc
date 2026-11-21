@@ -4,8 +4,12 @@
 #include "../layer/Layer.h"
 #include "../inspector/Inspector.hpp"
 #include "../osc/Command.hpp"
+#include "../Config.h"
+#if USE_OFX_DEFERRED_SHADING
 #include "ofxDeferredShading.h"
+#endif
 #include "ofxPostProcessing.h"
+#include <optional>
 
 class RenderSystem {
 public:
@@ -24,20 +28,15 @@ public:
         return layout;
     }
 
-    void setDeferredShading(bool enabled) {
-        deferredShading = enabled;
-    }
+    void setDeferredShading(bool enabled);
     void applyShadingPasses(const vector<osc::ShadingPassSpec>& passes);
-    void resetScenePipeline() {
-        deferredShading = false;
-        applyShadingPasses({});
-    }
+    void resetScenePipeline();
+#if !USE_OFX_DEFERRED_SHADING
+    static std::string excludedShadingFeature(const osc::Command& command);
+#endif
 #ifdef VOSC_RECOVERY_TESTING
-    ofJson recoveryTestPipeline() {
-        return {{"deferred", deferredShading}, {"post_passes", post.getPasses().size()},
-                {"deferred_passes", deferred.getPasses().size()},
-                {"point_light_pass", bool(pointLightPass)}, {"shadow_light_pass", bool(shadowLightPass)}};
-    }
+    ofJson recoveryTestPipeline() const;
+    ofJson recoveryTestTargets() const;
 #endif
     bool supportsDirectShaderTrial();
     bool supportsScenePersistence();
@@ -63,19 +62,23 @@ private:
     void doDraw(Camera& camera);
     void endDraw();
     void toggleWireframeAll();
-    void createShadingPass(ofxDeferredProcessing& processor, PostPass passId);
-    void createShadingPass(ofxDeferredProcessing& processor, const string& passName);
-    void createShadingPass(ofxDeferredProcessing& processor, int passId);
+    void releaseTargets();
+    void prepareTargets(bool cameraEnabled);
     void createShadingPass(ofxPostProcessing& processor, PostPass passId);
-    void createShadingPass(ofxPostProcessing& processor, const string& passName);
-    void createShadingPass(ofxPostProcessing& processor, int passId);
+#if USE_OFX_DEFERRED_SHADING
+    void createShadingPass(ofxDeferredProcessing& processor, PostPass passId);
+#endif
 
     vector<shared_ptr<Layer>> layers;
     Layout layout = Layout::STACK;
     Inspector inspector;
-    ofxPostProcessing post;
-    ofxDeferredProcessing deferred;
+    vector<PostPass> shadingPasses;
     bool deferredShading = false;
+    std::unique_ptr<ofxPostProcessing> post;
+    std::optional<bool> directFramebufferSupported;
+#if USE_OFX_DEFERRED_SHADING
+    std::unique_ptr<ofxDeferredProcessing> deferred;
     ofxDeferred::PointLightPass::Ptr pointLightPass;
     ofxDeferred::ShadowLightPass::Ptr shadowLightPass;
+#endif
 };
