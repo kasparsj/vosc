@@ -26,6 +26,38 @@ Compact hardware workflow:
 - In practice, feature availability/performance depends on GPU drivers/OpenGL support and enabled addons.
 - Heavier shader/post pipelines are better suited to desktop GPUs.
 
+### Minimal Linux build and render settings
+
+Use the Linux openFrameworks 0.12.1 SDK with the retained addons from
+`addons.make`. Linux ARM64 compilation and runtime qualification are pending.
+
+```sh
+make Release VOSC_PROFILE=minimal OF_ROOT=/absolute/path/to/openFrameworks
+```
+
+The profile skips ofxDeferredShading, ofxImGui, ofxHPVPlayer, and ofxUltralight.
+It stages its executable and runtime assets in a fresh `.vosc-linux/minimal-*`
+directory and prints the run location. It includes forward post-processing,
+OSC, image and shader layers, and shader feedback. Put any regular video
+files you need in the staged `bin/data/videos` directory.
+
+From the printed run location, this command opens a scene at 1280×720 with a
+30 FPS cap.
+
+```sh
+./vosc --scene /absolute/path/to/scene.vosc.json --size 1280x720 --fps 30
+```
+
+`--size` accepts dimensions from 1 to 8192 and overrides a scene's initial
+window size. Without it VOSC uses the scene size or 1024×768. `--fps` accepts
+1 to 1000 and defaults to 60. Vsync stays enabled. Feedback buffer sizes stored
+in the scene still apply. Feedback configured to advance once per frame
+advances less often per second at a lower frame cap.
+
+The minimal profile uses the existing desktop OpenGL 4.1 renderer. Verify
+hardware-accelerated context creation and the intended shaders on the target
+board and OS before relying on it in an installation.
+
 ## Building with Xcode on macOS
 
 Use the macOS release of openFrameworks [0.11.1](https://openframeworks.cc/versions/v0.11.1/)
@@ -156,8 +188,8 @@ Export and wrapped SuperCollider replay retain their 2048-pixel image limit.
 Use the [scene exporter](docs/Editable-scene-contract.md) to capture a running
 renderer as a native JSON scene. Add `--scd` for a SuperCollider companion.
 
-Use `--size WIDTHxHEIGHT` to override the initial window size. See the
-[examples index](examples/README.md) for scene assets, companions, and prerequisites.
+See the [examples index](examples/README.md) for scene assets, SuperCollider
+companions, and prerequisites.
 
 ## Quickstart (Local + SuperCollider)
 

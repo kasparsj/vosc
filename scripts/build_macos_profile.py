@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 
+from addon_compat import patch_expression_returns, patch_shadertoy_timestamp
 from build_macos_legacy import (
     ROOT, patch_imgui_glfw, prepare_output, receiver_inputs,
     replace_expected, sdk_paths, write_overlay,
@@ -69,19 +70,6 @@ def prepare_core(sdk, output):
     return compiled
 
 
-def patch_expression_returns(text):
-    # Preserve evaluation of every component and report any component failure.
-    for call in ("addVar(name, value, recompile, setTime)", "addDummyVar(name, recompile)",
-                 "addConst(name, value, recompile)", "compile(setTime)"):
-        text = replace_expected(
-            text, f"    for (int i=0; i<size(); i++) {{\n        expr[i]->{call};\n    }}\n}}",
-            f"    bool success = true;\n    for (int i=0; i<size(); i++) {{\n"
-            f"        success = expr[i]->{call} && success;\n    }}\n    return success;\n}}",
-            f"vector expression {call}",
-        )
-    return text
-
-
 def prepare_addon_overlay(addon_sdk, output):
     addons = addon_sdk / "addons"
     entries = [{"type": "file", "name": item["source"], "external-contents": item["replacement"]}
@@ -92,11 +80,7 @@ def prepare_addon_overlay(addon_sdk, output):
         "ofxImGui/src/ImHelpers.h": lambda text: replace_expected(
             text, '#include "imgui.h"', '#include "imgui.h"\n#include <stack>', "ImGui helpers include",
         ),
-        "ofxShadertoy/src/ofxShadertoy.cpp": lambda text: replace_expected(
-            text, "std::filesystem::last_write_time(ofToDataPath(mainShaderFile))",
-            "std::filesystem::last_write_time(ofToDataPath(mainShaderFile)).time_since_epoch().count()",
-            "Shadertoy last-write time",
-        ),
+        "ofxShadertoy/src/ofxShadertoy.cpp": patch_shadertoy_timestamp,
     }
     for filename in ("ofxOscSender.h", "ofxOscSender.cpp", "ofxOscParameterSync.h"):
         patches[f"ofxOsc/src/{filename}"] = lambda text: replace_expected(

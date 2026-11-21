@@ -11,3 +11,4 @@ __pycache__/
 .claude/
 /Project.local.xcconfig
 /.vosc-macos/
+/.vosc-linux/
