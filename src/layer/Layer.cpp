@@ -143,7 +143,7 @@ void Layer::update(const vector<TidalNote> &notes) {
 
 void Layer::oscCommand(const string& command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
-        shared_ptr<Texture>& tex = shader.getDefaultTexture();
+        auto tex = shader.getDefaultTexture();
         bool isShared = false;
         if (command == "/tex" || command == "/tex/choose" || tex == nullptr) {
             if (command == "/tex") {

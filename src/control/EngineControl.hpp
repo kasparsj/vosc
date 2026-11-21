@@ -31,8 +31,7 @@ public:
     void noteExternalSample() { ++externalEpoch; }
     void noteControlAdmission() { ++configurationEpoch; }
     void beforeLegacyControl(bool inputSample);
-    void interruptTrial(bool restoreDimensions = true);
-    bool handleWindowResized(int w, int h);
+    void interruptTrial();
     bool canBeginSceneReplay() const { return !trial && pendingCount() == 0 && queued.empty() && captures.empty(); }
     uint64_t configurationSerial() const { return revision ^ (configurationEpoch << 32); }
 #ifdef VOSC_RECOVERY_TESTING
@@ -41,16 +40,11 @@ public:
     ofJson recoveryTestConfigureFeedbackTrial(const ofJson& command);
     const ofJson& recoveryTestFeedbackCaptureReceipt() const { return recoveryTestFeedbackCaptureResult; }
     uint64_t recoveryTestFeedbackUpdates() const;
-    ofJson recoveryTestInjectResizeCallback(int expectedWidth, int expectedHeight,
-                                            int callbackWidth, int callbackHeight,
-                                            bool synchronous);
     ofJson recoveryTestInspectPrograms(const std::vector<unsigned>& programs) const;
-    void recoveryTestArmSynchronousResizeMismatch(int width, int height);
     ofJson recoveryTestDispatch(const ofJson& request) { return dispatch(request); }
 #endif
 
 private:
-    enum class InternalResizePurpose { Candidate, Rollback, Interrupt };
     struct Receipt {
         ofJson request;
         ofJson response;
@@ -123,8 +117,6 @@ private:
     void settleFeedbackDraw();
     void evaluateTrial();
     void rollbackTrial(const std::string& code);
-    bool requestInternalResize(int width, int height, InternalResizePurpose purpose);
-    bool processWindowResized(int width, int height, bool synchronousInternalCallback);
     void updateTrialReceipt();
     ofJson trialSummary() const;
 
@@ -154,10 +146,6 @@ private:
     uint64_t externalEpoch = 0;
     uint64_t configurationEpoch = 0;
     std::unique_ptr<Trial> trial;
-    std::optional<std::pair<int, int>> internalResize;
-    std::optional<InternalResizePurpose> internalResizePurpose;
-    bool windowShapeRequestActive = false;
-    std::optional<std::pair<int, int>> deferredResizeCallback;
 #ifdef VOSC_RECOVERY_TESTING
     std::optional<double> recoveryTestPreviousDrawStart;
     std::optional<double> recoveryTestDrawInterval;
@@ -166,9 +154,6 @@ private:
     void recoveryTestCaptureFeedback(std::string phase, ShaderPingPongTex& texture);
     bool recoveryTestFeedbackTimerLost = false;
     bool recoveryTestSuppressFeedbackPairs = false;
-    uint64_t recoveryTestFramebufferFallbacks = 0;
-    uint64_t recoveryTestSetterMismatches = 0;
-    std::optional<std::pair<int, int>> recoveryTestArmedResizeMismatch;
 #endif
 };
 

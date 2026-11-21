@@ -2,7 +2,9 @@
 
 from contextlib import closing
 import json
+import os
 import struct
+import time
 
 from shader_ivec_acceptance import (
     configure, diagnostic_cursor, expect_binding, integer_shader, language_case,
@@ -314,6 +316,8 @@ def legacy_paths(renderer, client, output, label):
     send(renderer, [0.25, 0.5, 0.75])
     load(client, float_shader((0.25, 0.5)))
     cases["preload"] = observe(client, output, f"{label}-preload")[0]
+    if cases["preload"].get("export_error") != "scene_unsupported":
+        raise RuntimeError(f"expected unsupported preloaded binding shape: {cases['preload']}")
     for length in (1, 2):
         for mixed in (False, True):
             key = f"array-{length}-{mixed}"
@@ -323,7 +327,7 @@ def legacy_paths(renderer, client, output, label):
             receipt = raw_replay(renderer, replay_setup(path) + [replay_binding(fields)])
             require_applied(receipt)
             reflected = client.call("get_scene", {})["result"]["layers"][0]["shader"]["uniforms"]["probe"]
-            if not reflected["array"]:
+            if not reflected["array"] or reflected["writable"] or reflected["gl_type"] != 0x8B52:
                 raise RuntimeError(f"{key}: expected array reflection, got {reflected}")
             state = observe(client, output, f"{label}-{key}")[0]
             expect_binding(state, fields)
@@ -440,9 +444,73 @@ def scalar_export_and_trial(renderer, client, output):
             "captures": {"baseline": baseline, "candidate": candidate, "restored": restored}}
 
 
+def reflection_transitions(renderer, client, output):
+    def wait_for_uniforms(matches):
+        deadline = time.monotonic() + 6
+        while time.monotonic() < deadline:
+            shader = client.call("get_scene", {})["result"]["layers"][0]["shader"]
+            uniforms = shader["uniforms"]
+            if shader["program"] and matches(uniforms):
+                return uniforms
+            time.sleep(0.03)
+        raise RuntimeError(f"shader reflection did not change as expected: {uniforms}")
+
+    path = output / "source"
+    path.write_text(float_shader((0.25, 0.5)))
+
+    def replace_watched_source(source):
+        # ofxAutoReloadedShader observes timestamps at whole-second resolution.
+        modified = int(path.stat().st_mtime) + 2
+        path.write_text(source)
+        os.utime(path, (modified, modified))
+
+    applied(client, "configure_layers", {"count": 1, "layout": "stack"})
+    osc(renderer.port, "/onset", 0)
+    osc(renderer.port, "/shader", 0, str(path))
+    wait_for_uniforms(lambda uniforms: uniforms.get("probe", {}).get("writable") is True)
+    send(renderer, [0.25, 0.5])
+    original, _ = observe(client, output, "watch-original")
+    expect_binding(original, [0.25, 0.5])
+    wait_for_uniforms(lambda uniforms: uniforms.get("probe", {}).get("writable") is True)
+
+    replace_watched_source(float_shader((0.25, 0.5), array_size=1))
+    array = wait_for_uniforms(lambda uniforms: uniforms.get("probe", {}).get("array") is True)["probe"]
+    rejected = client.call("set_uniform", {"layer": 0, "name": "probe", "value": [0.25, 0.5]})
+    if array["writable"] or rejected.get("error", {}).get("code") != "invalid_uniform":
+        raise RuntimeError(f"singleton array accepted a numeric control: {array}, {rejected}")
+
+    replace_watched_source("#version 330\nout vec4 color;void main(){color=vec4(0,1,0,1);}")
+    wait_for_uniforms(lambda uniforms: "probe" not in uniforms)
+
+    replace_watched_source(float_shader((0.375, 0.625, 0.875)))
+    reloaded = wait_for_uniforms(lambda uniforms: uniforms.get("probe", {}).get("gl_type") == 0x8B51)
+    osc(renderer.port, "/shader/uniform", 0, "probe", "[0.375,0.625,0.875]")
+    final, _ = observe(client, output, "watch-reloaded")
+    expect_binding(final, [0.375, 0.625, 0.875])
+
+    load(client, float_shader((0.375, 0.625, 0.875)))
+    # Protected trials retain numeric controls stored as flat float components.
+    applied(client, "set_uniform", {"layer": 0, "name": "probe", "value": [0.375, 0.625, 0.875]})
+    rejected = client.call("trial_shader", {
+        "layer": 0, "source": float_shader((1.0, 0.5, 0.25), array_size=1),
+        "uniforms": {"probe": [1.0, 0.5, 0.25]},
+    })
+    if rejected.get("error", {}).get("code") != "invalid_uniform":
+        raise RuntimeError(f"trial accepted an override of a candidate array: {rejected}")
+    retained, _ = observe(client, output, "watch-trial-rejected")
+    if retained != final:
+        raise RuntimeError(f"rejected trial changed the baseline binding: {retained}")
+    empty = write_shader(output, "zero-active", "#version 330\nout vec4 color;void main(){color=vec4(0,1,0,1);}")
+    empty.with_suffix(".vert").write_text("#version 330\nin vec4 position;void main(){gl_Position=position;}")
+    osc(renderer.port, "/shader", 0, str(empty))
+    wait_for_uniforms(lambda uniforms: not uniforms)
+    wait_for_uniforms(lambda uniforms: not uniforms)
+    return {"singleton_array": array, "reloaded": reloaded, "trial_rejection": rejected, "zero_active": True}
+
+
 def run_shader_fvec(args, binary, sclang, output):
-    baseline = args.baseline_binary.resolve()
-    if baseline == binary or not baseline.is_file():
+    baseline = args.baseline_binary.resolve() if args.baseline_binary else None
+    if baseline and (baseline == binary or not baseline.is_file()):
         raise ValueError("shader float-vector acceptance requires a distinct baseline app")
     quark = checkout_path(args.visuals_quark)
     (output / "assets").mkdir()
@@ -467,7 +535,7 @@ def run_shader_fvec(args, binary, sclang, output):
         evidence["scalar_export_trial"] = scalar_export_and_trial(renderer, client, output)
         # The legacy fixture ends by installing a named shader, which cannot be exported.
         evidence["candidate_legacy"] = legacy_paths(renderer, client, output, "candidate")
-        if (evidence["baseline_cross_arity"] != evidence["candidate_cross_arity"] or
+        if baseline and (evidence["baseline_cross_arity"] != evidence["candidate_cross_arity"] or
                 evidence["baseline_rgb"] != evidence["candidate_rgb"] or
                 evidence["baseline_legacy"] != evidence["candidate_legacy"]):
             raise RuntimeError("one or more preserved paths differed from baseline")
@@ -484,10 +552,15 @@ def run_shader_fvec(args, binary, sclang, output):
             raise RuntimeError("replayed scalar frame differs from original")
         return {"receipt": replay, "render": state}
 
+    def run_reflection(renderer, client):
+        return reflection_transitions(renderer, client, output)
+
     try:
-        run_owned(baseline, output, "baseline", run_baseline)
+        if baseline:
+            run_owned(baseline, output, "baseline", run_baseline)
         run_owned(binary, output, "candidate", run_candidate)
         evidence["scalar_replay"] = run_owned(binary, output, "scalar-replay", run_scalar_replay)
+        evidence["reflection_transitions"] = run_owned(binary, output, "reflection", run_reflection)
         evidence["status"] = "PASS"
     finally:
         (output / "shader-fvec-evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")

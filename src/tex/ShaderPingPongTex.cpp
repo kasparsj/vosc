@@ -273,26 +273,19 @@ bool ShaderPingPongTex::validateConfiguration(TexData& data, std::string& reason
     }
     // A promoted direct-source program was built with the fixed vertex stage.
     // Its execution and export no longer depend on the original watched file.
-    if (getShaderPath() != "source") {
+    if (watchedShader()) {
         const auto paths = Shader::getShaderPaths(path);
         if (paths.vertPath != "shaders/passthru.vert" || !paths.geomPath.empty()) {
             reason = "feedback custom vertex/geometry source is unsupported"; return false;
         }
     }
     if (!isShaderLoaded()) { reason = "feedback shader is not compiled"; return false; }
-    GLint activeCount = 0, maximum = 0;
-    glGetProgramiv(getShader().getProgram(), GL_ACTIVE_UNIFORMS, &activeCount);
-    glGetProgramiv(getShader().getProgram(), GL_ACTIVE_UNIFORM_MAX_LENGTH, &maximum);
-    std::vector<char> uniformName(std::max(1, maximum));
-    for (GLint index = 0; index < activeCount; ++index) {
-        GLsizei length = 0; GLint size = 0; GLenum type = 0;
-        glGetActiveUniform(getShader().getProgram(), index, maximum, &length, &size, &type, uniformName.data());
-        const std::string name(uniformName.data(), length);
-        if (size != 1 || name.find('[') != std::string::npos) {
+    const auto& types = getUniforms();
+    for (const auto& entry : types) {
+        if (entry.second.isArray()) {
             reason = "feedback uniform arrays are unsupported"; return false;
         }
     }
-    const auto& types = getUniformTypes();
     static const std::set<std::string> holderBuiltins = {"size", "speed", "color", "tint", "timePct"};
     static const std::map<std::string, GLenum> shaderBuiltins = {{"time", GL_FLOAT}, {"resolution", GL_FLOAT_VEC2},
         {"random", GL_INT}, {"srctex", GL_SAMPLER_2D}, {"projectionMatrix", GL_FLOAT_MAT4},
@@ -306,10 +299,10 @@ bool ShaderPingPongTex::validateConfiguration(TexData& data, std::string& reason
         const auto reflected = types.find(item.first);
         int expected = 0;
         if (reflected != types.end()) {
-            if (reflected->second == GL_FLOAT) expected = 1;
-            else if (reflected->second == GL_FLOAT_VEC2) expected = 2;
-            else if (reflected->second == GL_FLOAT_VEC3) expected = 3;
-            else if (reflected->second == GL_FLOAT_VEC4) expected = 4;
+            if (reflected->second.type == GL_FLOAT) expected = 1;
+            else if (reflected->second.type == GL_FLOAT_VEC2) expected = 2;
+            else if (reflected->second.type == GL_FLOAT_VEC3) expected = 3;
+            else if (reflected->second.type == GL_FLOAT_VEC4) expected = 4;
         }
         int actual = 0;
         std::vector<float> components;
@@ -330,10 +323,10 @@ bool ShaderPingPongTex::validateConfiguration(TexData& data, std::string& reason
     for (const auto& uniform : types) {
         const auto builtin = shaderBuiltins.find(uniform.first);
         if (builtin != shaderBuiltins.end()) {
-            if (uniform.second != builtin->second) { reason = "feedback built-in uniform type mismatch"; return false; }
+            if (uniform.second.type != builtin->second) { reason = "feedback built-in uniform type mismatch"; return false; }
             continue;
         }
-        if (!data.getVars().count(uniform.first) || uniform.first.find('[') != std::string::npos) {
+        if (!data.getVars().count(uniform.first)) {
             reason = "feedback has unsupported or unbound uniforms"; return false;
         }
     }

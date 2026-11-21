@@ -121,56 +121,14 @@ bool managedUniform(const Layer& layer, const std::string& name) {
            layer.vars.count(name) || name.find('[') != std::string::npos;
 }
 
-bool persistenceManagedUniform(const Layer& layer, const std::string& name, GLenum type) {
-    GLenum expected = 0;
-    if (name == "time" || name == "usingTexture" || name == "usingColors") expected = GL_FLOAT;
-    else if (name == "resolution" || name == "offset") expected = GL_FLOAT_VEC2;
-    else if (name == "random" || name == "layer" || name == "numLights") expected = GL_INT;
-    else if (name == "globalColor") expected = GL_FLOAT_VEC4;
-    else if (name == "projectionMatrix" || name == "modelViewMatrix" ||
-             name == "modelViewProjectionMatrix" || name == "textureMatrix") expected = GL_FLOAT_MAT4;
-    else {
-        auto binding = layer.vars.find(name);
-        if (binding != layer.vars.end()) {
-            if (std::dynamic_pointer_cast<Variable<float>>(binding->second)) expected = GL_FLOAT;
-            else if (std::dynamic_pointer_cast<Variable<glm::vec3>>(binding->second)) expected = GL_FLOAT_VEC3;
-            else if (std::dynamic_pointer_cast<Variable<ofFloatColor>>(binding->second)) expected = GL_FLOAT_VEC4;
-            else throw Invalid("invalid_uniform", "managed layer binding has unsupported type");
-        }
-    }
-    if (!expected) return false;
-    if (type != expected) throw Invalid("invalid_uniform", "managed uniform type mismatch: " + name);
-    return true;
-}
-
-std::set<std::string> arrayUniforms(const Shader& shader) {
-    std::set<std::string> result;
-    if (!shader.isShaderLoaded()) return result;
-    const auto program = shader.getShader().getProgram();
-    GLint count = 0, maximum = 0;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
-    glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maximum);
-    if (maximum <= 0) return result;
-    std::vector<GLchar> name(maximum);
-    for (int index = 0; index < count; ++index) {
-        GLsizei length = 0;
-        GLint size = 0;
-        GLenum type = 0;
-        glGetActiveUniform(program, index, maximum, &length, &size, &type, name.data());
-        std::string actual(name.data(), length);
-        auto bracket = actual.find('[');
-        if (size > 1 || bracket != std::string::npos) result.insert(actual.substr(0, bracket));
-    }
-    return result;
-}
-
 void setNumericBinding(VarsHolder& holder, const std::string& name, const std::vector<float>& values) {
+    auto& pool = VariablePool::getPool(&holder);
     auto found = holder.vars.find(name);
     auto variable = found == holder.vars.end() ? nullptr :
         std::dynamic_pointer_cast<Variable<float>>(found->second);
     if (!variable) variable = std::make_shared<Variable<float>>();
     variable->set(values);
-    VariablePool::getPool(&holder)[name] = variable;
+    pool[name] = variable;
     holder.vars[name] = variable;
 }
 
@@ -519,12 +477,12 @@ Json exportRecipe(RenderSystem& render, const RuntimeContext& runtime, const Com
                 commands.push_back(recipeCommand("/shader", Json::array({recipeArg("i", int(index)), recipeArg("asset", fragmentName)})));
             }
             for (const auto& binding : layer.shader.vars) {
-                const auto& types = layer.shader.getUniformTypes();
+                const auto& types = layer.shader.getUniforms();
                 const auto reflected = types.find(binding.first);
-                if (reflected == types.end() || !recipeUniformComponents(reflected->second))
+                if (reflected == types.end() || !recipeUniformComponents(reflected->second.type))
                     throw Invalid("scene_unsupported", "shader binding is absent or has an unsupported reflected type: " + binding.first);
                 Json args = Json::array({recipeArg("i", int(index)), recipeArg("s", binding.first)});
-                for (const auto& item : describeVariable(binding.second, recipeUniformComponents(reflected->second))) args.push_back(item);
+                for (const auto& item : describeVariable(binding.second, recipeUniformComponents(reflected->second.type))) args.push_back(item);
                 commands.push_back(recipeCommand("/shader/var", args));
             }
             for (const auto& binding : layer.shader.getTextures()) {
@@ -557,14 +515,15 @@ Json exportRecipe(RenderSystem& render, const RuntimeContext& runtime, const Com
                     commands.push_back(recipeCommand("/tex/speed", Json::array({recipeArg("i", int(index)), recipeArg("f", 1.f)})));
                     for (const auto& setting : std::vector<std::pair<std::string,int>>{{"internalformat",GL_RGBA8},{"textureTarget",GL_TEXTURE_2D},{"filter",GL_LINEAR},{"blendMode",0},{"aspectRatio",1},{"static",int(texture->isStatic)}})
                         commands.push_back(recipeCommand("/tex/set", Json::array({recipeArg("i", int(index)), recipeArg("s", setting.first), recipeArg("i", setting.second)})));
+                    const auto& uniforms = feedback->getUniforms();
                     size_t controls = 0;
                     for (const auto& control : texture->vars) {
                         if (defaults.count(control.first)) continue;
-                        const auto found = feedback->getUniformTypes().find(control.first);
-                        if (++controls > 64 || found == feedback->getUniformTypes().end() || !uniformComponents(found->second))
+                        const auto found = uniforms.find(control.first);
+                        if (++controls > 64 || found == uniforms.end() || !uniformComponents(found->second.type))
                             throw Invalid("scene_unsupported", "feedback control lacks float reflection");
                         Json args = Json::array({recipeArg("i", int(index)), recipeArg("s", control.first)});
-                        for (const auto& value : describeVariable(control.second, uniformComponents(found->second))) {
+                        for (const auto& value : describeVariable(control.second, uniformComponents(found->second.type))) {
                             if (value.at("type") != "f") throw Invalid("scene_unsupported", "feedback control must be constant float");
                             args.push_back(value);
                         }
@@ -851,14 +810,14 @@ void EngineControl::validate(const std::string& method, const Json& params) cons
             text(params["source"], 128 * 1024, "source");
         } else if (method == "set_uniform") {
             auto name = text(params["name"], 128, "name");
-            if (managedUniform(layer, name) || arrayUniforms(shader).count(name))
+            const auto& types = shader.getUniforms();
+            auto found = types.find(name);
+            if (managedUniform(layer, name) || (found != types.end() && found->second.isArray()))
                 throw Invalid("invalid_uniform", "uniform is engine-managed or an array");
             if (!shader.isShaderLoaded()) throw Invalid("invalid_uniform", "no ordinary GLSL shader loaded");
-            const auto& types = shader.getUniformTypes();
-            auto found = types.find(name);
-            if (found == types.end() || !uniformComponents(found->second))
+            if (found == types.end() || !uniformComponents(found->second.type))
                 throw Invalid("invalid_uniform", "uniform is absent or has an unsupported type");
-            int count = uniformComponents(found->second);
+            int count = uniformComponents(found->second.type);
             if (count == 1) number(params["value"], -1000000, 1000000);
             else {
                 if (!params["value"].is_array() || params["value"].size() != static_cast<size_t>(count))
@@ -884,6 +843,8 @@ void EngineControl::execute(const std::string& id) {
     auto params = entry.request.value("params", Json::object());
     uint64_t logStart = logger() ? logger()->latestSequence() : 0;
     try {
+        if (!ResourceRegistry::hasCurrent())
+            throw ResourceRegistry::Inactive("engine operation requires an active ResourceRegistry");
         validate(method, params); // Targets/types may have changed while this request waited.
         if (method == "trial_shader") {
             startTrial(id);
@@ -910,7 +871,7 @@ void EngineControl::execute(const std::string& id) {
                 // A failed restore interrupts and releases the trial while
                 // writing trial_conflict to this action receipt. Do not resume
                 // the ordinary applied/rendered path and overwrite that truth.
-                if (!shouldCompleteShaderTrialAction(bool(trial))) return;
+                if (!trial) return;
             }
             entry.response = reply(id, "applied");
             entry.response["method"] = method;
@@ -952,6 +913,10 @@ void EngineControl::execute(const std::string& id) {
         auto entries = method == "trial_shader" && error.code == "shader_failed"
             ? diagnostics(logStart, 128)["entries"] : Json::array();
         entry.response = failure(id, error.code, error.what(), entries);
+        entry.response["method"] = method;
+    } catch (const ResourceRegistry::Inactive& error) {
+        ofLogError("control") << error.what();
+        entry.response = failure(id, "execution_failed", error.what());
         entry.response["method"] = method;
     } catch (...) {
         entry.response = failure(id, "execution_failed", "engine operation failed");
@@ -1009,8 +974,9 @@ void EngineControl::startTrial(const std::string& id) {
     for (auto it = overrides.begin(); it != overrides.end(); ++it) {
         if (it.key().find('[') != std::string::npos || managedUniform(*render.getLayers()[layerIndex], it.key()))
             throw Invalid("invalid_uniform", "uniform is engine-managed or an array");
-        auto found = prepared.uniformTypes.find(it.key());
-        const int components = found == prepared.uniformTypes.end() ? 0 : uniformComponents(found->second);
+        auto found = prepared.uniforms.find(it.key());
+        const int components = found == prepared.uniforms.end() || found->second.isArray()
+            ? 0 : uniformComponents(found->second.type);
         if (components == 0) throw Invalid("invalid_uniform", "uniform is absent or has an unsupported type");
         std::vector<float> values;
         if (it.value().is_array()) for (const auto& value : it.value()) values.push_back(value.get<float>());
@@ -1311,7 +1277,7 @@ void EngineControl::evaluateTrial() {
     updateTrialReceipt();
 }
 
-void EngineControl::interruptTrial(bool) {
+void EngineControl::interruptTrial() {
     if (!trial) return;
     bool restored = false;
     if (trial->feedbackBaseline) {
@@ -1344,14 +1310,6 @@ void EngineControl::interruptTrial(bool) {
         receipts.at(trial->actionId).response = action;
     }
     trial.reset();
-}
-
-bool EngineControl::handleWindowResized(int w, int h) {
-    if (windowShapeRequestActive) {
-        deferredResizeCallback = std::make_pair(w, h);
-        return true;
-    }
-    return processWindowResized(w, h, false);
 }
 
 #ifdef VOSC_RECOVERY_TESTING
@@ -1415,10 +1373,6 @@ Json EngineControl::recoveryTestSnapshot() const {
             {"legacy_pending", commands.pendingCount()},
             {"frame", frame}, {"width", ofGetWidth()}, {"height", ofGetHeight()},
             {"framebuffer_width", framebuffer.first}, {"framebuffer_height", framebuffer.second},
-            {"internal_resize_pending", bool(internalResize)},
-            {"resize_settled", true},
-            {"framebuffer_fallbacks", recoveryTestFramebufferFallbacks},
-            {"setter_mismatches", recoveryTestSetterMismatches},
             {"revision", revision}, {"external_epoch", externalEpoch},
             {"resources", {{"layers", render.getLayers().size()},
                 {"variable_holder_pools", registry ? registry->variableHolderPool.size() : 0},
@@ -1442,67 +1396,7 @@ Json EngineControl::recoveryTestInspectPrograms(const std::vector<unsigned>& pro
     return {{"source", "glIsProgram"}, {"programs", inspected}, {"snapshot", recoveryTestSnapshot()}};
 }
 
-void EngineControl::recoveryTestArmSynchronousResizeMismatch(int width, int height) {
-    recoveryTestArmedResizeMismatch = std::make_pair(width, height);
-}
-
-Json EngineControl::recoveryTestInjectResizeCallback(int expectedWidth, int expectedHeight,
-                                                     int callbackWidth, int callbackHeight,
-                                                     bool synchronous) {
-    internalResize = std::make_pair(expectedWidth, expectedHeight);
-    internalResizePurpose = InternalResizePurpose::Candidate;
-    const auto before = recoveryTestSnapshot();
-    const bool handled = processWindowResized(callbackWidth, callbackHeight, synchronous);
-    const auto afterProcess = recoveryTestSnapshot();
-    internalResize.reset();
-    internalResizePurpose.reset();
-    return {{"source", "deterministic_engine_injection"}, {"synchronous", synchronous},
-            {"expected", {{"width", expectedWidth}, {"height", expectedHeight}}},
-            {"callback", {{"width", callbackWidth}, {"height", callbackHeight}}},
-            {"handled", handled}, {"before", before}, {"after_process", afterProcess},
-            {"after_cleanup", recoveryTestSnapshot()}};
-}
 #endif
-
-bool EngineControl::requestInternalResize(int width, int height, InternalResizePurpose purpose) {
-    internalResize = std::make_pair(width, height);
-    internalResizePurpose = purpose;
-    windowShapeRequestActive = true;
-    ofSetWindowShape(width, height);
-    windowShapeRequestActive = false;
-#ifdef VOSC_RECOVERY_TESTING
-    if (recoveryTestArmedResizeMismatch) {
-        deferredResizeCallback = *recoveryTestArmedResizeMismatch;
-        recoveryTestArmedResizeMismatch.reset();
-        ++recoveryTestSetterMismatches;
-    }
-#endif
-    bool exactSynchronousCallback = true;
-    if (deferredResizeCallback) {
-        const auto callback = *deferredResizeCallback;
-        deferredResizeCallback.reset();
-        exactSynchronousCallback = callback.first == width && callback.second == height &&
-            ofGetWidth() == width && ofGetHeight() == height;
-        processWindowResized(callback.first, callback.second, true);
-    }
-    return exactSynchronousCallback;
-}
-
-bool EngineControl::processWindowResized(int w, int h, bool synchronousInternalCallback) {
-    const auto callbackDecision = classifyInternalResizeCallback(bool(internalResize),
-        internalResize ? internalResize->first : 0, internalResize ? internalResize->second : 0,
-        w, h, ofGetWidth(), ofGetHeight(), synchronousInternalCallback);
-    const bool internal = callbackDecision == InternalResizeCallbackDecision::Expected ||
-        (!internalResizeCallbackMayRelayout(callbackDecision) && internalResizePurpose.has_value());
-    internalResize.reset();
-    internalResizePurpose.reset();
-    if (internal) {
-        render.resizeBacking(w, h);
-        return true;
-    }
-    if (trial) interruptTrial(false);
-    return false;
-}
 
 void EngineControl::update() {
     if (!server.isRunning()) return;
@@ -1679,13 +1573,13 @@ Json EngineControl::scene() const {
         const auto& shader = layer->shader;
         Json uniforms = Json::object(), textures = Json::object();
         auto gpuValues = shader.getUniformValues();
-        auto arrays = arrayUniforms(shader);
-        for (const auto& pair : shader.getUniformTypes()) {
-            Json value = {{"gl_type", pair.second}, {"array", bool(arrays.count(pair.first))},
-                {"writable", uniformComponents(pair.second) > 0 && !managedUniform(*layer, pair.first) && !arrays.count(pair.first)}};
-            auto gpu = gpuValues.find(pair.first);
+        for (const auto& [name, uniform] : shader.getUniforms()) {
+            const bool array = uniform.isArray();
+            Json value = {{"gl_type", uniform.type}, {"array", array},
+                {"writable", uniformComponents(uniform.type) > 0 && !managedUniform(*layer, name) && !array}};
+            auto gpu = gpuValues.find(name);
             if (gpu != gpuValues.end()) value["rendered_value"] = gpu->second;
-            auto var = shader.vars.find(pair.first);
+            auto var = shader.vars.find(name);
             if (var != shader.vars.end()) {
                 auto floats = std::dynamic_pointer_cast<Variable<float>>(var->second);
                 if (floats) {
@@ -1693,7 +1587,7 @@ Json EngineControl::scene() const {
                     value["binding"] = floats->isConst() ? "constant" : "expression";
                 }
             }
-            uniforms[pair.first] = value;
+            uniforms[name] = value;
         }
         for (const auto& pair : shader.getTextures()) {
             textures[pair.first] = {{"loaded", pair.second && pair.second->isLoaded()},
@@ -1785,6 +1679,10 @@ void captureComposedPng(const Json& params, int& backingWidth, int& backingHeigh
 #ifdef VOSC_RECOVERY_TESTING
 Json EngineControl::recoveryTestConflictFeedbackTrial(const Json& command) {
     Json result;
+    if (command.value("invalidate_baseline_program", false) && trial && trial->feedbackBaseline) {
+        trial->baselineProgram = 0;
+        result["candidate_owned"] = bool(ownedFeedbackHolder());
+    }
     if (command.count("action")) result["action"] = Json::parse(handle(command.at("action").dump()));
     if (command.count("foreign_source") && trial && trial->feedbackBaseline)
         result["foreign_installed"] = expectedFeedback().loadFromSource(command.at("foreign_source").get<std::string>());

@@ -7,8 +7,8 @@
 #include "../Buffer.hpp"
 #include "../TexturePool.h"
 #include "ofxShadertoy.h"
-#include <set>
 #include <cstdint>
+#include <optional>
 #include <variant>
 
 #define DEFAULT_TEX "tex"
@@ -34,11 +34,19 @@ public:
         map<string, vector<float>> bindings;
     };
 
+    struct UniformInfo {
+        GLenum type;
+        GLint size;
+        bool indexed;
+
+        bool isArray() const { return indexed || size != 1; }
+    };
+    using Uniforms = map<string, UniformInfo>;
+
     struct PreparedDirectSource {
         shared_ptr<ofShader> program;
         string source;
-        map<string, GLenum> uniformTypes;
-        std::set<std::string> arrayUniforms;
+        Uniforms uniforms;
     };
 
     static map<string, ofxAutoReloadedShader> cache;
@@ -92,10 +100,11 @@ public:
     shared_ptr<Texture>& getTexture(string name) {
         return textures[name];
     }
-    bool hasDefaultTexture() {
-        return hasTexture(DEFAULT_TEX) && getDefaultTexture()->isLoaded();
+    bool hasDefaultTexture() const {
+        const auto texture = getDefaultTexture();
+        return texture && texture->isLoaded();
     }
-    shared_ptr<Texture>& getDefaultTexture();
+    shared_ptr<Texture> getDefaultTexture() const;
     void setDefaultTexture(shared_ptr<Texture>& tex);
     void setTexture(const ofxOscMessage& m);
     void setTexture(const string& name, const ofxOscMessage& m, int arg = 1);
@@ -122,16 +131,17 @@ public:
     }
     const string& getDirectSource() const { return directSource; }
     bool getExportSource(string& source, string& reason) const;
-    const map<string, GLenum>& getUniformTypes() const;
+    const Uniforms& getUniforms() const;
     map<string, string> getUniformValues() const;
     
 protected:
     ofxAutoReloadedShader* watchedShader() const {
-        return isShaderLoaded() && !retainedSourcePath.empty()
+        return isShaderLoaded() && !watchedSourcePath.empty()
             ? static_cast<ofxAutoReloadedShader*>(shader.get()) : nullptr;
     }
 
 private:
+    void clearUniforms();
     GLenum reflectedNonArrayUniformType(const string& name) const;
     void setIntegerVector(const string& name, size_t arity, const vector<IntegerComponent>& components,
                           const shared_ptr<Variable<int>>& variable);
@@ -164,8 +174,9 @@ private:
     shared_ptr<ofxShadertoy> shadertoy;
     string shaderPath;
     string directSource;
-    string retainedSourcePath;
-    mutable map<string, GLenum> uniformTypes;
-    mutable GLuint uniformTypesProgram = 0;
+    string watchedSourcePath;
+    mutable Uniforms uniforms;
+    mutable GLuint uniformProgram = 0;
+    mutable std::optional<ofShader> reflectedWatchedProgram;
     int texLoc;
 };

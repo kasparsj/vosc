@@ -2,6 +2,7 @@
 #include "var/ComponentLiteral.hpp"
 #include "layer/Layer.h"
 #include "ResourceRegistry.hpp"
+#include "TexturePool.h"
 #include "var/VariablePool.h"
 #include <clocale>
 #include <iostream>
@@ -204,7 +205,46 @@ static void mixedFloatLocale() {
     require(!parseComponentLiteral(string("0.25\0junk", 9)));
 }
 
+static void poolOwnership() {
+    Shader holder;
+    const auto requiresRegistry = [](const auto& write) {
+        try {
+            write();
+        } catch (const ResourceRegistry::Inactive&) {
+            return;
+        }
+        throw std::runtime_error("pool write succeeded without a registry");
+    };
+
+    requiresRegistry([&] { holder.setVar("unowned", 1.f); });
+    requiresRegistry([] { VariablePool::createOrUpdateShared<float>("unowned", 1.f); });
+    requiresRegistry([&] { TexturePool::getOrCreate("unowned", &holder); });
+    requiresRegistry([] { TexturePool::getShared("unowned", true); });
+    require(holder.vars.empty());
+
+    ResourceRegistry registry;
+    registry.activate();
+    require(!VariablePool::hasShared("unowned") && !TexturePool::hasShared("unowned"));
+    require(VariablePool::getPool(&holder).empty() && TexturePool::getPool(&holder).empty());
+    require(holder.setVar("owned", 2.f)->get() == 2.f);
+    require(TexturePool::getOrCreate("owned", &holder) == TexturePool::getPool(&holder).at("owned"));
+    require(TexturePool::getShared("owned", true) == TexturePool::getShared("owned", false));
+
+    Layer layer;
+    ofxOscMessage command;
+    command.setAddress("/tex");
+    command.addIntArg(0);
+    command.addStringArg("unowned");
+    registry.deactivate();
+    requiresRegistry([&] { layer.oscCommand(command.getAddress(), command); });
+    require(layer.shader.getTextures().empty());
+    require(!layer.shader.hasDefaultTexture());
+    registry.activate();
+    require(TexturePool::getPool(&layer.shader).empty());
+}
+
 int main() {
+    ofInit();
     repeated<glm::vec2>({"i/total", "(i+1)/total"});
     repeated<glm::vec3>({"i/total", "(i+1)/total", "total+i"});
     repeated<ofFloatColor>({"i/total", "(i+1)/total", "total+i", "1"});
@@ -213,6 +253,7 @@ int main() {
     mixed.update();
     require(mixed.get().x == std::numeric_limits<float>::denorm_min());
     require(mixed.get().y == 1.f);
+    poolOwnership();
     positionBinding();
     integerUniformBinding();
     floatUniformBinding();

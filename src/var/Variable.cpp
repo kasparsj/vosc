@@ -186,8 +186,8 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
 template<typename T>
 void Variable<T>::addSharedVars() {
     if (componentExpressionMode) {
-        auto& pool = VariablePool::getPool(NULL);
-        for (auto& kv : pool) {
+        const auto& pool = VariablePool::sharedVariables();
+        for (const auto& kv : pool) {
             Variable<float>* floatVar = dynamic_cast<Variable<float>*>(kv.second.get());
             if (floatVar != NULL) addExpressionVariable(componentExpressions, kv.first, floatVar->get());
         }
@@ -201,8 +201,8 @@ void Variable<T>::addSharedVars() {
         addExpressionConstant(componentExpressions, "center", 0.5f);
         return;
     }
-    auto& pool = VariablePool::getPool(NULL);
-    for (auto& kv : pool) {
+    const auto& pool = VariablePool::sharedVariables();
+    for (const auto& kv : pool) {
         Variable<float>* floatVar = dynamic_cast<Variable<float>*>(kv.second.get());
         if (floatVar != NULL) {
             addExpressionVariable(expr, kv.first, floatVar->get());
@@ -223,8 +223,8 @@ void Variable<T>::addSharedVars() {
 template<>
 void Variable<int>::addSharedVars() {
     // For int variables, use float expressions and cast to int
-    auto& pool = VariablePool::getPool(NULL);
-    for (auto& kv : pool) {
+    const auto& pool = VariablePool::sharedVariables();
+    for (const auto& kv : pool) {
         Variable<float>* floatVar = dynamic_cast<Variable<float>*>(kv.second.get());
         if (floatVar != NULL) {
             addExpressionVariable(componentExpressions, kv.first, floatVar->get());

@@ -2,26 +2,17 @@
 #include "shader/Shader.h"
 #include "ResourceRegistry.hpp"
 
-namespace {
-map<string, shared_ptr<Texture>>& emptyPool() {
-    static map<string, shared_ptr<Texture>> pool;
-    return pool;
-}
-}
-
 bool TexturePool::hasShared(string name) {
     ResourceRegistry* registry = ResourceRegistry::current();
     return registry != nullptr && registry->textureSharedPool.find(name) != registry->textureSharedPool.end();
 }
 
 shared_ptr<Texture> TexturePool::getShared(string name, bool create) {
+    if (create) return getOrCreate(name, nullptr);
     ResourceRegistry* registry = ResourceRegistry::current();
     if (registry == nullptr) {
         ofLogError() << "TexturePool::getShared called without active ResourceRegistry";
         return nullptr;
-    }
-    if (create && !hasShared(name)) {
-        registry->textureSharedPool[name] = make_shared<Texture>();
     }
     auto it = registry->textureSharedPool.find(name);
     if (it == registry->textureSharedPool.end()) {
@@ -40,10 +31,7 @@ shared_ptr<Texture> TexturePool::getOrCreate(string name, const VarsHolder* hold
 
 map<string, shared_ptr<Texture>>& TexturePool::getPool(const VarsHolder* holder) {
     ResourceRegistry* registry = ResourceRegistry::current();
-    if (registry == nullptr) {
-        ofLogError() << "TexturePool::getPool called without active ResourceRegistry";
-        return emptyPool();
-    }
+    if (!registry) throw ResourceRegistry::Inactive("TexturePool requires an active ResourceRegistry");
     if (holder == nullptr) {
         return registry->textureSharedPool;
     }

@@ -6,11 +6,10 @@
 #include "ofxExpr.hpp"
 #include "../ResourceRegistry.hpp"
 
-namespace {
-map<string, shared_ptr<BaseVar>>& emptyPool() {
-    static map<string, shared_ptr<BaseVar>> pool;
-    return pool;
-}
+const map<string, shared_ptr<BaseVar>>& VariablePool::sharedVariables() {
+    static const map<string, shared_ptr<BaseVar>> empty;
+    const auto* registry = ResourceRegistry::current();
+    return registry ? registry->variableSharedPool : empty;
 }
 
 bool VariablePool::hasShared(const string& name) {
@@ -36,19 +35,15 @@ shared_ptr<BaseVar> VariablePool::createOrUpdateShared(const string& name, const
 }
 
 shared_ptr<BaseVar> VariablePool::createOrUpdateShared(const string& name, const string& command, const ofxOscMessage& m, int idx) {
-    ResourceRegistry* registry = ResourceRegistry::current();
-    if (registry == nullptr) {
-        ofLogError() << "VariablePool::createOrUpdateShared called without active ResourceRegistry";
-        return nullptr;
-    }
+    auto& pool = getPool(nullptr);
     if (hasShared(name)) {
-        BaseVar::update(registry->variableSharedPool.at(name), command, m, idx);
+        BaseVar::update(pool.at(name), command, m, idx);
     }
     else {
-        registry->variableSharedPool[name] = BaseVar::create(command, m, idx);
+        pool[name] = BaseVar::create(command, m, idx);
     }
-    auto it = registry->variableSharedPool.find(name);
-    if (it == registry->variableSharedPool.end()) {
+    auto it = pool.find(name);
+    if (it == pool.end()) {
         return nullptr;
     }
     return it->second;
@@ -56,15 +51,11 @@ shared_ptr<BaseVar> VariablePool::createOrUpdateShared(const string& name, const
 
 template<typename T>
 const shared_ptr<Variable<T>> VariablePool::createOrUpdateShared(const string& name, T value) {
-    ResourceRegistry* registry = ResourceRegistry::current();
-    if (registry == nullptr) {
-        ofLogError() << "VariablePool::createOrUpdateShared called without active ResourceRegistry";
-        return nullptr;
+    auto& pool = getPool(nullptr);
+    if (!hasShared(name) || !std::dynamic_pointer_cast<Variable<T>>(pool.at(name))) {
+        pool[name] = make_shared<Variable<T>>();
     }
-    if (!hasShared(name) || !std::dynamic_pointer_cast<Variable<T>>(registry->variableSharedPool.at(name))) {
-        registry->variableSharedPool[name] = make_shared<Variable<T>>();
-    }
-    auto var = std::dynamic_pointer_cast<Variable<T>>(registry->variableSharedPool.at(name));
+    auto var = std::dynamic_pointer_cast<Variable<T>>(pool.at(name));
     var->set(value);
     return var;
 }
@@ -96,10 +87,7 @@ const shared_ptr<Variable<T>> VariablePool::getOrCreate(const string& name, cons
 
 map<string, shared_ptr<BaseVar>>& VariablePool::getPool(const VarsHolder* holder) {
     ResourceRegistry* registry = ResourceRegistry::current();
-    if (registry == nullptr) {
-        ofLogError() << "VariablePool::getPool called without active ResourceRegistry";
-        return emptyPool();
-    }
+    if (!registry) throw ResourceRegistry::Inactive("VariablePool requires an active ResourceRegistry");
     if (holder == nullptr) {
         return registry->variableSharedPool;
     }

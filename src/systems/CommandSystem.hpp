@@ -41,6 +41,8 @@ private:
     bool checkOnset() const;
     void parseMessage(const ofxOscMessage& m);
     void processQueue();
+    bool hasCommandRegistry(const ofxOscMessage& message) const;
+    bool routeLegacyCommand(const osc::Command& command);
     void handleMidi(const osc::Command& command);
     void routeTargetedResource(const osc::Command& command);
     void invalidCommand(const ofxOscMessage& m) const;

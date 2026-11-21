@@ -6,44 +6,6 @@ bool hasShaderTrialCandidateFrame(uint64_t currentFrame, uint64_t firstCandidate
     return currentFrame >= firstCandidateFrame;
 }
 
-bool shouldCompleteShaderTrialAction(bool trialStillActive) {
-    return trialStillActive;
-}
-
-SceneRollbackResizeDecision evaluateSceneRollbackResize(bool resizeSettled,
-                                                        double nowSeconds,
-                                                        double deadlineSeconds,
-                                                        int framebufferWidth,
-                                                        int framebufferHeight,
-                                                        int baselineWidth,
-                                                        int baselineHeight) {
-    if (resizeSettled || nowSeconds < deadlineSeconds)
-        return SceneRollbackResizeDecision::Wait;
-    if (framebufferWidth == baselineWidth && framebufferHeight == baselineHeight)
-        return SceneRollbackResizeDecision::SettleFromFramebuffer;
-    return SceneRollbackResizeDecision::Unrecoverable;
-}
-
-InternalResizeCallbackDecision classifyInternalResizeCallback(bool hasExpectation,
-                                                              int expectedWidth,
-                                                              int expectedHeight,
-                                                              int eventWidth,
-                                                              int eventHeight,
-                                                              int actualWidth,
-                                                              int actualHeight,
-                                                              bool synchronousRequest) {
-    if (hasExpectation && eventWidth == expectedWidth && eventHeight == expectedHeight &&
-        actualWidth == expectedWidth && actualHeight == expectedHeight)
-        return InternalResizeCallbackDecision::Expected;
-    if (hasExpectation && synchronousRequest)
-        return InternalResizeCallbackDecision::SynchronousMismatch;
-    return InternalResizeCallbackDecision::External;
-}
-
-bool internalResizeCallbackMayRelayout(InternalResizeCallbackDecision decision) {
-    return decision == InternalResizeCallbackDecision::External;
-}
-
 ShaderTrialEvaluation evaluateShaderTrial(const FilteredGpuSnapshot& gpu,
                                           double budgetMilliseconds,
                                           double nowSeconds,

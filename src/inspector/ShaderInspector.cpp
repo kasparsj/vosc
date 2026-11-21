@@ -52,8 +52,8 @@ void ShaderInspector::draw() {
         // Calculate how many uniforms were displayed
         int uniformsHeight = 20; // Title height
         if (shader->isShaderLoaded()) {
-            const map<string, GLenum>& uniformTypes = shader->getUniformTypes();
-            int uniformCount = uniformTypes.size();
+            const auto& uniforms = shader->getUniforms();
+            int uniformCount = uniforms.size();
             if (uniformCount > 0) {
                 // Uniforms are limited to 300 pixels in drawShaderUniforms
                 int displayedUniforms = uniformCount;
@@ -122,13 +122,13 @@ void ShaderInspector::drawShaderUniforms() {
     ofDrawBitmapString("Shader Uniforms", 0, -20);
     
     if (shader->isShaderLoaded()) {
-        const map<string, GLenum>& uniformTypes = shader->getUniformTypes();
+        const auto& uniforms = shader->getUniforms();
         const map<string, string>& uniformValues = shader->getUniformValues();
         
         int y = 0;
-        for (const auto& it : uniformTypes) {
+        for (const auto& it : uniforms) {
             const string& name = it.first;
-            GLenum type = it.second;
+            GLenum type = it.second.type;
             string typeStr = "Unknown";
             
             // Convert GLenum to string
@@ -165,7 +165,7 @@ void ShaderInspector::drawShaderUniforms() {
             }
         }
         
-        if (uniformTypes.empty()) {
+        if (uniforms.empty()) {
             ofDrawBitmapString("No uniforms found", 0, 0);
         }
     }

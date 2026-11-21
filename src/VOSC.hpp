@@ -35,7 +35,6 @@ private:
     std::string recoveryTestDirectory;
     std::string recoveryTestCommandPath;
     std::string recoveryTestEventsPath;
-    int recoveryTestSuppressResizeCallbacks = 0;
 #endif
     ResourceSystem resourceSystem;
     RuntimeContext runtime;
