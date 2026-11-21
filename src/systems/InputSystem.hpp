@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxMidi.h"
 #include "ofxOsc.h"
 #include <functional>
 
@@ -14,5 +13,4 @@ public:
 
 private:
     ofxOscReceiver receiver;
-    ofxMidiIn midiIn;
 };
