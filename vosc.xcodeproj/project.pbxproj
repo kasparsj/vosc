@@ -406,9 +406,9 @@
 		2B7546672EC0BEFD00494ADF /* particles-gpu.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = "particles-gpu.scd"; sourceTree = "<group>"; };
 		2B7546682EC0BEFD00494ADF /* performance.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = performance.scd; sourceTree = "<group>"; };
 		2B7546692EC0BEFD00494ADF /* shaders.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = shaders.scd; sourceTree = "<group>"; };
-		2B75466A2EC0BEFD00494ADF /* sieve.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = sieve.scd; sourceTree = "<group>"; };
+		2B75466A2EC0BEFD00494ADF /* sieve.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = "../examples/sieve/scene.scd"; sourceTree = "<group>"; };
 		2B75466B2EC0BEFD00494ADF /* sketches.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = sketches.scd; sourceTree = "<group>"; };
-		2B75466C2EC0BEFD00494ADF /* sound-data.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = "sound-data.scd"; sourceTree = "<group>"; };
+		2B75466C2EC0BEFD00494ADF /* sound-data.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = "../examples/sound-data/scene.scd"; sourceTree = "<group>"; };
 		2B75466D2EC0BEFD00494ADF /* test.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = test.scd; sourceTree = "<group>"; };
 		2B75466E2EC0BEFD00494ADF /* ultralight.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = ultralight.scd; sourceTree = "<group>"; };
 		2B75466F2EC0BEFD00494ADF /* video.scd */ = {isa = PBXFileReference; lastKnownFileType = text; path = video.scd; sourceTree = "<group>"; };

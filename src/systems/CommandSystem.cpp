@@ -798,7 +798,7 @@ void CommandSystem::applyStartupScene(const scene::File& file, ScenePrograms& pr
     auto& state = *sceneReplay;
     state.width = file.width;
     state.height = file.height;
-    state.finalGate = -1;
+    state.finalGate = file.onsetGate;
     state.deadline = replayNow() + 12.0;
     state.diagnosticStart = replayLogger() ? replayLogger()->latestSequence() : 0;
     resetScene(file.width, file.height);
@@ -1214,6 +1214,7 @@ void CommandSystem::afterComposedDraw() {
         failSceneReplay("input resource did not settle before draw");
         return;
     }
+    const int maxImageSide = startupSceneResult ? scene::MaxImageSide : 2048;
     for (const auto& layer : renderSystem.getLayers()) {
         if (!layer) { failSceneReplay("layer resource is missing before draw"); return; }
         const glm::vec3 size = layer->getVarVec3("size");
@@ -1231,10 +1232,10 @@ void CommandSystem::afterComposedDraw() {
                 continue;
             }
             if (!texture || !texture->isLoaded() || !texture->getPixels().isAllocated() ||
-                texture->getPixels().getWidth() <= 0 || texture->getPixels().getWidth() > 2048 ||
-                texture->getPixels().getHeight() <= 0 || texture->getPixels().getHeight() > 2048 ||
+                texture->getPixels().getWidth() <= 0 || texture->getPixels().getWidth() > maxImageSide ||
+                texture->getPixels().getHeight() <= 0 || texture->getPixels().getHeight() > maxImageSide ||
                 texture->data.getSize().x <= 0 || texture->data.getSize().y <= 0 ||
-                texture->data.getSize().x > 2048 || texture->data.getSize().y > 2048) {
+                texture->data.getSize().x > maxImageSide || texture->data.getSize().y > maxImageSide) {
                 failSceneReplay("image resource did not settle before draw"); return;
             }
         }

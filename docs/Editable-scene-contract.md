@@ -67,4 +67,4 @@ and shared resource aliases. The recipe captures configuration. Animation phase,
 input samples, and live feedback history are recreated by running the scene.
 
 See the [engine API](Engine-api.md#editable-scene-export) for descriptor access
-and the [SuperCollider examples](../SuperCollider/README.md) for a runnable sketch.
+and the [Editable Scene example](../examples/editable-scene/scene.scd) for a runnable sketch.

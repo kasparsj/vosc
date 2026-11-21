@@ -6,10 +6,22 @@ considers only nearby cells and uses up to eight continuous tapered segments per
 trail. Paths are procedural, not persisted feedback or a stateful simulation.
 The shader honors the renderer's globalColor.
 
-## Recreate or adjust
+## Run the native scene
 
-For an eligible single-layer direct-source scene, submit `organic-trails.frag`
-and all four [preset.json](preset.json) values together with `trial_shader`.
+From the repository root, pass [scene.vosc.json](scene.vosc.json) to a VOSC
+binary that supports `--scene`.
+
+```sh
+vosc --scene examples/organic-trails/scene.vosc.json
+```
+
+The scene opens at 1024×768 and loads the fragment shader under `assets/` on one
+stack layer with the four defaults below.
+
+## Protected live authoring
+
+For an eligible single-layer direct-source scene, submit `assets/organic-trails.frag`
+and the four uniform defaults from [scene.vosc.json](scene.vosc.json) together with `trial_shader`.
 Wait for `ready`, inspect a native preview, and explicitly `accept_trial`; use
 `cancel_trial` when the candidate is not the intended visual. This protects the
 retained shader and controls with the composed-scene GPU budget.
@@ -40,8 +52,7 @@ CHECK_DIR="$(mktemp -d /tmp/vosc-organic.XXXXXX)"
 python3 scripts/build_macos_authoring.py --output "$CHECK_DIR/build"
 python3 scripts/test_protected_authoring.py \
   --binary "$CHECK_DIR/build/products/voscDebug.app/Contents/MacOS/voscDebug" \
-  --shader examples/organic-trails/organic-trails.frag \
-  --preset examples/organic-trails/preset.json \
+  --scene examples/organic-trails/scene.vosc.json \
   --output "$CHECK_DIR/evidence" --allow-reset
 ```
 

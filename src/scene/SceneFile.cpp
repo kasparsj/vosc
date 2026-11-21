@@ -47,7 +47,7 @@ fs::path resolveAsset(const fs::path& root, const std::string& name) {
     return resolved;
 }
 
-void preflightImage(const fs::path& path, std::string& bytes) {
+void preflightImage(const fs::path& path, std::string& bytes, size_t& decodedBytes) {
     auto extension = path.extension().string();
     std::transform(extension.begin(), extension.end(), extension.begin(),
                    [](unsigned char ch) { return std::tolower(ch); });
@@ -67,16 +67,24 @@ void preflightImage(const fs::path& path, std::string& bytes) {
         throw std::runtime_error("invalid image header");
     std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> header(
         FreeImage_LoadFromMemory(expected, memory.get(), FIF_LOAD_NOPIXELS), FreeImage_Unload);
-    const auto validSize = [](size_t width, size_t height) {
-        return width > 0 && height > 0 && width <= 2048 && height <= 2048;
-    };
     if (!header) throw std::runtime_error("invalid image header");
-    if (!validSize(FreeImage_GetWidth(header.get()), FreeImage_GetHeight(header.get())))
-        throw std::runtime_error("image exceeds the 2048-pixel per-side limit");
+    const size_t width = FreeImage_GetWidth(header.get());
+    const size_t height = FreeImage_GetHeight(header.get());
+    if (width == 0 || height == 0 || width > MaxImageSide || height > MaxImageSide)
+        throw std::runtime_error("image exceeds the " + std::to_string(MaxImageSide) + "-pixel per-side limit");
+    if (width * height > MaxImagePixels)
+        throw std::runtime_error("image exceeds the 10000000-pixel limit");
+    // The decoder can allocate higher-depth rows before ofLoadImage converts them.
+    const size_t decodedRowBytes = FreeImage_GetPitch(header.get());
+    const size_t imageBytes = std::max(width * 4, decodedRowBytes) * height;
+    if (imageBytes > MaxDecodedImageBytes - decodedBytes)
+        throw std::runtime_error("scene exceeds the 64 MiB decoded image budget");
     ofPixels pixels;
     if (!ofLoadImage(pixels, ofBuffer(bytes.data(), bytes.size())) ||
-        !validSize(pixels.getWidth(), pixels.getHeight()))
+        pixels.getWidth() != width || pixels.getHeight() != height ||
+        pixels.size() > imageBytes)
         throw std::runtime_error("image could not be decoded within bounds");
+    decodedBytes += imageBytes;
 }
 
 void preflightFragment(const fs::path& path, const std::string& bytes) {
@@ -131,7 +139,7 @@ bool objectShape(const ofJson& value, std::initializer_list<const char*> keys) {
 
 bool sceneAddress(const std::string& address) {
     static const std::set<std::string> allowed{
-        "/layers/reset", "/shader", "/shader/texture", "/shader/var", "/layer/pos",
+        "/layers/reset", "/input", "/shader", "/shader/texture", "/shader/var", "/layer/pos",
         "/layer/size", "/layer/tint", "/layer/alpha", "/layer/visible"};
     return allowed.count(address) != 0;
 }
@@ -189,8 +197,9 @@ File load(const fs::path& path) {
             throw std::runtime_error("duplicate JSON key: " + item.get<std::string>());
         return true;
     });
-    if (!objectShape(document, {"version", "title", "size", "commands"}))
-        throw std::runtime_error("expected version, title, size and commands");
+    if (!objectShape(document, {"version", "title", "size", "commands"}) &&
+        !objectShape(document, {"version", "title", "size", "commands", "onset_gate"}))
+        throw std::runtime_error("expected version, title, size, commands and optional onset_gate");
     if (!document["version"].is_number_integer() || document["version"] != 1)
         throw std::runtime_error("unsupported scene version (expected 1)");
     if (!document["title"].is_string()) throw std::runtime_error("title must be a string");
@@ -202,12 +211,18 @@ File load(const fs::path& path) {
     if (!size.is_array() || size.size() != 2) throw std::runtime_error("size must contain width and height");
     result.width = windowDimension(size[0]);
     result.height = windowDimension(size[1]);
+    if (document.count("onset_gate")) {
+        const auto& gate = document["onset_gate"];
+        if (!gate.is_number_integer() || gate < -1 || gate > 1)
+            throw std::runtime_error("onset_gate must be an integer in -1..1");
+        result.onsetGate = gate.get<int>();
+    }
     const auto& commands = document["commands"];
     if (!commands.is_array() || commands.empty() || commands.size() > 2048)
         throw std::runtime_error("commands must contain 1..2048 entries");
 
     std::set<fs::path> assets;
-    size_t shaderBytes = 0, imageBytes = 0;
+    size_t shaderBytes = 0, imageBytes = 0, decodedImageBytes = 0;
     for (const auto& entry : commands) {
         const std::string prefix = "command " + std::to_string(result.commands.size() + 1);
         if (!objectShape(entry, {"address", "args"}) || !entry["address"].is_string() ||
@@ -244,13 +259,14 @@ File load(const fs::path& path) {
                             std::min(remaining, fragment ? 128 * KiB : 16 * MiB));
                         total += command.assetBytes.size();
                         if (fragment) preflightFragment(command.asset, command.assetBytes);
-                        else preflightImage(command.asset, command.assetBytes);
+                        else preflightImage(command.asset, command.assetBytes, decodedImageBytes);
                     } catch (const std::exception& error) {
                         throw std::runtime_error(command.asset.string() + ": " + error.what());
                     }
                     command.message.addStringArg(command.asset.string());
                 } else if ((type == "s" && index > 0 &&
-                            (address.rfind("/layer/", 0) == 0 || (address == "/shader/var" && index > 1))) ||
+                            ((address.rfind("/layer/", 0) == 0 && address != "/layer/alpha") ||
+                             (address == "/shader/var" && index > 1))) ||
                            !appendOscValue(command.message, type, value)) {
                     throw std::runtime_error("invalid type or value for argument " + std::to_string(index + 1));
                 }

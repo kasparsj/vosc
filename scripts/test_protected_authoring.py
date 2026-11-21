@@ -15,6 +15,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import struct
 import subprocess
 import tempfile
 import time
@@ -94,6 +95,14 @@ def configured_controls(scene: dict, names: list[str]) -> dict:
     return {name: uniforms[name]["configured_value"] for name in names}
 
 
+def float32_controls(controls: dict) -> dict:
+    return {
+        name: [struct.unpack("!f", struct.pack("!f", value))[0]
+               for value in (values if isinstance(values, list) else [values])]
+        for name, values in controls.items()
+    }
+
+
 def wait_for_socket(process: subprocess.Popen, socket_path: Path, log_path: Path) -> None:
     for _ in range(150):
         if socket_path.is_socket():
@@ -120,8 +129,7 @@ def stop_owned(process: subprocess.Popen, binary: Path, socket_path: Path) -> di
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
-    parser.add_argument("--shader", type=Path, required=True)
-    parser.add_argument("--preset", type=Path, required=True)
+    parser.add_argument("--scene", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--allow-reset", action="store_true",
                         help="Acknowledge that the newly launched disposable renderer is reset")
@@ -131,11 +139,25 @@ def main() -> int:
     if not args.allow_reset:
         parser.error("--allow-reset is required for this destructive disposable-renderer check")
     binary = args.binary.resolve()
-    shader_path = args.shader.resolve()
-    preset_path = args.preset.resolve()
+    scene_path = args.scene.resolve()
     output = args.output.resolve()
-    if not binary.is_file() or not shader_path.is_file() or not preset_path.is_file():
-        parser.error("binary, shader, and preset must be existing files")
+    if not binary.is_file() or not scene_path.is_file():
+        parser.error("binary and scene must be existing files")
+    scene_bytes = scene_path.read_bytes()
+    commands = json.loads(scene_bytes)["commands"]
+    shader_args, = [command["args"] for command in commands if command["address"] == "/shader"]
+    shader_path = (scene_path.parent / shader_args[1]["value"]).resolve()
+    if not shader_path.is_relative_to(scene_path.parent) or not shader_path.is_file():
+        parser.error("shader must be an existing asset within the scene folder")
+    controls = {}
+    for command in commands:
+        if command["address"] == "/shader/var":
+            layer, name, *components = (arg["value"] for arg in command["args"])
+            if layer != 0:
+                parser.error("protected authoring check requires controls on layer 0")
+            controls[name] = components[0] if len(components) == 1 else components
+    names = list(controls)
+    shader = shader_path.read_text()
     output.mkdir(parents=True, exist_ok=False)
     output.chmod(0o700)
     runtime = Path(tempfile.mkdtemp(prefix="vosc-protected-authoring-", dir="/tmp"))
@@ -154,9 +176,6 @@ def main() -> int:
     try:
         wait_for_socket(process, socket_path, log_path)
         session = Session(socket_path, output)
-        controls = json.loads(preset_path.read_text())["controls"]
-        names = list(controls)
-        shader = shader_path.read_text()
         session.mutate("configure_layers", {"count": 1, "layout": "stack"})
         session.mutate("publish_shader", {"layer": 0, "source": BASELINE})
         cheap_baseline = session.scene()
@@ -180,6 +199,8 @@ def main() -> int:
         accepted_scene = session.scene()
         accepted_program = accepted_scene["layers"][0]["shader"]["program"]
         accepted_controls = configured_controls(accepted_scene, names)
+        expected_controls = float32_controls(controls)
+        assert accepted_controls == expected_controls, (accepted_controls, expected_controls)
         accepted_capture = session.capture("organic-accepted.png", accepted_scene["revision"])
 
         # Let preview readback and acceptance leave the 120-frame telemetry window
@@ -207,6 +228,9 @@ def main() -> int:
             lambda item: item["status"] == "ready" or not item["ok"])
         assert cancel_ready["ok"] and cancel_ready["status"] == "ready", cancel_ready
         candidate_scene = session.scene()
+        candidate_controls = configured_controls(candidate_scene, names)
+        expected_candidate = float32_controls(revised)
+        assert candidate_controls == expected_candidate, (candidate_controls, expected_candidate)
         candidate_capture = session.capture("organic-cancel-candidate.png", candidate_scene["revision"])
         cancel = session.mutate("cancel_trial", {"trial_id": cancel_trial_id})
         cancelled_receipt = session.wait_for(cancel_trial_id, lambda item: item["status"] not in PENDING)
@@ -221,7 +245,7 @@ def main() -> int:
 
         evidence = {"status": "PASS", "owner": owner,
             "inputs": {"shader": str(shader_path), "shader_sha256": hashlib.sha256(shader.encode()).hexdigest(),
-                       "preset": str(preset_path), "preset_sha256": hashlib.sha256(preset_path.read_bytes()).hexdigest(),
+                       "scene": str(scene_path), "scene_sha256": hashlib.sha256(scene_bytes).hexdigest(),
                        "controls": controls},
             "cheap_baseline": {"program": cheap_baseline["layers"][0]["shader"]["program"],
                                "revision": cheap_baseline["revision"]},
@@ -234,7 +258,8 @@ def main() -> int:
                              "candidate_scene": candidate_scene, "action": cancel,
                              "terminal": cancelled_receipt, "restored_scene": restored_scene,
                              "accepted_program": accepted_program, "restored_program": restored_program,
-                             "accepted_controls": accepted_controls, "restored_controls": restored_controls,
+                             "accepted_controls": accepted_controls, "candidate_controls": candidate_controls,
+                             "restored_controls": restored_controls,
                              "capture_candidate": candidate_capture, "capture_restored": restored_capture}}
         (output / "evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
         print(f"PASS protected organic accept/cancel session; evidence: {output}")

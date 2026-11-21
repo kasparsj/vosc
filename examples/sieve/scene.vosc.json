@@ -5,7 +5,7 @@
   "commands": [
     {"address": "/layers/reset", "args": [{"type": "i", "value": 1}, {"type": "s", "value": "stack"}]},
     {"address": "/shader", "args": [{"type": "i", "value": 0}, {"type": "asset", "value": "assets/sieve.frag"}]},
-    {"address": "/shader/texture", "args": [{"type": "i", "value": 0}, {"type": "s", "value": "srctex"}, {"type": "asset", "value": "assets/black_hole-2048.png"}]},
+    {"address": "/shader/texture", "args": [{"type": "i", "value": 0}, {"type": "s", "value": "srctex"}, {"type": "asset", "value": "assets/black_hole.jpg"}]},
     {"address": "/shader/texture", "args": [{"type": "i", "value": 0}, {"type": "s", "value": "sieve"}, {"type": "asset", "value": "assets/square_3x3.png"}]},
     {"address": "/shader/var", "args": [{"type": "i", "value": 0}, {"type": "s", "value": "dim"}, {"type": "i", "value": 1024}, {"type": "i", "value": 768}]},
     {"address": "/shader/var", "args": [{"type": "i", "value": 0}, {"type": "s", "value": "sievedim"}, {"type": "i", "value": 6}, {"type": "i", "value": 6}]},

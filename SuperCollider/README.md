@@ -24,11 +24,11 @@ NetAddr("127.0.0.1", 33333).sendMsg('/onset', 0);
 | [Clouds](clouds.scd), [grass](grass.scd), [GPU particles](particles-gpu.scd) | Bundled shaders with camera, geometry or feedback. [GL constants](gl.scd) is a helper these scripts load. |
 | [Video](video.scd) | Playback and seeking with your own local MOV or MP4. |
 | [Webcam delay](webcam-delay.scd), [webcam looper](webcam-looper.scd) | Shared webcam textures, frame history and loops. Requires an available capture device and Camera permission for the running app. |
-| [External audio analysis](sound-data.scd) | Start the SC audio server first. Send analysis from a microphone or selected file channel into a VOSC expression input. |
-| [Editable scene](editable-scene-example.scd) | Uses an owned renderer on port 43333 and VisualsQuark scene replay API 1. |
+| [External audio analysis](../examples/sound-data/scene.scd) | Start the SC audio server first. Send analysis from a microphone or selected file channel into a VOSC expression input. |
+| [Editable scene](../examples/editable-scene/scene.scd) | Uses an owned renderer on port 43333 and VisualsQuark scene replay API 1. |
 
 [Ultralight](ultralight.scd) needs an optional HTML-enabled build and a reachable
 URL. The default build disables HTML textures. The local Ultralight libraries
 are Intel-only, so an Apple Silicon build needs ARM64 libraries to enable
-that example. [Sieve](sieve.scd) demonstrates spatial remapping with ordinary
+that example. [Sieve](../examples/sieve/scene.scd) demonstrates spatial remapping with ordinary
 2D textures.

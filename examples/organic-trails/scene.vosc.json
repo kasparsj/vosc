@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "title": "Organic Trails",
+  "size": [1024, 768],
+  "commands": [
+    {"address": "/layers/reset", "args": [{"type": "i", "value": 1}, {"type": "s", "value": "stack"}]},
+    {"address": "/shader", "args": [{"type": "i", "value": 0}, {"type": "asset", "value": "assets/organic-trails.frag"}]},
+    {"address": "/shader/var", "args": [{"type": "i", "value": 0}, {"type": "s", "value": "motionSpeed"}, {"type": "f", "value": 0.65}]},
+    {"address": "/shader/var", "args": [{"type": "i", "value": 0}, {"type": "s", "value": "trailLength"}, {"type": "f", "value": 1.25}]},
+    {"address": "/shader/var", "args": [{"type": "i", "value": 0}, {"type": "s", "value": "brightness"}, {"type": "f", "value": 1.7}]},
+    {"address": "/shader/var", "args": [{"type": "i", "value": 0}, {"type": "s", "value": "coolTint"}, {"type": "f", "value": 0.16}, {"type": "f", "value": 0.62}, {"type": "f", "value": 1.0}]}
+  ]
+}

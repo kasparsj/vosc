@@ -617,7 +617,8 @@ def swap_layer_order(source: Path, destination: Path) -> Path:
 def source_snapshot(visuals_quark: Path | None = None) -> dict:
     digest = hashlib.sha256()
     count = 0
-    for root_name in ("src", "mcp", "scripts", "tests", "SuperCollider"):
+    roots = ["src", "mcp", "scripts", "tests", "SuperCollider", "examples"]
+    for root_name in roots:
         for path in sorted((ROOT / root_name).rglob("*")):
             # Finder view metadata is not an executable/fixture input. Preserve it,
             # but exclude its incidental updates from the source fingerprint.
@@ -631,8 +632,7 @@ def source_snapshot(visuals_quark: Path | None = None) -> dict:
             digest.update(struct.pack(">Q", len(data)))
             digest.update(data)
             count += 1
-    result = {"sha256": digest.hexdigest(), "file_count": count,
-              "roots": ["src", "mcp", "scripts", "tests", "SuperCollider"]}
+    result = {"sha256": digest.hexdigest(), "file_count": count, "roots": roots}
     if visuals_quark is not None:
         result["visuals_quark"] = quark_source_identity(visuals_quark)
     return result

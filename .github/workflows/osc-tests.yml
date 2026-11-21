@@ -46,6 +46,9 @@ jobs:
       - name: Verify Generated OSC Reference
         run: python3 scripts/generate_osc_reference.py --check
 
+      - name: Verify Generated Example Sketches
+        run: python3 scripts/generate_example_scd.py --check
+
       - name: Verify Markdown Links
         run: bash scripts/check_md_links.sh
 

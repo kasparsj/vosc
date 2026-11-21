@@ -8,6 +8,10 @@
 
 namespace scene {
 
+inline constexpr int MaxImageSide = 4096;
+inline constexpr size_t MaxDecodedImageBytes = 64 * 1024 * 1024;
+inline constexpr size_t MaxImagePixels = 10'000'000;
+
 struct Command {
     ofxOscMessage message;
     std::filesystem::path asset;
@@ -19,6 +23,7 @@ struct File {
     std::string title;
     int width = 0;
     int height = 0;
+    int onsetGate = -1;
     std::vector<Command> commands;
 };
 

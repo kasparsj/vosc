@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify native scene startup and original SC parity using owned processes."""
+"""Verify native scene startup and SuperCollider replay using owned processes."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import argparse
 from contextlib import closing
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -17,11 +18,12 @@ import tempfile
 import time
 import zlib
 
+from generate_example_scd import sieve_scene
 from test_scene_recipe import (
-    ROOT, OwnedRenderer, arm_recovery_hook, capture, collect_cleanup, free_udp_port, run_sclang, sc_escape,
+    ROOT, OwnedRenderer, arm_recovery_hook, capture, collect_cleanup, free_udp_port, osc, run_sclang,
 )
 
-SIEVE_IMAGE = "black_hole-2048.png"
+SIEVE_IMAGE = "black_hole.jpg"
 SIEVE_MARKER = "VOSC_SIEVE_SEND_COMPLETE"
 
 
@@ -30,24 +32,15 @@ def require(condition, detail):
         raise RuntimeError(detail)
 
 
-def redirect_sc(text, port, *, sieve, derivative=None):
+def redirect_sc(text, port, *, sieve):
     require(0 < port < 65536 and port != 33333, "expected owned private UDP port")
+    original = "var rendererPort = 33333;" if sieve else "var rendererPort = 43333;"
+    require(text.count(original) == 1, "original endpoint is ambiguous")
+    require(text.count('var rendererHost = "127.0.0.1";') == 1, "unexpected example host")
     if sieve:
-        original = 'OSCVisuals("127.0.0.1", 33333, reset: true)'
-        owned = f'OSCVisuals("127.0.0.1", {port}, reset: true)'
-        original_image = '"black_hole.jpg"'
-        if derivative is not None:
-            require(text.count(original_image) == 1, "Sieve source image is ambiguous")
-            text = text.replace(original_image, f'"{sc_escape(derivative)}"', 1)
         require(text.rstrip().endswith(")"), "expected trailing Sieve block")
         text = text.rstrip()[:-1] + f'"{SIEVE_MARKER}".postln;\n)\n'
-    else:
-        original = "var rendererPort = 43333;"
-        owned = f"var rendererPort = {port};"
-        require(text.count("OSCVisuals(rendererHost, rendererPort)") == 1 and
-                text.count('var rendererHost = "127.0.0.1";') == 1, "unexpected Editable Scene endpoint")
-    require(text.count(original) == 1, "original endpoint is ambiguous")
-    return text.replace(original, owned, 1), "verified-owned-example"
+    return text.replace(original, f"var rendererPort = {port};", 1), "verified-owned-example"
 
 
 def read_state(client):
@@ -59,6 +52,8 @@ def read_state(client):
 def comparable_state(state):
     return {
         "layout": state["layout"],
+        "size": [state["width"], state["height"]],
+        "onset_gate": state["onset_gate"],
         "layers": [
             {
                 **{key: layer[key] for key in ("alpha", "visible", "size", "geometry_loaded")},
@@ -161,23 +156,102 @@ def run_port(args, output, file, label, size, cwd, evidence, *, sieve):
     return run_owned(args.binary, output, label, 0, run, evidence, arguments=("--scene", file), cwd=cwd)
 
 
-def run_original(args, output, origin, label, size, evidence, *, sieve, derivative=None):
-    file = output / f"{label}.scd"
-    file.write_bytes(origin.read_bytes())
-    if not sieve:
-        shutil.copytree(origin.parent / "assets", output / "assets")
+def run_animated_examples(args, output, cwd, evidence):
+    size = (1024, 768)
+    for name in ("organic-trails", "sound-data"):
+        staged = output / f"{name}-staged"
+        relocated = output / f"{name} déplacé"
+        shutil.copytree(ROOT / "examples" / name, staged)
+        staged.rename(relocated)
+        manifest = relocated / "scene.vosc.json"
+
+        def run(renderer, node):
+            pixels, observation = observe(renderer, output, name, size, native=True)
+            node.update(observation)
+            layer, = observation["state"]["layers"]
+            if name == "organic-trails":
+                uniforms = layer["shader"]["uniforms"]
+                manifest_data = json.loads(manifest.read_text())
+                for command in manifest_data["commands"]:
+                    if command["address"] != "/shader/var":
+                        continue
+                    _, control, *components = (arg["value"] for arg in command["args"])
+                    format_string = f"!{len(components)}f"
+                    expected = list(struct.unpack(format_string, struct.pack(format_string, *components)))
+                    uniform = uniforms[control]
+                    rendered = json.loads(uniform["rendered_value"])
+                    if not isinstance(rendered, list):
+                        rendered = [rendered]
+                    require(len(rendered) == len(expected) and all(
+                        math.isclose(actual, target, rel_tol=5e-6)
+                        for actual, target in zip(rendered, expected)
+                    ), f"{control} rendered value")
+                next_pixels, _ = observe(renderer, output, "organic-trails-next", size, native=True)
+                require(pixels != next_pixels and any(max(pixel[:3]) > 80 for pixel in pixels),
+                        "Organic Trails did not render moving particles")
+                return
+
+            require(layer["alpha"] == 0.0, "Sound Data alpha without a sample")
+            osc(renderer.port, "/input/data", "analysis", 0.7, 1.0, 0)
+            active, sample = observe(renderer, output, "sound-data-sample", size, native=True)
+            require(sample["state"]["layers"][0]["alpha"] > 0.0 and active != pixels,
+                    "Sound Data sample did not drive the rendered opacity")
+            osc(renderer.port, "/input/data", "analysis", 0.0)
+            cleared, sample = observe(renderer, output, "sound-data-cleared", size, native=True)
+            require(sample["state"]["layers"][0]["alpha"] == 0.0 and cleared == pixels,
+                    "Sound Data cleanup did not clear the rendered opacity")
+
+        run_owned(args.binary, output, name, free_udp_port(), run, evidence,
+                  arguments=("--scene", manifest), cwd=cwd)
+
+
+def run_companion(args, output, folder, label, size, cwd, evidence, *, sieve, native=False):
+    original = folder / "scene.scd"
+    file = folder / f"{label}.scd"
 
     def run(renderer, node):
         node["sclang"] = run_sclang(
             args.sclang, file, output, renderer.port, label, args.visuals_quark,
             ordinary=sieve, ordinary_marker=SIEVE_MARKER,
-            prepare_endpoint=lambda text, port: redirect_sc(text, port, sieve=sieve, derivative=derivative),
+            prepare_endpoint=lambda text, port: redirect_sc(text, port, sieve=sieve),
         )
-        pixels, observation = observe(renderer, output, label, size, sieve=sieve)
+        pixels, observation = observe(renderer, output, label, size, native=native, sieve=sieve)
         node.update(observation)
         return pixels, comparable_state(observation["state"])
 
-    return run_owned(args.binary, output, label, free_udp_port(), run, evidence)
+    arguments = ()
+    if native:
+        arguments = ("--scene", folder / "scene.vosc.json")
+    elif sieve:
+        launch_size = re.search(r"^// Blank renderer: vosc --size (\d+x\d+)$",
+                                original.read_text(), re.MULTILINE)
+        require(launch_size and launch_size[1] == f"{size[0]}x{size[1]}",
+                "Sieve's generated blank-renderer command does not match the manifest dimensions")
+        arguments = ("--size", launch_size[1])
+    file.write_bytes(original.read_bytes())
+    try:
+        return run_owned(args.binary, output, label, free_udp_port(), run, evidence, arguments=arguments, cwd=cwd)
+    finally:
+        file.unlink()
+
+
+def run_sieve_manifest_variant(args, output, cwd, evidence):
+    folder = output / "sieve custom déplacé"
+    shutil.copytree(ROOT / "examples/sieve", folder)
+    manifest_file = folder / "scene.vosc.json"
+    manifest = json.loads(manifest_file.read_text())
+    size = (800, 600)
+    manifest.update(size=list(size), onset_gate=1)
+    manifest_file.write_text(json.dumps(manifest))
+    (folder / "scene.scd").write_text(sieve_scene(manifest))
+    native = run_port(args, output, manifest_file, "sieve-custom-native", size, cwd, evidence, sieve=True)
+    replay = run_companion(args, output, folder, "sieve-custom-sc", size, cwd, evidence, sieve=True)
+    key = "sieve-custom-sc-parity"
+    comparison = compare(output, key, size, native[0], replay[0])
+    evidence["comparisons"][key] = comparison
+    require(native[1]["onset_gate"] is True and replay[1]["onset_gate"] is True,
+            "Sieve custom onset gate did not take effect in both renderers")
+    require(comparison["changed_pixels"] == 0 and native[1] == replay[1], key)
 
 
 def negative(binary, output, label, argv, expected, *, trace=(), inject=None):
@@ -241,6 +315,7 @@ def run_negatives(args, output, evidence):
         file.write_bytes(content.encode())
         results[label] = negative(args.binary, output, label, ["--scene", file], expected)
     fixture("version", lambda data: data.update(version=2), "unsupported scene version")
+    fixture("onset-gate", lambda data: data.update(onset_gate=2), "onset_gate must be an integer in -1..1")
     fixture("address", lambda data: data["commands"][-1].update(address="/bogus"), "command 9 /bogus")
     fixture("arity", lambda data: data["commands"][-1]["args"].clear(), "command 9 /shader/var")
     fixture("order", lambda data: data["commands"].reverse(), "command 1 /shader/var")
@@ -257,9 +332,39 @@ def run_negatives(args, output, evidence):
     (work / "assets/corrupt.png").write_bytes(b"not an image")
     fixture("corrupt", lambda data: data["commands"][2]["args"][2].update(value="assets/corrupt.png"),
             "invalid image header")
-    shutil.copy2(ROOT / "bin/data/images/black_hole.jpg", work / "assets/oversized.jpg")
-    fixture("oversized", lambda data: data["commands"][2]["args"][2].update(value="assets/oversized.jpg"),
-            "2048-pixel")
+    def write_png(path, width, height, *, rgba16=False):
+        def chunk(kind, payload):
+            return (struct.pack(">I", len(payload)) + kind + payload +
+                    struct.pack(">I", zlib.crc32(kind + payload)))
+
+        depth, color_type = (16, 6) if rgba16 else (8, 0)
+        header = struct.pack(">IIBBBBB", width, height, depth, color_type, 0, 0, 0)
+        row = bytes(width * (8 if rgba16 else 1) + 1)
+        compressor = zlib.compressobj()
+        pixels = b"".join(compressor.compress(row) for _ in range(height)) + compressor.flush()
+        path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) +
+                         chunk(b"IDAT", pixels) + chunk(b"IEND", b""))
+
+    write_png(work / "assets/over-side.png", 4097, 1)
+    fixture("over-side", lambda data: data["commands"][2]["args"][2].update(value="assets/over-side.png"),
+            "4096-pixel per-side")
+    write_png(work / "assets/over-area.png", 4096, 2442)
+    fixture("over-area", lambda data: data["commands"][2]["args"][2].update(value="assets/over-area.png"),
+            "10000000-pixel limit")
+    fixture("decoded-budget", lambda data: data["commands"].insert(3, data["commands"][2]),
+            "64 MiB decoded image budget")
+    write_png(work / "assets/rgba16.png", 4000, 2500, rgba16=True)
+    fixture("wide-decoded-rows", lambda data: data["commands"][2]["args"][2].update(value="assets/rgba16.png"),
+            "64 MiB decoded image budget")
+    write_png(work / "assets/at-side.png", 4096, 1)
+    write_png(work / "assets/at-area.png", 4000, 2500)
+    dimensions = json.loads(base.read_text())
+    dimensions["commands"][2]["args"][2]["value"] = "assets/at-side.png"
+    dimensions["commands"][3]["args"][2]["value"] = "assets/at-area.png"
+    dimension_manifest = work / "at-dimension-limits.json"
+    dimension_manifest.write_text(json.dumps(dimensions))
+    run_port(args, output, dimension_manifest, "at-dimension-limits", (1024, 768),
+             args.binary.parents[3], evidence, sieve=True)
     (work / "assets/include.frag").write_text('#version 400\n#pragma include "foreign.glsl"\n')
     fixture("shader-include", lambda data: data["commands"][1]["args"][1].update(value="assets/include.frag"),
             "shader includes are outside scene v1")
@@ -351,10 +456,8 @@ def main():
         records = evidence["comparisons"] = {}
         cwd = output / "unrelated"
         cwd.mkdir()
-        for folder, size, source in (
-            ("editable-scene", (640, 480), "editable-scene-example.scd"),
-            ("sieve", (1024, 768), "sieve.scd"),
-        ):
+        run_animated_examples(args, output, cwd, evidence)
+        for folder, size in (("editable-scene", (640, 480)), ("sieve", (1024, 768))):
             sieve = folder == "sieve"
             repo_example = ROOT / "examples" / folder
             origin = output / f"{folder}-staged"
@@ -369,27 +472,22 @@ def main():
             key = f"{folder}-relocation"
             records[key] = compare(output, key, size, native[0], moved[0])
             require(records[key]["changed_pixels"] == 0 and native[1] == moved[1], key)
-            sc_source = ROOT / "SuperCollider" / source
-            original = run_original(args, output, sc_source, f"{folder}-original", size, evidence, sieve=sieve)
-            reference = original
+            sc = run_companion(args, output, relocated, f"{folder}-sc", size, cwd, evidence, sieve=sieve)
             if sieve:
-                reference = run_original(args, output, sc_source, "sieve-original-derivative", size, evidence,
-                                         sieve=True, derivative=str(relocated / "assets" / SIEVE_IMAGE))
-                for name, pair in (("sieve-resize-only", reference), ("sieve-original-vs-native", native)):
-                    records[name] = compare(output, name, size, original[0], pair[0])
-                resize = records["sieve-resize-only"]
-                image_residues = [(x, y) for x in (1, 2, 4, 5) for y in (1, 2, 4, 5)]
-                require(resize["changed_pixels"] > 0 and resize["changed_lookup_residues"] == image_residues,
-                        "Sieve resize differences must stay in the image-sampled pixels of the lookup grid")
-                require(original[1] == reference[1], f"Sieve resize changed state: {original[1]} vs {reference[1]}")
+                replay = run_companion(args, output, relocated, "sieve-sc-after-native", size, cwd, evidence,
+                                       sieve=True, native=True)
+                key = "sieve-sc-after-native"
+                records[key] = compare(output, key, size, native[0], replay[0])
+                require(records[key]["changed_pixels"] == 0 and native[1] == replay[1], key)
                 uniforms = native[1]["layers"][0]["uniforms"]
                 require(uniforms["dim"] == (0x8B53, "[1024, 768]") and
                         uniforms["sievedim"] == (0x8B53, "[6, 6]") and uniforms["multiplier"][0] == 0x8B50,
                         f"incorrect Sieve uniform types or values: {uniforms}")
             key = f"{folder}-sc-parity"
-            records[key] = compare(output, key, size, reference[0], native[0])
-            require(records[key]["changed_pixels"] == 0 and reference[1] == native[1],
+            records[key] = compare(output, key, size, sc[0], native[0])
+            require(records[key]["changed_pixels"] == 0 and sc[1] == native[1],
                     f"{key} differs in pixels or state. See {output / 'evidence.json'}")
+        run_sieve_manifest_variant(args, output, cwd, evidence)
         evidence["status"] = "passed"
         print(f"PASS native scene CLI; evidence: {output}")
         return 0

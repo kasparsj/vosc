@@ -11,7 +11,7 @@ At a high level, vosc gives you:
 
 It is mainly used from SuperCollider / TidalCycles, but any OSC client can drive it.
 
-See [docs/Home.md](docs/Home.md) for full docs, [SuperCollider examples](SuperCollider/README.md) for runnable sketches, and the [changelog](CHANGELOG.md) for recent changes.
+See [docs/Home.md](docs/Home.md) for full docs, [Examples](examples/README.md) for runnable sketches, and the [changelog](CHANGELOG.md) for recent changes.
 
 ## Good Fit Workflows
 
@@ -139,7 +139,8 @@ vosc --scene /path/to/examples/sieve/scene.vosc.json
 
 Use the actual executable inside `Contents/MacOS/` for a macOS app bundle.
 Each example folder can be moved with its assets. Version 1 scene files contain
-`version`, `title`, `size` (width and height), and an ordered `commands` array.
+`version`, `title`, `size` (width and height), and an ordered `commands` array. The optional
+`onset_gate` accepts `-1` (automatic), `0` (off), or `1` (on).
 Each command has an OSC `address` and an `args` array of `type`/`value` pairs.
 Use `i` for integer values, `f` for floating-point values such as `1.0`, `s` for
 strings, and `asset` for a path relative to the scene file. Vector components
@@ -148,17 +149,13 @@ are consecutive typed arguments. Start with `/layers/reset` and use
 in the examples. A successful launch prints `VOSC_SCENE_READY` after the first
 composed frame.
 
-Sieve uses a 2048×1193 derivative of the original 4000×2330 JPEG to fit the
-2048-pixel image limit. The lookup PNG and fragment shader are byte-for-byte
-copies. Use FFmpeg 8.1.1 and Lanczos resampling to recreate the derivative.
+Native manifests accept PNG and JPEG images up to 4096 pixels per side and
+10 million pixels per image, with a 64 MiB decoded image budget per scene.
+Export and wrapped SuperCollider replay retain their 2048-pixel image limit.
 
-```sh
-ffmpeg -i bin/data/images/black_hole.jpg -vf scale=2048:1193:flags=lanczos \
-  -frames:v 1 examples/sieve/assets/black_hole-2048.png
-```
-
-- Original SHA-256 `93653fe5774613d1a8d308b42a3b217ef045ca0fa2f776cb5ef9b12989f9fb3d`
-- Derivative SHA-256 `4220b601a03857f97e8bc574cb97babbbe29fd0e236efc332bb42bcd3b47f89c`
+Use `--size WIDTHxHEIGHT` to override the initial window size. See the
+[examples index](examples/README.md) for assets, SuperCollider companions,
+and prerequisites.
 
 ## Quickstart (Local + SuperCollider)
 
@@ -186,7 +183,7 @@ The renderer listens on UDP port `33333` by default.
 Next steps:
 - browse [docs/OSC-reference.md](docs/OSC-reference.md),
 - export a portable editable composition with [scene recipes](docs/Editable-scene-contract.md),
-- try the [SuperCollider example collection](SuperCollider/README.md) and the [Organic Trails shader](examples/organic-trails/README.md).
+- try the [example collection](examples/README.md).
 
 ## Testing
 
