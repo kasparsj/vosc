@@ -19,8 +19,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify Atomic Scene Folder Publication
-        run: python3 -m unittest discover -s tests -p test_scene_recipe_schema.py -v
+      - name: Verify Python Tools and macOS Filesystem Behavior
+        run: python3 -m unittest discover -s tests -v
 
   mcp-cpu-tests:
     runs-on: ubuntu-latest

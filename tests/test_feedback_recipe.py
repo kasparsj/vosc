@@ -1,5 +1,6 @@
 """Feedback descriptor and generated-source boundaries, independent of native GL."""
 import copy
+import sys
 import tempfile
 from pathlib import Path
 import unittest
@@ -64,6 +65,7 @@ class FeedbackRecipeTests(unittest.TestCase):
         with self.assertRaises(RecipeValidationError):validate_descriptor(value)
 
 
+@unittest.skipUnless(sys.platform == "darwin", "scene-folder publication requires macOS atomic rename")
 class FeedbackCliPublicationTests(unittest.TestCase):
     """Real CLI processes receive descriptors over a private Unix API socket."""
     def test_feedback_cli_publication_faults_preserve_foreign_content(self):

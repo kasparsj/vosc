@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import subprocess
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -97,6 +98,7 @@ class OverlayTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Unexpected shared receiver baseline"):
                     legacy_build.receiver_inputs(root / "of")
 
+    @unittest.skipUnless(sys.platform == "darwin", "requires macOS plutil")
     def test_private_project_rebases_of_inputs_and_keeps_checkout_sources(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "output"
