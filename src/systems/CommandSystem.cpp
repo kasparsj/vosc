@@ -9,6 +9,7 @@
 #include "../ResourceRegistry.hpp"
 #include "../Logger.h"
 #include "ofAppGLFWWindow.h"
+#include <GLFW/glfw3.h>
 #ifdef VOSC_RECOVERY_TESTING
 #include "ofBufferObject.h"
 #endif
@@ -47,6 +48,29 @@ bool recipeAddress(const std::string& value) {
         "/layer/bri", "/layer/speed", "/layer/visible", "/layer/align", "/layer/blend"};
     return allowed.count(value) != 0;
 }
+
+#ifdef VOSC_MINIMAL_BUILD
+std::string excludedTextureBackend(const osc::Command& command, bool resolveAliases) {
+    if (command.type != osc::CommandType::TARGETED_RESOURCE) return {};
+    const auto& path = command.resource.commandPath;
+    const bool choosing = path == "/tex/choose";
+    const bool namedBinding = path == "/shader/texture" || path == "/shader/tex";
+    if (path != "/tex" && !choosing && !namedBinding) return {};
+    const int argument = namedBinding ? 2 : 1;
+    const auto& message = command.raw;
+    if (message.getNumArgs() <= argument || message.getArgType(argument) != OFXOSC_TYPE_STRING) return {};
+    const auto source = message.getArgAsString(argument);
+    if (resolveAliases && (namedBinding || (path == "/tex" && command.resource.target.kind != osc::TargetKind::NAME)) &&
+        TexturePool::hasShared(source)) return {};
+    return Texture::excludedBackend(source, choosing);
+}
+
+void logExcludedFeature(const ofxOscMessage& message, const std::string& feature) {
+    // A rejected foreign control is a diagnostic for its sender, not a
+    // renderer error attributable to the scene currently being replayed.
+    ofLogWarning("minimal") << message.getAddress() << ": " << feature << " unavailable in this build";
+}
+#endif
 
 bool integerUniformType(GLenum type) {
     return type == GL_INT || type == GL_INT_VEC2 || type == GL_INT_VEC3 || type == GL_INT_VEC4;
@@ -298,8 +322,26 @@ bool CommandSystem::checkOnset() const {
 void CommandSystem::parseMessage(const ofxOscMessage& m) {
     if (!hasCommandRegistry(m)) return;
     if (handleSceneEnvelope(m)) return;
+#ifndef VOSC_MINIMAL_BUILD
     if (sceneReplay && m.getAddress() != "/input/data") failSceneReplay("foreign control superseded replay before draw");
+#endif
     auto parsed = commandParser.parse(m);
+#ifdef VOSC_MINIMAL_BUILD
+    if (parsed.isOk()) {
+        const auto feature = RenderSystem::excludedShadingFeature(parsed.value());
+        if (!feature.empty()) {
+            logExcludedFeature(m, feature);
+            return;
+        }
+        if (!excludedTextureBackend(parsed.value(), false).empty()) {
+            // An earlier queued command can create a shared texture with this name.
+            // Delay both validation and the external-control hooks until dispatch.
+            messageQueue.push_back(parsed.value());
+            return;
+        }
+    }
+    if (sceneReplay && m.getAddress() != "/input/data") failSceneReplay("foreign control superseded replay before draw");
+#endif
     if (!parsed.isOk()) {
         invalidCommand(parsed.error());
         return;
@@ -1290,6 +1332,18 @@ bool CommandSystem::handleReplayWindowResized(int width, int height) {
 void CommandSystem::processQueue() {
     while (!messageQueue.empty()) {
         const osc::Command& command = messageQueue.front();
+#ifdef VOSC_MINIMAL_BUILD
+        if (!excludedTextureBackend(command, false).empty()) {
+            const auto feature = excludedTextureBackend(command, true);
+            if (!feature.empty()) {
+                logExcludedFeature(command.raw, feature);
+                messageQueue.pop_front();
+                continue;
+            }
+            if (sceneReplay) failSceneReplay("foreign control superseded replay before draw");
+            if (onBeforeLegacyControl) onBeforeLegacyControl(false);
+        }
+#endif
         if (routeLegacyCommand(command) && onLegacyControl) onLegacyControl();
         messageQueue.pop_front();
     }

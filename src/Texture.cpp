@@ -14,41 +14,51 @@
 #include <cmath>
 #include <limits>
 
+namespace {
+const char* textureFileType(const std::string& source, bool isURL) {
+    auto extension = ofFile(source).getExtension();
+    std::transform(extension.begin(), extension.end(), extension.begin(),
+                   [](unsigned char ch) { return std::tolower(ch); });
+    if (extension == "frag") return "shader";
+    if (extension == "jpg" || extension == "jpeg" || extension == "png") return "image";
+    if (extension == "mov" || extension == "mp4") return "video";
+    if (extension == "hpv") return "hpv";
+    if (extension == "html" || isURL) return "html";
+    return nullptr;
+}
+}
+
+#ifdef VOSC_MINIMAL_BUILD
+std::string Texture::excludedBackend(const std::string& source, bool choosing) {
+    std::string type;
+    const bool isURL = !choosing && Args::isURL(source);
+    const auto separator = source.find(':');
+    if (!isURL && separator != std::string::npos) {
+        type = source.substr(0, separator);
+    } else if (choosing) {
+        type = source;
+    } else if (const auto* fileType = textureFileType(source, isURL)) {
+        type = fileType;
+    }
+    if (type == "html") return "HTML/Ultralight textures";
+    if (type == "hpv") return "HPV textures";
+    if (type == "gv") return "GV textures";
+    return {};
+}
+#endif
+
 void Texture::load(string source, const vector<float>& args) {
     _unload();
-    bool explicitType = source.find(":") != string::npos;
-    bool _isURL = Args::isURL(source);
-    if (explicitType && !_isURL) {
+    const bool isURL = Args::isURL(source);
+    if (!isURL && source.find(':') != string::npos) {
         tex = BaseTex::factory(source, args);
-    }
-    else {
-        string extension = ofFile(source).getExtension();
-        std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-        if (extension == "frag") {
-            tex = BaseTex::factory("shader", source, args);
-        }
-        else if (extension == "jpg" || extension == "jpeg" || extension == "png") {
-            tex = BaseTex::factory("image", source, args);
-        }
-        else if (extension == "mov" || extension == "mp4") {
-            tex = BaseTex::factory("video", source, args);
-        }
-        else if (extension == "hpv") {
-            tex = BaseTex::factory("hpv", source, args);
-        }
-        else if (extension == "html" || _isURL) {
-            tex = BaseTex::factory("html", source, args);
-        }
-        else {
-            if (Args::isHexColor(source)) {
-                ofFloatColor color = Args::parseHexColor(source);
-                vector<float> args1 = {color.r, color.g, color.b, color.a};
-                tex = BaseTex::factory("color", "color", args1);
-            }
-            else if (SketchTex::exists(source)) {
-                tex = BaseTex::factory("sketch", source, args);
-            }
-        }
+    } else if (const auto* type = textureFileType(source, isURL)) {
+        tex = BaseTex::factory(type, source, args);
+    } else if (Args::isHexColor(source)) {
+        const ofFloatColor color = Args::parseHexColor(source);
+        tex = BaseTex::factory("color", "color", {color.r, color.g, color.b, color.a});
+    } else if (SketchTex::exists(source)) {
+        tex = BaseTex::factory("sketch", source, args);
     }
     if (tex == nullptr && source != "") {
         ofLogError() << ("invalid source: " + source);
@@ -106,9 +116,17 @@ void Texture::choose(const ofxOscMessage& m) {
 
 shared_ptr<BaseTex> Texture::chooseTex(string type, const vector<float>& args) {
     if (type == "") {
+#ifdef VOSC_MINIMAL_BUILD
+        vector<string> available;
+        for (const auto& entry : SourceMap) {
+            if (excludedBackend(entry.first, true).empty()) available.push_back(entry.first);
+        }
+        type = available.at(static_cast<size_t>(ofRandom(available.size())));
+#else
         auto it = SourceMap.begin();
         advance(it, int(ofRandom(SourceMap.size())));
         type = it->first;
+#endif
     }
     return BaseTex::factory(type, args);
 }

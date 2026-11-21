@@ -21,6 +21,9 @@ public:
     void load(const ofxOscMessage& m, int arg = 1);
     void loadData(const ofxOscMessage& m, int arg = 1);
     void choose(const ofxOscMessage& m);
+#ifdef VOSC_MINIMAL_BUILD
+    static std::string excludedBackend(const std::string& source, bool choosing);
+#endif
     void reload();
     void unload();
     void clear();
