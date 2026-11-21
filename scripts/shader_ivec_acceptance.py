@@ -81,9 +81,10 @@ def array_replay(renderer, client, output, label):
                 raise RuntimeError(f"{name}: expected applied receipt, got {result}")
             scene = client.call("get_scene", {})["result"]
             uniform = scene["layers"][0]["shader"]["uniforms"].get("probe", {})
-            if not uniform.get("array"):
+            if not uniform.get("array") or uniform.get("writable") or uniform.get("gl_type") != 0x8B53:
                 raise RuntimeError(f"{name}: expected an active GLSL array, got {uniform}")
             state, _ = observe(client, output, name)
+            expect_binding(state, [16777217, "1+2" if mixed else 3])
             key = f"{length}-{mixed}"
             cases[key] = {"result": state, "reflection": uniform}
             (output / f"{name}-receipt.json").write_text(json.dumps(result, indent=2) + "\n")
@@ -99,6 +100,8 @@ def ordinary_baseline(renderer, client, output, label):
     configure(renderer, client, integer_shader((16777217, 31)))
     osc(renderer.port, "/shader/var", 0, "probe", 16777217, 31)
     flat_result, _ = observe(client, output, f"{label}-flat")
+    expect_binding(scalar_result, [17])
+    expect_binding(flat_result, [16777217, 31])
     return {"scalar": scalar_result, "flat": flat_result}
 
 
@@ -327,6 +330,8 @@ def wildcard_case(renderer, client, output, label, *, baseline=False):
     cursor = diagnostic_cursor(client)
     osc(renderer.port, "/shader/var", "*", "probe", "[19,31]")
     float_state, _ = observe(client, output, label + "-float", point=(400, 500), layer=2)
+    if float_state.get("binding") != typed_binding([19.0, 31.0], 2):
+        raise RuntimeError(f"expected typed float wildcard binding, got {float_state}")
     result = {"float": float_state}
     if not baseline:
         result["rejection"] = require_diagnostic(client, cursor, "layer 1 uniform probe", "arity")
@@ -348,8 +353,8 @@ def named_shared_case(renderer, client):
 
 
 def run_shader_ivec(args, binary, sclang, output):
-    baseline = args.baseline_binary.resolve()
-    if baseline == binary or not baseline.is_file():
+    baseline = args.baseline_binary.resolve() if args.baseline_binary else None
+    if baseline and (baseline == binary or not baseline.is_file()):
         raise ValueError("shader ivec acceptance requires a distinct baseline app")
     quark = checkout_path(args.visuals_quark)
     (output / "assets").mkdir()
@@ -363,22 +368,14 @@ def run_shader_ivec(args, binary, sclang, output):
                 "float_replacement": replaced, "shared": named_shared_case(renderer, client)["message"]}
 
     def run_candidate(renderer, client):
-        old = evidence["baseline"]
-        preserved = ordinary_baseline(renderer, client, output, "candidate")
-        if preserved != old["legacy"]:
-            raise RuntimeError(f"legacy scalar/flat compatibility changed: {preserved}, {old['legacy']}")
-        arrays = array_replay(renderer, client, output, "candidate")
-        if arrays != old["arrays"]:
-            raise RuntimeError(f"legacy array replay changed: {arrays}, {old['arrays']}")
-        evidence["candidate_arrays"] = arrays
+        evidence["candidate_legacy"] = ordinary_baseline(renderer, client, output, "candidate")
+        evidence["candidate_arrays"] = array_replay(renderer, client, output, "candidate")
         evidence["positive"] = positive_cases(renderer, client, sclang, quark, output)
         evidence["scalars"] = scalar_cases(renderer, client, output)
         evidence["range"] = range_case(renderer, client, output)
         evidence["ordinary_rejections"] = ordinary_negatives(renderer, client, output)
         evidence["replay_rejections"] = replay_negatives(renderer, client, output)
         evidence["candidate_wildcard"] = wildcard_case(renderer, client, output, "candidate-wildcard")
-        if evidence["candidate_wildcard"]["float"] != evidence["legacy_paths"]["wildcard"]["float"]:
-            raise RuntimeError("wildcard changed the legacy float-vector path")
 
         configure(renderer, client, float_shader())
         osc(renderer.port, "/shader/var", 0, "probe", "[19.0,31.0]")
@@ -388,17 +385,25 @@ def run_shader_ivec(args, binary, sclang, output):
         replaced, _ = observe(client, output, "after-type-replacement")
         expect_binding(replaced, [19, 31])
         evidence["replacement_uniform"] = replaced
-        returned = replace_with_float(renderer, client, output, "candidate-float-replacement")
-        if returned != evidence["legacy_paths"]["float_replacement"]:
-            raise RuntimeError("float-vector update after shader replacement differs from baseline")
-        evidence["float_replacement"] = returned
-        if named_shared_case(renderer, client)["message"] != evidence["legacy_paths"]["shared"]:
-            raise RuntimeError("named shared shader stopped using the legacy handler")
+        evidence["float_replacement"] = replace_with_float(renderer, client, output, "candidate-float-replacement")
+        evidence["candidate_shared"] = named_shared_case(renderer, client)["message"]
 
     try:
-        evidence["baseline"] = baseline_cases(baseline, output)
-        evidence["legacy_paths"] = run_owned(baseline, output, "legacy", run_baseline)
+        if baseline:
+            evidence["baseline"] = baseline_cases(baseline, output)
+            evidence["legacy_paths"] = run_owned(baseline, output, "legacy", run_baseline)
         run_owned(binary, output, "candidate", run_candidate)
+        if baseline:
+            for case, expected in {
+                "candidate_legacy": evidence["baseline"]["legacy"],
+                "candidate_arrays": evidence["baseline"]["arrays"],
+                "float_replacement": evidence["legacy_paths"]["float_replacement"],
+                "candidate_shared": evidence["legacy_paths"]["shared"],
+            }.items():
+                if evidence[case] != expected:
+                    raise RuntimeError(f"{case} differs from the historical binary")
+            if evidence["candidate_wildcard"]["float"] != evidence["legacy_paths"]["wildcard"]["float"]:
+                raise RuntimeError("float wildcard differs from the historical binary")
         evidence["status"] = "PASS"
     finally:
         (output / "shader-ivec-evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")

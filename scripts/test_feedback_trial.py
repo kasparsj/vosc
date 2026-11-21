@@ -529,6 +529,20 @@ def verify_conflicts(renderer, client, fixture, evidence):
 
     replay(renderer, mixed_commands(fixture), final_gate=0)
     trial = start(client)
+    ready(client, trial["id"])
+    action_id = "cancel-missing-baseline-program"
+    event = hook(renderer, "feedback_trial_conflict", stage="draw", invalidate_baseline_program=True,
+                 action={"id": action_id, "method": "cancel_trial", "params": {"trial_id": trial["id"]}})
+    assert event["result"]["candidate_owned"], event
+    action = err(event["result"]["action"], "trial_conflict")
+    assert retained(client, action_id) == action
+    assert "applied_after_frame" not in action and "rendered_frame" not in action
+    original = err(terminal(client, trial["id"]), "trial_conflict")
+    assert not original["result"]["trial"]["restored_previous"]
+    cases["cancel_missing_baseline_program"] = {"hook": event, "action": action, "original": original}
+
+    replay(renderer, mixed_commands(fixture), final_gate=0)
+    trial = start(client)
     assert trial["ok"], trial
     foreign = CANDIDATE.replace(".85,1", ".65,1")
     event = hook(renderer, "feedback_trial_conflict", stage="draw", foreign_source=foreign)

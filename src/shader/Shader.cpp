@@ -78,6 +78,30 @@ bool isValidShaderProgram(const ofShader& shader, bool hasGeometryStage = false)
     return hasLinkedProgram(shader);
 }
 
+Shader::Uniforms reflectUniforms(GLuint program) {
+    Shader::Uniforms uniforms;
+    if (!program) return uniforms;
+    GLint count = 0, maximum = 0;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maximum);
+    if (maximum <= 0) return uniforms;
+
+    vector<GLchar> name(static_cast<size_t>(maximum));
+    for (GLint index = 0; index < count; ++index) {
+        GLsizei length = 0;
+        GLint size = 0;
+        GLenum type = 0;
+        glGetActiveUniform(program, index, maximum, &length, &size, &type, name.data());
+        if (length <= 0) continue;
+        string reflected(name.data(), static_cast<size_t>(length));
+        const auto bracket = reflected.find('[');
+        // The driver reports singleton arrays with a [0] suffix as well.
+        uniforms.insert_or_assign(reflected.substr(0, bracket),
+                                  Shader::UniformInfo{type, size, bracket != string::npos});
+    }
+    return uniforms;
+}
+
 class ValidatedShadertoy : public ofxShadertoy {
 public:
     bool hasValidMainShader() const {
@@ -151,10 +175,12 @@ bool Shader::loadFromSource(const string& source) {
     shadertoy.reset();
     shaderPath = "source";
     directSource = prepared.source;
-    retainedSourcePath.clear();
+    watchedSourcePath.clear();
     // Preserve existing VarsHolder/VariablePool bindings. Ordinary source
     // replacement has always kept them; detached bindings are trial-only.
-    uniformTypes.clear();
+    reflectedWatchedProgram.reset();
+    uniforms = std::move(prepared.uniforms);
+    uniformProgram = shader->getProgram();
     return true;
 }
 
@@ -168,27 +194,12 @@ bool Shader::prepareDirectSource(const string& source, PreparedDirectSource& pre
     }
     prepared.program = std::move(candidate);
     prepared.source = source;
-    GLint count = 0, maximum = 0;
-    glGetProgramiv(prepared.program->getProgram(), GL_ACTIVE_UNIFORMS, &count);
-    glGetProgramiv(prepared.program->getProgram(), GL_ACTIVE_UNIFORM_MAX_LENGTH, &maximum);
-    if (maximum > 0) {
-        vector<GLchar> name(static_cast<size_t>(maximum));
-        for (GLint index = 0; index < count; ++index) {
-            GLsizei length = 0;
-            GLint size = 0;
-            GLenum type = 0;
-            glGetActiveUniform(prepared.program->getProgram(), index, maximum, &length, &size, &type, name.data());
-            string reflected(name.data(), static_cast<size_t>(length));
-            auto bracket = reflected.find('[');
-            if (size > 1 || bracket != string::npos) prepared.arrayUniforms.insert(reflected.substr(0, bracket));
-            else prepared.uniformTypes[reflected] = type;
-        }
-    }
+    prepared.uniforms = reflectUniforms(prepared.program->getProgram());
     return true;
 }
 
 bool Shader::snapshotDirectSource(DirectSourceState& state, string& reason) const {
-    if (!isShaderLoaded() || shadertoy || shaderPath != "source") {
+    if (!isShaderLoaded() || shadertoy || !watchedSourcePath.empty()) {
         reason = "baseline shader must be a loaded direct-source program";
         return false;
     }
@@ -235,16 +246,16 @@ bool Shader::snapshotDirectSource(DirectSourceState& state, string& reason) cons
 
 void Shader::installDirectSource(PreparedDirectSource&& prepared,
                                  const map<string, vector<float>>& bindings) {
+    auto& pool = VariablePool::getPool(this);
     shader = std::move(prepared.program);
     shadertoy.reset();
     shaderPath = "source";
     directSource = prepared.source;
-    retainedSourcePath.clear();
-    // Reflect lazily through getUniformTypes so array uniforms remain visible
-    // to the ordinary inspection and managed-uniform paths.
-    uniformTypes.clear();
+    watchedSourcePath.clear();
+    reflectedWatchedProgram.reset();
+    uniforms = std::move(prepared.uniforms);
+    uniformProgram = shader->getProgram();
     vars.clear();
-    auto& pool = VariablePool::getPool(this);
     pool.clear();
     for (const auto& binding : bindings) {
         auto value = make_shared<Variable<float>>();
@@ -256,16 +267,14 @@ void Shader::installDirectSource(PreparedDirectSource&& prepared,
 
 bool Shader::restoreDirectSource(const DirectSourceState& state) {
     if (!state.program || !state.program->isLoaded()) return false;
-    PreparedDirectSource prepared;
-    prepared.program = state.program;
-    shader = prepared.program;
+    auto& pool = VariablePool::getPool(this);
+    shader = state.program;
     shadertoy.reset();
     shaderPath = state.path;
     directSource = state.source;
-    retainedSourcePath.clear();
-    uniformTypes.clear();
+    watchedSourcePath.clear();
+    clearUniforms();
     vars.clear();
-    auto& pool = VariablePool::getPool(this);
     pool.clear();
     for (const auto& binding : state.bindings) {
         auto value = make_shared<Variable<float>>();
@@ -325,7 +334,8 @@ bool Shader::loadShadertoy(const string& shadertoyId) {
         shader.reset();
         shaderPath = "shadertoy/" + shadertoyId + ".frag";
         directSource.clear();
-        uniformTypes.clear();
+        watchedSourcePath.clear();
+        clearUniforms();
         return true;
     }
     catch (const std::exception& ex) {
@@ -390,8 +400,8 @@ bool Shader::loadFromFileAndWatch(const string& path) {
             shadertoy.reset();
             shaderPath = ofFilePath::getFileName(paths.fragPath);
             directSource = retained.size() > 0 && retained.size() <= 128 * 1024 ? retained.getText() : "";
-            retainedSourcePath = directSource.empty() ? "" : paths.fragPath;
-            uniformTypes.clear();
+            watchedSourcePath = paths.fragPath;
+            clearUniforms();
             return true;
         }
     }
@@ -471,25 +481,12 @@ shared_ptr<BaseVar> makeFloatVector(const vector<Shader::FloatComponent>& compon
 }
 
 GLenum Shader::reflectedNonArrayUniformType(const string& name) const {
-    if (!isShaderLoaded()) return 0;
-    const GLuint program = shader->getProgram();
-    const GLchar* requested = name.c_str();
-    GLuint index = GL_INVALID_INDEX;
-    glGetUniformIndices(program, 1, &requested, &index);
-    if (index == GL_INVALID_INDEX || glGetUniformLocation(program, requested) < 0) return 0;
-
-    GLint maximum = 0;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maximum);
-    if (maximum <= 0) return 0;
-    vector<GLchar> reflected(static_cast<size_t>(maximum));
-    GLsizei length = 0;
-    GLint size = 0;
-    GLenum type = 0;
-    glGetActiveUniform(program, index, maximum, &length, &size, &type, reflected.data());
-    // A singleton GLSL array still has a reflected name ending in [0].
-    if (size != 1 || name != string(reflected.data(), length) || name.find('[') != string::npos)
+    const auto& reflected = getUniforms();
+    const auto found = reflected.find(name);
+    if (found == reflected.end() || found->second.isArray() ||
+        glGetUniformLocation(uniformProgram, name.c_str()) < 0)
         return 0;
-    return type;
+    return found->second.type;
 }
 
 size_t Shader::reflectedIntegerVectorArity(const string& name) const {
@@ -1044,7 +1041,7 @@ void Shader::setUniformFromFloatFromInt(shared_ptr<T>& shader, const string& nam
 
 template<typename T>
 void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<BaseVar>>& vars) {
-    const map<string, GLenum>& types = getUniformTypes();
+    const auto& types = getUniforms();
 
     // Built-in OpenFrameworks uniforms that are set automatically
     static const std::set<string> builtInUniforms = {
@@ -1057,7 +1054,7 @@ void Shader::setUniforms(shared_ptr<T>& shader, const map<string, shared_ptr<Bas
     // Loop through uniform types to ensure all shader uniforms are set
     for (const auto& typeIt : types) {
         const string& name = typeIt.first;
-        GLenum uniformType = typeIt.second;
+        GLenum uniformType = typeIt.second.type;
 
         // Check if it's a type we can handle in the switch statement
         bool isHandledType = (uniformType == GL_INT || uniformType == GL_INT_VEC2 || uniformType == GL_INT_VEC3 || uniformType == GL_INT_VEC4 ||
@@ -1218,13 +1215,12 @@ void Shader::reset() {
     buffers.clear();
     VariablePool::cleanup(_id);
     vars.clear();
-    uniformTypes.clear();
 }
 
 void Shader::unload() {
     shaderPath = "";
     directSource.clear();
-    retainedSourcePath.clear();
+    watchedSourcePath.clear();
     if (shader != NULL) {
         if (shader->isLoaded()) {
             shader->unload();
@@ -1232,7 +1228,7 @@ void Shader::unload() {
         shader.reset();
     }
     shadertoy.reset();
-    uniformTypes.clear();
+    clearUniforms();
 }
 
 bool Shader::getExportSource(string& source, string& reason) const {
@@ -1252,8 +1248,9 @@ bool Shader::getExportSource(string& source, string& reason) const {
     return true;
 }
 
-shared_ptr<Texture>& Shader::getDefaultTexture() {
-    return getTexture(DEFAULT_TEX);
+shared_ptr<Texture> Shader::getDefaultTexture() const {
+    const auto texture = textures.find(DEFAULT_TEX);
+    return texture == textures.end() ? nullptr : texture->second;
 }
 
 void Shader::setDefaultTexture(shared_ptr<Texture>& tex) {
@@ -1266,9 +1263,6 @@ void Shader::setTexture(const ofxOscMessage& m) {
 }
 
 void Shader::setTexture(const string& name, const ofxOscMessage& m, int arg) {
-    if (textures.find(name) != textures.end()) {
-        textures.erase(name);
-    }
     string source = m.getArgAsString(arg);
     if (TexturePool::hasShared(source)) {
         textures[name] = TexturePool::getShared(source);
@@ -1346,48 +1340,23 @@ void Shader::set(const ofxOscMessage& m) {
     }
 }
 
-const map<string, GLenum>& Shader::getUniformTypes() const {
-    if (isShaderLoaded() && uniformTypesProgram != shader->getProgram()) {
-        uniformTypes.clear();
-        uniformTypesProgram = shader->getProgram();
+void Shader::clearUniforms() {
+    reflectedWatchedProgram.reset();
+    uniforms.clear();
+    uniformProgram = 0;
+}
+
+const Shader::Uniforms& Shader::getUniforms() const {
+    const GLuint program = isShaderLoaded() ? shader->getProgram() : 0;
+    if (uniformProgram != program) {
+        uniforms = reflectUniforms(program);
+        uniformProgram = program;
+        // Keep the last reflected watched program alive until the next lookup.
+        // The watcher can delete and relink a program with a recycled GL name.
+        if (watchedShader()) reflectedWatchedProgram.emplace(*shader);
+        else reflectedWatchedProgram.reset();
     }
-    if (uniformTypes.empty() && isShaderLoaded()) {
-        if (shadertoy == NULL && shader != NULL) {
-            GLuint program = shader->getProgram();
-            if (program != 0) {
-                GLint numUniforms = 0;
-                glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numUniforms);
-                
-                GLint maxNameLength = 0;
-                glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxNameLength);
-                
-                if (maxNameLength > 0) {
-                    vector<GLchar> nameBuffer(maxNameLength);
-                    
-                    for (GLint i = 0; i < numUniforms; i++) {
-                        GLint size = 0;
-                        GLenum type = 0;
-                        GLsizei length = 0;
-                        
-                        glGetActiveUniform(program, i, maxNameLength, &length, &size, &type, nameBuffer.data());
-                        
-                        if (length > 0) {
-                            string uniformName(nameBuffer.data(), length);
-                            // Handle array uniforms (e.g., "array[0]" -> "array")
-                            size_t bracketPos = uniformName.find('[');
-                            if (bracketPos != string::npos) {
-                                uniformName = uniformName.substr(0, bracketPos);
-                            }
-                            uniformTypes[uniformName] = type;
-                        }
-                    }
-                }
-            }
-        }
-        // Note: ofxShadertoy doesn't provide direct access to uniform types
-        // For shadertoy, we could leave the map empty or try to infer from usage
-    }
-    return uniformTypes;
+    return uniforms;
 }
 
 map<string, string> Shader::getUniformValues() const {
@@ -1402,11 +1371,11 @@ map<string, string> Shader::getUniformValues() const {
         return values;
     }
     
-    const map<string, GLenum>& uniformTypes = getUniformTypes();
+    const auto& reflected = getUniforms();
     
-    for (const auto& it : uniformTypes) {
+    for (const auto& it : reflected) {
         const string& name = it.first;
-        GLenum type = it.second;
+        GLenum type = it.second.type;
         
         GLint location = glGetUniformLocation(program, name.c_str());
         if (location < 0) {

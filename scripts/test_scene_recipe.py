@@ -1423,10 +1423,8 @@ def main() -> int:
         parser.error("--layer-position-only does not support --expect-sanitizer")
     if args.shader_ivec_only and args.expect_sanitizer:
         parser.error("--shader-ivec-only does not support --expect-sanitizer")
-    if args.shader_ivec_only and args.baseline_binary is None:
-        parser.error("--shader-ivec-only requires --baseline-binary")
-    if args.shader_fvec_only and (args.expect_sanitizer or args.baseline_binary is None):
-        parser.error("--shader-fvec-only requires --baseline-binary and excludes --expect-sanitizer")
+    if args.shader_fvec_only and args.expect_sanitizer:
+        parser.error("--shader-fvec-only does not support --expect-sanitizer")
     if not args.allow_owned_restart: parser.error("--allow-owned-restart is required")
     binary, sclang, output = args.binary.resolve(), args.sclang.resolve(), args.output.resolve()
     if not binary.is_file() or not sclang.is_file(): parser.error("binary and sclang must be existing files")

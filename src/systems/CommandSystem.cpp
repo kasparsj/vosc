@@ -273,6 +273,7 @@ bool CommandSystem::checkOnset() const {
 }
 
 void CommandSystem::parseMessage(const ofxOscMessage& m) {
+    if (!hasCommandRegistry(m)) return;
     if (handleSceneEnvelope(m)) return;
     if (sceneReplay && m.getAddress() != "/input/data") failSceneReplay("foreign control superseded replay before draw");
     auto parsed = commandParser.parse(m);
@@ -292,9 +293,8 @@ void CommandSystem::parseMessage(const ofxOscMessage& m) {
         return;
     }
 
-    if (!commandRouter.route(command)) {
-        invalidCommand(command.raw);
-    } else if (inputSample && onLegacySample) {
+    if (!routeLegacyCommand(command)) return;
+    if (inputSample && onLegacySample) {
         onLegacySample();
     } else if (onLegacyControl) {
         onLegacyControl();
@@ -501,12 +501,12 @@ bool CommandSystem::validateSceneCommand(const ofxOscMessage& m, SceneReplay& st
             if (recipeType(m, i, OFXOSC_TYPE_STRING) && !expressionAt(i)) return false;
         }
         if ((sawInt && sawFloat) || !addComponents(count - 2)) return false;
-        const auto& uniformTypes = renderSystem.getLayers().at(index)->shader.getUniformTypes();
+        const auto& uniformTypes = renderSystem.getLayers().at(index)->shader.getUniforms();
         const auto reflected = uniformTypes.find(stringAt(1));
         if (reflected != uniformTypes.end()) {
-            if (uniformComponentCount(reflected->second) != count - 2) return false;
-            if (integerUniformType(reflected->second) && sawFloat) return false;
-            if (!integerUniformType(reflected->second) && sawInt) return false;
+            if (uniformComponentCount(reflected->second.type) != count - 2) return false;
+            if (integerUniformType(reflected->second.type) && sawFloat) return false;
+            if (!integerUniformType(reflected->second.type) && sawInt) return false;
         }
         return addBinding(index, "uniform:" + stringAt(1));
     }
@@ -704,24 +704,25 @@ bool CommandSystem::routeSceneCommand(const ofxOscMessage& wrapped) {
             }
             return true;
         }
-        const auto reflected = shader.getUniformTypes().find(name);
-        if (reflected != shader.getUniformTypes().end() &&
-            (reflected->second == GL_FLOAT_VEC2 || reflected->second == GL_FLOAT_VEC3 ||
-             reflected->second == GL_FLOAT_VEC4)) {
-            const int components = uniformComponentCount(reflected->second);
+        const auto& uniforms = shader.getUniforms();
+        const auto reflected = uniforms.find(name);
+        if (reflected != uniforms.end() &&
+            (reflected->second.type == GL_FLOAT_VEC2 || reflected->second.type == GL_FLOAT_VEC3 ||
+             reflected->second.type == GL_FLOAT_VEC4)) {
+            const int components = uniformComponentCount(reflected->second.type);
             bool hasExpression = false;
             for (int index = 5; index < wrapped.getNumArgs(); ++index)
                 hasExpression = hasExpression || wrapped.getArgType(index) == OFXOSC_TYPE_STRING;
             if (components == wrapped.getNumArgs() - 5 && hasExpression) {
-                if (reflected->second == GL_FLOAT_VEC2)
+                if (reflected->second.type == GL_FLOAT_VEC2)
                     setMixedComponents<glm::vec2>(shader, name, wrapped, 5, components);
-                else if (reflected->second == GL_FLOAT_VEC3)
+                else if (reflected->second.type == GL_FLOAT_VEC3)
                     setMixedComponents<glm::vec3>(shader, name, wrapped, 5, components);
-                else if (reflected->second == GL_FLOAT_VEC4)
+                else if (reflected->second.type == GL_FLOAT_VEC4)
                     setMixedComponents<ofFloatColor>(shader, name, wrapped, 5, components);
                 return true;
             }
-            if (reflected->second == GL_FLOAT_VEC4 && components == wrapped.getNumArgs() - 5) {
+            if (reflected->second.type == GL_FLOAT_VEC4 && components == wrapped.getNumArgs() - 5) {
                 auto variable = VariablePool::getOrCreate<ofFloatColor>(name, &shader);
                 variable->set(ofFloatColor(wrapped.getArgAsFloat(5), wrapped.getArgAsFloat(6),
                                            wrapped.getArgAsFloat(7), wrapped.getArgAsFloat(8)));
@@ -734,7 +735,7 @@ bool CommandSystem::routeSceneCommand(const ofxOscMessage& wrapped) {
         const int layer = wrapped.getArgAsInt32(3);
         const std::string name = wrapped.getArgAsString(4);
         auto& shader = renderSystem.getLayers().at(layer)->shader;
-        const auto& uniformTypes = shader.getUniformTypes();
+        const auto& uniformTypes = shader.getUniforms();
         const auto reflected = uniformTypes.find(name);
         if (const auto arity = shader.reflectedIntegerVectorArity(name)) {
             vector<Shader::IntegerComponent> components;
@@ -751,7 +752,7 @@ bool CommandSystem::routeSceneCommand(const ofxOscMessage& wrapped) {
             return true;
         }
         // Preserve the legacy reflected scalar and GLSL array applications.
-        if (reflected != uniformTypes.end() && integerUniformType(reflected->second)) {
+        if (reflected != uniformTypes.end() && integerUniformType(reflected->second.type)) {
             bool hasExpression = false;
             for (int index = 5; index < wrapped.getNumArgs(); ++index)
                 hasExpression = hasExpression || wrapped.getArgType(index) == OFXOSC_TYPE_STRING;
@@ -888,11 +889,11 @@ bool CommandSystem::finishFeedbackSetup(const SceneReplay& state, std::string& r
     auto& texture = *renderSystem.getLayers().at(state.feedbackLayer)->shader.getDefaultTexture();
     auto feedback = std::dynamic_pointer_cast<ShaderPingPongTex>(texture.tex);
     if (!feedback || !feedback->prepareFeedback() || !feedback->validateConfiguration(texture.data, reason)) return false;
-    const auto& types = feedback->getUniformTypes();
+    const auto& types = feedback->getUniforms();
     for (const auto& name : state.feedbackControls) {
         auto found = types.find(name);
-        if (found == types.end() || integerUniformType(found->second) ||
-            !uniformComponentCount(found->second)) {
+        if (found == types.end() || integerUniformType(found->second.type) ||
+            !uniformComponentCount(found->second.type)) {
             reason = "feedback control is not a reflected scalar/vector constant"; return false;
         }
         int components = 0;
@@ -901,7 +902,7 @@ bool CommandSystem::finishFeedbackSetup(const SceneReplay& state, std::string& r
         else if (std::dynamic_pointer_cast<Variable<glm::vec2>>(value)) components = 2;
         else if (std::dynamic_pointer_cast<Variable<glm::vec3>>(value)) components = 3;
         else if (std::dynamic_pointer_cast<Variable<ofFloatColor>>(value)) components = 4;
-        if (components != uniformComponentCount(found->second)) {
+        if (components != uniformComponentCount(found->second.type)) {
             reason = "feedback control arity disagrees with reflected uniform"; return false;
         }
     }
@@ -1044,13 +1045,26 @@ bool CommandSystem::handleReplayWindowResized(int width, int height) {
 void CommandSystem::processQueue() {
     while (!messageQueue.empty()) {
         const osc::Command& command = messageQueue.front();
-        if (!commandRouter.route(command)) {
-            invalidCommand(command.raw);
-        } else if (onLegacyControl) {
-            onLegacyControl();
-        }
+        if (routeLegacyCommand(command) && onLegacyControl) onLegacyControl();
         messageQueue.pop_front();
     }
+}
+
+bool CommandSystem::hasCommandRegistry(const ofxOscMessage& message) const {
+    if (ResourceRegistry::hasCurrent()) return true;
+    ofLogError() << message.getAddress() << " rejected: no active ResourceRegistry";
+    return false;
+}
+
+bool CommandSystem::routeLegacyCommand(const osc::Command& command) {
+    if (!hasCommandRegistry(command.raw)) return false;
+    try {
+        if (commandRouter.route(command)) return true;
+        invalidCommand(command.raw);
+    } catch (const ResourceRegistry::Inactive& error) {
+        ofLogError() << command.raw.getAddress() << " rejected: " << error.what();
+    }
+    return false;
 }
 
 void CommandSystem::handleMidi(const osc::Command& command) {

@@ -12,6 +12,7 @@ public:
     template<typename T>
     const static shared_ptr<Variable<T>> getOrCreate(const string& name, const VarsHolder* holder);
     static map<string, shared_ptr<BaseVar>>& getPool(const VarsHolder* holder);
+    static const map<string, shared_ptr<BaseVar>>& sharedVariables();
     static bool hasShared(const string& name);
     static shared_ptr<BaseVar> getShared(const string& name);
     static shared_ptr<BaseVar> createOrUpdateShared(const string& name, const ofxOscMessage& m, int idx);

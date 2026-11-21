@@ -2,6 +2,7 @@
 
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 class Texture;
@@ -11,6 +12,11 @@ class BaseVar;
 
 class ResourceRegistry {
 public:
+    class Inactive : public std::logic_error {
+    public:
+        using std::logic_error::logic_error;
+    };
+
     using TextureSharedMap = std::map<std::string, std::shared_ptr<Texture>>;
     using TextureShaderMap = std::map<int, std::map<std::string, std::shared_ptr<Texture>>>;
     using GeomSharedMap = std::map<std::string, std::shared_ptr<Geom>>;

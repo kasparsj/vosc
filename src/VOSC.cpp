@@ -127,12 +127,7 @@ void VOSC::windowResized(int w, int h) {
 #ifdef VOSC_RECOVERY_TESTING
     if (!recoveryTestDirectory.empty()) {
         recoveryTestRecord({{"event", "native_window_callback"}, {"source", "glfw_native_callback"},
-            {"width", w}, {"height", h}, {"suppressed", recoveryTestSuppressResizeCallbacks != 0},
-            {"snapshot", engineControl.recoveryTestSnapshot()}});
-        if (recoveryTestSuppressResizeCallbacks != 0) {
-            if (recoveryTestSuppressResizeCallbacks > 0) --recoveryTestSuppressResizeCallbacks;
-            return;
-        }
+            {"width", w}, {"height", h}, {"snapshot", engineControl.recoveryTestSnapshot()}});
     }
 #endif
     if (commandSystem.handleReplayWindowResized(w, h)) {
@@ -140,16 +135,11 @@ void VOSC::windowResized(int w, int h) {
         settledWindowHeight = h;
         return;
     }
-    if (engineControl.handleWindowResized(w, h)) {
-        settledWindowWidth = w;
-        settledWindowHeight = h;
-        return;
-    }
+    engineControl.interruptTrial();
     if (w == settledWindowWidth && h == settledWindowHeight &&
         ofGetWidth() == w && ofGetHeight() == h) {
         return;
     }
-    engineControl.interruptTrial();
     renderSystem.windowResized(w, h);
     engineControl.noteExternalChange();
     settledWindowWidth = w;
@@ -198,14 +188,6 @@ void VOSC::recoveryTestUpdate(bool beforeDraw) {
     } else if (operation == "feedback_snapshot" || operation == "feedback_configure") {
         const auto result = operation == "feedback_snapshot" ? ShaderPingPongTex::recoveryTestSnapshot() : ShaderPingPongTex::recoveryTestConfigure(command);
         recoveryTestRecord({{"event", "command_complete"}, {"id", id}, {"operation", operation}, {"result", result}});
-    } else if (operation == "suppress_resize_callbacks") {
-        recoveryTestSuppressResizeCallbacks = command.value("count", 1);
-        recoveryTestRecord({{"event", "command_complete"}, {"id", id}, {"operation", operation},
-            {"count", recoveryTestSuppressResizeCallbacks}, {"snapshot", snapshot}});
-    } else if (operation == "release_resize_callbacks") {
-        recoveryTestSuppressResizeCallbacks = 0;
-        recoveryTestRecord({{"event", "command_complete"}, {"id", id}, {"operation", operation},
-            {"snapshot", snapshot}});
     } else if (operation == "native_resize") {
         const int width = command.at("width").get<int>();
         const int height = command.at("height").get<int>();
@@ -223,18 +205,6 @@ void VOSC::recoveryTestUpdate(bool beforeDraw) {
         engineControl.noteExternalChange();
         recoveryTestRecord({{"event", "command_complete"}, {"id", id}, {"operation", operation},
             {"snapshot", engineControl.recoveryTestSnapshot()}});
-    } else if (operation == "inject_resize_callback") {
-        auto result = engineControl.recoveryTestInjectResizeCallback(
-            command.at("expected_width").get<int>(), command.at("expected_height").get<int>(),
-            command.at("width").get<int>(), command.at("height").get<int>(),
-            command.value("synchronous", false));
-        recoveryTestRecord({{"event", "command_complete"}, {"id", id}, {"operation", operation},
-            {"result", result}});
-    } else if (operation == "arm_setter_mismatch") {
-        engineControl.recoveryTestArmSynchronousResizeMismatch(
-            command.at("width").get<int>(), command.at("height").get<int>());
-        recoveryTestRecord({{"event", "command_complete"}, {"id", id}, {"operation", operation},
-            {"source", "deterministic_requestInternalResize_injection"}, {"snapshot", snapshot}});
     } else if (operation == "inspect_programs") {
         std::vector<unsigned> programs;
         for (const auto& value : command.at("programs")) programs.push_back(value.get<unsigned>());
