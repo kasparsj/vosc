@@ -1,4 +1,4 @@
-//(
+(
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
 // create visuals sender
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
@@ -6,26 +6,26 @@
 // initialize a grid of 9 layers
 ~visuals.send('/layers', 9, "grid");
 
-// load plane geometry (optional, because plane is default)
+// Load a box on each layer.
 ~visuals.send('/geom', "*", "box");
 
-// load first webcam in all layers textures
-~visuals.send('/tex', "webcam", "webcam:0");
-~visuals.send('/tex', "*", "webcam");
+// Share a bundled image across the boxes.
+~visuals.send('/tex', "boxImage", "black_hole.jpg");
+~visuals.send('/tex', "*", "boxImage");
 
 // add a light
-~visuals.send('/light', "*", [0, 0, 500]);
+~visuals.send('/light', 0, 0, 0, 500);
 
 ~visuals.send('/cam', "easy");
 ~visuals.send('/cam/set', "distance", 1000);
 ~visuals.send('/cam/orbit', 20);
-//)
+)
 
-//(
+(
 // create visuals sender
 ~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
-// initialize a grid of 9 layers
+// initialize a grid of 100 layers
 ~visuals.send('/layers', 100, "grid");
 
 ~visuals.send('/geom', "penguin", "penguin/penguin.dae");
@@ -45,6 +45,6 @@
 ~visuals.send('/cam', "easy");
 ~visuals.send('/cam/set', "distance", 300);
 ~visuals.send('/cam/orbit', 20);
-//)
+)
 
 ~visuals.send('/shading/passes', 1);

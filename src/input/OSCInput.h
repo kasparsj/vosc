@@ -7,6 +7,7 @@
 
 class OSCInput : public Input {
 public:
+    OSCInput() : loudness(0.f), onset(0) {}
 //    void initAsSC() {
 //        setVar<float>("maxAmp", MAX_AMP);
 //        setVar<float>("maxLoud", MAX_LOUD);

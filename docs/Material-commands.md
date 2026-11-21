@@ -2,11 +2,9 @@
 
 Material commands are targeted resource commands.
 
-First argument is `target`:
-- `int` or numeric string: layer index
-- `"*"`, `"x"`, `"a"`: all layers
-
-Note: non-numeric string names are not supported for `/mat*` commands.
+The first argument selects a layer by nonnegative OSC `int32` or by a string
+containing only decimal digits within int32 range. The index must identify an
+existing layer. The strings `"*"`, `"x"`, and `"a"` select all layers.
 
 Supported commands:
 - `/mat/diffuse`

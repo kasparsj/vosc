@@ -1,6 +1,108 @@
 #include "Layer.h"
 #include "VariablePool.h"
 
+#include <algorithm>
+#include <cmath>
+#include <iomanip>
+#include <limits>
+#include <locale>
+#include <sstream>
+#include <stdexcept>
+
+namespace {
+void applyPositionArray(Layer& layer, const string& encoded) {
+    ofJson array;
+    try {
+        array = ofJson::parse(encoded);
+    } catch (const ofJson::out_of_range& error) {
+        // nlohmann JSON reports numeric conversion overflow as error 406.
+        ofLogError() << "/layer/pos rejected: "
+                     << (error.id == 406 ? "component outside float32 range" : "invalid array syntax");
+        return;
+    } catch (const ofJson::parse_error&) {
+        ofLogError() << "/layer/pos rejected: invalid array syntax";
+        return;
+    }
+    if (!array.is_array()) {
+        ofLogError() << "/layer/pos rejected: invalid array syntax";
+        return;
+    }
+    Layer::Position components;
+    if (array.size() != components.size()) {
+        ofLogError() << "/layer/pos rejected: expected three components";
+        return;
+    }
+    for (size_t index = 0; index < components.size(); ++index) {
+        const auto& component = array[index];
+        if (component.is_string() && !component.get_ref<const string&>().empty()) {
+            components[index] = component.get<string>();
+        } else if (component.is_number()) {
+            const double value = component.get<double>();
+            if (!std::isfinite(value) || std::abs(value) > std::numeric_limits<float>::max()) {
+                ofLogError() << "/layer/pos rejected: component outside float32 range";
+                return;
+            }
+            components[index] = static_cast<float>(value);
+        } else {
+            ofLogError() << "/layer/pos rejected: invalid component type";
+            return;
+        }
+    }
+    try {
+        layer.setPosition(components);
+    } catch (...) {
+        ofLogError() << "/layer/pos rejected: could not initialize position";
+    }
+}
+}
+
+void Layer::setPosition(const Position& components) {
+    auto position = std::make_shared<Variable<glm::vec3>>();
+    if (std::all_of(components.begin(), components.end(), [](const auto& component) {
+        return std::holds_alternative<float>(component);
+    })) {
+        position->set(glm::vec3(std::get<float>(components[0]), std::get<float>(components[1]),
+                                std::get<float>(components[2])));
+    } else {
+        vector<string> values;
+        vector<bool> expressionMask;
+        for (const auto& component : components) {
+            const auto* expression = std::get_if<string>(&component);
+            expressionMask.push_back(expression != nullptr);
+            if (expression) {
+                values.push_back(*expression);
+            } else {
+                std::ostringstream number;
+                number.imbue(std::locale::classic());
+                number << std::setprecision(std::numeric_limits<double>::max_digits10)
+                       << static_cast<double>(std::get<float>(component));
+                values.push_back(number.str());
+            }
+        }
+        position->set(values, expressionMask);
+        if (!position->validateComponentExpressions())
+            throw std::invalid_argument("could not initialize position expression");
+    }
+
+    auto& pool = VariablePool::getPool(this);
+    const auto poolEntry = pool.try_emplace("pos");
+    try {
+        auto layerEntry = vars.try_emplace("pos").first;
+        layerEntry->second = position;
+        poolEntry.first->second = position;
+    } catch (...) {
+        if (poolEntry.second) pool.erase(poolEntry.first);
+        throw;
+    }
+}
+
+Layer::~Layer() {
+    geom = nullptr;
+    GeomPool::clean(_id);
+    vars.clear();
+    VariablePool::cleanup(_id);
+}
+
 void Layer::setup(int index)
 {
     this->index = index;
@@ -94,6 +196,8 @@ void Layer::oscCommand(const string& command, const ofxOscMessage &m) {
         layerCommand(command, m);
     }
     else if (command.substr(0, 7) == "/shader") {
+        if ((command == "/shader/var" || command == "/shader/uniform") &&
+            shader.handleLayerVectorWrite(m, index)) return;
         shader.oscCommand(command, m);
     }
     else if (command.substr(0, 4) == "/mat") {
@@ -118,6 +222,14 @@ void Layer::layerCommand(const string& command, const ofxOscMessage& m) {
         reset();
     }
     else if (command == "/layer/pos") {
+        if (m.getNumArgs() == 2 && m.getArgType(1) == OFXOSC_TYPE_STRING) {
+            const auto encoded = m.getArgAsString(1);
+            const auto first = encoded.find_first_not_of(" \t\r\n");
+            if (first != string::npos && encoded[first] == '[') {
+                applyPositionArray(*this, encoded);
+                return;
+            }
+        }
         setVar("pos", m);
     }
     else if (command == "/layer/size") {
@@ -172,6 +284,12 @@ void Layer::layerCommand(const string& command, const ofxOscMessage& m) {
     }
     else if (command == "/layer/visible") {
         setVar("visible", m);
+    }
+    else if (command == "/layer/speed") {
+        setVar("speed", m);
+    }
+    else if (command == "/layer/blend") {
+        data.blendMode = static_cast<ofBlendMode>(m.getArgAsInt(1));
     }
 }
 

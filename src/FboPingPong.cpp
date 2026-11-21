@@ -31,8 +31,10 @@ void FboPingPong::allocate( ofFbo::Settings _settings, ofColor _clearColor )
 	fbo2.allocate( _settings );
 	sourceIsFirst = true;
 	
-	clearSource();
-	clearDest();
+	if (isAllocated()) {
+		clearSource();
+		clearDest();
+	}
 }
 
 // ------------------------------------------------------------------------------------
@@ -84,6 +86,7 @@ void FboPingPong::clearDest()
 //
 void FboPingPong::clearSource( ofColor _clearColor )
 {
+	if (!source().isAllocated()) return;
 	source().begin();
 		ofClear( _clearColor );
 	source().end();
@@ -93,6 +96,7 @@ void FboPingPong::clearSource( ofColor _clearColor )
 //
 void FboPingPong::clearDest( ofColor _clearColor )
 {
+	if (!dest().isAllocated()) return;
 	dest().begin();
 		ofClear( _clearColor );
 	dest().end();

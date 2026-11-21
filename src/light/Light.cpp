@@ -1,9 +1,15 @@
 #include "Light.hpp"
 #include "Args.h"
+#include "VariablePool.h"
 
 Light::Light() {
     light.enable();
     setVar("pos", glm::vec3());
+}
+
+Light::~Light() {
+    vars.clear();
+    VariablePool::cleanup(getId());
 }
 
 void Light::set(const ofxOscMessage& m, int idx) {

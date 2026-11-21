@@ -2,14 +2,13 @@
 "gl.scd".loadRelative;
 
 // Quarks.install("https://github.com/kasparsj/VisualsQuark.git");
-~visuals = OSCVisuals("127.0.0.1", 33333);
+~visuals = OSCVisuals("127.0.0.1", 33333, reset: true);
 
 ~visuals.send('/layers', 2, "stack");
-~visuals.send('/cam', "easy");
-~visuals.send('/cam/pos', [0, 0.5, -1.1]);
-~visuals.send('/cam/look', [0, 0, 0]);
+~visuals.send('/cam', "default");
+~visuals.send('/cam/pos', 0, 400, 900);
+~visuals.send('/cam/look', 0, 50, 0);
 ~visuals.send('/cam/set', "nearClip", 0.01);
-~visuals.send('/cam/set', "movementMaxSpeed", 0.1);
 
 ~visuals.send('/tex', 0, "2d:gridplane", 1, 21, 0);
 ~visuals.send('/layer/rot', 0, [0, 0, -90]);

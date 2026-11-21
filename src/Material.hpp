@@ -5,6 +5,7 @@
 class Material : public VarsHolder {
 public:
     Material();
+    ~Material();
     ofMaterial& get() {
         return material;
     }

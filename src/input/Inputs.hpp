@@ -11,11 +11,16 @@ public:
     const map<string, shared_ptr<OSCInput>>& all() {
         return inputs;
     }
+    const map<string, shared_ptr<OSCInput>>& all() const {
+        return inputs;
+    }
+    bool hasConfiguredTarget(const ofxOscMessage& m) const;
     void oscCommand(string command, const ofxOscMessage &m);
     void remove(const ofxOscMessage& m);
     void update();
     bool checkOnset();
     void log();
+    void clear();
     
 private:
     static Inputs instance;

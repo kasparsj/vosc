@@ -3,6 +3,7 @@
 #include "ofxOsc.h"
 #include "Config.h"
 #include <vector>
+#include <string>
 
 namespace osc {
 
@@ -59,7 +60,7 @@ enum class InputAction {
 struct TargetSelector {
     TargetKind kind;
     int index;
-    string name;
+    std::string name;
 
     TargetSelector()
         : kind(TargetKind::NONE), index(-1), name("") {}
@@ -77,7 +78,7 @@ struct LayersPayload {
 
 struct ShadingPassSpec {
     bool byName;
-    string name;
+    std::string name;
     int id;
 
     ShadingPassSpec()
@@ -87,7 +88,7 @@ struct ShadingPassSpec {
 struct TargetedResourcePayload {
     ResourceDomain domain;
     ResourceAction action;
-    string commandPath;
+    std::string commandPath;
     TargetSelector target;
 
     TargetedResourcePayload()
@@ -96,14 +97,14 @@ struct TargetedResourcePayload {
 
 struct InputPayload {
     InputAction action;
-    string commandPath;
+    std::string commandPath;
 
     InputPayload()
         : action(InputAction::FORWARD), commandPath("") {}
 };
 
 struct CameraPayload {
-    string commandPath;
+    std::string commandPath;
 
     CameraPayload()
         : commandPath("") {}
@@ -111,14 +112,14 @@ struct CameraPayload {
 
 struct Command {
     CommandType type;
-    string address;
+    std::string address;
     ofxOscMessage raw;
     bool hasOnsetValue;
     bool onsetValue;
     MidiAction midiAction;
     LayersPayload layers;
-    string shadingMode;
-    vector<ShadingPassSpec> shadingPasses;
+    std::string shadingMode;
+    std::vector<ShadingPassSpec> shadingPasses;
     InputPayload input;
     CameraPayload camera;
     TargetedResourcePayload resource;

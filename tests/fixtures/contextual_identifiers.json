@@ -1,0 +1,14 @@
+[
+  {"context": "input", "name": "controlInput", "accepted": true},
+  {"context": "uniform", "name": "controlValue", "accepted": true},
+  {"context": "sampler", "name": "controlTexture", "accepted": true},
+  {"context": "input", "name": "camPos", "accepted": false},
+  {"context": "input", "name": "camLook", "accepted": false},
+  {"context": "input", "name": "camOrbit", "accepted": false},
+  {"context": "uniform", "name": "camPos", "accepted": false},
+  {"context": "uniform", "name": "camLook", "accepted": false},
+  {"context": "uniform", "name": "camOrbit", "accepted": false},
+  {"context": "sampler", "name": "camPos", "accepted": false},
+  {"context": "sampler", "name": "camLook", "accepted": false},
+  {"context": "sampler", "name": "camOrbit", "accepted": false}
+]

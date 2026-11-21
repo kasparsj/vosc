@@ -104,6 +104,7 @@ template shared_ptr<Variable<glm::mat4>> VarsHolder::setVar(const string& name, 
 template shared_ptr<Variable<ofFloatColor>> VarsHolder::setVar(const string& name, ofFloatColor value);
 
 template shared_ptr<Variable<float>> VarsHolder::setVar(const string& name, vector<float> value);
+template shared_ptr<Variable<int>> VarsHolder::setVar(const string& name, vector<int> value);
 template shared_ptr<Variable<glm::vec3>> VarsHolder::setVar(const string& name, vector<glm::vec3> value);
 template shared_ptr<Variable<glm::mat4>> VarsHolder::setVar(const string& name, vector<glm::mat4> value);
 template shared_ptr<Variable<ofFloatColor>> VarsHolder::setVar(const string& name, vector<ofFloatColor> value);

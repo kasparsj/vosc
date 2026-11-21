@@ -116,10 +116,11 @@ void RenderSystem::endDraw() {
     ofPopMatrix();
 }
 
-void RenderSystem::draw(Camera& camera, bool showDebug) {
+void RenderSystem::draw(Camera& camera, bool showDebug, const std::function<void()>& afterCompose) {
     beginDraw(camera);
     doDraw(camera);
     endDraw();
+    if (afterCompose) afterCompose();
 
     if (showDebug) {
         if (camera.isEnabled()) {
@@ -130,7 +131,7 @@ void RenderSystem::draw(Camera& camera, bool showDebug) {
     }
 }
 
-void RenderSystem::windowResized(int w, int h) {
+void RenderSystem::resizeBacking(int w, int h) {
     if (w > 0 && h > 0) {
         ofEnableArbTex();
         deferred.init(ofGetWidth(), ofGetHeight());
@@ -138,6 +139,10 @@ void RenderSystem::windowResized(int w, int h) {
 
         post.init(ofGetWidth(), ofGetHeight());
     }
+}
+
+void RenderSystem::windowResized(int w, int h) {
+    resizeBacking(w, h);
     layoutLayers(layout);
 }
 
@@ -310,6 +315,23 @@ void RenderSystem::applyShadingPasses(const vector<osc::ShadingPassSpec>& passes
             createShadingPass(post, passes[i].id);
             createShadingPass(deferred, passes[i].id);
         }
+    }
+}
+
+bool RenderSystem::supportsDirectShaderTrial() {
+    return layers.size() == 1 && layers.front() && !deferredShading &&
+           post.getPasses().empty() && deferred.getPasses().empty();
+}
+
+bool RenderSystem::supportsScenePersistence() {
+    return !deferredShading && post.getPasses().empty() && deferred.getPasses().empty();
+}
+
+void RenderSystem::replaceSceneLayers(vector<shared_ptr<Layer>> replacement, Layout replacementLayout) {
+    layers = std::move(replacement);
+    layout = replacementLayout;
+    for (size_t index = 0; index < layers.size(); ++index) {
+        if (layers[index]) layers[index]->index = static_cast<int>(index);
     }
 }
 

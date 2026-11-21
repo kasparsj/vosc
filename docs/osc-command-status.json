@@ -122,7 +122,7 @@
   "/input": {
     "status": "supported",
     "canonical": "",
-    "notes": "",
+    "notes": "Create or reconfigure one OSC-fed slot with target alone. Supply device and optional channel count and buffer for a single device slot. Wildcard setup requires all fields. Wrapped setup is explicit.",
     "feature_flag": "",
     "replacement": "",
     "owner": "Inputs"
@@ -130,7 +130,7 @@
   "/input/data": {
     "status": "supported",
     "canonical": "",
-    "notes": "",
+    "notes": "Configure the slot first, then send target and amplitude, optionally followed by loudness, onset and MFCC coefficients. Live only.",
     "feature_flag": "",
     "replacement": "",
     "owner": "Inputs"
@@ -138,7 +138,7 @@
   "/input/list": {
     "status": "supported",
     "canonical": "",
-    "notes": "",
+    "notes": "No arguments. Lists available audio input devices.",
     "feature_flag": "",
     "replacement": "",
     "owner": "Inputs"
@@ -146,7 +146,7 @@
   "/input/set": {
     "status": "supported",
     "canonical": "",
-    "notes": "",
+    "notes": "Set maxAmp or maxLoud with one finite OSC float on an existing slot.",
     "feature_flag": "",
     "replacement": "",
     "owner": "Inputs"
@@ -168,6 +168,14 @@
     "owner": "Layer"
   },
   "/layer/alpha": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
+  "/layer/blend": {
     "status": "supported",
     "canonical": "",
     "notes": "",
@@ -210,7 +218,7 @@
   "/layer/pos": {
     "status": "supported",
     "canonical": "",
-    "notes": "",
+    "notes": "A single JSON array takes exactly three components. Use finite float32 numbers or expression strings whose names resolve to registered symbols or the runtime variables i and total.",
     "feature_flag": "",
     "replacement": "",
     "owner": "Layer"
@@ -255,6 +263,14 @@
     "replacement": "",
     "owner": "Layer"
   },
+  "/layer/speed": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Layer"
+  },
   "/layer/tint": {
     "status": "supported",
     "canonical": "",
@@ -274,7 +290,7 @@
   "/layers": {
     "status": "supported",
     "canonical": "",
-    "notes": "",
+    "notes": "Optional count and layout. A lone layout name uses the initial count of nine.",
     "feature_flag": "",
     "replacement": "",
     "owner": "RenderSystem"
@@ -282,7 +298,7 @@
   "/layers/layout": {
     "status": "supported",
     "canonical": "",
-    "notes": "",
+    "notes": "Exactly one layout. Relayouts the existing layer list.",
     "feature_flag": "",
     "replacement": "",
     "owner": "RenderSystem"
@@ -290,7 +306,7 @@
   "/layers/reset": {
     "status": "supported",
     "canonical": "",
-    "notes": "",
+    "notes": "Rebuilds the layer list. A lone layout name uses the initial count of nine. Wrapped replay requires explicit count and layout.",
     "feature_flag": "",
     "replacement": "",
     "owner": "RenderSystem"
@@ -455,6 +471,30 @@
     "replacement": "",
     "owner": "Shader"
   },
+  "/shader/texture/set": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shader/texture/size": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
+  "/shader/texture/speed": {
+    "status": "supported",
+    "canonical": "",
+    "notes": "",
+    "feature_flag": "",
+    "replacement": "",
+    "owner": "Shader"
+  },
   "/shader/uniform": {
     "status": "alias",
     "canonical": "/shader/var",
@@ -466,7 +506,7 @@
   "/shader/var": {
     "status": "supported",
     "canonical": "",
-    "notes": "",
+    "notes": "For an active layer ivec2, ivec3, or ivec4 uniform, one JSON array takes exactly the reflected number of int32 values or expression strings. Active layer vec2, vec3, and vec4 uniforms take one JSON array of the reflected arity with float32 numbers or expression strings. Oversized vectors are rejected, and four vec4 components are used as raw values. Existing vec4 color bindings and ordinary ivec4-to-vec4 transitions accept three RGB components with alpha 1 and divide RGB by 255 when all three components are numeric and any exceeds 1. GLSL uniform arrays keep their existing handling.",
     "feature_flag": "",
     "replacement": "",
     "owner": "Shader"
@@ -490,7 +530,7 @@
   "/sound/data": {
     "status": "deprecated",
     "canonical": "/input/data",
-    "notes": "Legacy audio analysis payload command removed in typed router.",
+    "notes": "Rejected by the typed router. [Configure a slot before sending samples](Setup-commands.md#input).",
     "feature_flag": "",
     "replacement": "/input/data",
     "owner": "Migration"

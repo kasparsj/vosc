@@ -20,14 +20,14 @@ private:
     Result<Command> parseMidi(const ofxOscMessage& message) const;
     Result<Command> parseShading(const ofxOscMessage& message) const;
     Result<Command> parseShadingPasses(const ofxOscMessage& message) const;
-    Result<Command> parseTargeted(const ofxOscMessage& message, ResourceDomain domain, const string& prefix) const;
+    Result<Command> parseTargeted(const ofxOscMessage& message, ResourceDomain domain, const std::string& prefix) const;
 
     Result<Layout> parseLayoutArg(const ofxOscMessage& message, int index) const;
-    Result<TargetSelector> parseTarget(const ofxOscMessage& message, int index) const;
-    Result<string> normalizePrefixedPath(const ofxOscMessage& message, const string& prefix) const;
-    bool isPrefixedCommand(const string& value, const string& prefix) const;
+    Result<TargetSelector> parseTarget(const ofxOscMessage& message, int index, ResourceDomain domain) const;
+    Result<std::string> normalizePrefixedPath(const ofxOscMessage& message, const std::string& prefix) const;
+    bool isPrefixedCommand(const std::string& value, const std::string& prefix) const;
 
-    bool startsWith(const string& value, const string& prefix) const;
+    bool startsWith(const std::string& value, const std::string& prefix) const;
 };
 
 } // namespace osc

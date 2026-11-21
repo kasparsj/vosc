@@ -6,10 +6,13 @@
 #include "Args.h"
 #include "tex/Tex.h"
 #include "tex/ShaderTex.h"
+#include "tex/ShaderPingPongTex.h"
 #include "shader/ShaderPass.h"
 #include "shader/ShaderPool.h"
 #include <algorithm>
 #include <cctype>
+#include <cmath>
+#include <limits>
 
 void Texture::load(string source, const vector<float>& args) {
     _unload();
@@ -70,12 +73,16 @@ void Texture::loadData(const ofxOscMessage &m, int arg) {
     var->set(m, arg);
     var->update();
     tex->update(data);
+#if ALLOW_TEX_2D_ARRAY
     if (tex->getTexture().getDepth() > 0) {
         tex->getTexture().loadData(var->getVec());
     }
     else {
+#endif
         tex->getTexture().loadData(var->asBufferObject(), GL_RGBA, GL_FLOAT);
+#if ALLOW_TEX_2D_ARRAY
     }
+#endif
     var = nullptr;
 }
 
@@ -102,6 +109,8 @@ shared_ptr<BaseTex> Texture::chooseTex(string type, const vector<float>& args) {
 }
 
 void Texture::_unload() {
+    if (std::dynamic_pointer_cast<ShaderPingPongTex>(tex)) ShaderPingPongTex::invalidateFeedbackGeneration();
+    feedbackSetupPending = false;
     frames.clear();
     frames.resize(numFrames);
     tex = nullptr;
@@ -133,7 +142,7 @@ void Texture::clear() {
 }
 
 void Texture::update(const vector<TidalNote> &notes) {
-    if (isStatic && !needsUpdate) return;
+    if (feedbackSetupPending || (isStatic && !needsUpdate)) return;
     needsUpdate = false;
 
     if (isLoaded()) {
@@ -144,6 +153,9 @@ void Texture::update(const vector<TidalNote> &notes) {
         // - ImageTex: only loads if not loaded (static content)
         // - Tex: only allocates if needed (static content)
         tex->update(data);
+        if (auto feedback = std::dynamic_pointer_cast<ShaderPingPongTex>(tex)) {
+            if (!feedback->firstUpdateComplete()) return;
+        }
         
         // Apply shader passes
         ofTexture* render = &tex->getTexture();
@@ -170,6 +182,7 @@ void Texture::update(const vector<TidalNote> &notes) {
 }
 
 void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
+    if (std::dynamic_pointer_cast<ShaderPingPongTex>(tex)) ShaderPingPongTex::invalidateFeedbackGeneration();
     if (command == "/tex") {
         load(m);
     }
@@ -207,7 +220,8 @@ void Texture::oscCommand(const string& command, const ofxOscMessage& m) {
                     wrapModeHorizontal = m.getArgAsInt(2);
                     wrapModeVertical = m.getArgAsInt(2);
                 }
-                getTexture().setTextureWrap(wrapModeHorizontal, wrapModeVertical);
+                if (tex && getNumTextures() > 0 && getTexture().isAllocated())
+                    getTexture().setTextureWrap(wrapModeHorizontal, wrapModeVertical);
                 data.setTextureWrap(wrapModeHorizontal, wrapModeVertical);
             }
         }
@@ -306,6 +320,9 @@ void Texture::drawFrame() {
 }
 
 void Texture::draw(Layer& layer) {
+    if (feedbackSetupPending) return;
+    if (auto feedback = std::dynamic_pointer_cast<ShaderPingPongTex>(tex))
+        if (!feedback->firstUpdateComplete()) return;
     const glm::vec3& pos = layer.getVarVec3("pos");
     const glm::vec2& size = layer.data.getSize();
     if (isLoaded() && layer.delay == 0) {
@@ -446,11 +463,31 @@ void Texture::setLooper(const ofxOscMessage& m) {
         float maxDuration = m.getArgAsFloat(1);
         int fps = m.getNumArgs() > 2 ? m.getArgAsInt(2) : 30;
         int speed = m.getNumArgs() > 3 ? m.getArgAsInt(3) : 2.0;
+        if (speed == 0) {
+            ofLogError() << "/tex/looper playback speed cannot be zero";
+            return;
+        }
+        const float recordingRate = static_cast<float>(fps) / static_cast<float>(speed);
+        if (!std::isfinite(recordingRate) ||
+            static_cast<double>(recordingRate) < std::numeric_limits<int>::min() ||
+            static_cast<double>(recordingRate) > std::numeric_limits<int>::max()) {
+            ofLogError() << "/tex/looper has an unrepresentable recording rate";
+            return;
+        }
         if (!looper) {
             looper = std::unique_ptr<ofxLooper>(new ofxLooper());
+            // setup() calls setFps() before setPlaySpeed(); seed its divisor first.
+            looper->setPlaySpeed(speed);
             looper->setup(maxDuration, fps, speed);
         }
         else {
+            const float intermediateRate = static_cast<float>(fps) / looper->getPlaySpeed();
+            if (!std::isfinite(intermediateRate) ||
+                static_cast<double>(intermediateRate) < std::numeric_limits<int>::min() ||
+                static_cast<double>(intermediateRate) > std::numeric_limits<int>::max()) {
+                ofLogError() << "/tex/looper has an unrepresentable intermediate recording rate";
+                return;
+            }
             looper->setMaxDuration(maxDuration);
             looper->setFps(fps);
             looper->setPlaySpeed(speed);

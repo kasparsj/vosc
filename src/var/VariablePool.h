@@ -22,4 +22,5 @@ public:
     static void cleanup(const VarsHolder* holder);
     static void cleanup(int id);
     static void setShuttingDown(bool value);
+    static void clearSceneShared();
 };

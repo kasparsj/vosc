@@ -7,6 +7,9 @@
 #include "../Buffer.hpp"
 #include "../TexturePool.h"
 #include "ofxShadertoy.h"
+#include <set>
+#include <cstdint>
+#include <variant>
 
 #define DEFAULT_TEX "tex"
 #define MAX_LIGHTS 8
@@ -24,6 +27,20 @@ class Camera;
 
 class Shader : public VarsHolder {
 public:
+    struct DirectSourceState {
+        shared_ptr<ofShader> program;
+        string path;
+        string source;
+        map<string, vector<float>> bindings;
+    };
+
+    struct PreparedDirectSource {
+        shared_ptr<ofShader> program;
+        string source;
+        map<string, GLenum> uniformTypes;
+        std::set<std::string> arrayUniforms;
+    };
+
     static map<string, ofxAutoReloadedShader> cache;
     static string random();
     
@@ -40,12 +57,25 @@ public:
     }
     bool load(string path);
     bool loadFromSource(const string& source);
+    bool snapshotDirectSource(DirectSourceState& state, string& reason) const;
+    bool prepareDirectSource(const string& source, PreparedDirectSource& prepared) const;
+    void installDirectSource(PreparedDirectSource&& prepared,
+                             const map<string, vector<float>>& bindings);
+    bool restoreDirectSource(const DirectSourceState& state);
+    bool ownsProgram(GLuint program) const;
     bool loadShadertoy(const string& shadertoyId);
     static ShaderPaths getShaderPaths(const string& path);  // Returns vert, frag, and geom paths
     bool loadFromFileAndWatch(const string& path);  // Instance method that loads into this shader
     void reload();
     void update(const vector<TidalNote> &notes);
     void oscCommand(const string& command, const ofxOscMessage& m);
+    using IntegerComponent = std::variant<std::int32_t, string>;
+    using FloatComponent = std::variant<float, string>;
+    size_t reflectedIntegerVectorArity(const string& name) const;
+    size_t reflectedFloatVectorArity(const string& name) const;
+    void setFloatVector(const string& name, size_t arity, const vector<FloatComponent>& components);
+    bool handleLayerVectorWrite(const ofxOscMessage& message, int layerIndex);
+    void setIntegerVector(const string& name, size_t arity, const vector<IntegerComponent>& components);
     void begin(TexData& data, int delay = 0, const Camera* camera = nullptr);
     void end();
     void reset();
@@ -81,16 +111,31 @@ public:
     ofShader& getShader() {
         return *shader;
     }
+    const ofShader& getShader() const {
+        return *shader;
+    }
     ofxShadertoy& getShadertoy() {
         return *shadertoy;
     }
     string getShaderPath() const {
         return shaderPath;
     }
+    const string& getDirectSource() const { return directSource; }
+    bool getExportSource(string& source, string& reason) const;
     const map<string, GLenum>& getUniformTypes() const;
     map<string, string> getUniformValues() const;
     
+protected:
+    ofxAutoReloadedShader* watchedShader() const {
+        return isShaderLoaded() && !retainedSourcePath.empty()
+            ? static_cast<ofxAutoReloadedShader*>(shader.get()) : nullptr;
+    }
+
 private:
+    GLenum reflectedNonArrayUniformType(const string& name) const;
+    void setIntegerVector(const string& name, size_t arity, const vector<IntegerComponent>& components,
+                          const shared_ptr<Variable<int>>& variable);
+    void publishUniformBinding(const string& name, const shared_ptr<BaseVar>& variable);
     void setUniformTextures(const map<string, shared_ptr<Texture>>& textures, int delay = 0);
     void setUniforms(const map<string, shared_ptr<BaseVar>>& vars);
     template<typename T>
@@ -98,7 +143,7 @@ private:
     template<typename T>
     void setLights(shared_ptr<T>& shader);
     template<typename T>
-    void setUniformCameraMatrices(shared_ptr<T>& shader, ofCamera& cam, const string& prefix = "cam");
+    void setUniformCameraMatrices(shared_ptr<T>& shader, const ofCamera& cam, const string& prefix = "cam");
     template<typename T>
     void setUniformMaterial(shared_ptr<T>& shader, ofMaterial& mat, const string& prefix = "mat");
     
@@ -118,6 +163,9 @@ private:
     shared_ptr<ofShader> shader;
     shared_ptr<ofxShadertoy> shadertoy;
     string shaderPath;
+    string directSource;
+    string retainedSourcePath;
     mutable map<string, GLenum> uniformTypes;
+    mutable GLuint uniformTypesProgram = 0;
     int texLoc;
 };

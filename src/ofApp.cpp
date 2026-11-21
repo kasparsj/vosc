@@ -1,5 +1,6 @@
 #include "ofApp.h"
 #include "Config.h"
+#include "control/OscPort.hpp"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -15,7 +16,7 @@ void ofApp::setup(){
     console = std::make_shared<Logger>();
     ofSetLoggerChannel(console);
     
-    vosc.setup(PORT);
+    vosc.setup(control::oscPortFromEnvironment());
 }
 
 //--------------------------------------------------------------

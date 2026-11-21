@@ -8,6 +8,7 @@
 class InputSystem {
 public:
     void setup(unsigned int port);
+    void shutdown();
     void forEachOscMessage(const std::function<void(const ofxOscMessage&)>& handler);
     void listMidiPorts();
 

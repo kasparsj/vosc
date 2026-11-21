@@ -3,6 +3,7 @@
 #include "../shader/ShaderPool.h"
 #include "../Buffer.hpp"
 #include "../input/Inputs.hpp"
+#include "../utils.h"
 
 Inspector::Inspector() {
     // Set up callback for TextureInspector to open ShaderInspector
@@ -210,7 +211,7 @@ void Inspector::debugTexture(const ofTexture& tex, const string& name, float x, 
     ofSetColor(255);
     
     // If texture has depth > 1, use tex_array shader to display layer 0
-    int depth = tex.getDepth();
+    int depth = getTextureDepth(tex);
     if (depth > 1) {
         textureArrayDraw.draw(const_cast<ofTexture&>(tex), (int)x, (int)y, 100, 100, 0);
     } else {
@@ -478,7 +479,7 @@ void Inspector::drawLargeTexture() {
     // Draw texture name
     ofSetColor(255);
     string displayName = largeTextureName;
-    int depth = largeTexture->getDepth();
+    int depth = getTextureDepth(*largeTexture);
     if (depth > 1) {
         displayName += " (Layer 0 / " + ofToString(depth - 1) + ")";
     }

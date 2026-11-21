@@ -22,6 +22,12 @@ bool tryGetInputName(const ofxOscMessage& m, string& name) {
 }
 }  // namespace
 
+bool Inputs::hasConfiguredTarget(const ofxOscMessage& m) const {
+    string name;
+    if (!tryGetInputName(m, name)) return false;
+    return name == "*" ? !inputs.empty() : inputs.count(name) != 0;
+}
+
 void Inputs::oscCommand(string command, const ofxOscMessage &m) {
     if (command == "/input/list") {
         log();
@@ -38,9 +44,16 @@ void Inputs::oscCommand(string command, const ofxOscMessage &m) {
         }
         else {
             if (inputs.find(name) == inputs.end()) {
+                if (command != "/input") {
+                    return;
+                }
                 inputs[name] = make_shared<OSCInput>();
             }
             shared_ptr<OSCInput>& input = inputs.at(name);
+            if (command == "/input") {
+                input->requestedIdIsInteger = m.getArgType(0) == OFXOSC_TYPE_INT32 || m.getArgType(0) == OFXOSC_TYPE_INT64;
+                if (input->requestedIdIsInteger) input->requestedIntegerId = m.getArgAsInt(0);
+            }
             input->oscCommand(command, m);
         }
     }
@@ -75,4 +88,8 @@ void Inputs::log() {
     for (int i=0; i<devices.size(); i++) {
         ofLog() << (ofToString(i) + ": " + devices[i].name);
     }
+}
+
+void Inputs::clear() {
+    inputs.clear();
 }

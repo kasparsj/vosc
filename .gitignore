@@ -7,4 +7,7 @@ bin/data/videos
 bin/data/shaders/shadertoy
 log.txt
 tests/bin
+__pycache__/
 .claude/
+/Project.local.xcconfig
+/.vosc-macos/

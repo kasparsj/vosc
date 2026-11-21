@@ -1,4 +1,5 @@
 #include "Material.hpp"
+#include "VariablePool.h"
 
 Material::Material() {
     setVar("diffuse", settings.diffuse);
@@ -6,6 +7,11 @@ Material::Material() {
     setVar("specular", settings.specular);
     setVar("emissive", settings.emissive);
     setVar("shininess", settings.shininess);
+}
+
+Material::~Material() {
+    vars.clear();
+    VariablePool::cleanup(_id);
 }
 
 void Material::update() {

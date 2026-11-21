@@ -16,6 +16,11 @@ void Camera::reset() {
     // todo: reset camera object
 }
 
+void Camera::resetScene() {
+    cam.reset();
+    reset();
+}
+
 void Camera::update() {
     if (cam != nullptr) {
         ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam.get());

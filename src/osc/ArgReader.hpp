@@ -18,12 +18,12 @@ public:
         return _message;
     }
 
-    Result<string> requireString(int index) const;
+    Result<std::string> requireString(int index) const;
     Result<int> requireInt(int index) const;
     Result<float> requireFloat(int index) const;
     Result<bool> requireBool(int index) const;
 
-    Result<string> optionalString(int index, const string& fallback) const;
+    Result<std::string> optionalString(int index, const std::string& fallback) const;
     Result<int> optionalInt(int index, int fallback) const;
     Result<float> optionalFloat(int index, float fallback) const;
     Result<bool> optionalBool(int index, bool fallback) const;

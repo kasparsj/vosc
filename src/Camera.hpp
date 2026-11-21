@@ -4,11 +4,15 @@
 #include "VariablePool.h"
 #include "ofxOsc.h"
 #include <memory>
+#ifdef VOSC_RECOVERY_TESTING
+#include <array>
+#endif
 
 class Camera {
 public:
     void setup();
     void reset();
+    void resetScene();
     void preUpdate() {
         ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam.get());
         if (easyCam != nullptr) {
@@ -17,7 +21,7 @@ public:
         }
     }
     void update();
-    bool isEnabled() {
+    bool isEnabled() const {
         return cam != nullptr;
     }
     glm::vec3 getPosition() {
@@ -29,8 +33,16 @@ public:
     ofCamera& getCamera() {
         return *cam;
     }
+    const ofCamera& getCamera() const {
+        return *cam;
+    }
     void oscCommand(const string& command, const ofxOscMessage& m);
     void oscInit(const ofxOscMessage& m);
+#ifdef VOSC_RECOVERY_TESTING
+    std::array<const BaseVar*, 3> recoveryTestManagedVariables() const {
+        return {{camPos.get(), camLook.get(), camOrbit.get()}};
+    }
+#endif
     
 private:
     std::unique_ptr<ofCamera> cam;

@@ -4,11 +4,12 @@
 ################################################################################
 
 ################################################################################
-# OF ROOT
+# OF ROOT (non-macOS Makefile builds)
 #   The location of your root openFrameworks installation
-#       (default) OF_ROOT = ../../.. 
+#       (default) OF_ROOT = ../../..
 ################################################################################
-OF_ROOT = /Users/kasparsj/Work2/of_v0.11.2
+-include Project.local.xcconfig
+OF_ROOT ?= $(or $(OF_PATH),../../..)
 
 ################################################################################
 # PROJECT ROOT

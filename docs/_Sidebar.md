@@ -4,6 +4,9 @@
 - [OSC reference](OSC-reference.md)
 - [Command migration](Command-migration.md)
 - [Architecture](Architecture.md)
+- [GPU backend research](GPU-backend-research.md)
+- [Feedback scenes](Feedback-composition-contract.md)
+- [Local engine API](Engine-api.md)
 
 # Commands
 
@@ -20,3 +23,9 @@
 # Constants
 
 - [Constants](Constants.md)
+
+
+- [Everyday live authoring](Live-authoring.md)
+
+- [Protected shader trials](Shader-trials.md)
+- [Feedback shader trials](Feedback-shader-trials.md)

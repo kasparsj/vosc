@@ -9,7 +9,7 @@
 uniform vec2 resolution;
 uniform float time;
 uniform sampler2D tex;
-uniform sampler2D tex1;
+uniform vec3 baseSpeed;
 uniform vec2 texSize;
 uniform float particleMaxAge;
 uniform vec4 particleStartColor;
@@ -37,7 +37,6 @@ void main ()
 	
 	// Grab our data
 	vec4 particleData = texture( tex, texCoord );
-	vec3 particleVel = texture( tex1, texCoord ).xyz;
 
 	float ageFrac = particleData.w / particleMaxAge;
 	vec4 vertexPos = position;
@@ -49,8 +48,8 @@ void main ()
 	// We are going to scale the particle so it comes in and out, as the vertex position is in model space, we can just multiply it to grow or shrink it
 	vertexPos *= smoothStepInOut( 0.0, 0.1, 0.9, 1.0, ageFrac );
 	
-	// Rotate the vertex of our mesh (in model space) to face the velocity direction
-	mat4 lookAt = makeLookAt( vec3(0,0,0), particleVel, vec3(0,1,0) );
+	// Rotate the vertex of our mesh (in model space) to face the base direction of the simulation
+	mat4 lookAt = makeLookAt( vec3(0,0,0), baseSpeed, vec3(0,1,0) );
 	vertexPos = lookAt * vertexPos;
 	
 	// We add the rotated model space vertex pos to the particle pos to get the final position in space

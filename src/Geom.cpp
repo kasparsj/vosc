@@ -11,6 +11,22 @@ string Geom::random() {
     return primitives[int(ofRandom(primitives.size()))];
 }
 
+bool Geom::isCanonicalQuad() const {
+    if (path != "quad" || !mesh || !vars.empty() || drawWireframe || drawInstanced != 0 ||
+        mesh->getMode() != OF_PRIMITIVE_TRIANGLES || mesh->hasNormals() || mesh->hasColors() ||
+        mesh->getNumVertices() != 4 || mesh->getNumIndices() != 6 || mesh->getNumTexCoords() != 4) {
+        return false;
+    }
+    const glm::vec3 vertices[4] = {{1,1,0}, {-1,1,0}, {1,-1,0}, {-1,-1,0}};
+    const glm::vec2 texCoords[4] = {{1,1}, {0,1}, {1,0}, {0,0}};
+    const ofIndexType indices[6] = {0,1,2,2,1,3};
+    for (size_t i = 0; i < 4; ++i) {
+        if (mesh->getVertex(i) != vertices[i] || mesh->getTexCoord(i) != texCoords[i]) return false;
+    }
+    for (size_t i = 0; i < 6; ++i) if (mesh->getIndex(i) != indices[i]) return false;
+    return true;
+}
+
 void Geom::load(const string& newPath, const ofxOscMessage& m, int idx) {
     string newPrevPath = path;
     path = newPath;
@@ -88,18 +104,7 @@ bool Geom::loadModel(const ofxOscMessage& m, int idx) {
     }
     else {
         usingModel = true;
-#if OF_VERSION_MAJOR==0 && OF_VERSION_MINOR<=11
-#if OF_VERSION_MINOR<11 || OF_VERSION_PATCH <= 1
-        // <= 0.11.1
         return model.loadModel(modelPath);
-#else
-        // > 0.11.1
-        return model.load(modelPath);
-#endif
-#else
-        // > 0.11
-        return model.load(modelPath);
-#endif
     }
 }
 

@@ -41,6 +41,7 @@ public:
         return tex != nullptr;
     }
     bool hasShader() const;
+    bool hasLooper() const { return looper != nullptr; }
     void setLooper(const ofxOscMessage& m);
 
     shared_ptr<BaseTex> tex = nullptr;
@@ -51,6 +52,8 @@ public:
     vector<shared_ptr<ShaderPass>> passes;
     bool isStatic = false;
     bool needsUpdate = true;
+    // Correlated feedback setup must finish before resource submission.
+    bool feedbackSetupPending = false;
     
 private:
     static shared_ptr<BaseTex> chooseTex(const ofxOscMessage& m);

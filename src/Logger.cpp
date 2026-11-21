@@ -9,9 +9,48 @@ Logger::Logger() {}
 Logger::Logger(const string & path, bool append) :
     fileLogger(path, append) {}
 
+void Logger::append(ofLogLevel level, const string& module, const string& message) {
+    string bounded = module.empty() ? message : module + ": " + message;
+    if (bounded.size() > 2048) {
+        size_t end = 2048;
+        while (end > 0 && (static_cast<unsigned char>(bounded[end]) & 0xc0) == 0x80) --end;
+        bounded.resize(end);
+    }
+    std::lock_guard<std::mutex> lock(linesMutex);
+    lines.push_back({ofGetElapsedTimef(), bounded, toColor(level), ++sequence, level, module.substr(0, 128)});
+    if (lines.size() > 512) lines.erase(lines.begin());
+}
+
+uint64_t Logger::latestSequence() const {
+    std::lock_guard<std::mutex> lock(linesMutex);
+    return sequence;
+}
+
+vector<LoggerLine> Logger::entriesSince(uint64_t after, size_t limit, bool& gap, uint64_t* latest) const {
+    std::lock_guard<std::mutex> lock(linesMutex);
+    if (latest) *latest = sequence;
+    gap = after < sequence && (lines.empty() || after < lines.front().sequence - 1);
+    vector<LoggerLine> result;
+    for (const auto& line : lines) {
+        if (line.sequence > after && result.size() < limit) result.push_back(line);
+    }
+    return result;
+}
+
+bool Logger::hasNewErrors(float maxAge) {
+    std::lock_guard<std::mutex> lock(linesMutex);
+    bool found = false;
+    for (const auto& line : lines) {
+        if (line.sequence > errorCursor && line.level == OF_LOG_ERROR &&
+            line.time > ofGetElapsedTimef() - maxAge) found = true;
+    }
+    errorCursor = sequence;
+    return found;
+}
+
 void Logger::log(ofLogLevel level, const string &module, const string &message) {
     consoleLogger.log(level, module, message);
-    if (level >= consoleLogLevel) lines.push_back({ofGetElapsedTimef(), message, toColor(level)});
+    if (level >= consoleLogLevel) append(level, module, message);
     if (level >= fileLogLevel) fileLogger.log(level, module, message);
 }
 
@@ -34,9 +73,7 @@ void Logger::log(ofLogLevel level, const string & module, const char* format, va
         vsnprintf(buffer.data(), size, format, args);
         string message = string(buffer.data());
         
-        consoleLogger.log(level, module, message);
-        if (level >= consoleLogLevel) lines.push_back({ofGetElapsedTimef(), module + ": " + message, toColor(level)});
-        if (level >= fileLogLevel) fileLogger.log(level, module, message);
+        log(level, module, message);
     }
 }
 
@@ -48,7 +85,10 @@ void Logger::draw(bool* isOpen) {
         ImGui::End();
     }
     
-    if (ImGui::SmallButton("Clear")) { lines.clear(); }
+    if (ImGui::SmallButton("Clear")) {
+        std::lock_guard<std::mutex> lock(linesMutex);
+        lines.clear();
+    }
     ImGui::SameLine();
     bool copy_to_clipboard = ImGui::SmallButton("Copy");
 
@@ -59,6 +99,7 @@ void Logger::draw(bool* isOpen) {
     if (ImGui::BeginPopupContextWindow())
     {
         if (ImGui::Selectable("Clear")) {
+            std::lock_guard<std::mutex> lock(linesMutex);
             lines.clear();
         }
         ImGui::EndPopup();
@@ -68,9 +109,11 @@ void Logger::draw(bool* isOpen) {
     if (copy_to_clipboard) {
         ImGui::LogToClipboard();
     }
-    for (int i = 0; i < lines.size(); i++)
+    bool gap;
+    const auto visibleLines = entriesSince(0, 512, gap);
+    for (int i = 0; i < visibleLines.size(); i++)
     {
-        LoggerLine item = lines[i];
+        LoggerLine item = visibleLines[i];
         string msg = item.message;
         if (!Filter.PassFilter(msg.c_str()))
             continue;

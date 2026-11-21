@@ -1,13 +1,55 @@
 #include "Variable.h"
+#include "ComponentLiteral.hpp"
 #include "Args.h"
 #include "ColorUtil.h"
 #include "TexData.h"
 #include "VariablePool.h"
 #include "Inputs.hpp"
 
+namespace {
+template<typename T>
+constexpr bool supportsComponentExpressions() {
+    return std::is_same<T, glm::vec2>::value || std::is_same<T, glm::vec3>::value ||
+        std::is_same<T, ofFloatColor>::value;
+}
+
+template<typename T>
+float* componentData(T& value) {
+    return glm::value_ptr(value);
+}
+
+template<>
+float* componentData(ofFloatColor& value) {
+    return &value.r;
+}
+
+template<typename T>
+size_t componentCount() {
+    return sizeof(T) / sizeof(float);
+}
+
+template<typename Expr>
+void addExpressionVariable(Expr& expressions, const string& name, float& value,
+                           bool recompile = true, bool setTime = true) {
+    for (size_t index = 0; index < expressions.size(); ++index)
+        if (expressions[index]) expressions[index]->addVar(name, value, recompile, setTime);
+}
+
+template<typename Expr>
+void addExpressionConstant(Expr& expressions, const string& name, float value,
+                           bool recompile = true) {
+    for (size_t index = 0; index < expressions.size(); ++index)
+        if (expressions[index]) expressions[index]->addConst(name, value, recompile);
+}
+}
+
 template <typename T>
 void Variable<T>::set(T value) {
     _isExpr = false;
+    expressionMask.clear();
+    configuredExpressions.clear();
+    componentExpressions.clear();
+    componentExpressionMode = false;
     this->values.resize(1);
     this->values[0] = value;
 }
@@ -15,6 +57,10 @@ void Variable<T>::set(T value) {
 template <typename T>
 void Variable<T>::set(vector<T> value) {
     _isExpr = false;
+    expressionMask.clear();
+    configuredExpressions.clear();
+    componentExpressions.clear();
+    componentExpressionMode = false;
     this->values.resize(value.size());
     for (int i=0; i<value.size(); i++) {
         this->values[i] = value[i];
@@ -24,15 +70,98 @@ void Variable<T>::set(vector<T> value) {
 template<typename T>
 void Variable<T>::set(const string& expr) {
     _isExpr = true;
-    this->expr.set(expr);
+    expressionMask.assign(1, true);
+    configuredExpressions.clear();
+    componentExpressions.clear();
+    componentExpressionMode = std::is_same<T, int>::value;
+    if constexpr (std::is_same<T, int>::value) {
+        configuredExpressions = {expr};
+        componentExpressions = {std::make_shared<ofxExpr_<float>>()};
+        componentExpressions.front()->set(expr);
+        values.resize(1);
+    } else {
+        this->expr.set(expr);
+        values.resize(1);
+    }
     addSharedVars();
 }
 
 template<typename T>
 void Variable<T>::set(const vector<string>& expr) {
+    set(expr, vector<bool>(expr.size(), true));
+}
+
+template<typename T>
+void Variable<T>::set(const vector<string>& expressions, const vector<bool>& mask) {
     _isExpr = true;
-    this->expr.set(expr);
+    expressionMask = mask.size() == expressions.size() ? mask : vector<bool>(expressions.size(), true);
+    componentExpressionMode = std::is_same<T, int>::value || supportsComponentExpressions<T>();
+    if constexpr (std::is_same<T, int>::value) {
+        configuredExpressions = expressions;
+        componentExpressions.clear();
+        values.resize(expressions.size());
+        for (size_t index = 0; index < expressions.size(); ++index) {
+            if (expressionMask[index]) {
+                auto component = std::make_shared<ofxExpr_<float>>();
+                component->set(expressions[index]);
+                componentExpressions.push_back(std::move(component));
+            } else {
+                size_t consumed = 0;
+                const long long value = std::stoll(expressions[index], &consumed);
+                if (consumed != expressions[index].size() ||
+                    value < std::numeric_limits<int>::min() || value > std::numeric_limits<int>::max())
+                    throw std::out_of_range("integer recipe component is outside int32 range");
+                values[index] = static_cast<int>(value);
+                componentExpressions.push_back(nullptr);
+            }
+        }
+    } else if constexpr (supportsComponentExpressions<T>()) {
+        if (expressions.size() != componentCount<T>())
+            throw std::invalid_argument("vector expression component count mismatch");
+        configuredExpressions = expressions;
+        componentExpressions.clear();
+        componentExpressions.reserve(expressions.size());
+        values.assign(1, T{});
+        float* components = componentData(values.front());
+        for (size_t index = 0; index < expressions.size(); ++index) {
+            if (expressionMask[index]) {
+                auto component = std::make_shared<ofxExpr_<float>>();
+                component->set(expressions[index]);
+                componentExpressions.push_back(std::move(component));
+            } else {
+                const auto parsed = parseComponentLiteral(expressions[index]);
+                if (!parsed || std::abs(*parsed) > std::numeric_limits<float>::max())
+                    throw std::out_of_range("vector recipe component is invalid");
+                components[index] = static_cast<float>(*parsed);
+                componentExpressions.push_back(nullptr);
+            }
+        }
+    } else {
+        values.resize(std::is_arithmetic<T>::value ? expressions.size() : 1);
+        this->expr.set(expressions);
+    }
     addSharedVars();
+}
+
+template<typename T>
+bool Variable<T>::validateComponentExpressions() {
+    for (const auto& component : componentExpressions) {
+        if (!component) continue;
+        if (component->getExpression().find('\0') != std::string::npos ||
+            !component->compile(false)) return false;
+        try {
+            // Parse with the same symbols and functions, without running optimizer callbacks.
+            auto parser = component->getParser();
+            parser.EnableOptimizer(false);
+            for (const auto& [name, binding] : parser.GetUsedVar()) {
+                // The per-frame update binds these before evaluating the component.
+                if (!binding && name != "i" && name != "total") return false;
+            }
+        } catch (const mu::Parser::exception_type&) {
+            return false;
+        }
+    }
+    return true;
 }
 
 template<typename T>
@@ -44,28 +173,51 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
         set(Args::parseExpr<T>(m, idx));
         int count = m.getNumArgs() > idx ? m.getArgAsInt(idx) : 1;
         values.resize(count);
+        if constexpr (std::is_same<T, int>::value) {
+            if (count > 1 && componentExpressions.size() == 1) {
+                componentExpressions.resize(count, componentExpressions.front());
+                configuredExpressions.resize(count, configuredExpressions.front());
+                expressionMask.assign(count, true);
+            }
+        }
     }
 }
 
 template<typename T>
 void Variable<T>::addSharedVars() {
+    if (componentExpressionMode) {
+        auto& pool = VariablePool::getPool(NULL);
+        for (auto& kv : pool) {
+            Variable<float>* floatVar = dynamic_cast<Variable<float>*>(kv.second.get());
+            if (floatVar != NULL) addExpressionVariable(componentExpressions, kv.first, floatVar->get());
+        }
+        const auto& inputs = Inputs::get().all();
+        for (const auto& kv : inputs)
+            addExpressionVariable(componentExpressions, "in_" + kv.first, kv.second->get());
+        addExpressionConstant(componentExpressions, "left", 0.f);
+        addExpressionConstant(componentExpressions, "right", 1.f);
+        addExpressionConstant(componentExpressions, "top", 0.f);
+        addExpressionConstant(componentExpressions, "bottom", 1.f);
+        addExpressionConstant(componentExpressions, "center", 0.5f);
+        return;
+    }
     auto& pool = VariablePool::getPool(NULL);
     for (auto& kv : pool) {
         Variable<float>* floatVar = dynamic_cast<Variable<float>*>(kv.second.get());
         if (floatVar != NULL) {
-            expr.addVar(kv.first, floatVar->get());
+            addExpressionVariable(expr, kv.first, floatVar->get());
         }
     }
     const auto& inputs = Inputs::get().all();
     for (const auto& kv : inputs) {
         // todo: support other properties (e.g. loudness, raw amplitude)
-        expr.addVar("in_" + kv.first, kv.second->get());
+        addExpressionVariable(expr, "in_" + kv.first, kv.second->get());
     }
-    expr.addConst("left", 0.f);
-    expr.addConst("right", 1.f);
-    expr.addConst("top", 0.f);
-    expr.addConst("bottom", 1.f);
-    expr.addConst("center", 0.5f);
+    addExpressionConstant(expr, "left", 0.f);
+    addExpressionConstant(expr, "right", 1.f);
+    addExpressionConstant(expr, "top", 0.f);
+    addExpressionConstant(expr, "bottom", 1.f);
+    addExpressionConstant(expr, "center", 0.5f);
 }
 
 template<>
@@ -75,18 +227,18 @@ void Variable<int>::addSharedVars() {
     for (auto& kv : pool) {
         Variable<float>* floatVar = dynamic_cast<Variable<float>*>(kv.second.get());
         if (floatVar != NULL) {
-            expr.addVar(kv.first, floatVar->get());
+            addExpressionVariable(componentExpressions, kv.first, floatVar->get());
         }
     }
     const auto& inputs = Inputs::get().all();
     for (const auto& kv : inputs) {
-        expr.addVar("in_" + kv.first, kv.second->get());
+        addExpressionVariable(componentExpressions, "in_" + kv.first, kv.second->get());
     }
-    expr.addConst("left", 0.f);
-    expr.addConst("right", 1.f);
-    expr.addConst("top", 0.f);
-    expr.addConst("bottom", 1.f);
-    expr.addConst("center", 0.5f);
+    addExpressionConstant(componentExpressions, "left", 0.f);
+    addExpressionConstant(componentExpressions, "right", 1.f);
+    addExpressionConstant(componentExpressions, "top", 0.f);
+    addExpressionConstant(componentExpressions, "bottom", 1.f);
+    addExpressionConstant(componentExpressions, "center", 0.5f);
 }
 
 // todo: fix
@@ -207,8 +359,20 @@ void Variable<T>::update() {
     if (_isExpr) {
         float i = 0;
         float total = values.size();
-        expr.addVar("i", i, true, false);
-        expr.addVar("total", total, true, false);
+        if constexpr (supportsComponentExpressions<T>()) {
+            if (componentExpressionMode) {
+                addExpressionVariable(componentExpressions, "i", i, true, false);
+                addExpressionVariable(componentExpressions, "total", total, true, false);
+                for (; i < values.size(); ++i) {
+                    float* components = componentData(values[static_cast<size_t>(i)]);
+                    for (size_t index = 0; index < componentExpressions.size(); ++index)
+                        if (expressionMask[index]) components[index] = componentExpressions[index]->get();
+                }
+                return;
+            }
+        }
+        addExpressionVariable(expr, "i", i, true, false);
+        addExpressionVariable(expr, "total", total, true, false);
         // todo: add mics, sounds notes, data to expr vars
         for (i; i<values.size(); i++) {
             values[i] = expr.get();
@@ -221,11 +385,19 @@ void Variable<int>::update() {
     if (_isExpr) {
         float i = 0;
         float total = values.size();
-        expr.addVar("i", i, true, false);
-        expr.addVar("total", total, true, false);
+        addExpressionVariable(componentExpressions, "i", i, true, false);
+        addExpressionVariable(componentExpressions, "total", total, true, false);
         // todo: add mics, sounds notes, data to expr vars
         for (i; i<values.size(); i++) {
-            values[i] = static_cast<int>(expr.get());
+            if (!expressionMask[i]) continue;
+            const double evaluated = static_cast<double>(componentExpressions[i]->get());
+            if (!std::isfinite(evaluated) ||
+                evaluated < static_cast<double>(std::numeric_limits<int>::min()) ||
+                evaluated > static_cast<double>(std::numeric_limits<int>::max())) {
+                ofLogError() << "integer expression result is outside int32 range";
+                continue;
+            }
+            values[i] = static_cast<int>(evaluated);
         }
     }
 }

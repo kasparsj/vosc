@@ -40,6 +40,20 @@ static bool testParseFloatRejectsEmptyString() {
     return true;
 }
 
+static bool testParseFloatRequiresCompleteNumericString() {
+    for (const char* expression : {"in_0", "sin(t*10)", "0.5+sin(t)"}) {
+        ofxOscMessage m = msg("/var");
+        m.addStringArg(expression);
+        TEST_REQUIRE(throwsAny([&]() { (void) Args::parse<float>(m, 0); }));
+    }
+    for (const char* number : {"0", "-0.0", "+0.0", "1.25e-3"}) {
+        ofxOscMessage m = msg("/var");
+        m.addStringArg(number);
+        TEST_REQUIRE(std::isfinite(Args::parse<float>(m, 0)));
+    }
+    return true;
+}
+
 static bool testParsePercentHandlesIntAndFractionInputs() {
     ofxOscMessage m = msg("/var");
     m.addIntArg(50);
@@ -137,6 +151,7 @@ int main() {
     RUN_TEST(testParseIntRejectsInvalidString);
     RUN_TEST(testParseFloatFromString);
     RUN_TEST(testParseFloatRejectsEmptyString);
+    RUN_TEST(testParseFloatRequiresCompleteNumericString);
     RUN_TEST(testParsePercentHandlesIntAndFractionInputs);
     RUN_TEST(testParseColorFromHexString);
     RUN_TEST(testParseColorFromJsonObjectNormalizes255Range);
