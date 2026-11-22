@@ -1,8 +1,11 @@
 # VOSC on openFrameworks 0.11.1
 
+The `of-0.11.1` maintenance branch targets openFrameworks 0.11.1 on
+Apple Silicon Macs. The newer VOSC version targets openFrameworks 0.12.1
+on the [`main` branch](https://github.com/kasparsj/vosc/tree/main).
+
 VOSC is a real-time 2D/3D visuals engine for OSC-driven performance and
-installations. The `of-0.11.1` maintenance branch targets Apple Silicon
-Macs with openFrameworks 0.11.1.
+installations.
 
 Use VOSC from SuperCollider, TidalCycles, or any OSC client to control layers,
 textures, geometry, shaders, cameras, and post effects. See the
@@ -203,11 +206,6 @@ SANITIZER=undefined ./scripts/run_osc_tests.sh
 
 For the private 0.11.1 core, instrumented app build, and OSC receiver
 shutdown checks, see the [shutdown procedure](docs/shutdown-lifecycle.md#validation).
-
-## Other build targets
-
-See the [main branch README](https://github.com/kasparsj/vosc/blob/main/README.md)
-for openFrameworks 0.12.1 and the minimal Linux build.
 
 ## Docs Sync
 
