@@ -10,11 +10,37 @@ Project{
 
     ofApp {
         name: { return FileInfo.baseName(sourceDirectory) }
+        type: base.concat(["vosc-runtime-asset"])
 
-        files: [
-            'src/**',
-            'bin/data/**',
-        ]
+        files: ['src/**']
+
+        Group {
+            name: "Shared assets"
+            prefix: "assets/"
+            files: ["**/*"]
+            excludeFiles: ["**/.*"]
+            fileTags: ["vosc-asset"]
+        }
+
+        Rule {
+            inputs: ["vosc-asset"]
+            Artifact {
+                filePath: {
+                    var source = FileInfo.joinPaths(project.sourceDirectory, "assets");
+                    var relative = FileInfo.relativePath(source, input.filePath);
+                    return FileInfo.joinPaths(product.destinationDirectory, "data", relative);
+                }
+                fileTags: ["vosc-runtime-asset"]
+            }
+            prepare: {
+                var copy = new JavaScriptCommand();
+                copy.description = "staging " + input.fileName;
+                copy.sourceCode = function() {
+                    File.copy(input.filePath, output.filePath);
+                };
+                return [copy];
+            }
+        }
 
         of.addons: [
             'ofxAssimpModelLoader',

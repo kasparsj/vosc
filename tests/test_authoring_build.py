@@ -83,12 +83,10 @@ class AuthoringBuildTests(unittest.TestCase):
             manifest.write_text('{"status":"built"}')
             with patch.object(sys, "argv", ["builder", "--of-root", str(output / "of"), "--output", str(output)]), \
                     patch.object(authoring, "sdk_version", return_value="0.12.1"), \
-                    patch.object(authoring.subprocess, "run", side_effect=subprocess.CalledProcessError(1, "build")) as run, \
-                    patch.object(authoring, "copy_data") as copy_data:
+                    patch.object(authoring.subprocess, "run", side_effect=subprocess.CalledProcessError(1, "build")) as run:
                 with self.assertRaises(subprocess.CalledProcessError):
                     authoring.main()
             self.assertEqual(run.call_count, 1)
-            copy_data.assert_not_called()
             self.assertFalse(manifest.exists())
 
     def test_success_binds_app_to_the_built_core_and_hashes_artifacts(self):
@@ -105,6 +103,7 @@ class AuthoringBuildTests(unittest.TestCase):
                     self.assertIn(f"OF_PATH={sdk}", command)
                     self.assertIn(f"VOSC_ADDON_SDK={addon_sdk}", command)
                     self.assertIn(f"VOSC_COMPAT_BUILD_DIR={core_dir}", command)
+                    self.assertIn(f"VOSC_STAGE_LOCAL_VIDEOS={'NO' if recovery else 'YES'}", command)
                     self.assertEqual(any("VOSC_RECOVERY_TESTING=1" in arg for arg in command), recovery)
                     for artifact, content in ((core, b"core"), (binary, b"app")):
                         artifact.parent.mkdir(parents=True, exist_ok=True)
@@ -118,10 +117,8 @@ class AuthoringBuildTests(unittest.TestCase):
                     patch.object(authoring, "sdk_version", return_value="0.12.1"),
                     patch.object(authoring.subprocess, "run", side_effect=build),
                     patch.object(authoring, "sdk_revision", return_value=None) as revision,
-                    patch.object(authoring, "copy_data") as copy_data,
                 ):
                     self.assertEqual(authoring.main(), 0)
-                copy_data.assert_called_once_with(addon_sdk, output, include_videos=not recovery)
                 revision.assert_called_once_with(sdk)
                 manifest = json.loads((output / "build-manifest.json").read_text())
                 self.assertEqual(manifest["core"]["sha256"], hashlib.sha256(b"core").hexdigest())

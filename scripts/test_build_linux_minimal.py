@@ -21,10 +21,12 @@ def main():
             target = project / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, target)
-        data = project / "bin/data/shaders"
+        data = project / "assets/shaders"
         (data / "deferred").mkdir(parents=True)
         (data / "direct.frag").touch()
         (data / "deferred/pass.frag").touch()
+        (project / "media/videos").mkdir(parents=True)
+        (project / "media/videos/private.mov").touch()
         sdk = work / "sdk"
         header = sdk / "libs/openFrameworks/utils/ofConstants.h"
         header.parent.mkdir(parents=True)
@@ -71,6 +73,7 @@ def main():
         assert '#include "ofUtils.h"' not in expr_header.read_text()
         assert (stage / "bin/data/shaders/direct.frag").is_file()
         assert not (stage / "bin/data/shaders/deferred").exists()
+        assert list((stage / "bin/data/videos").iterdir()) == []
     print("PASS minimal SDK selection, Make dry-run, and staging with a fixture SDK")
 
 

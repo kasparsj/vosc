@@ -326,7 +326,7 @@ def run_negatives(args, output, evidence):
     fixture("missing", lambda data: data["commands"][2]["args"][2].update(value="black_hole.jpg"), "black_hole.jpg")
     fixture("traversal", lambda data: data["commands"][2]["args"][2].update(value="../outside.png"),
             "scene-relative asset path")
-    (work / "assets/escape.png").symlink_to(ROOT / "bin/data/images/square_3x3.png")
+    (work / "assets/escape.png").symlink_to(ROOT / "assets/images/square_3x3.png")
     fixture("symlink", lambda data: data["commands"][2]["args"][2].update(value="assets/escape.png"),
             "inside the scene folder")
     (work / "assets/corrupt.png").write_bytes(b"not an image")

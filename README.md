@@ -133,12 +133,9 @@ For a separate build directory, run
 `python3 scripts/build_macos_profile.py --configuration Release --output /path/to/build`.
 Verify the Release executable with
 `lipo -archs /path/to/build/of-0.12.1/Release/products/vosc.app/Contents/MacOS/vosc`.
-For a standalone run, put the runtime assets from `bin/data` next to the app
-and copy `ofxDeferredShading/data/shaders/deferred` from the addon tree into
-`data/shaders`. With the setup script, the addon tree is under
-`.vosc-macos/addon-sdks/of-0.12.1/addons/` by default. The
-[authoring build](docs/Live-authoring.md) copies these assets into its
-private output directory.
+The standalone build stages a `data/` directory beside the app in `products/`.
+Keep both together when distributing the app. The runtime's deferred shaders
+are staged from the configured addon SDK.
 
 For a checkout outside the SDK, put an `OF_PATH` assignment in the ignored
 `Project.local.xcconfig`. Add `VOSC_ADDON_SDK` only if a different installation
@@ -152,6 +149,28 @@ VOSC_ADDON_SDK = /path/to/addon-installation
 For a one-off command-line build, use `make Debug OF_ROOT=/path/to/openFrameworks`
 or the Python builder's `--of-root` option. Both look for addons in the selected
 SDK unless you also supply `VOSC_ADDON_SDK` or `--addon-sdk`, respectively.
+
+### Shared assets and local media
+
+Edit shared shaders, images, and models in [assets/](assets/). Build output uses
+copies in `data/` beside the app or Linux executable. Each portable example
+keeps its assets beside its scene manifest.
+
+Refresh assets in an existing macOS build without recompiling. Set the addon
+SDK to the path used by the build. Use `bin/data` for an in-place app or
+the build's `products/data` for an isolated app.
+
+```sh
+python3 scripts/stage_assets.py bin/data --addon-sdk /path/to/addon-sdk
+```
+
+Keep personal clips in ignored `media/videos/` or in an external media folder.
+Pass external clips by absolute path to scenes that accept a video input.
+For filename lookup or random selection, add `--include-videos` to the refresh
+command or copy the needed clips into the staged `data/videos/` directory.
+The authoring build includes clips from `media/videos/` by default.
+Downloaded Shadertoy files stay in writable runtime `data/shaders/shadertoy/`.
+Use a fresh output without private clips or downloads when assembling a release.
 
 ## Run a native scene
 

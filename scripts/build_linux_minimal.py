@@ -19,7 +19,7 @@ LINUX_SDK_VERSION = "0.12.1"
 
 
 def ignore_assets(directory, names):
-    path = Path(directory).relative_to(ROOT / "bin/data")
+    path = Path(directory).relative_to(ROOT / "assets")
     excluded = {name for name in names
                 if name.startswith(".") or Path(name).suffix.lower() in {".hpv", ".gv", ".html", ".htm"}}
     if path == Path("."):
@@ -100,7 +100,7 @@ def main():
         "include $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk\n"
     )
     shutil.copytree(ROOT / "src", stage / "src")
-    shutil.copytree(ROOT / "bin/data", stage / "bin/data", ignore=ignore_assets)
+    shutil.copytree(ROOT / "assets", stage / "bin/data", ignore=ignore_assets)
     (stage / "bin/data/videos").mkdir()
     print(f"Building VOSC minimal in {stage}", flush=True)
     result = subprocess.run([*shlex.split(args.make), f"OF_ROOT={sdk}", "Release"], cwd=stage)

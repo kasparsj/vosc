@@ -175,8 +175,7 @@ def main():
     xcode_flags = args.xcode_flags[1:] if args.xcode_flags[:1] == ["--"] else args.xcode_flags
     clean_product = None
     if clean_only and not any(flag.startswith("CONFIGURATION_BUILD_DIR=") for flag in xcode_flags):
-        # Xcode cleans its derived files. The checkout's bin directory also
-        # contains source assets, so remove only the selected app bundle.
+        # Clean only the selected app bundle and leave staged runtime data intact.
         command.append("CONFIGURATION_BUILD_DIR=$(BUILD_DIR)/$(CONFIGURATION)")
         product = "voscDebug.app" if args.configuration == "Debug" else "vosc.app"
         clean_product = ROOT / "bin" / product

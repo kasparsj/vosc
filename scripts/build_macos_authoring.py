@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 import subprocess
 
-from macos_build import ROOT, copy_data, prepare_output, sdk_paths, source_identity
+from macos_build import ROOT, prepare_output, sdk_paths, source_identity
 from build_macos_profile import app_build_command, core_archive, sdk_revision, sdk_version
 
 
@@ -36,6 +36,7 @@ def main():
     core_dir = output / f"core-of-{version}"
     command = app_build_command(output, "Debug", sdk, addon_sdk)
     command.append(f"VOSC_COMPAT_BUILD_DIR={core_dir}")
+    command.append(f"VOSC_STAGE_LOCAL_VIDEOS={'NO' if args.without_videos else 'YES'}")
     if args.recovery_test_hooks:
         command.append("GCC_PREPROCESSOR_DEFINITIONS=$(inherited) VOSC_RECOVERY_TESTING=1")
     command.append("build")
@@ -43,7 +44,6 @@ def main():
     subprocess.run(command, cwd=ROOT, check=True)
     if sources != source_identity():
         raise RuntimeError("Application sources changed during the private build")
-    copy_data(addon_sdk, output, include_videos=not args.without_videos)
     core = core_archive(core_dir, "Debug")
     binary = output / "products/voscDebug.app/Contents/MacOS/voscDebug"
     manifest = {
