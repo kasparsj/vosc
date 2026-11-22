@@ -15,6 +15,7 @@ from unittest.mock import patch
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 import macos_build
+import stage_assets
 
 
 class MacOSBuildTests(unittest.TestCase):
@@ -39,19 +40,41 @@ class MacOSBuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             checkout = root / "checkout"
-            (checkout / "bin/data/shaders").mkdir(parents=True)
-            (checkout / "bin/data/settings.json").write_text("source")
-            (checkout / "bin/data/shaders/shader.frag").write_text("shader")
+            (checkout / "assets/shaders").mkdir(parents=True)
+            (checkout / "assets/.DS_Store").touch()
+            shader = checkout / "assets/shaders/shader.frag"
+            shader.write_text("shader")
+            (checkout / "media/videos").mkdir(parents=True)
+            (checkout / "media/videos/private.mov").write_text("local clip")
             of_root = root / "of"
             deferred = of_root / "addons/ofxDeferredShading/data/shaders/deferred"
             deferred.mkdir(parents=True)
             (deferred / "pass.frag").write_text("deferred")
-            with patch.object(macos_build, "ROOT", checkout):
-                data = macos_build.copy_data(of_root, root / "output")
-            self.assertFalse(any(path.is_symlink() for path in data.rglob("*")))
-            (data / "settings.json").write_text("runtime")
-            self.assertEqual((checkout / "bin/data/settings.json").read_text(), "source")
-            self.assertEqual((data / "shaders/deferred/pass.frag").read_text(), "deferred")
+            data = root / "output/data"
+            with patch.object(stage_assets, "ROOT", checkout):
+                stage_assets.stage_assets(data, addon_sdk=of_root)
+                self.assertFalse((data / ".DS_Store").exists())
+                self.assertFalse((data / "videos/private.mov").exists())
+                self.assertEqual((data / "shaders/deferred/pass.frag").read_text(), "deferred")
+                self.assertFalse(any(path.is_symlink() for path in data.rglob("*")))
+                staged_shader = data / "shaders/shader.frag"
+                staged_shader.write_text("runtime")
+                self.assertEqual(shader.read_text(), "shader")
+                shader.write_text("new shader")
+                cache = data / "shaders/shadertoy"
+                cache.mkdir()
+                (cache / "download.frag").write_text("cached")
+                (data / "videos/operator.mov").write_text("runtime clip")
+                stage_assets.stage_assets(data, addon_sdk=of_root, include_videos=True)
+                self.assertEqual(staged_shader.read_text(), "new shader")
+                self.assertEqual((cache / "download.frag").read_text(), "cached")
+                self.assertEqual((data / "videos/operator.mov").read_text(), "runtime clip")
+                self.assertEqual((data / "videos/private.mov").read_text(), "local clip")
+                staged_shader.unlink()
+                staged_shader.symlink_to(shader)
+                with self.assertRaisesRegex(ValueError, "ordinary runtime file"):
+                    stage_assets.stage_assets(data, addon_sdk=of_root)
+                self.assertEqual(shader.read_text(), "new shader")
 
     def test_receiver_overlay_requires_exact_sources_and_tracks_replacements(self):
         with tempfile.TemporaryDirectory() as directory:

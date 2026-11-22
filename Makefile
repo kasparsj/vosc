@@ -52,5 +52,11 @@ OF_ROOT ?= ../../..
 
 # call the project makefile!
 include $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk
+
+.PHONY: vosc-stage-assets
+ReleaseABI DebugABI: | vosc-stage-assets
+
+vosc-stage-assets:
+	python3 scripts/stage_assets.py bin/data
 endif
 endif

@@ -32,9 +32,16 @@ python3 scripts/build_macos_authoring.py \
 ```
 
 This builds the Debug scheme for openFrameworks 0.12.1 with a private core and
-copies the runtime data into the output directory. `build-manifest.json` records
-the app and core hashes and the Xcode command. Once the current renderer has been closed, launch the candidate with
+stages the shared library from `assets/` into the candidate's `products/data/`.
+Local clips in `media/videos/` are included by default. Use `--without-videos`
+with a fresh output for a candidate that needs no personal clips.
+`build-manifest.json` records the app and core hashes and the Xcode command.
+Once the current renderer has been closed, launch the candidate with
 `VOSC_BUILD_DIR="$HOME/Library/Caches/vosc-authoring/releases/next" ./scripts/run_authoring.sh`.
+
+After editing a shared shader, use the
+[asset-only refresh command](../README.md#shared-assets-and-local-media)
+with the candidate's `products/data` path.
 
 The default socket is `~/.local/share/vosc/control.sock`. Its parent directory
 is private. The launcher refuses to start over an existing socket or a UDP 33333

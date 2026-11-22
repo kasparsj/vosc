@@ -60,33 +60,6 @@ def receiver_inputs(of_root):
     return inputs
 
 
-def copy_data(of_root, output, *, include_videos=True):
-    """Materialize writable assets; runtime tests must never follow source links."""
-    data = output / "products/data"
-    if data.is_symlink():
-        data.unlink()
-    data.mkdir(parents=True, exist_ok=True)
-    # Refresh only known assets inside this marked output directory.
-    for source in (ROOT / "bin/data").iterdir():
-        if source.name == "videos" and not include_videos:
-            (data / "videos").mkdir(exist_ok=True)
-            continue
-        target = data / source.name
-        if target.is_symlink():
-            target.unlink()
-        if source.is_dir():
-            # Older builds used links at nested levels as well.
-            if target.exists() and any(path.is_symlink() for path in target.rglob("*")):
-                raise ValueError(f"Refusing linked existing asset tree; use a fresh output: {target}")
-            shutil.copytree(source, target, dirs_exist_ok=True)
-        else:
-            shutil.copy2(source, target)
-    deferred = data / "shaders/deferred"
-    if not deferred.exists():
-        shutil.copytree(of_root / "addons/ofxDeferredShading/data/shaders/deferred", deferred)
-    return data
-
-
 def replace_expected(text, original, replacement, description):
     """Replace one compatibility anchor, failing closed if OF sources drift."""
     count = text.count(original)

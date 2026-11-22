@@ -35,7 +35,7 @@ window wrapper:
 | Desktop OpenGL 4.1 | [Config.h](../src/Config.h), [main.cpp](../src/main.cpp) | GLES and WebGPU require compatibility work, not just a backend flag. |
 | Texture/pixel interfaces | [BaseTex.h](../src/tex/BaseTex.h) inherits OF interfaces | New source types must satisfy the existing resource contract. |
 | Custom GLSL, source loading, file watching, Shadertoy | [Shader.cpp](../src/shader/Shader.cpp) | Preserve compilation, bindings, diagnostics, and reload behavior. |
-| Desktop GLSL and geometry shaders | [passthru.vert](../bin/data/shaders/passthru.vert), [Grass.geom](../bin/data/shaders/grass/Grass.geom) | Audit shader stages and language features; an ES port is not automatic. |
+| Desktop GLSL and geometry shaders | [passthru.vert](../assets/shaders/passthru.vert), [Grass.geom](../assets/shaders/grass/Grass.geom) | Audit shader stages and language features; an ES port is not automatic. |
 | Instanced geometry | [Geom.cpp](../src/Geom.cpp) | A generic renderer without instancing loses an existing capability. |
 | Feedback and framebuffer operations | [FboPingPong.cpp](../src/FboPingPong.cpp), [ShaderPass.cpp](../src/shader/ShaderPass.cpp) | Preserve formats, attachments, history, and sampling semantics. |
 | Post-processing/deferred shading | [RenderSystem.hpp](../src/systems/RenderSystem.hpp) | OF addon compatibility is part of the migration. |

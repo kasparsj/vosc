@@ -2,9 +2,10 @@ bin/vosc
 bin/vosc_debug
 bin/*.app
 bin/*.zip
-bin/data/videos
+/bin/data/
+/media/videos/
+/dist/
 *.user
-bin/data/shaders/shadertoy
 log.txt
 tests/bin
 __pycache__/
