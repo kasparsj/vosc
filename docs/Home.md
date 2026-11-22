@@ -2,11 +2,12 @@
 
 2D/3D OSC VJing software built on openFrameworks.
 
-This documentation tracks the current OSC and local authoring interfaces in `main`.
+This documentation covers the `of-0.11.1` maintenance branch for Apple
+Silicon macOS.
 
 ## Installation
 
-- macOS: follow the [current Xcode build and quickstart](../README.md#building-with-xcode-on-macos).
+- Build with openFrameworks 0.11.1 using the [Xcode instructions](../README.md#building-with-xcode-on-macos).
 - Run the [examples](../examples/README.md) or use [local MCP authoring](Live-authoring.md).
 
 ## Keyboard shortcuts

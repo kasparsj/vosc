@@ -5,8 +5,9 @@ leaves the visual running.
 
 ## Start the renderer
 
-From a standalone checkout on Apple Silicon, prepare the pinned openFrameworks
-SDK and addons, then export both paths in the terminal that will run the launcher:
+From the `of-0.11.1` checkout on Apple Silicon, prepare the pinned
+openFrameworks 0.11.1 SDK and addons. Export both paths in the terminal
+that will run the launcher.
 
 ```bash
 python3 scripts/setup_macos.py
@@ -31,7 +32,7 @@ python3 scripts/build_macos_authoring.py \
   --output "$HOME/Library/Caches/vosc-authoring/releases/next"
 ```
 
-This builds the Debug scheme for the selected SDK with a private core and
+This builds the Debug scheme with a private openFrameworks 0.11.1 core and
 copies the runtime data into the output directory. `build-manifest.json` records
 the app and core hashes and the Xcode command. Once the current renderer has been closed, launch the candidate with
 `VOSC_BUILD_DIR="$HOME/Library/Caches/vosc-authoring/releases/next" ./scripts/run_authoring.sh`.

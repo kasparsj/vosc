@@ -1,75 +1,27 @@
-# vosc
+# VOSC on openFrameworks 0.11.1
 
-**This is work in progress!**
+VOSC is a real-time 2D/3D visuals engine for OSC-driven performance and
+installations. The `of-0.11.1` maintenance branch targets Apple Silicon
+Macs with openFrameworks 0.11.1.
 
-vosc is a real-time 2D/3D visuals engine for OSC-driven performance and installations.
-
-At a high level, vosc gives you:
-- a render runtime (layers, textures, geometry, shaders, camera, post effects),
-- an OSC command surface to control that runtime live,
-- a workflow where your music/livecoding environment drives visuals over the network.
-
-It is mainly used from SuperCollider / TidalCycles, but any OSC client can drive it.
-
-See [docs/Home.md](docs/Home.md) for full docs, [Examples](examples/README.md) for runnable sketches, and the [changelog](CHANGELOG.md) for recent changes.
-
-## Good Fit Workflows
-
-vosc is a good fit when you need:
-- livecoding visuals that react to musical structure (onset-gated command queueing, fast command iteration),
-- a dedicated visuals node controlled remotely over OSC (laptop-to-laptop or controller-to-render-machine),
-- shader/texture layering workflows for VJ sets and audiovisual performances,
-- installation setups where control and render are separated.
-
-Compact hardware workflow:
-- vosc can be used in Raspberry Pi-class workflows as an OSC-controlled visual node or as part of a split setup.
-- In practice, feature availability/performance depends on GPU drivers/OpenGL support and enabled addons.
-- Heavier shader/post pipelines are better suited to desktop GPUs.
-
-### Minimal Linux build and render settings
-
-Use the Linux openFrameworks 0.12.1 SDK with the retained addons from
-`addons.make`. Linux ARM64 compilation and runtime qualification are pending.
-
-```sh
-make Release VOSC_PROFILE=minimal OF_ROOT=/absolute/path/to/openFrameworks
-```
-
-The profile skips ofxDeferredShading, ofxImGui, ofxHPVPlayer, and ofxUltralight.
-It stages its executable and runtime assets in a fresh `.vosc-linux/minimal-*`
-directory and prints the run location. It includes forward post-processing,
-OSC, image and shader layers, and shader feedback. Put any regular video
-files you need in the staged `bin/data/videos` directory.
-
-From the printed run location, this command opens a scene at 1280×720 with a
-30 FPS cap.
-
-```sh
-./vosc --scene /absolute/path/to/scene.vosc.json --size 1280x720 --fps 30
-```
-
-`--size` accepts dimensions from 1 to 8192 and overrides a scene's initial
-window size. Without it VOSC uses the scene size or 1024×768. `--fps` accepts
-1 to 1000 and defaults to 60. Vsync stays enabled. Feedback buffer sizes stored
-in the scene still apply. Feedback configured to advance once per frame
-advances less often per second at a lower frame cap.
-
-The minimal profile uses the existing desktop OpenGL 4.1 renderer. Verify
-hardware-accelerated context creation and the intended shaders on the target
-board and OS before relying on it in an installation.
+Use VOSC from SuperCollider, TidalCycles, or any OSC client to control layers,
+textures, geometry, shaders, cameras, and post effects. See the
+[documentation index](docs/Home.md), [runnable examples](examples/README.md),
+and [changelog](CHANGELOG.md).
 
 ## Building with Xcode on macOS
 
-Use the macOS release of openFrameworks [0.11.1](https://openframeworks.cc/versions/v0.11.1/).
-Debug and Release target Apple Silicon. The build targets macOS 12.6 or later
-and uses Python 3.10 or later.
+Debug and Release target Apple Silicon on macOS 12.6 or later. Select Xcode
+and use native Python 3.10 or later. The build uses C++17 and the macOS release
+of [openFrameworks 0.11.1](https://openframeworks.cc/versions/v0.11.1/).
 
 ### Set up a local SDK and addons
 
-From a VOSC checkout on Apple Silicon, with native Python 3.10 or later
-and Xcode selected, run:
+Clone the maintenance branch and run setup.
 
 ```bash
+git clone --branch of-0.11.1 https://github.com/kasparsj/vosc
+cd vosc
 python3 scripts/setup_macos.py
 ```
 
@@ -78,8 +30,9 @@ This prepares openFrameworks 0.11.1 and the pinned VOSC addons under
 directories inside the checkout, build output goes under
 `~/Library/Caches/VOSC/builds/`. For setup directories outside the checkout,
 build output goes in the destination's `build/` directory.
-Use `--dest PATH` for another setup
-directory. For MCP, follow the [live authoring setup](docs/Live-authoring.md#start-the-renderer).
+Use `--dest PATH` for another setup directory. The
+[live authoring guide](docs/Live-authoring.md#start-the-renderer) shows how to
+launch VOSC with these staged dependencies and connect an MCP client.
 
 ```bash
 python3 scripts/setup_macos.py --sdk-only
@@ -116,15 +69,18 @@ make Debug
 make Release
 ```
 
-The build checks the SDK version from its headers and uses C++17. It prepares a private core and compiler overlays in Xcode's
-build directory. Debug produces `bin/voscDebug.app` and Release produces
-`bin/vosc.app`. Use `make RunDebug` or `make RunRelease` from the checkout to launch it.
+The build checks the SDK headers and prepares a private 0.11.1 core and
+compiler overlays in Xcode's build directory. Debug produces
+`bin/voscDebug.app` and Release produces `bin/vosc.app`. Launch from the
+checkout with `make RunDebug` or `make RunRelease`.
 
 For the Xcode GUI, open `vosc.xcodeproj` and select `vosc Debug` or
 `vosc Release`. Both schemes use openFrameworks 0.11.1 settings.
 
 For a separate build directory, run
 `python3 scripts/build_macos_profile.py --configuration Release --output /path/to/build`.
+On Xcode 27.2, `make CleanDebug` can fail because `bin` contains checkout
+assets. Use a fresh external `--output` directory for a clean build.
 Verify the Release executable with
 `lipo -archs /path/to/build/of-0.11.1/Release/products/vosc.app/Contents/MacOS/vosc`.
 For a standalone run, put the runtime assets from `bin/data` next to the app
@@ -156,7 +112,21 @@ vosc --scene /path/to/examples/editable-scene/scene.vosc.json
 vosc --scene /path/to/examples/sieve/scene.vosc.json
 ```
 
-Use the actual executable inside `Contents/MacOS/` for a macOS app bundle.
+Use the executable inside `Contents/MacOS/` for a macOS app bundle. For
+example, from the checkout after an in-place Debug build, run the animated
+shader example at 640×480 with a 30 FPS cap.
+
+```sh
+scene="$PWD/examples/shaders/scene.vosc.json"
+(cd bin && ./voscDebug.app/Contents/MacOS/voscDebug --scene "$scene" --size 640x480 --fps 30)
+```
+
+`--size` accepts dimensions from 1 to 8192 and overrides a scene's initial
+window size. Without it VOSC uses the scene size or 1024×768. `--fps` accepts
+1 to 1000 and defaults to 60. Vsync stays enabled. Feedback buffer sizes stored
+in the scene still apply. Feedback configured to advance once per frame
+advances less often per second at a lower frame cap.
+
 Keep the manifest and its assets together when moving a folder.
 The [native V2 format](docs/Native-scene-v2.md) covers built-in sources,
 geometry, and media. Version 1
@@ -208,6 +178,14 @@ Next steps:
 - export a portable editable composition with [scene recipes](docs/Editable-scene-contract.md),
 - try the [example collection](examples/README.md).
 
+## Good Fit Workflows
+
+vosc is a good fit when you need:
+- livecoding visuals that react to musical structure (onset-gated command queueing, fast command iteration),
+- a dedicated visuals node controlled remotely over OSC (laptop-to-laptop or controller-to-render-machine),
+- shader/texture layering workflows for VJ sets and audiovisual performances,
+- installation setups where control and render are separated.
+
 ## Testing
 
 Run the OSC harness tests:
@@ -222,6 +200,14 @@ Run AddressSanitizer or UndefinedBehaviorSanitizer builds:
 SANITIZER=address ./scripts/run_osc_tests.sh
 SANITIZER=undefined ./scripts/run_osc_tests.sh
 ```
+
+For the private 0.11.1 core, instrumented app build, and OSC receiver
+shutdown checks, see the [shutdown procedure](docs/shutdown-lifecycle.md#validation).
+
+## Other build targets
+
+See the [main branch README](https://github.com/kasparsj/vosc/blob/main/README.md)
+for openFrameworks 0.12.1 and the minimal Linux build.
 
 ## Docs Sync
 
