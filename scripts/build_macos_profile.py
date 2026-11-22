@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build VOSC with an isolated openFrameworks 0.11.1 or 0.12.1 core."""
+"""Build VOSC with an isolated openFrameworks 0.12.1 core."""
 
 import argparse
 import json
@@ -8,14 +8,15 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
-import sys
 
 from addon_compat import patch_expression_returns, patch_shadertoy_timestamp
-from build_macos_legacy import (
-    ROOT, patch_imgui_glfw, prepare_output, receiver_inputs,
-    replace_expected, sdk_paths, write_overlay,
+from macos_build import (
+    ROOT, patch_imgui_glfw, prepare_output, publish_xcode_overlay,
+    receiver_inputs, replace_expected, sdk_paths, write_overlay,
 )
-from build_macos_recovery_core import publish_xcode_overlay
+
+
+SDK_VERSION = "0.12.1"
 
 
 def sdk_version(sdk):
@@ -25,8 +26,8 @@ def sdk_version(sdk):
     components = dict(re.findall(r"^#define\s+OF_VERSION_(MAJOR|MINOR|PATCH)\s+(\d+)\b",
                                  header.read_text(encoding="latin-1"), re.MULTILINE))
     version = ".".join(components.get(key, "?") for key in ("MAJOR", "MINOR", "PATCH"))
-    if version not in ("0.11.1", "0.12.1"):
-        raise ValueError(f"{sdk} reports openFrameworks {version}; expected 0.11.1 or 0.12.1")
+    if version != SDK_VERSION:
+        raise ValueError(f"{sdk} reports openFrameworks {version}; expected {SDK_VERSION}")
     return version
 
 
@@ -95,14 +96,7 @@ def prepare_addon_overlay(addon_sdk, output):
     return write_overlay(output, entries)
 
 
-def build_xcode_inputs(sdk, addon_sdk, output, configuration, version):
-    if version == "0.11.1":
-        subprocess.run([
-            sys.executable, str(ROOT / "scripts/build_macos_recovery_core.py"),
-            "--of-root", str(sdk), "--addon-sdk", str(addon_sdk), "--output", str(output),
-            "--configuration", configuration, "--no-sanitizers",
-        ], check=True)
-        return
+def build_xcode_inputs(sdk, addon_sdk, output, configuration):
     prepare_output(output, sdk, addon_sdk)
     compiled = prepare_core(sdk, output)
     core_configuration = "Debug" if configuration == "Debug" else "Release"
@@ -121,21 +115,16 @@ def build_xcode_inputs(sdk, addon_sdk, output, configuration, version):
     publish_xcode_overlay(overlay, output)
 
 
-def core_archive(output, configuration, version="0.12.1"):
+def core_archive(output, configuration):
     name = "openFrameworksDebug.a" if configuration == "Debug" else "openFrameworks.a"
-    if version == "0.11.1":
-        return output / "products" / name
     return output / "sdk/libs/openFrameworksCompiled/lib/osx" / name
 
 
-def app_build_command(output, configuration, sdk, addon_sdk, *, version, xcodebuild="xcodebuild"):
+def app_build_command(output, configuration, sdk, addon_sdk, *, xcodebuild="xcodebuild"):
     command = [
         xcodebuild, "-project", str(ROOT / "vosc.xcodeproj"), "-scheme", f"vosc {configuration}",
         f"OF_PATH={sdk}", f"VOSC_ADDON_SDK={addon_sdk}",
     ]
-    if version is not None:
-        settings = "OpenFrameworks011.xcconfig" if version == "0.11.1" else "OpenFrameworks012.xcconfig"
-        command.extend(("-xcconfig", str(ROOT / "scripts" / settings)))
     if output is not None:
         command.extend(("-derivedDataPath", str(output / "derived"),
                         f"CONFIGURATION_BUILD_DIR={output / 'products'}"))
@@ -173,9 +162,8 @@ def main():
     output = args.output.expanduser().resolve() if args.output else None
     if args.prepare_xcode:
         if version != args.expected_version:
-            parser.error(f"Xcode settings select {args.expected_version} but the SDK is {version}. "
-                         "Use make Debug or make Release to select the matching settings.")
-        build_xcode_inputs(sdk, addon_sdk, output, args.configuration, version)
+            parser.error(f"Xcode settings select {args.expected_version} but this branch requires {SDK_VERSION}.")
+        build_xcode_inputs(sdk, addon_sdk, output, args.configuration)
         return
     if args.configuration == "AppStore":
         parser.error("Select Debug or Release for a standalone build")
@@ -183,8 +171,18 @@ def main():
         output = output / f"of-{version}" / args.configuration
         prepare_output(output, sdk, addon_sdk)
     command = app_build_command(output, args.configuration, sdk, addon_sdk,
-                                version=version, xcodebuild=args.xcodebuild)
-    command.extend(args.xcode_flags[1:] if args.xcode_flags[:1] == ["--"] else args.xcode_flags)
+                                xcodebuild=args.xcodebuild)
+    xcode_flags = args.xcode_flags[1:] if args.xcode_flags[:1] == ["--"] else args.xcode_flags
+    clean_product = None
+    if clean_only and not any(flag.startswith("CONFIGURATION_BUILD_DIR=") for flag in xcode_flags):
+        # Xcode cleans its derived files. The checkout's bin directory also
+        # contains source assets, so remove only the selected app bundle.
+        command.append("CONFIGURATION_BUILD_DIR=$(BUILD_DIR)/$(CONFIGURATION)")
+        product = "voscDebug.app" if args.configuration == "Debug" else "vosc.app"
+        clean_product = ROOT / "bin" / product
+        if clean_product.parent.is_symlink() or clean_product.is_symlink():
+            parser.error(f"Refusing to clean through a symlink: {clean_product}")
+    command.extend(xcode_flags)
     if args.clean:
         command.append("clean")
     if not clean_only:
@@ -194,6 +192,8 @@ def main():
             "sdk_version": version, "sdk_revision": sdk_revision(sdk), "app": command,
         }, indent=2) + "\n").encode())
     subprocess.run(command, cwd=ROOT, check=True)
+    if clean_product is not None and clean_product.is_dir():
+        shutil.rmtree(clean_product)
 
 
 if __name__ == "__main__":
