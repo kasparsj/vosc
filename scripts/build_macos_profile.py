@@ -172,7 +172,17 @@ def main():
         prepare_output(output, sdk, addon_sdk)
     command = app_build_command(output, args.configuration, sdk, addon_sdk,
                                 xcodebuild=args.xcodebuild)
-    command.extend(args.xcode_flags[1:] if args.xcode_flags[:1] == ["--"] else args.xcode_flags)
+    xcode_flags = args.xcode_flags[1:] if args.xcode_flags[:1] == ["--"] else args.xcode_flags
+    clean_product = None
+    if clean_only and not any(flag.startswith("CONFIGURATION_BUILD_DIR=") for flag in xcode_flags):
+        # Xcode cleans its derived files. The checkout's bin directory also
+        # contains source assets, so remove only the selected app bundle.
+        command.append("CONFIGURATION_BUILD_DIR=$(BUILD_DIR)/$(CONFIGURATION)")
+        product = "voscDebug.app" if args.configuration == "Debug" else "vosc.app"
+        clean_product = ROOT / "bin" / product
+        if clean_product.parent.is_symlink() or clean_product.is_symlink():
+            parser.error(f"Refusing to clean through a symlink: {clean_product}")
+    command.extend(xcode_flags)
     if args.clean:
         command.append("clean")
     if not clean_only:
@@ -182,6 +192,8 @@ def main():
             "sdk_version": version, "sdk_revision": sdk_revision(sdk), "app": command,
         }, indent=2) + "\n").encode())
     subprocess.run(command, cwd=ROOT, check=True)
+    if clean_product is not None and clean_product.is_dir():
+        shutil.rmtree(clean_product)
 
 
 if __name__ == "__main__":

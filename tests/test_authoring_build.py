@@ -56,14 +56,22 @@ class AuthoringBuildTests(unittest.TestCase):
         sdk = "/nonexistent/vosc-sdk"
         argv = ["builder", "--of-root", sdk, "--in-place", "--clean",
                 "--configuration", "Release", "--", "-quiet"]
-        with (patch.object(sys, "argv", argv),
-              patch.object(profile, "sdk_version") as version,
-              patch.object(profile.subprocess, "run") as run):
-            profile.main()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            products = root / "bin"
+            for name in ("data", "voscDebug.app", "vosc.app"):
+                (products / name).mkdir(parents=True)
+            with (patch.object(sys, "argv", argv),
+                  patch.object(profile, "ROOT", root),
+                  patch.object(profile, "sdk_version") as version,
+                  patch.object(profile.subprocess, "run") as run):
+                profile.main()
+            self.assertEqual({path.name for path in products.iterdir()}, {"data", "voscDebug.app"})
         version.assert_not_called()
         command = run.call_args.args[0]
         self.assertIn(f"OF_PATH={sdk}", command)
         self.assertIn("vosc Release", command)
+        self.assertIn("CONFIGURATION_BUILD_DIR=$(BUILD_DIR)/$(CONFIGURATION)", command)
         self.assertNotIn("-xcconfig", command)
         self.assertEqual(command[-2:], ["-quiet", "clean"])
 
