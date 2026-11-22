@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+
 //#define USE_ULTRALIGHT !defined TARGET_CPU_UNIVERSAL
 //#define GL_VERSION_MAJOR 3
 //#define GL_VERSION_MINOR 2
@@ -10,11 +13,19 @@
 #define USE_OFX_EXTREME_GPU_VIDEO 0
 #define USE_OFX_HPVPLAYER 0
 #ifdef VOSC_MINIMAL_BUILD
-#define USE_OFX_IMGUI 0
+#if defined(VOSC_OPERATOR_UI) && VOSC_OPERATOR_UI
+#error "The minimal build excludes operator UI dependencies"
+#endif
 #define USE_OFX_DEFERRED_SHADING 0
 #else
-#define USE_OFX_IMGUI 1
 #define USE_OFX_DEFERRED_SHADING 1
+#endif
+#ifndef VOSC_OPERATOR_UI
+#ifdef VOSC_MINIMAL_BUILD
+#define VOSC_OPERATOR_UI 0
+#else
+#define VOSC_OPERATOR_UI 1
+#endif
 #endif
 #define INITIAL_LAYERS 9
 #define MAX_NOTES 10

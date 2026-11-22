@@ -1,4 +1,5 @@
 #include "Layer.h"
+#include "../Logger.h"
 #include "VariablePool.h"
 
 #include <algorithm>
@@ -194,6 +195,33 @@ void Layer::oscCommand(const string& command, const ofxOscMessage &m) {
     }
     else if (command.substr(0, 6) == "/layer") {
         layerCommand(command, m);
+    }
+    else if (command == "/shader") {
+        const auto path = m.getArgAsString(1);
+        const auto previous = shader.isShaderLoaded() ? shader.getShader().getProgram() : 0;
+#if VOSC_OPERATOR_UI
+        reloadSequence = 0;
+#endif
+        if (!shader.load(path) && !path.empty()) {
+            const bool retained = previous != 0 && shader.ownsProgram(previous);
+            const auto message = "Layer " + ofToString(index) + ": shader " +
+                (retained ? "reload failed for " : "load failed for ") + path +
+                (retained ? ". Previous shader is still rendering." : ".");
+            if (auto logger = std::dynamic_pointer_cast<Logger>(ofGetLoggerChannel())) {
+                const auto sequence = logger->logEntry(OF_LOG_ERROR, "Shader", message);
+#if VOSC_OPERATOR_UI
+                if (retained) {
+                    reloadSequence = sequence;
+                    reloadProgramId = previous;
+                    reloadProgram = shader.operatorProgram();
+                }
+#else
+                (void)sequence;
+#endif
+            } else {
+                ofLogError("Shader") << message;
+            }
+        }
     }
     else if (command.substr(0, 7) == "/shader") {
         if ((command == "/shader/var" || command == "/shader/uniform") &&
@@ -410,6 +438,14 @@ void Layer::doRotate(const glm::vec3& pos) {
         ofTranslate(-(pos.x + pivot.x * size.x * abs(scale.x)), -(pos.y + pivot.y * size.y * abs(scale.y)));
     }
 }
+
+#if VOSC_OPERATOR_UI
+uint64_t Layer::reloadDiagnostic() const {
+    if (!reloadSequence || !shader.ownsProgram(reloadProgramId) ||
+        reloadProgram.lock() != shader.operatorProgram().lock()) return 0;
+    return reloadSequence;
+}
+#endif
 
 void Layer::unload() {
     geom = nullptr;

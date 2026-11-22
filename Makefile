@@ -1,4 +1,11 @@
 VOSC_PROFILE ?= default
+VOSC_OPERATOR_UI ?= 1
+
+ifneq ($(VOSC_OPERATOR_UI),0)
+ifneq ($(VOSC_OPERATOR_UI),1)
+$(error VOSC_OPERATOR_UI must be 0 or 1)
+endif
+endif
 
 ifneq ($(VOSC_PROFILE),default)
 ifneq ($(VOSC_PROFILE),minimal)
@@ -26,7 +33,7 @@ XCODEBUILD ?= xcodebuild
 all: Release
 
 Debug Release:
-	python3 scripts/build_macos_profile.py --xcodebuild "$(XCODEBUILD)" --configuration "$@" --in-place -- $(XCODEBUILD_FLAGS)
+	python3 scripts/build_macos_profile.py --xcodebuild "$(XCODEBUILD)" --configuration "$@" --in-place -- VOSC_OPERATOR_UI=$(VOSC_OPERATOR_UI) $(XCODEBUILD_FLAGS)
 
 clean: CleanDebug CleanRelease
 
@@ -50,8 +57,32 @@ endif
 
 OF_ROOT ?= ../../..
 
-# call the project makefile!
+PROJECT_ROOT ?= .
+override PROJECT_CFLAGS += -DVOSC_OPERATOR_UI=$(VOSC_OPERATOR_UI)
+ifeq ($(VOSC_OPERATOR_UI),1)
+VOSC_RMLUI_DIR ?= $(abspath .vosc-linux/operator-ui/$(or $(ABI),native))
+VOSC_RMLUI_FONT := $(VOSC_RMLUI_DIR)/generated/VoscOperatorFont.hpp
+VOSC_RMLUI_LIBS := $(VOSC_RMLUI_DIR)/lib/libvosc_rmlui_gl3.a $(VOSC_RMLUI_DIR)/lib/librmlui.a
+override PROJECT_CFLAGS += -I$(VOSC_RMLUI_DIR)/source/Include -I$(VOSC_RMLUI_DIR)/source/Backends -I$(VOSC_RMLUI_DIR)/generated
+override PROJECT_LDFLAGS += $(VOSC_RMLUI_LIBS) -lfreetype -ldl
+else
+override PROJECT_EXCLUSIONS += $(PROJECT_ROOT)/src/operator $(PROJECT_ROOT)/src/operator/% $(PROJECT_ROOT)/src/inspector $(PROJECT_ROOT)/src/inspector/%
+endif
+
 include $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk
+
+ifeq ($(VOSC_OPERATOR_UI),1)
+ifneq ($(filter ReleaseABI DebugABI,$(MAKECMDGOALS)),)
+$(OF_PROJECT_OBJS): | $(VOSC_RMLUI_FONT)
+$(TARGET): $(VOSC_RMLUI_LIBS)
+
+$(VOSC_RMLUI_LIBS): | $(VOSC_RMLUI_FONT)
+	@test -f "$@"
+
+$(VOSC_RMLUI_FONT): force
+	CC="$(CC)" CXX="$(CXX)" python3 scripts/build_rmlui.py --output "$(VOSC_RMLUI_DIR)"
+endif
+endif
 
 .PHONY: vosc-stage-assets
 ReleaseABI DebugABI: | vosc-stage-assets

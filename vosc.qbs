@@ -12,7 +12,11 @@ Project{
         name: { return FileInfo.baseName(sourceDirectory) }
         type: base.concat(["vosc-runtime-asset"])
 
-        files: ['src/**']
+        Group {
+            name: "Renderer sources"
+            files: ["src/**"]
+            excludeFiles: ["src/operator/**", "src/inspector/**"]
+        }
 
         Group {
             name: "Shared assets"
@@ -52,7 +56,6 @@ Project{
             // 'ofxExtremeGpuVideo', // works in of_v11 only
             'ofxGui',
             //'ofxHPVPlayer', // works in of_v11 only
-            //'ofxImGui', // works in of_v11 only
             'ofxLooper',
             'ofxMidi',
             'ofxOsc',
@@ -69,7 +72,7 @@ Project{
         of.cFlags: []           // flags passed to the c compiler
         of.cxxFlags: []         // flags passed to the c++ compiler
         of.linkerFlags: []      // flags passed to the linker
-        of.defines: []          // defines are passed as -D to the compiler
+        of.defines: ["VOSC_OPERATOR_UI=0"]          // defines are passed as -D to the compiler
                                 // and can be checked with #ifdef or #if in the code
         of.frameworks: []       // osx only, additional frameworks to link with the project
         of.staticLibraries: []  // static libraries

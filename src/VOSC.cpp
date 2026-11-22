@@ -111,37 +111,38 @@ void VOSC::draw() {
     recoveryTestUpdate(true);
 #endif
     engineControl.beforeDraw();
-    renderSystem.draw(runtime.camera, showDebug, [this]() {
+    renderSystem.draw(runtime.camera, [this]() {
         commandSystem.afterComposedDraw();
         engineControl.afterComposedDraw();
         engineControl.afterDraw();
     });
 }
 
+#if VOSC_OPERATOR_UI
 void VOSC::mousePressed(int x, int y, int button) {
     engineControl.interruptTrial();
     engineControl.noteExternalChange();
-    renderSystem.mousePressed(x, y, button, showDebug);
+    renderSystem.mousePressed(x, y, button);
 }
 
 void VOSC::mouseReleased(int x, int y, int button) {
     engineControl.interruptTrial();
     engineControl.noteExternalChange();
-    renderSystem.mouseReleased(x, y, button, showDebug);
+    renderSystem.mouseReleased(x, y, button);
 }
 
+#endif
+
 void VOSC::keyPressed(int key) {
+    if (key != 'f' && key != 'r' && key != 'u' && key != 'w' && (key < '0' || key > '9')) return;
     engineControl.interruptTrial();
     engineControl.noteExternalChange();
     switch (key) {
         case 'f':
             ofToggleFullscreen();
             break;
-        case OF_KEY_TAB:
-            showDebug = !showDebug;
-            break;
         default:
-            renderSystem.keyPressed(key, showDebug);
+            renderSystem.keyPressed(key);
             break;
     }
 }

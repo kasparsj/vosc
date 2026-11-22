@@ -49,9 +49,18 @@ public:
     shared_ptr<Geom> geom;
     TexData data;
     LayerShader shader;
+#if VOSC_OPERATOR_UI
+    uint64_t reloadDiagnostic() const;
+#endif
     ofAlignHorz alignH = OF_ALIGN_HORZ_IGNORE;
     ofAlignVert alignV = OF_ALIGN_VERT_IGNORE;
     int behaviour = -1;
     uint8_t delay = 0;
     Material material;
+#if VOSC_OPERATOR_UI
+private:
+    std::weak_ptr<const ofShader> reloadProgram;
+    GLuint reloadProgramId = 0;
+    uint64_t reloadSequence = 0;
+#endif
 };

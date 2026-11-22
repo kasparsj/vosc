@@ -7,10 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		000315A9FA4E2F9A09533E05 /* EngineOpenGLES.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3174462C64E918D8DA23041B /* EngineOpenGLES.cpp */; };
-		00413C35AAE31B483D7538AB /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9E02D9F3A04B5573758EBCF8 /* imgui_draw.cpp */; };
-		0090B479605B26E7C387B02D /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C525795C6CCB99616535318 /* imgui_widgets.cpp */; };
-		016BB55A143AD429330F07DB /* Gui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F0E2047B4D03D5151730B52B /* Gui.cpp */; };
+		6D1A436780B345DF902812A1 /* DiagnosticOverlay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902812A2 /* DiagnosticOverlay.cpp */; };
 		01B036F302D9F069DEDCD4F7 /* GeomPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 553241ABDCDFB7E8685963FC /* GeomPool.cpp */; };
 		04C13EEA813A786CC1D8137A /* FxaaPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9425843AEC3118B8FDEF1B0B /* FxaaPass.cpp */; };
 		0546D1A38E13BD319CC9755B /* OscReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9BF3AA0D4FAA89D0F8A0E545 /* OscReceivedElements.cpp */; };
@@ -55,7 +52,6 @@
 		41DD9DC1802DF24133437E44 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6C899862CA531001DF74AA77 /* Camera.cpp */; };
 		4355FD81C3F9DDE40B10CE94 /* SSAOPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C127DCF305861E6D5D6332E6 /* SSAOPass.cpp */; };
 		45D4625629B04460F8AA1451 /* ShadowLightPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C7671B989F8D4C15CAD64475 /* ShadowLightPass.cpp */; };
-		462C212713EFFA5383B35DAB /* EngineGLFW.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F1C686ADB50E8F79292BA80 /* EngineGLFW.cpp */; };
 		483FA4F6D5FA6422C559B1F5 /* ofxAssimpMeshHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F67FE68E327BEFBD4B777571 /* ofxAssimpMeshHelper.cpp */; };
 		48A20E676F10358589E99CE9 /* ofxExpr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5733619BC0960AF70EBA549B /* ofxExpr.cpp */; };
 		4A2B684DF41F7779B2947319 /* RimHighlightingPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74BDDD14F49833AD24862E87 /* RimHighlightingPass.cpp */; };
@@ -65,7 +61,6 @@
 		56939EF0076F3D51F0FE0EB9 /* VideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9174FE620B649DE0C36D5259 /* VideoTex.cpp */; };
 		5790F39566203E0212580DB0 /* ReflectX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7648D86674A13C326B506A34 /* ReflectX.cpp */; };
 		5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DF49D76C45D5DB505A234880 /* ofxOscMessage.cpp */; };
-		5C2607C471F8D48C0036C56E /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CF9B1FD213484DDDB7AE362 /* imgui.cpp */; };
 		5D833E7A02CBA76EFDA2776E /* VariablePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE6A0B50D6798FC3BC6A087A /* VariablePool.cpp */; };
 		622F2B6B3FFAA37224C22AD2 /* ofxAutoReloadedShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */; };
 		62545D179C94265CA1389D4A /* OscOutboundPacketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */; };
@@ -76,7 +71,6 @@
 		67FE4C7B15C2F0478C8126C2 /* NetworkingUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3B361208CD4107E479F04E7B /* NetworkingUtils.cpp */; };
 		6A505EAE8088949A9180FFE7 /* GodRaysPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07AAE715D8853EDA76BC909 /* GodRaysPass.cpp */; };
 		6AA453E722B20F2D91FB973D /* DofPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7AA08370976ABF6D8E5DA0D9 /* DofPass.cpp */; };
-		6B3BB6E115053982E13C175C /* EngineVk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 91D1568F53D3EC80AC718E7B /* EngineVk.cpp */; };
 		6D05523FAB0501580B1205C7 /* TexturePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 189C978C54FE51E73B0EADFD /* TexturePool.cpp */; };
 		7052F688D52988ED7551979E /* DeferredProcessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6DF8876C61ADECAB54283438 /* DeferredProcessor.cpp */; };
 		72A929D3561B8232A182ABFC /* ofxOscBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65EEFA3DA3526E9CDD9C21F9 /* ofxOscBundle.cpp */; };
@@ -105,7 +99,6 @@
 		A1D2F32CDE34F3703ECD8A01 /* Geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FE6C4A803E115F324568E6A /* Geom.cpp */; };
 		A21F931B4F89844B53FE5065 /* ofxUltralight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75CE68B0155679264FE10473 /* ofxUltralight.cpp */; };
 		A40A1934868B9C3BEF746DFA /* Rotate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 15644D27B8AD78E007263288 /* Rotate.cpp */; };
-		A6F396BE5D1E24326E1F796A /* ofxImGuiLoggerChannel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 64438C8902B287DA10BCD63B /* ofxImGuiLoggerChannel.cpp */; };
 		A94A4AAB6D95011FA3020914 /* HPVideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 73E0E4213D89C594715F8F14 /* HPVideoTex.cpp */; };
 		A9F83CF5C9FA8511E0922D0B /* GBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9820724E2106BAB063EB2B5D /* GBuffer.cpp */; };
 		ABF325D1FDB51ACEE11650E3 /* PointLightPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ECB946864099706489A6198C /* PointLightPass.cpp */; };
@@ -130,7 +123,6 @@
 		BE3493D6E979F67015152F31 /* Buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3077BC0CAE3268B94F4B2354 /* Buffer.cpp */; };
 		BE5ED1FDB18D5092CF3AACA0 /* PostProcessing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 484F662699DFE8176E1B750F /* PostProcessing.cpp */; };
 		C10FEC2629D59D0DCB9EC0FC /* SsaoPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C075CB65AE0EBA1C28349EC5 /* SsaoPass.cpp */; };
-		C2114978C2A333BA9867109F /* DefaultTheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A9A7E144D697FCBB4216A73E /* DefaultTheme.cpp */; };
 		C30B835F91F6E8B3B1BD5F83 /* Split.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E952AF032B351FB32CCBD2B /* Split.cpp */; };
 		C4782ECC372420ACE0615B74 /* OscPrintReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BC8881B3C8C0A1C45F042E7A /* OscPrintReceivedElements.cpp */; };
 		C6FE64F74F1EA1D98C8F9847 /* ofxMidiMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0E7EDA67EDF213FC0E83D17 /* ofxMidiMessage.cpp */; };
@@ -141,8 +133,6 @@
 		D752EB8BA905C25F5E7F2B30 /* ZoomBlurPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF8D27B3DEDC121DE85F5B7B /* ZoomBlurPass.cpp */; };
 		D91BBD56E65F1B0195ABD2FB /* ofxTidalCycles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A5288DE681747CD43B30E8C3 /* ofxTidalCycles.cpp */; };
 		DB2F2C3E4EE08D7BD592228D /* FboTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 943E84164BBE12A26025530F /* FboTex.cpp */; };
-		DBBE189ECD171A97DCF46C6A /* BaseEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D7C7BDAD29F580A47FF56B52 /* BaseEngine.cpp */; };
-		DC62E5817CB03447F2ADFB85 /* ImHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3A286071F8A3AE1988CAF6D3 /* ImHelpers.cpp */; };
 		DD70F1493421AE507A4C0156 /* Logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 372124C2D4BE337F66C4B210 /* Logger.cpp */; };
 		DFB75F1EBE744A456AC999F4 /* ContrastPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6788311DC7D945282047837A /* ContrastPass.cpp */; };
 		E00EDA256444953D8429D9F3 /* TexData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 67B4E9095603F3F375B58675 /* TexData.cpp */; };
@@ -151,7 +141,6 @@
 		E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */; };
 		E6EB0253C7456C2442D3560C /* Invert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 20CE1E405861E6EFEDA0A144 /* Invert.cpp */; };
 		E8F628D23F8FFF6E80EA3203 /* DrawTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 88984603F62DE9EB61ECDFF6 /* DrawTex.cpp */; };
-		E984796BE84AA4315636B6E7 /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9CC36552DD0A47E758D71FB5 /* imgui_demo.cpp */; };
 		E9CB645BF1929FB452798E95 /* ShaderPingPongTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4B1216CB6EB3A54B8A5A5D94 /* ShaderPingPongTex.cpp */; };
 		EDC8F63F53442F3FD571440C /* BloomPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A5A118D06143D68D753BB721 /* BloomPass.cpp */; };
 		F0CC8EC812D9864680C703B1 /* LayerShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 788B25E9947816B8DFDCAF81 /* LayerShader.cpp */; };
@@ -186,6 +175,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6D1A436780B345DF902812A2 /* DiagnosticOverlay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/operator/DiagnosticOverlay.cpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902812A3 /* DiagnosticOverlay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/DiagnosticOverlay.hpp; sourceTree = SOURCE_ROOT; };
 		0007F94E72255780D908645A /* VideoTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VideoTex.h; path = src/tex/VideoTex.h; sourceTree = SOURCE_ROOT; };
 		00D6D32B84B099226431108C /* ofxOsc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOsc.h; path = "ofxOsc/src/ofxOsc.h"; sourceTree = VOSC_ADDONS; };
 		01455AAEF0E0EDFB4DEFABB5 /* WaveClock.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = WaveClock.h; path = src/sketches/WaveClock.h; sourceTree = SOURCE_ROOT; };
@@ -208,7 +199,6 @@
 		10BDAD77820FDBCBF144C28A /* lz4hc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = lz4hc.h; path = "ofxHPVPlayer/src/lz4hc.h"; sourceTree = VOSC_ADDONS; };
 		10E2C891AAA166534B1F3B4E /* ofxMidiTimecode.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxMidiTimecode.cpp; path = "ofxMidi/src/ofxMidiTimecode.cpp"; sourceTree = VOSC_ADDONS; };
 		12738B1FF1E7E1A14D195AC8 /* CAPI.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = CAPI.h; path = "ofxUltralight/libs/include/AppCore/CAPI.h"; sourceTree = VOSC_ADDONS; };
-		12EBC5773B81D5E37E068E24 /* imgui_internal.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = imgui_internal.h; path = "ofxImGui/libs/imgui/src/imgui_internal.h"; sourceTree = VOSC_ADDONS; };
 		14F8B4286F653202B881D865 /* ToonPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ToonPass.h; path = "ofxPostProcessing/src/ToonPass.h"; sourceTree = VOSC_ADDONS; };
 		15644D27B8AD78E007263288 /* Rotate.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Rotate.cpp; path = "ofxPostProcessing/src/Rotate.cpp"; sourceTree = VOSC_ADDONS; };
 		15FB2E86C44B0C97D2B82E65 /* ofxLooper.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxLooper.cpp; path = "ofxLooper/src/ofxLooper.cpp"; sourceTree = VOSC_ADDONS; };
@@ -428,13 +418,11 @@
 		2C2B73DCDAF417A486A343EF /* VerticalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VerticalTiltShifPass.cpp; path = "ofxPostProcessing/src/VerticalTiltShifPass.cpp"; sourceTree = VOSC_ADDONS; };
 		2C47A705981BAE08460C159F /* String32.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = String32.h; path = "ofxUltralight/libs/include/Ultralight/String32.h"; sourceTree = VOSC_ADDONS; };
 		2E2EF60AF55D0A39EC1BAC78 /* Log.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Log.h; path = "ofxHPVPlayer/src/Log.h"; sourceTree = VOSC_ADDONS; };
-		2F1C686ADB50E8F79292BA80 /* EngineGLFW.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = EngineGLFW.cpp; path = "ofxImGui/src/EngineGLFW.cpp"; sourceTree = VOSC_ADDONS; };
 		2F62573620B9255773B1A774 /* muParserTemplateMagic.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserTemplateMagic.h; path = "ofxExpr/libs/muparser/include/muParserTemplateMagic.h"; sourceTree = VOSC_ADDONS; };
 		2FD4B0329909D3527F003494 /* UdpSocket.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = UdpSocket.h; path = "ofxOsc/libs/oscpack/src/ip/UdpSocket.h"; sourceTree = VOSC_ADDONS; };
 		3077BC0CAE3268B94F4B2354 /* Buffer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Buffer.cpp; path = src/Buffer.cpp; sourceTree = SOURCE_ROOT; };
 		31202126036F37FDEF61D59D /* ofxExprParser.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxExprParser.hpp; path = "ofxExpr/src/ofxExprParser.hpp"; sourceTree = VOSC_ADDONS; };
 		3160BA8560C0ECC51DC47454 /* Tex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Tex.h; path = src/tex/Tex.h; sourceTree = SOURCE_ROOT; };
-		3174462C64E918D8DA23041B /* EngineOpenGLES.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = EngineOpenGLES.cpp; path = "ofxImGui/src/EngineOpenGLES.cpp"; sourceTree = VOSC_ADDONS; };
 		3270028C8CA1EE86617DEFE8 /* muParserInt.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserInt.h; path = "ofxExpr/libs/muparser/include/muParserInt.h"; sourceTree = VOSC_ADDONS; };
 		3281EEF1668D868C286EE509 /* Invert.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Invert.h; path = "ofxPostProcessing/src/Invert.h"; sourceTree = VOSC_ADDONS; };
 		32BD3F48BC09E9A464542C7E /* Buffer.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Buffer.hpp; path = src/Buffer.hpp; sourceTree = SOURCE_ROOT; };
@@ -446,14 +434,10 @@
 		3636DB6F4CB449A9812ADD41 /* HPVRenderBridge.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVRenderBridge.h; path = "ofxHPVPlayer/src/HPVRenderBridge.h"; sourceTree = VOSC_ADDONS; };
 		372124C2D4BE337F66C4B210 /* Logger.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Logger.cpp; path = src/Logger.cpp; sourceTree = SOURCE_ROOT; };
 		3949FAF742820CE558F33AA4 /* Beyoon.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Beyoon.h; path = "ofxPostProcessing/src/Beyoon.h"; sourceTree = VOSC_ADDONS; };
-		3A286071F8A3AE1988CAF6D3 /* ImHelpers.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ImHelpers.cpp; path = "ofxImGui/src/ImHelpers.cpp"; sourceTree = VOSC_ADDONS; };
 		3A5C80FF2CE2833134509749 /* HPVPlayer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HPVPlayer.cpp; path = "ofxHPVPlayer/src/HPVPlayer.cpp"; sourceTree = VOSC_ADDONS; };
-		3A9013A02246381F14572188 /* EngineGLFW.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = EngineGLFW.h; path = "ofxImGui/src/EngineGLFW.h"; sourceTree = VOSC_ADDONS; };
 		3AACD9661AF21261E24A05A4 /* ConvolutionPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ConvolutionPass.cpp; path = "ofxPostProcessing/src/ConvolutionPass.cpp"; sourceTree = VOSC_ADDONS; };
-		3AB24D308736280A07568671 /* imconfig.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = imconfig.h; path = "ofxImGui/src/imconfig.h"; sourceTree = VOSC_ADDONS; };
 		3B361208CD4107E479F04E7B /* NetworkingUtils.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = NetworkingUtils.cpp; path = "ofxOsc/libs/oscpack/src/ip/posix/NetworkingUtils.cpp"; sourceTree = VOSC_ADDONS; };
 		3C39EA8CB1911093FD56F9ED /* HorizontalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HorizontalTiltShifPass.h; path = "ofxPostProcessing/src/HorizontalTiltShifPass.h"; sourceTree = VOSC_ADDONS; };
-		3C525795C6CCB99616535318 /* imgui_widgets.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_widgets.cpp; path = "ofxImGui/libs/imgui/src/imgui_widgets.cpp"; sourceTree = VOSC_ADDONS; };
 		3D5F33D66F2F166A4E8EA438 /* cfileio.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = cfileio.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/cfileio.h"; sourceTree = VOSC_ADDONS; };
 		3DD359247F3ED1550D8BB5C9 /* ofxMidiIn.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxMidiIn.cpp; path = "ofxMidi/src/ofxMidiIn.cpp"; sourceTree = VOSC_ADDONS; };
 		3DE27F8F3350100A56220776 /* ai_assert.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ai_assert.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/ai_assert.h"; sourceTree = VOSC_ADDONS; };
@@ -472,9 +456,7 @@
 		4310BEFDE24FF04FEBEE8086 /* ofxBaseMidi.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxBaseMidi.h; path = "ofxMidi/src/ofxBaseMidi.h"; sourceTree = VOSC_ADDONS; };
 		444657A12E59D0ED86981498 /* TimerListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = TimerListener.h; path = "ofxOsc/libs/oscpack/src/ip/TimerListener.h"; sourceTree = VOSC_ADDONS; };
 		44B69661E6F31B5745084434 /* ofxShadertoy.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxShadertoy.h; path = "ofxShadertoy/src/ofxShadertoy.h"; sourceTree = VOSC_ADDONS; };
-		450466BDE619E4EC9BF85C57 /* Gui.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Gui.h; path = "ofxImGui/src/Gui.h"; sourceTree = VOSC_ADDONS; };
 		470CF04F1D4D1B38D5AA1797 /* ofxRtMidiOut.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxRtMidiOut.h; path = "ofxMidi/src/desktop/ofxRtMidiOut.h"; sourceTree = VOSC_ADDONS; };
-		47190DF45B0452B28E3DFF3C /* DefaultTheme.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DefaultTheme.h; path = "ofxImGui/src/DefaultTheme.h"; sourceTree = VOSC_ADDONS; };
 		476684E60F0DDA0792F989BB /* GeomPool.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GeomPool.h; path = src/GeomPool.h; sourceTree = SOURCE_ROOT; };
 		484F662699DFE8176E1B750F /* PostProcessing.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PostProcessing.cpp; path = "ofxPostProcessing/src/PostProcessing.cpp"; sourceTree = VOSC_ADDONS; };
 		48974F980F51769171D0B2F5 /* IpEndpointName.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IpEndpointName.h; path = "ofxOsc/libs/oscpack/src/ip/IpEndpointName.h"; sourceTree = VOSC_ADDONS; };
@@ -516,8 +498,6 @@
 		63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscOutboundPacketStream.cpp; path = "ofxOsc/libs/oscpack/src/osc/OscOutboundPacketStream.cpp"; sourceTree = VOSC_ADDONS; };
 		63B4B5BCC8A00507E2337461 /* BloomPass.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BloomPass.hpp; path = "ofxDeferredShading/src/pass/BloomPass.hpp"; sourceTree = VOSC_ADDONS; };
 		63ECBA78AD5AB5C18A94F9B6 /* Session.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Session.h; path = "ofxUltralight/libs/include/Ultralight/Session.h"; sourceTree = VOSC_ADDONS; };
-		64438C8902B287DA10BCD63B /* ofxImGuiLoggerChannel.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxImGuiLoggerChannel.cpp; path = "ofxImGui/src/ofxImGuiLoggerChannel.cpp"; sourceTree = VOSC_ADDONS; };
-		65152F5D964F26915DE8E206 /* ImHelpers.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ImHelpers.h; path = "ofxImGui/src/ImHelpers.h"; sourceTree = VOSC_ADDONS; };
 		656BC845C8E483C3D9E3A7A2 /* LayerShader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LayerShader.h; path = src/layer/LayerShader.h; sourceTree = SOURCE_ROOT; };
 		65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxAutoReloadedShader.cpp; path = "ofxAutoReloadedShader/src/ofxAutoReloadedShader.cpp"; sourceTree = VOSC_ADDONS; };
 		65EEFA3DA3526E9CDD9C21F9 /* ofxOscBundle.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscBundle.cpp; path = "ofxOsc/src/ofxOscBundle.cpp"; sourceTree = VOSC_ADDONS; };
@@ -532,7 +512,6 @@
 		6B65E6930994CC4B2D2B8B33 /* OscPacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscPacketListener.h; path = "ofxOsc/libs/oscpack/src/osc/OscPacketListener.h"; sourceTree = VOSC_ADDONS; };
 		6BBE5C9251660EA96B398017 /* SSAOPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SSAOPass.h; path = "ofxPostProcessing/src/SSAOPass.h"; sourceTree = VOSC_ADDONS; };
 		6C899862CA531001DF74AA77 /* Camera.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Camera.cpp; path = src/Camera.cpp; sourceTree = SOURCE_ROOT; };
-		6CF9B1FD213484DDDB7AE362 /* imgui.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui.cpp; path = "ofxImGui/libs/imgui/src/imgui.cpp"; sourceTree = VOSC_ADDONS; };
 		6DF8876C61ADECAB54283438 /* DeferredProcessor.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DeferredProcessor.cpp; path = "ofxDeferredShading/src/DeferredProcessor.cpp"; sourceTree = VOSC_ADDONS; };
 		6E069CE4C58E970E3429DBE5 /* Importer.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Importer.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/Importer.hpp"; sourceTree = VOSC_ADDONS; };
 		6E6A2DE60EF8F0A144C0EC05 /* Window.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Window.h; path = "ofxUltralight/libs/include/AppCore/Window.h"; sourceTree = VOSC_ADDONS; };
@@ -583,7 +562,6 @@
 		8FF82F2EF8EE6573368278E4 /* HPVManager.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVManager.h; path = "ofxHPVPlayer/src/HPVManager.h"; sourceTree = VOSC_ADDONS; };
 		9144546E5481902E77870A52 /* lz4.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4.c; path = "ofxHPVPlayer/src/lz4.c"; sourceTree = VOSC_ADDONS; };
 		9174FE620B649DE0C36D5259 /* VideoTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VideoTex.cpp; path = src/tex/VideoTex.cpp; sourceTree = SOURCE_ROOT; };
-		91D1568F53D3EC80AC718E7B /* EngineVk.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = EngineVk.cpp; path = "ofxImGui/src/EngineVk.cpp"; sourceTree = VOSC_ADDONS; };
 		91F91C3BEAD0B3C2B92BB9A5 /* DofAltPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DofAltPass.cpp; path = "ofxPostProcessing/src/DofAltPass.cpp"; sourceTree = VOSC_ADDONS; };
 		9222AE2464AE1CF72876A4ED /* LimbDarkeningPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LimbDarkeningPass.cpp; path = "ofxPostProcessing/src/LimbDarkeningPass.cpp"; sourceTree = VOSC_ADDONS; };
 		9339B8AD0EF31B7708C53B9F /* ProgressHandler.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ProgressHandler.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/ProgressHandler.hpp"; sourceTree = VOSC_ADDONS; };
@@ -598,13 +576,10 @@
 		98033501202172DF458BD6CF /* vector2.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = vector2.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/vector2.h"; sourceTree = VOSC_ADDONS; };
 		9820724E2106BAB063EB2B5D /* GBuffer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GBuffer.cpp; path = "ofxDeferredShading/src/GBuffer.cpp"; sourceTree = VOSC_ADDONS; };
 		982F6A4F410C2A639409070D /* Rotate.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Rotate.h; path = "ofxPostProcessing/src/Rotate.h"; sourceTree = VOSC_ADDONS; };
-		99559F284344A867305900DB /* EngineVk.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = EngineVk.h; path = "ofxImGui/src/EngineVk.h"; sourceTree = VOSC_ADDONS; };
 		996B111C55912E9E608E4882 /* Defines.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Defines.h; path = "ofxUltralight/libs/include/AppCore/Defines.h"; sourceTree = VOSC_ADDONS; };
 		9AACF31BAE533E8F81AD4043 /* LUTPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LUTPass.h; path = "ofxPostProcessing/src/LUTPass.h"; sourceTree = VOSC_ADDONS; };
 		9B435A4BA28BC6C8A0546147 /* HPVEvent.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVEvent.h; path = "ofxHPVPlayer/src/HPVEvent.h"; sourceTree = VOSC_ADDONS; };
 		9BF3AA0D4FAA89D0F8A0E545 /* OscReceivedElements.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscReceivedElements.cpp; path = "ofxOsc/libs/oscpack/src/osc/OscReceivedElements.cpp"; sourceTree = VOSC_ADDONS; };
-		9CC36552DD0A47E758D71FB5 /* imgui_demo.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_demo.cpp; path = "ofxImGui/libs/imgui/src/imgui_demo.cpp"; sourceTree = VOSC_ADDONS; };
-		9E02D9F3A04B5573758EBCF8 /* imgui_draw.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_draw.cpp; path = "ofxImGui/libs/imgui/src/imgui_draw.cpp"; sourceTree = VOSC_ADDONS; };
 		9E8237DEBB94AB91C9D4C150 /* Renderer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Renderer.h; path = "ofxUltralight/libs/include/Ultralight/Renderer.h"; sourceTree = VOSC_ADDONS; };
 		9F7986DC4EB05E75FCE2C777 /* ofxOscSender.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscSender.h; path = "ofxOsc/src/ofxOscSender.h"; sourceTree = VOSC_ADDONS; };
 		9FE6B1567FD15057E4C07D4D /* AndroidJNIIOSystem.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = AndroidJNIIOSystem.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/port/AndroidJNI/AndroidJNIIOSystem.h"; sourceTree = VOSC_ADDONS; };
@@ -627,8 +602,6 @@
 		A8793707281FD436C34316A5 /* RtMidi.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RtMidi.h; path = "ofxMidi/libs/rtmidi/RtMidi.h"; sourceTree = VOSC_ADDONS; };
 		A937731265782800A8359098 /* ofxMidiClock.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxMidiClock.cpp; path = "ofxMidi/src/ofxMidiClock.cpp"; sourceTree = VOSC_ADDONS; };
 		A971DED05A4903DAE30F6473 /* Lights.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Lights.cpp; path = src/light/Lights.cpp; sourceTree = SOURCE_ROOT; };
-		A9A7E144D697FCBB4216A73E /* DefaultTheme.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DefaultTheme.cpp; path = "ofxImGui/src/DefaultTheme.cpp"; sourceTree = VOSC_ADDONS; };
-		AA228C62A0D0E0A229410AE5 /* imstb_rectpack.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = imstb_rectpack.h; path = "ofxImGui/libs/imgui/src/imstb_rectpack.h"; sourceTree = VOSC_ADDONS; };
 		AB551F763F5655B9681EABB4 /* Material.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Material.cpp; path = src/Material.cpp; sourceTree = SOURCE_ROOT; };
 		ABDEF0ACF05BF28F5C74E008 /* RtMidi.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = RtMidi.cpp; path = "ofxMidi/libs/rtmidi/RtMidi.cpp"; sourceTree = VOSC_ADDONS; };
 		AC1BD60E9290CC1DCAF65749 /* OSCInput.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OSCInput.cpp; path = src/input/OSCInput.cpp; sourceTree = SOURCE_ROOT; };
@@ -638,7 +611,6 @@
 		ADAE582E4696B9BD64E5B2B8 /* IOSystem.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IOSystem.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/IOSystem.hpp"; sourceTree = VOSC_ADDONS; };
 		ADD194746185E2DA11468377 /* IpEndpointName.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = IpEndpointName.cpp; path = "ofxOsc/libs/oscpack/src/ip/IpEndpointName.cpp"; sourceTree = VOSC_ADDONS; };
 		AE335EB4709BFD4671EEAC84 /* MessageMappingOscPacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = MessageMappingOscPacketListener.h; path = "ofxOsc/libs/oscpack/src/osc/MessageMappingOscPacketListener.h"; sourceTree = VOSC_ADDONS; };
-		AE806A26C99C3FB31F2ACF76 /* imstb_textedit.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = imstb_textedit.h; path = "ofxImGui/libs/imgui/src/imstb_textedit.h"; sourceTree = VOSC_ADDONS; };
 		AED6F84D8DABA623CAF59F13 /* color4.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = color4.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/color4.h"; sourceTree = VOSC_ADDONS; };
 		B01394EA79C42507A03541CE /* Pixelsort.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Pixelsort.h; path = "ofxPostProcessing/src/Pixelsort.h"; sourceTree = VOSC_ADDONS; };
 		B1A08DF9109205CC575788CA /* Camera.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Camera.hpp; path = src/Camera.hpp; sourceTree = SOURCE_ROOT; };
@@ -646,8 +618,6 @@
 		B31C608870ECEB2490A93736 /* ofxOscParameterSync.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscParameterSync.h; path = "ofxOsc/src/ofxOscParameterSync.h"; sourceTree = VOSC_ADDONS; };
 		B416EA211A13C1B5FA51418B /* Input.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Input.cpp; path = src/input/Input.cpp; sourceTree = SOURCE_ROOT; };
 		B4457E150752C8EC9313764D /* FileSystem.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FileSystem.h; path = "ofxUltralight/libs/include/Ultralight/platform/FileSystem.h"; sourceTree = VOSC_ADDONS; };
-		B462DABAC6A023A1D88702C7 /* BaseTheme.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BaseTheme.h; path = "ofxImGui/src/BaseTheme.h"; sourceTree = VOSC_ADDONS; };
-		B55D941FBE2558C9BEB7534B /* imstb_truetype.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = imstb_truetype.h; path = "ofxImGui/libs/imgui/src/imstb_truetype.h"; sourceTree = VOSC_ADDONS; };
 		B5B7022DF99163C20EF049A8 /* Light.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Light.hpp; path = src/light/Light.hpp; sourceTree = SOURCE_ROOT; };
 		B5CEF0B83529626C7E8410B7 /* BloomPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BloomPass.h; path = "ofxPostProcessing/src/BloomPass.h"; sourceTree = VOSC_ADDONS; };
 		B5F48196D9084E19E283D3F1 /* ofxVecExprInputField.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxVecExprInputField.hpp; path = "ofxExpr/src/ofxVecExprInputField.hpp"; sourceTree = VOSC_ADDONS; };
@@ -682,7 +652,6 @@
 		C7671B989F8D4C15CAD64475 /* ShadowLightPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ShadowLightPass.cpp; path = "ofxDeferredShading/src/pass/ShadowLightPass.cpp"; sourceTree = VOSC_ADDONS; };
 		C88E5EF94094FE80C8BBAE4C /* Ultralight.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Ultralight.h; path = "ofxUltralight/libs/include/Ultralight/Ultralight.h"; sourceTree = VOSC_ADDONS; };
 		CB53C297D8E39D8E8EACA00E /* ofxUltralight.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxUltralight.h; path = "ofxUltralight/src/ofxUltralight.h"; sourceTree = VOSC_ADDONS; };
-		CB5C15EA0881D35A88C22937 /* EngineOpenGLES.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = EngineOpenGLES.h; path = "ofxImGui/src/EngineOpenGLES.h"; sourceTree = VOSC_ADDONS; };
 		CBA432ECD5081552EDD13A56 /* RenderPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = RenderPass.cpp; path = "ofxDeferredShading/src/RenderPass.cpp"; sourceTree = VOSC_ADDONS; };
 		CC725CAE0A003458E5573DF9 /* GodRaysPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = GodRaysPass.h; path = "ofxPostProcessing/src/GodRaysPass.h"; sourceTree = VOSC_ADDONS; };
 		CC95D6A4850BE0F8FFB7D5E5 /* Variable.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Variable.cpp; path = src/var/Variable.cpp; sourceTree = SOURCE_ROOT; };
@@ -704,11 +673,9 @@
 		D61DEE3651D29623D73222F6 /* muParserFixes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserFixes.h; path = "ofxExpr/libs/muparser/include/muParserFixes.h"; sourceTree = VOSC_ADDONS; };
 		D68440B8D0A43403F97D96A6 /* AppCore.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = AppCore.h; path = "ofxUltralight/libs/include/AppCore/AppCore.h"; sourceTree = VOSC_ADDONS; };
 		D6E0F285E0088E6733AC3D70 /* GVVideoTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GVVideoTex.cpp; path = src/tex/GVVideoTex.cpp; sourceTree = SOURCE_ROOT; };
-		D7C7BDAD29F580A47FF56B52 /* BaseEngine.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = BaseEngine.cpp; path = "ofxImGui/src/BaseEngine.cpp"; sourceTree = VOSC_ADDONS; };
 		D825FF1F1EA48B305BB428B7 /* scene.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = scene.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/scene.h"; sourceTree = VOSC_ADDONS; };
 		D8272F96628FECC086D67453 /* FontLoader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FontLoader.h; path = "ofxUltralight/libs/include/Ultralight/platform/FontLoader.h"; sourceTree = VOSC_ADDONS; };
 		D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = WebcamTex.cpp; path = src/tex/WebcamTex.cpp; sourceTree = SOURCE_ROOT; };
-		D91100C1FBA245AD6CB55BD3 /* ofxImGui.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxImGui.h; path = "ofxImGui/src/ofxImGui.h"; sourceTree = VOSC_ADDONS; };
 		D9696434C087642B807AB3BE /* Geom.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Geom.h; path = src/Geom.h; sourceTree = SOURCE_ROOT; };
 		D9BFFBBF4CC43DEE890B3C3E /* OscTypes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscTypes.cpp; path = "ofxOsc/libs/oscpack/src/osc/OscTypes.cpp"; sourceTree = VOSC_ADDONS; };
 		DACACDF2F37260A0BFF826E2 /* PostProcessing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PostProcessing.h; path = "ofxPostProcessing/src/PostProcessing.h"; sourceTree = VOSC_ADDONS; };
@@ -721,7 +688,6 @@
 		DEC75D5945E98943720623CC /* BaseVar.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BaseVar.h; path = src/var/BaseVar.h; sourceTree = SOURCE_ROOT; };
 		DEF2C306ED271A94AC33B144 /* HsbShiftPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HsbShiftPass.h; path = "ofxPostProcessing/src/HsbShiftPass.h"; sourceTree = VOSC_ADDONS; };
 		DF49D76C45D5DB505A234880 /* ofxOscMessage.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscMessage.cpp; path = "ofxOsc/src/ofxOscMessage.cpp"; sourceTree = VOSC_ADDONS; };
-		E135C7F22D40FCFD9C5AB94B /* imgui.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = imgui.h; path = "ofxImGui/libs/imgui/src/imgui.h"; sourceTree = VOSC_ADDONS; };
 		E16BB73D19DD0713FDCC7986 /* ofxMidiTypes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxMidiTypes.h; path = "ofxMidi/src/ofxMidiTypes.h"; sourceTree = VOSC_ADDONS; };
 		E19FEC80DCD9D17C17D36AFD /* Platform.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Platform.h; path = "ofxUltralight/libs/include/AppCore/Platform.h"; sourceTree = VOSC_ADDONS; };
 		E238CCDE032640E0FEBFAD82 /* ofxMidi.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxMidi.cpp; path = "ofxMidi/src/ofxMidi.cpp"; sourceTree = VOSC_ADDONS; };
@@ -919,13 +885,11 @@
 		EDAE40F4409B52242243517B /* ShaderTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ShaderTex.cpp; path = src/tex/ShaderTex.cpp; sourceTree = SOURCE_ROOT; };
 		EDE55D82BD962DAC0E94B708 /* ofxAssimpModelLoader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxAssimpModelLoader.cpp; path = "ofxAssimpModelLoader/src/ofxAssimpModelLoader.cpp"; sourceTree = VOSC_ADDONS; };
 		EED8C389555EA379BDFA5BD5 /* Logger.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Logger.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/Logger.hpp"; sourceTree = VOSC_ADDONS; };
-		EF37E038E1DD79E1D9BA939D /* ofxImGuiLoggerChannel.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxImGuiLoggerChannel.h; path = "ofxImGui/src/ofxImGuiLoggerChannel.h"; sourceTree = VOSC_ADDONS; };
 		EF3A04320CF71A9384B887B3 /* ReflectY.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ReflectY.h; path = "ofxPostProcessing/src/ReflectY.h"; sourceTree = VOSC_ADDONS; };
 		EF666DA393251DE1093627D1 /* BlurPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = BlurPass.cpp; path = "ofxDeferredShading/src/pass/BlurPass.cpp"; sourceTree = VOSC_ADDONS; };
 		EF8D27B3DEDC121DE85F5B7B /* ZoomBlurPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ZoomBlurPass.cpp; path = "ofxPostProcessing/src/ZoomBlurPass.cpp"; sourceTree = VOSC_ADDONS; };
 		F0A5308C626CE3EB51EE48D7 /* muParserTokenReader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserTokenReader.h; path = "ofxExpr/libs/muparser/include/muParserTokenReader.h"; sourceTree = VOSC_ADDONS; };
 		F0BBBD032D905D92679D83E6 /* ofxAssimpMeshHelper.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAssimpMeshHelper.h; path = "ofxAssimpModelLoader/src/ofxAssimpMeshHelper.h"; sourceTree = VOSC_ADDONS; };
-		F0E2047B4D03D5151730B52B /* Gui.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Gui.cpp; path = "ofxImGui/src/Gui.cpp"; sourceTree = VOSC_ADDONS; };
 		F171898BD12F77CCAD29B7C1 /* LUTPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LUTPass.cpp; path = "ofxPostProcessing/src/LUTPass.cpp"; sourceTree = VOSC_ADDONS; };
 		F38BBAA2F93DED836503E450 /* pushpack1.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = pushpack1.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/Compiler/pushpack1.h"; sourceTree = VOSC_ADDONS; };
 		F3CFD94F37ABC9182A320B79 /* ofxAutoReloadedShader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAutoReloadedShader.h; path = "ofxAutoReloadedShader/src/ofxAutoReloadedShader.h"; sourceTree = VOSC_ADDONS; };
@@ -942,7 +906,6 @@
 		F9A9C66BE1F8722D2455854E /* View.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = View.h; path = "ofxUltralight/libs/include/Ultralight/View.h"; sourceTree = VOSC_ADDONS; };
 		F9E69702DE151AD76690D1CF /* NoiseWarpPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoiseWarpPass.h; path = "ofxPostProcessing/src/NoiseWarpPass.h"; sourceTree = VOSC_ADDONS; };
 		FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HorizontalTiltShifPass.cpp; path = "ofxPostProcessing/src/HorizontalTiltShifPass.cpp"; sourceTree = VOSC_ADDONS; };
-		FD24C7DBE373C3B79648C23F /* BaseEngine.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BaseEngine.h; path = "ofxImGui/src/BaseEngine.h"; sourceTree = VOSC_ADDONS; };
 		FE6A0B50D6798FC3BC6A087A /* VariablePool.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VariablePool.cpp; path = src/var/VariablePool.cpp; sourceTree = SOURCE_ROOT; };
 		FF2B018E24837032A4878576 /* ofxEasing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxEasing.h; path = "ofxEasing/src/ofxEasing.h"; sourceTree = VOSC_ADDONS; };
 		0DFB0E8C46F4052A7C81A462 /* CommandSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandSystem.cpp; path = src/systems/CommandSystem.cpp; sourceTree = SOURCE_ROOT; };
@@ -1617,41 +1580,6 @@
 			name = libs;
 			sourceTree = "<group>";
 		};
-		6FF8AA08E79CFA38503CDB0E /* src */ = {
-			isa = PBXGroup;
-			children = (
-				D7C7BDAD29F580A47FF56B52 /* BaseEngine.cpp */,
-				FD24C7DBE373C3B79648C23F /* BaseEngine.h */,
-				B462DABAC6A023A1D88702C7 /* BaseTheme.h */,
-				A9A7E144D697FCBB4216A73E /* DefaultTheme.cpp */,
-				47190DF45B0452B28E3DFF3C /* DefaultTheme.h */,
-				2F1C686ADB50E8F79292BA80 /* EngineGLFW.cpp */,
-				3A9013A02246381F14572188 /* EngineGLFW.h */,
-				3174462C64E918D8DA23041B /* EngineOpenGLES.cpp */,
-				CB5C15EA0881D35A88C22937 /* EngineOpenGLES.h */,
-				91D1568F53D3EC80AC718E7B /* EngineVk.cpp */,
-				99559F284344A867305900DB /* EngineVk.h */,
-				F0E2047B4D03D5151730B52B /* Gui.cpp */,
-				450466BDE619E4EC9BF85C57 /* Gui.h */,
-				3A286071F8A3AE1988CAF6D3 /* ImHelpers.cpp */,
-				65152F5D964F26915DE8E206 /* ImHelpers.h */,
-				3AB24D308736280A07568671 /* imconfig.h */,
-				D91100C1FBA245AD6CB55BD3 /* ofxImGui.h */,
-				64438C8902B287DA10BCD63B /* ofxImGuiLoggerChannel.cpp */,
-				EF37E038E1DD79E1D9BA939D /* ofxImGuiLoggerChannel.h */,
-			);
-			name = src;
-			sourceTree = "<group>";
-		};
-		768C3255AF2F3E1A78DC4DF4 /* ofxImGui */ = {
-			isa = PBXGroup;
-			children = (
-				C618591A26FF62625326E2DD /* libs */,
-				6FF8AA08E79CFA38503CDB0E /* src */,
-			);
-			name = ofxImGui;
-			sourceTree = "<group>";
-		};
 		789ECDDE6C1B02B05433E52E /* include */ = {
 			isa = PBXGroup;
 			children = (
@@ -1660,22 +1588,6 @@
 				E420C2D26677C3DCC0ED017B /* Ultralight */,
 			);
 			name = include;
-			sourceTree = "<group>";
-		};
-		807146441E0D13714E9F4654 /* src */ = {
-			isa = PBXGroup;
-			children = (
-				6CF9B1FD213484DDDB7AE362 /* imgui.cpp */,
-				E135C7F22D40FCFD9C5AB94B /* imgui.h */,
-				9CC36552DD0A47E758D71FB5 /* imgui_demo.cpp */,
-				9E02D9F3A04B5573758EBCF8 /* imgui_draw.cpp */,
-				12EBC5773B81D5E37E068E24 /* imgui_internal.h */,
-				3C525795C6CCB99616535318 /* imgui_widgets.cpp */,
-				AA228C62A0D0E0A229410AE5 /* imstb_rectpack.h */,
-				AE806A26C99C3FB31F2ACF76 /* imstb_textedit.h */,
-				B55D941FBE2558C9BEB7534B /* imstb_truetype.h */,
-			);
-			name = src;
 			sourceTree = "<group>";
 		};
 		860077A874ED877AC187ABA4 /* ofxLooper */ = {
@@ -1708,14 +1620,6 @@
 				23B354DE9B2F7CC92FB1652E /* src */,
 			);
 			name = ofxHPVPlayer;
-			sourceTree = "<group>";
-		};
-		8D2869234BA7562D78D731FF /* imgui */ = {
-			isa = PBXGroup;
-			children = (
-				807146441E0D13714E9F4654 /* src */,
-			);
-			name = imgui;
 			sourceTree = "<group>";
 		};
 		8F679A181EC60143ED220F0B /* ofxShadertoy */ = {
@@ -1950,7 +1854,6 @@
 				0D0595A62FF5ED8D37029107 /* ofxEasing */,
 				A90AE703434A7B74B1B8F5BE /* ofxExpr */,
 				8A339919FA87B6FC5F1F0447 /* ofxHPVPlayer */,
-				768C3255AF2F3E1A78DC4DF4 /* ofxImGui */,
 				860077A874ED877AC187ABA4 /* ofxLooper */,
 				2413C01760B1811BED0F502D /* ofxMidi */,
 				E6053AB7FEC63D5F83825B88 /* ofxOsc */,
@@ -2024,14 +1927,6 @@
 				61F771AD70983C40DF6B7287 /* WebcamTex.h */,
 			);
 			name = tex;
-			sourceTree = "<group>";
-		};
-		C618591A26FF62625326E2DD /* libs */ = {
-			isa = PBXGroup;
-			children = (
-				8D2869234BA7562D78D731FF /* imgui */,
-			);
-			name = libs;
 			sourceTree = "<group>";
 		};
 		C721A9AF1157766AFE54645E /* libs */ = {
@@ -2504,6 +2399,8 @@
 				1BF4AF61A21BC0CB4D19CFDE /* layer */,
 				31E2146EA24A0C366D3753DB /* light */,
 				372124C2D4BE337F66C4B210 /* Logger.cpp */,
+				6D1A436780B345DF902812A2 /* DiagnosticOverlay.cpp */,
+				6D1A436780B345DF902812A3 /* DiagnosticOverlay.hpp */,
 				42EEF41412CD072D7A17504A /* Logger.h */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				AB551F763F5655B9681EABB4 /* Material.cpp */,
@@ -2797,6 +2694,7 @@
 				23D18228C3BE1A551BD21FC3 /* Lights.cpp in Sources */,
 				90BB2D10988A91408820D432 /* Light.cpp in Sources */,
 				DD70F1493421AE507A4C0156 /* Logger.cpp in Sources */,
+				6D1A436780B345DF902812A1 /* DiagnosticOverlay.cpp in Sources */,
 				A1D2F32CDE34F3703ECD8A01 /* Geom.cpp in Sources */,
 				F7D4F1045C3F5CE0000DE92F /* Material.cpp in Sources */,
 				3B8120368B4FCCD80883BAF3 /* ofxAssimpAnimation.cpp in Sources */,
@@ -2826,20 +2724,8 @@
 				CEA24AEB74ADBDFB0AE926F3 /* lz4.c in Sources */,
 				B16D9E639BA367E8246322E8 /* lz4hc.c in Sources */,
 				D736C6549BC0F3AC000D3E46 /* ofxHPVPLayer.cpp in Sources */,
-				5C2607C471F8D48C0036C56E /* imgui.cpp in Sources */,
 				2BF8BE242EC39AC100CB0DE9 /* Inspector.cpp in Sources */,
-				E984796BE84AA4315636B6E7 /* imgui_demo.cpp in Sources */,
-				00413C35AAE31B483D7538AB /* imgui_draw.cpp in Sources */,
 				2BF8BE322EC39AC900CB0DE9 /* ShaderPool.cpp in Sources */,
-				0090B479605B26E7C387B02D /* imgui_widgets.cpp in Sources */,
-				DBBE189ECD171A97DCF46C6A /* BaseEngine.cpp in Sources */,
-				C2114978C2A333BA9867109F /* DefaultTheme.cpp in Sources */,
-				462C212713EFFA5383B35DAB /* EngineGLFW.cpp in Sources */,
-				000315A9FA4E2F9A09533E05 /* EngineOpenGLES.cpp in Sources */,
-				6B3BB6E115053982E13C175C /* EngineVk.cpp in Sources */,
-				016BB55A143AD429330F07DB /* Gui.cpp in Sources */,
-				DC62E5817CB03447F2ADFB85 /* ImHelpers.cpp in Sources */,
-				A6F396BE5D1E24326E1F796A /* ofxImGuiLoggerChannel.cpp in Sources */,
 				1DABF50C769AD89161B557AE /* FramesBuffer.cpp in Sources */,
 				2BF8BE252EC39AC100CB0DE9 /* ShaderInspector.cpp in Sources */,
 				B5A6983EFC656071DB3EFFBF /* ofxLooper.cpp in Sources */,
@@ -2935,6 +2821,7 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(OF_CORE_HEADERS)",
+					"$(VOSC_RMLUI_HEADERS_$(VOSC_OPERATOR_UI))",
 					src,
 					src,
 					src/input,
@@ -3033,10 +2920,6 @@
 					"$(VOSC_ADDONS)/ofxExpr/libs/muparser/src/test",
 					"$(VOSC_ADDONS)/ofxExpr/src",
 					"$(VOSC_ADDONS)/ofxHPVPlayer/src",
-					"$(VOSC_ADDONS)/ofxImGui/libs",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui/src",
-					"$(VOSC_ADDONS)/ofxImGui/src",
 					"$(VOSC_ADDONS)/ofxLooper/src",
 					"$(VOSC_ADDONS)/ofxMidi/libs",
 					"$(VOSC_ADDONS)/ofxMidi/libs/pgmidi",
@@ -3081,6 +2964,7 @@
 				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = "APPSTORE=1";
 				HEADER_SEARCH_PATHS = (
 					"$(OF_CORE_HEADERS)",
+					"$(VOSC_RMLUI_HEADERS_$(VOSC_OPERATOR_UI))",
 					src,
 					src,
 					src/input,
@@ -3179,10 +3063,6 @@
 					"$(VOSC_ADDONS)/ofxExpr/libs/muparser/src/test",
 					"$(VOSC_ADDONS)/ofxExpr/src",
 					"$(VOSC_ADDONS)/ofxHPVPlayer/src",
-					"$(VOSC_ADDONS)/ofxImGui/libs",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui/src",
-					"$(VOSC_ADDONS)/ofxImGui/src",
 					"$(VOSC_ADDONS)/ofxLooper/src",
 					"$(VOSC_ADDONS)/ofxMidi/libs",
 					"$(VOSC_ADDONS)/ofxMidi/libs/pgmidi",
@@ -3212,6 +3092,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
+					"$(VOSC_RMLUI_LIBRARIES_$(VOSC_OPERATOR_UI))",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF)",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/assimp.a",
@@ -3250,6 +3131,7 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(OF_CORE_HEADERS)",
+					"$(VOSC_RMLUI_HEADERS_$(VOSC_OPERATOR_UI))",
 					src,
 					src,
 					src/input,
@@ -3348,10 +3230,6 @@
 					"$(VOSC_ADDONS)/ofxExpr/libs/muparser/src/test",
 					"$(VOSC_ADDONS)/ofxExpr/src",
 					"$(VOSC_ADDONS)/ofxHPVPlayer/src",
-					"$(VOSC_ADDONS)/ofxImGui/libs",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui/src",
-					"$(VOSC_ADDONS)/ofxImGui/src",
 					"$(VOSC_ADDONS)/ofxLooper/src",
 					"$(VOSC_ADDONS)/ofxMidi/libs",
 					"$(VOSC_ADDONS)/ofxMidi/libs/pgmidi",
@@ -3403,6 +3281,7 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(OF_CORE_HEADERS)",
+					"$(VOSC_RMLUI_HEADERS_$(VOSC_OPERATOR_UI))",
 					src,
 					src,
 					src/input,
@@ -3501,10 +3380,6 @@
 					"$(VOSC_ADDONS)/ofxExpr/libs/muparser/src/test",
 					"$(VOSC_ADDONS)/ofxExpr/src",
 					"$(VOSC_ADDONS)/ofxHPVPlayer/src",
-					"$(VOSC_ADDONS)/ofxImGui/libs",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui/src",
-					"$(VOSC_ADDONS)/ofxImGui/src",
 					"$(VOSC_ADDONS)/ofxLooper/src",
 					"$(VOSC_ADDONS)/ofxMidi/libs",
 					"$(VOSC_ADDONS)/ofxMidi/libs/pgmidi",
@@ -3549,6 +3424,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited) OFXEXPR_NOGUI";
 				HEADER_SEARCH_PATHS = (
 					"$(OF_CORE_HEADERS)",
+					"$(VOSC_RMLUI_HEADERS_$(VOSC_OPERATOR_UI))",
 					src,
 					src,
 					src/input,
@@ -3647,10 +3523,6 @@
 					"$(VOSC_ADDONS)/ofxExpr/libs/muparser/src/test",
 					"$(VOSC_ADDONS)/ofxExpr/src",
 					"$(VOSC_ADDONS)/ofxHPVPlayer/src",
-					"$(VOSC_ADDONS)/ofxImGui/libs",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui/src",
-					"$(VOSC_ADDONS)/ofxImGui/src",
 					"$(VOSC_ADDONS)/ofxLooper/src",
 					"$(VOSC_ADDONS)/ofxMidi/libs",
 					"$(VOSC_ADDONS)/ofxMidi/libs/pgmidi",
@@ -3680,6 +3552,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
+					"$(VOSC_RMLUI_LIBRARIES_$(VOSC_OPERATOR_UI))",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF_DEBUG)",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/assimp.a",
@@ -3702,7 +3575,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
-				EXCLUDED_SOURCE_FILE_NAMES = "$(VOSC_RELEASE_EXCLUDED_SOURCES)";
+				EXCLUDED_SOURCE_FILE_NAMES = "$(inherited) $(VOSC_RELEASE_EXCLUDED_SOURCES)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/System/Library/Frameworks,
@@ -3712,6 +3585,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited) OFXEXPR_NOGUI";
 				HEADER_SEARCH_PATHS = (
 					"$(OF_CORE_HEADERS)",
+					"$(VOSC_RMLUI_HEADERS_$(VOSC_OPERATOR_UI))",
 					src,
 					src,
 					src/input,
@@ -3810,10 +3684,6 @@
 					"$(VOSC_ADDONS)/ofxExpr/libs/muparser/src/test",
 					"$(VOSC_ADDONS)/ofxExpr/src",
 					"$(VOSC_ADDONS)/ofxHPVPlayer/src",
-					"$(VOSC_ADDONS)/ofxImGui/libs",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui",
-					"$(VOSC_ADDONS)/ofxImGui/libs/imgui/src",
-					"$(VOSC_ADDONS)/ofxImGui/src",
 					"$(VOSC_ADDONS)/ofxLooper/src",
 					"$(VOSC_ADDONS)/ofxMidi/libs",
 					"$(VOSC_ADDONS)/ofxMidi/libs/pgmidi",
@@ -3843,6 +3713,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
+					"$(VOSC_RMLUI_LIBRARIES_$(VOSC_OPERATOR_UI))",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF)",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/assimp.a",
