@@ -87,10 +87,6 @@ def prepare_addon_overlay(addon_sdk, output):
         ),
         "ofxShadertoy/src/ofxShadertoy.cpp": patch_shadertoy_timestamp,
     }
-    for filename in ("ofxOscSender.h", "ofxOscSender.cpp", "ofxOscParameterSync.h"):
-        patches[f"ofxOsc/src/{filename}"] = lambda text: replace_expected(
-            text, '"ofParameterGroup.h"', '"ofParameter.h"', "OSC parameter include",
-        )
     for relative, patch in patches.items():
         source = addons / relative
         target = output / "addons" / relative

@@ -5,13 +5,9 @@
     "root": "of_v0.12.1_osx_release"
   },
   "bundled_addons": [
-    "ofxAssimpModelLoader"
+    "ofxAssimpModelLoader",
+    "ofxOsc"
   ],
-  "legacy_osc_archive": {
-    "url": "https://openframeworks.cc/versions/v0.11.1/of_v0.11.1_osx_release.zip",
-    "sha256": "815d578512ee328aaa9592951298f88716abb6a7e4bbcb4993aa755f477ed004",
-    "root": "of_v0.11.1_osx_release"
-  },
   "addons": {
     "ofxAutoReloadedShader": {
       "url": "https://codeload.github.com/kasparsj/ofxAutoReloadedShader/tar.gz/9d2f690e7ceb3d6c956e78762c18649fb6836875",

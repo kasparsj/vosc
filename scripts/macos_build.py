@@ -30,8 +30,8 @@ def sdk_paths(of_root=None, addon_sdk=None):
 
 
 RECEIVER_BASELINES = {
-    "ofxOscReceiver.h": "fe010d0369bdb95330a84e1ac4b96485a6d5a4171f86060db43cc32833581931",
-    "ofxOscReceiver.cpp": "73e69079b15b5948bc18b601d1d9a1ba5a56678c969badaf8279932be9516c6c",
+    "ofxOscReceiver.h": "9c5ee99de8f700aed7451ca45173f57d38ce1a13532cae93488b2ee986d30d6e",
+    "ofxOscReceiver.cpp": "fd0010f574010b138bb5797e1db6a933a2368c748c18bcfcb70c10a46ae1429a",
 }
 
 

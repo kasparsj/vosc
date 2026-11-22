@@ -1,24 +1,18 @@
-# Repository-controlled ofxOsc receiver
+# macOS ofxOsc receiver repair
 
-The receiver header and source derive from the openFrameworks 0.11.1 ofxOsc
-addon and retain their original file notices. See the accompanying
-[openFrameworks MIT license](LICENSE). The supported macOS builder overlays both
-files for every consumer and preserves the original message decoding.
-Do not mix this header with the installed receiver object, or vice versa.
+The receiver source and header derive from the ofxOsc addon in the pinned
+openFrameworks 0.12.1 macOS release and retain the [MIT license](LICENSE).
+The macOS builder verifies both upstream file hashes before selecting these
+two files through the private compiler overlay.
 
-Original source SHA-256 (before this repair):
+The receiver keeps the bundled oscpack asynchronous wakeup pipe and atomic
+break flag. The repair releases the bound socket if launching the receive
+thread fails. It also marks an exited receive worker inactive so the next
+start can join it, release its socket, and bind again.
 
-- `ofxOscReceiver.h`: `fe010d0369bdb95330a84e1ac4b96485a6d5a4171f86060db43cc32833581931`
-- `ofxOscReceiver.cpp`: `73e69079b15b5948bc18b601d1d9a1ba5a56678c969badaf8279932be9516c6c`
-
-Lifecycle calls are serialized on the owning thread. `stop()` requests shutdown,
-joins the worker and only then destroys its socket/multiplexer. A 10 ms timer
-calls oscpack `Break()` on the receiver thread, avoiding its cross-thread volatile
-flag race and its Run-entry reset. This costs roughly 100 idle wakeups/second.
-Stopping from a receiver callback is unsupported. Subclasses must stop before
-destroying any state accessed by their callback.
-
-A failed worker marks itself no longer listening. Restart joins that worker and
-creates fresh state. The message queue and configured port retain their existing
-lifetime across stop/restart. Test hooks exist only under
-`VOSC_RECEIVER_LIFECYCLE_TESTING`, never in application builds.
+Call setup, start, stop, and copy from one owner thread. Stop joins before
+destroying the socket and must be called outside receive callbacks. Subclasses
+stop reception before destroying state the callback can access.
+`VOSC_RECEIVER_LIFECYCLE_TESTING` enables failure injection only in the
+standalone test harness. See the [shutdown lifecycle](../../docs/shutdown-lifecycle.md)
+for the application teardown order and test coverage.

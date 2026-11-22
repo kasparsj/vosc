@@ -133,12 +133,11 @@ def validate_sdk(root):
 def addon_inputs(manifest):
     bundled = manifest["bundled_addons"]
     expected = set((ROOT / "addons.make").read_text().split())
-    actual = set(bundled) | {"ofxOsc"} | manifest["addons"].keys()
+    actual = set(bundled) | manifest["addons"].keys()
     if actual != expected:
         raise ValueError("Setup dependency manifest does not match addons.make")
     return {
         "bundled": {"names": bundled, "archive": manifest["sdk"]},
-        "legacy_osc_archive": manifest["legacy_osc_archive"],
         "addons": manifest["addons"],
         "muparser": manifest["muparser_source"],
     }
@@ -150,10 +149,6 @@ def prepare_addons(target, inputs, manifest, cache, staging):
     unpack(cached_archive(pin, cache, staging), target,
            *(f"{pin['root']}/addons/{name}" for name in bundled["names"]))
     addons = target / "addons"
-    osc = inputs["legacy_osc_archive"]
-    legacy = staging / "legacy-osc"
-    unpack(cached_archive(osc, cache, staging), legacy, f"{osc['root']}/addons/ofxOsc")
-    (legacy / "addons/ofxOsc").rename(addons / "ofxOsc")
     for name, pin in inputs["addons"].items():
         unpack(cached_archive(pin, cache, staging), addons / name)
     muparser = inputs["muparser"]
