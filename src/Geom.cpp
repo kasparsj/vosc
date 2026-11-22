@@ -1,6 +1,8 @@
 #include "Geom.h"
 #include "Layer.h"
 
+#include <assimp/postprocess.h>
+
 vector<string> Geom::primitives = {"box", "sphere", "icosphere", "cylinder", "plane", "cone"};
 
 bool Geom::isPrimitive(const string& path) {
@@ -104,7 +106,11 @@ bool Geom::loadModel(const ofxOscMessage& m, int idx) {
     }
     else {
         usingModel = true;
-        return model.loadModel(modelPath);
+        // Keep the existing model coordinates. The addon's default also flips
+        // handedness and winding, which changes how saved scenes face the camera.
+        constexpr int importFlags = aiProcessPreset_TargetRealtime_MaxQuality |
+            aiProcess_Triangulate | aiProcess_FlipUVs;
+        return model.load(modelPath, importFlags);
     }
 }
 

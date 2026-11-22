@@ -76,6 +76,10 @@ def prepare_addon_overlay(addon_sdk, output):
     entries = [{"type": "file", "name": item["source"], "external-contents": item["replacement"]}
                for item in receiver_inputs(addon_sdk)]
     patches = {
+        "ofxAssimpModelLoader/src/ofxAssimpModelLoader.cpp": lambda text: replace_expected(
+            text, "if( flags <= OPTIMIZE_HIGH )", "if( assimpOptimizeFlags <= OPTIMIZE_HIGH )",
+            "Assimp import flags signed comparison",
+        ),
         "ofxExpr/src/ofxExpr.cpp": patch_expression_returns,
         "ofxImGui/src/EngineGLFW.cpp": patch_imgui_glfw,
         "ofxImGui/src/ImHelpers.h": lambda text: replace_expected(

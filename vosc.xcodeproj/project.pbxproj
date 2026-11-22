@@ -203,7 +203,7 @@
 		0BC82FF9BACF54030E42E808 /* RGBShiftPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RGBShiftPass.h; path = "ofxPostProcessing/src/RGBShiftPass.h"; sourceTree = VOSC_ADDONS; };
 		0D811F3E1817C17351F97CCF /* BleachBypassPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BleachBypassPass.h; path = "ofxPostProcessing/src/BleachBypassPass.h"; sourceTree = VOSC_ADDONS; };
 		0E20084CB88EA44FF1B52E1D /* JSObjectRef.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = JSObjectRef.h; path = "ofxUltralight/libs/include/JavaScriptCore/JSObjectRef.h"; sourceTree = VOSC_ADDONS; };
-		0E3FB6D73DB6B260295B6855 /* LogStream.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LogStream.hpp; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/LogStream.hpp"; sourceTree = VOSC_ADDONS; };
+		0E3FB6D73DB6B260295B6855 /* LogStream.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LogStream.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/LogStream.hpp"; sourceTree = VOSC_ADDONS; };
 		108C4DB0C398388D00027091 /* KaleidoscopePass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = KaleidoscopePass.cpp; path = "ofxPostProcessing/src/KaleidoscopePass.cpp"; sourceTree = VOSC_ADDONS; };
 		10BDAD77820FDBCBF144C28A /* lz4hc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = lz4hc.h; path = "ofxHPVPlayer/src/lz4hc.h"; sourceTree = VOSC_ADDONS; };
 		10E2C891AAA166534B1F3B4E /* ofxMidiTimecode.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxMidiTimecode.cpp; path = "ofxMidi/src/ofxMidiTimecode.cpp"; sourceTree = VOSC_ADDONS; };
@@ -218,15 +218,15 @@
 		18421B11F77BFE7C077DAA7D /* PointLightPass.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PointLightPass.hpp; path = "ofxDeferredShading/src/pass/PointLightPass.hpp"; sourceTree = VOSC_ADDONS; };
 		1898AEA4672CEAFCE203FF55 /* VariablePool.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VariablePool.h; path = src/var/VariablePool.h; sourceTree = SOURCE_ROOT; };
 		189C978C54FE51E73B0EADFD /* TexturePool.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = TexturePool.cpp; path = src/TexturePool.cpp; sourceTree = SOURCE_ROOT; };
-		18D6965F094E05B40B20AFB8 /* IOStream.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IOStream.hpp; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/IOStream.hpp"; sourceTree = VOSC_ADDONS; };
+		18D6965F094E05B40B20AFB8 /* IOStream.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IOStream.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/IOStream.hpp"; sourceTree = VOSC_ADDONS; };
 		19190AF076C438144443211C /* KeyEvent.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = KeyEvent.h; path = "ofxUltralight/libs/include/Ultralight/KeyEvent.h"; sourceTree = VOSC_ADDONS; };
 		199A2F0F6EFDD17E50C9FD34 /* Pixelsort.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Pixelsort.cpp; path = "ofxPostProcessing/src/Pixelsort.cpp"; sourceTree = VOSC_ADDONS; };
 		1C2899CABC78CFBEDD426E85 /* SketchTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = SketchTex.cpp; path = src/tex/SketchTex.cpp; sourceTree = SOURCE_ROOT; };
 		1CEE09A14FECFB1599AE2765 /* muParserTest.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserTest.h; path = "ofxExpr/libs/muparser/include/muParserTest.h"; sourceTree = VOSC_ADDONS; };
 		1D2148FDD3F118E1826ACFC2 /* KeyCodes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = KeyCodes.h; path = "ofxUltralight/libs/include/Ultralight/KeyCodes.h"; sourceTree = VOSC_ADDONS; };
 		1D6F31315D0088443004CA2F /* App.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = App.h; path = "ofxUltralight/libs/include/AppCore/App.h"; sourceTree = VOSC_ADDONS; };
-		1E0BC0CEABC90B611234B3BE /* DefaultIOSystem.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DefaultIOSystem.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/DefaultIOSystem.h"; sourceTree = VOSC_ADDONS; };
-		1E0C80A97E66F858E3720C91 /* quaternion.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = quaternion.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/quaternion.h"; sourceTree = VOSC_ADDONS; };
+		1E0BC0CEABC90B611234B3BE /* DefaultIOSystem.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DefaultIOSystem.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/DefaultIOSystem.h"; sourceTree = VOSC_ADDONS; };
+		1E0C80A97E66F858E3720C91 /* quaternion.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = quaternion.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/quaternion.h"; sourceTree = VOSC_ADDONS; };
 		1E602E00039B91003AE973D9 /* Config.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Config.h; path = "ofxUltralight/libs/include/Ultralight/platform/Config.h"; sourceTree = VOSC_ADDONS; };
 		1E952AF032B351FB32CCBD2B /* Split.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Split.cpp; path = "ofxPostProcessing/src/Split.cpp"; sourceTree = VOSC_ADDONS; };
 		1FB8AC908D6BDA59B5D4E76B /* Listener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Listener.h; path = "ofxUltralight/libs/include/Ultralight/Listener.h"; sourceTree = VOSC_ADDONS; };
@@ -235,18 +235,18 @@
 		20E6C3CEAFB513DB4D4F1BE2 /* SketchTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SketchTex.h; path = src/tex/SketchTex.h; sourceTree = SOURCE_ROOT; };
 		20F35AFADAF0068B067E713F /* OscReceivedElements.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscReceivedElements.h; path = "ofxOsc/libs/oscpack/src/osc/OscReceivedElements.h"; sourceTree = VOSC_ADDONS; };
 		20FA7F2967238EE369A6E275 /* Glitch.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Glitch.h; path = "ofxPostProcessing/src/Glitch.h"; sourceTree = VOSC_ADDONS; };
-		221A6B45269330B270549CB3 /* texture.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = texture.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/texture.h"; sourceTree = VOSC_ADDONS; };
+		221A6B45269330B270549CB3 /* texture.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = texture.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/texture.h"; sourceTree = VOSC_ADDONS; };
 		23640F57DF6C4BB6BFC5DA4C /* PacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PacketListener.h; path = "ofxOsc/libs/oscpack/src/ip/PacketListener.h"; sourceTree = VOSC_ADDONS; };
 		23AB9B54C418735665B1EBA6 /* Tex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Tex.cpp; path = src/tex/Tex.cpp; sourceTree = SOURCE_ROOT; };
-		2412104B96C3E5E004D85DED /* cimport.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = cimport.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/cimport.h"; sourceTree = VOSC_ADDONS; };
-		24814572966A916B92F96257 /* DefaultLogger.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DefaultLogger.hpp; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/DefaultLogger.hpp"; sourceTree = VOSC_ADDONS; };
+		2412104B96C3E5E004D85DED /* cimport.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = cimport.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/cimport.h"; sourceTree = VOSC_ADDONS; };
+		24814572966A916B92F96257 /* DefaultLogger.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DefaultLogger.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/DefaultLogger.hpp"; sourceTree = VOSC_ADDONS; };
 		2588B1403B37A447F9955E93 /* Input.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Input.h; path = src/input/Input.h; sourceTree = SOURCE_ROOT; };
-		26149D52CBE031B3F154D862 /* defs.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = defs.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/defs.h"; sourceTree = VOSC_ADDONS; };
+		26149D52CBE031B3F154D862 /* defs.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = defs.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/defs.h"; sourceTree = VOSC_ADDONS; };
 		270CD228282D3275D0A49EF3 /* JSTypedArray.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = JSTypedArray.h; path = "ofxUltralight/libs/include/JavaScriptCore/JSTypedArray.h"; sourceTree = VOSC_ADDONS; };
 		273649FD41D6E3133519E9A9 /* DrawTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DrawTex.h; path = src/tex/DrawTex.h; sourceTree = SOURCE_ROOT; };
 		28374948E03051FC6A028C33 /* muParserDLL.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserDLL.h; path = "ofxExpr/libs/muparser/include/muParserDLL.h"; sourceTree = VOSC_ADDONS; };
 		283FC0CCFA95CB3B45FE6893 /* Geometry.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Geometry.h; path = "ofxUltralight/libs/include/Ultralight/Geometry.h"; sourceTree = VOSC_ADDONS; };
-		28A42A2103C59E7D30E9D245 /* Exporter.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Exporter.hpp; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/Exporter.hpp"; sourceTree = VOSC_ADDONS; };
+		28A42A2103C59E7D30E9D245 /* Exporter.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Exporter.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/Exporter.hpp"; sourceTree = VOSC_ADDONS; };
 		298C5F9F580CD9596624E489 /* NoisySpirals.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NoisySpirals.h; path = src/sketches/NoisySpirals.h; sourceTree = SOURCE_ROOT; };
 		2B33C2D7297FBA42003E3292 /* scope.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = scope.frag; sourceTree = "<group>"; };
 		2B33C2D8297FCD21003E3292 /* scope2.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = scope2.frag; sourceTree = "<group>"; };
@@ -393,7 +393,7 @@
 		2B56C4D2294E45940094681D /* texture.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = texture.frag; sourceTree = "<group>"; };
 		2B56C4D3294E8E560094681D /* ofxFirstPersonCamera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ofxFirstPersonCamera.h; sourceTree = "<group>"; };
 		2B56EC092951C6AF00808AC5 /* BaseVar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = BaseVar.cpp; path = var/BaseVar.cpp; sourceTree = "<group>"; };
-		2B629E4DB07A45391A420283 /* importerdesc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = importerdesc.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/importerdesc.h"; sourceTree = VOSC_ADDONS; };
+		2B629E4DB07A45391A420283 /* importerdesc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = importerdesc.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/importerdesc.h"; sourceTree = VOSC_ADDONS; };
 		2B6C21032B66FA87004C7B00 /* Inputs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Inputs.cpp; path = input/Inputs.cpp; sourceTree = "<group>"; };
 		2B6C21042B66FA87004C7B00 /* Inputs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = Inputs.hpp; path = input/Inputs.hpp; sourceTree = "<group>"; };
 		2B7546732EC0C26F00494ADF /* BaseTex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BaseTex.h; path = tex/BaseTex.h; sourceTree = "<group>"; };
@@ -454,9 +454,9 @@
 		3B361208CD4107E479F04E7B /* NetworkingUtils.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = NetworkingUtils.cpp; path = "ofxOsc/libs/oscpack/src/ip/posix/NetworkingUtils.cpp"; sourceTree = VOSC_ADDONS; };
 		3C39EA8CB1911093FD56F9ED /* HorizontalTiltShifPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HorizontalTiltShifPass.h; path = "ofxPostProcessing/src/HorizontalTiltShifPass.h"; sourceTree = VOSC_ADDONS; };
 		3C525795C6CCB99616535318 /* imgui_widgets.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_widgets.cpp; path = "ofxImGui/libs/imgui/src/imgui_widgets.cpp"; sourceTree = VOSC_ADDONS; };
-		3D5F33D66F2F166A4E8EA438 /* cfileio.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = cfileio.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/cfileio.h"; sourceTree = VOSC_ADDONS; };
+		3D5F33D66F2F166A4E8EA438 /* cfileio.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = cfileio.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/cfileio.h"; sourceTree = VOSC_ADDONS; };
 		3DD359247F3ED1550D8BB5C9 /* ofxMidiIn.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxMidiIn.cpp; path = "ofxMidi/src/ofxMidiIn.cpp"; sourceTree = VOSC_ADDONS; };
-		3DE27F8F3350100A56220776 /* ai_assert.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ai_assert.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/ai_assert.h"; sourceTree = VOSC_ADDONS; };
+		3DE27F8F3350100A56220776 /* ai_assert.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ai_assert.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/ai_assert.h"; sourceTree = VOSC_ADDONS; };
 		3F8A1741CC4F784D8B130531 /* HsbShiftPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HsbShiftPass.cpp; path = "ofxPostProcessing/src/HsbShiftPass.cpp"; sourceTree = VOSC_ADDONS; };
 		3FC9333DABA538FA1FE61678 /* SsaoPass.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SsaoPass.hpp; path = "ofxDeferredShading/src/pass/SsaoPass.hpp"; sourceTree = VOSC_ADDONS; };
 		3FE6C4A803E115F324568E6A /* Geom.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Geom.cpp; path = src/Geom.cpp; sourceTree = SOURCE_ROOT; };
@@ -465,9 +465,9 @@
 		40E3B175D68EA99116024843 /* FramesBuffer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FramesBuffer.h; path = "ofxLooper/src/FramesBuffer.h"; sourceTree = VOSC_ADDONS; };
 		4110934092204458911C2E3E /* JSValueRef.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = JSValueRef.h; path = "ofxUltralight/libs/include/JavaScriptCore/JSValueRef.h"; sourceTree = VOSC_ADDONS; };
 		4176D2EC3811F1A6586B49A5 /* Beyoon.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Beyoon.cpp; path = "ofxPostProcessing/src/Beyoon.cpp"; sourceTree = VOSC_ADDONS; };
-		41DBF41AB15D7C33CA52C05F /* NullLogger.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NullLogger.hpp; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/NullLogger.hpp"; sourceTree = VOSC_ADDONS; };
-		42B5D460590D03DC3009F243 /* material.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = material.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/material.h"; sourceTree = VOSC_ADDONS; };
-		42D77E59A87937F5313E468D /* postprocess.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = postprocess.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/postprocess.h"; sourceTree = VOSC_ADDONS; };
+		41DBF41AB15D7C33CA52C05F /* NullLogger.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = NullLogger.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/NullLogger.hpp"; sourceTree = VOSC_ADDONS; };
+		42B5D460590D03DC3009F243 /* material.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = material.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/material.h"; sourceTree = VOSC_ADDONS; };
+		42D77E59A87937F5313E468D /* postprocess.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = postprocess.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/postprocess.h"; sourceTree = VOSC_ADDONS; };
 		42EEF41412CD072D7A17504A /* Logger.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Logger.h; path = src/Logger.h; sourceTree = SOURCE_ROOT; };
 		4310BEFDE24FF04FEBEE8086 /* ofxBaseMidi.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxBaseMidi.h; path = "ofxMidi/src/ofxBaseMidi.h"; sourceTree = VOSC_ADDONS; };
 		444657A12E59D0ED86981498 /* TimerListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = TimerListener.h; path = "ofxOsc/libs/oscpack/src/ip/TimerListener.h"; sourceTree = VOSC_ADDONS; };
@@ -526,7 +526,7 @@
 		687EACD1A8990AD397859E0E /* String.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = String.h; path = "ofxUltralight/libs/include/Ultralight/String.h"; sourceTree = VOSC_ADDONS; };
 		697B169C0F7B7A765EB7BECB /* Log.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Log.cpp; path = "ofxHPVPlayer/src/Log.cpp"; sourceTree = VOSC_ADDONS; };
 		69E3BC33896175B84A8DFCDD /* lz4.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = lz4.h; path = "ofxHPVPlayer/src/lz4.h"; sourceTree = VOSC_ADDONS; };
-		6A0E743407465957DB764ED3 /* mesh.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = mesh.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/mesh.h"; sourceTree = VOSC_ADDONS; };
+		6A0E743407465957DB764ED3 /* mesh.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = mesh.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/mesh.h"; sourceTree = VOSC_ADDONS; };
 		6AF187A99EECFB13E3BCCD33 /* LimbDarkeningPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = LimbDarkeningPass.h; path = "ofxPostProcessing/src/LimbDarkeningPass.h"; sourceTree = VOSC_ADDONS; };
 		6AFBBAD2E967FBCC6CFC98E4 /* OSCInput.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OSCInput.h; path = src/input/OSCInput.h; sourceTree = SOURCE_ROOT; };
 		6B65E6930994CC4B2D2B8B33 /* OscPacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscPacketListener.h; path = "ofxOsc/libs/oscpack/src/osc/OscPacketListener.h"; sourceTree = VOSC_ADDONS; };
@@ -534,7 +534,7 @@
 		6C899862CA531001DF74AA77 /* Camera.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Camera.cpp; path = src/Camera.cpp; sourceTree = SOURCE_ROOT; };
 		6CF9B1FD213484DDDB7AE362 /* imgui.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui.cpp; path = "ofxImGui/libs/imgui/src/imgui.cpp"; sourceTree = VOSC_ADDONS; };
 		6DF8876C61ADECAB54283438 /* DeferredProcessor.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DeferredProcessor.cpp; path = "ofxDeferredShading/src/DeferredProcessor.cpp"; sourceTree = VOSC_ADDONS; };
-		6E069CE4C58E970E3429DBE5 /* Importer.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Importer.hpp; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/Importer.hpp"; sourceTree = VOSC_ADDONS; };
+		6E069CE4C58E970E3429DBE5 /* Importer.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Importer.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/Importer.hpp"; sourceTree = VOSC_ADDONS; };
 		6E6A2DE60EF8F0A144C0EC05 /* Window.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Window.h; path = "ofxUltralight/libs/include/AppCore/Window.h"; sourceTree = VOSC_ADDONS; };
 		70C825B3D4C69EF31A216540 /* CAPI.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = CAPI.h; path = "ofxUltralight/libs/include/Ultralight/CAPI.h"; sourceTree = VOSC_ADDONS; };
 		712B183BC00EBFFB1EEA5AB8 /* ofxRtMidiOut.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxRtMidiOut.cpp; path = "ofxMidi/src/desktop/ofxRtMidiOut.cpp"; sourceTree = VOSC_ADDONS; };
@@ -549,16 +549,16 @@
 		7809B234B888B369B724B134 /* ofxTidalCycles.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxTidalCycles.h; path = "ofxTidalCycles/src/ofxTidalCycles.h"; sourceTree = VOSC_ADDONS; };
 		788B25E9947816B8DFDCAF81 /* LayerShader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LayerShader.cpp; path = src/layer/LayerShader.cpp; sourceTree = SOURCE_ROOT; };
 		7907C2B8A951053ABA0838FC /* RefPtr.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RefPtr.h; path = "ofxUltralight/libs/include/Ultralight/RefPtr.h"; sourceTree = VOSC_ADDONS; };
-		7920005E4069FBD68DF30F56 /* config.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = config.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/config.h"; sourceTree = VOSC_ADDONS; };
+		7920005E4069FBD68DF30F56 /* config.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = config.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/config.h"; sourceTree = VOSC_ADDONS; };
 		79CDBBBAC046662F1A156238 /* HPVPlayer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVPlayer.h; path = "ofxHPVPlayer/src/HPVPlayer.h"; sourceTree = VOSC_ADDONS; };
 		7AA08370976ABF6D8E5DA0D9 /* DofPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DofPass.cpp; path = "ofxDeferredShading/src/pass/DofPass.cpp"; sourceTree = VOSC_ADDONS; };
 		7AE59D333FCA4B7F103A56F7 /* ofxVecExprInputField.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxVecExprInputField.cpp; path = "ofxExpr/src/ofxVecExprInputField.cpp"; sourceTree = VOSC_ADDONS; };
 		7B35025C4D80EF371CC15FA1 /* WebKitAvailability.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = WebKitAvailability.h; path = "ofxUltralight/libs/include/JavaScriptCore/WebKitAvailability.h"; sourceTree = VOSC_ADDONS; };
 		7B41E6EB5A3EB6345FB3E1D8 /* ImageTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ImageTex.h; path = src/tex/ImageTex.h; sourceTree = SOURCE_ROOT; };
-		7B454555CF8F39CFBAAFDFA2 /* camera.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = camera.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/camera.h"; sourceTree = VOSC_ADDONS; };
+		7B454555CF8F39CFBAAFDFA2 /* camera.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = camera.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/camera.h"; sourceTree = VOSC_ADDONS; };
 		7DF381F656E8FD352E21346E /* ofxAssimpModelLoader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAssimpModelLoader.h; path = "ofxAssimpModelLoader/src/ofxAssimpModelLoader.h"; sourceTree = VOSC_ADDONS; };
-		808F0EC060E7C8DA90947996 /* light.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = light.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/light.h"; sourceTree = VOSC_ADDONS; };
-		8090B616E3293BD0E1085AE8 /* metadata.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = metadata.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/metadata.h"; sourceTree = VOSC_ADDONS; };
+		808F0EC060E7C8DA90947996 /* light.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = light.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/light.h"; sourceTree = VOSC_ADDONS; };
+		8090B616E3293BD0E1085AE8 /* metadata.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = metadata.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/metadata.h"; sourceTree = VOSC_ADDONS; };
 		81436E53CC4A77E326F659C3 /* ofxMidiOut.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxMidiOut.h; path = "ofxMidi/src/ofxMidiOut.h"; sourceTree = VOSC_ADDONS; };
 		81967292BFC87A0144BD32C6 /* ofxOscSender.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscSender.cpp; path = "ofxOsc/src/ofxOscSender.cpp"; sourceTree = VOSC_ADDONS; };
 		81AC32CCCB56FAABA3E1BDE0 /* CoreMIDI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMIDI.framework; path = /System/Library/Frameworks/CoreMIDI.framework; sourceTree = "<group>"; };
@@ -586,16 +586,16 @@
 		91D1568F53D3EC80AC718E7B /* EngineVk.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = EngineVk.cpp; path = "ofxImGui/src/EngineVk.cpp"; sourceTree = VOSC_ADDONS; };
 		91F91C3BEAD0B3C2B92BB9A5 /* DofAltPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DofAltPass.cpp; path = "ofxPostProcessing/src/DofAltPass.cpp"; sourceTree = VOSC_ADDONS; };
 		9222AE2464AE1CF72876A4ED /* LimbDarkeningPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LimbDarkeningPass.cpp; path = "ofxPostProcessing/src/LimbDarkeningPass.cpp"; sourceTree = VOSC_ADDONS; };
-		9339B8AD0EF31B7708C53B9F /* ProgressHandler.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ProgressHandler.hpp; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/ProgressHandler.hpp"; sourceTree = VOSC_ADDONS; };
+		9339B8AD0EF31B7708C53B9F /* ProgressHandler.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ProgressHandler.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/ProgressHandler.hpp"; sourceTree = VOSC_ADDONS; };
 		938214A2795AA8FED29086DB /* ofxMidiConstants.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxMidiConstants.h; path = "ofxMidi/src/ofxMidiConstants.h"; sourceTree = VOSC_ADDONS; };
 		9425843AEC3118B8FDEF1B0B /* FxaaPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FxaaPass.cpp; path = "ofxPostProcessing/src/FxaaPass.cpp"; sourceTree = VOSC_ADDONS; };
 		943E84164BBE12A26025530F /* FboTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FboTex.cpp; path = src/tex/FboTex.cpp; sourceTree = SOURCE_ROOT; };
 		94B3C3C21F92F9310CA90986 /* ofxBaseMidi.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxBaseMidi.cpp; path = "ofxMidi/src/ofxBaseMidi.cpp"; sourceTree = VOSC_ADDONS; };
 		968D72C0F70A6BE01FC2AACC /* ReflectX.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ReflectX.h; path = "ofxPostProcessing/src/ReflectX.h"; sourceTree = VOSC_ADDONS; };
-		96EBF8A6CD3F11C79F7950BC /* cexport.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = cexport.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/cexport.h"; sourceTree = VOSC_ADDONS; };
+		96EBF8A6CD3F11C79F7950BC /* cexport.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = cexport.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/cexport.h"; sourceTree = VOSC_ADDONS; };
 		979A9A3F0546EBDE6212FB67 /* ImageTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ImageTex.cpp; path = src/tex/ImageTex.cpp; sourceTree = SOURCE_ROOT; };
 		97AC5D82D06DAB2345FDB039 /* Config.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Config.h; path = src/Config.h; sourceTree = SOURCE_ROOT; };
-		98033501202172DF458BD6CF /* vector2.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = vector2.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/vector2.h"; sourceTree = VOSC_ADDONS; };
+		98033501202172DF458BD6CF /* vector2.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = vector2.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/vector2.h"; sourceTree = VOSC_ADDONS; };
 		9820724E2106BAB063EB2B5D /* GBuffer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GBuffer.cpp; path = "ofxDeferredShading/src/GBuffer.cpp"; sourceTree = VOSC_ADDONS; };
 		982F6A4F410C2A639409070D /* Rotate.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Rotate.h; path = "ofxPostProcessing/src/Rotate.h"; sourceTree = VOSC_ADDONS; };
 		99559F284344A867305900DB /* EngineVk.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = EngineVk.h; path = "ofxImGui/src/EngineVk.h"; sourceTree = VOSC_ADDONS; };
@@ -607,8 +607,8 @@
 		9E02D9F3A04B5573758EBCF8 /* imgui_draw.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_draw.cpp; path = "ofxImGui/libs/imgui/src/imgui_draw.cpp"; sourceTree = VOSC_ADDONS; };
 		9E8237DEBB94AB91C9D4C150 /* Renderer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Renderer.h; path = "ofxUltralight/libs/include/Ultralight/Renderer.h"; sourceTree = VOSC_ADDONS; };
 		9F7986DC4EB05E75FCE2C777 /* ofxOscSender.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOscSender.h; path = "ofxOsc/src/ofxOscSender.h"; sourceTree = VOSC_ADDONS; };
-		9FE6B1567FD15057E4C07D4D /* AndroidJNIIOSystem.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = AndroidJNIIOSystem.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/port/AndroidJNI/AndroidJNIIOSystem.h"; sourceTree = VOSC_ADDONS; };
-		9FECF0FCF0CCAEC9C58FE54F /* version.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = version.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/version.h"; sourceTree = VOSC_ADDONS; };
+		9FE6B1567FD15057E4C07D4D /* AndroidJNIIOSystem.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = AndroidJNIIOSystem.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/port/AndroidJNI/AndroidJNIIOSystem.h"; sourceTree = VOSC_ADDONS; };
+		9FECF0FCF0CCAEC9C58FE54F /* version.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = version.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/version.h"; sourceTree = VOSC_ADDONS; };
 		A06E48D364216485BEDDAA8C /* muParserBase.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserBase.h; path = "ofxExpr/libs/muparser/include/muParserBase.h"; sourceTree = VOSC_ADDONS; };
 		A0A198E871FD0E18132B1DF6 /* String16.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = String16.h; path = "ofxUltralight/libs/include/Ultralight/String16.h"; sourceTree = VOSC_ADDONS; };
 		A10DC4793F4E756D33104356 /* Logger.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Logger.h; path = "ofxUltralight/libs/include/Ultralight/platform/Logger.h"; sourceTree = VOSC_ADDONS; };
@@ -621,9 +621,9 @@
 		A5288DE681747CD43B30E8C3 /* ofxTidalCycles.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxTidalCycles.cpp; path = "ofxTidalCycles/src/ofxTidalCycles.cpp"; sourceTree = VOSC_ADDONS; };
 		A5A118D06143D68D753BB721 /* BloomPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = BloomPass.cpp; path = "ofxDeferredShading/src/pass/BloomPass.cpp"; sourceTree = VOSC_ADDONS; };
 		A5CF8DC6B46CE6E879054B6D /* muParserError.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserError.h; path = "ofxExpr/libs/muparser/include/muParserError.h"; sourceTree = VOSC_ADDONS; };
-		A6197D72F51ED9030D7C5F16 /* vector3.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = vector3.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/vector3.h"; sourceTree = VOSC_ADDONS; };
-		A7579B6BD9B77152BF320192 /* matrix4x4.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = matrix4x4.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/matrix4x4.h"; sourceTree = VOSC_ADDONS; };
-		A8293D5D248661E10813470E /* DefaultIOStream.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DefaultIOStream.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/DefaultIOStream.h"; sourceTree = VOSC_ADDONS; };
+		A6197D72F51ED9030D7C5F16 /* vector3.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = vector3.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/vector3.h"; sourceTree = VOSC_ADDONS; };
+		A7579B6BD9B77152BF320192 /* matrix4x4.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = matrix4x4.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/matrix4x4.h"; sourceTree = VOSC_ADDONS; };
+		A8293D5D248661E10813470E /* DefaultIOStream.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DefaultIOStream.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/DefaultIOStream.h"; sourceTree = VOSC_ADDONS; };
 		A8793707281FD436C34316A5 /* RtMidi.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RtMidi.h; path = "ofxMidi/libs/rtmidi/RtMidi.h"; sourceTree = VOSC_ADDONS; };
 		A937731265782800A8359098 /* ofxMidiClock.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxMidiClock.cpp; path = "ofxMidi/src/ofxMidiClock.cpp"; sourceTree = VOSC_ADDONS; };
 		A971DED05A4903DAE30F6473 /* Lights.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Lights.cpp; path = src/light/Lights.cpp; sourceTree = SOURCE_ROOT; };
@@ -635,11 +635,11 @@
 		AC9F55AC591B53654883DFEC /* TexturePool.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = TexturePool.h; path = src/TexturePool.h; sourceTree = SOURCE_ROOT; };
 		ACEF148664D862FB76A48E44 /* ShaderPingPongTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ShaderPingPongTex.h; path = src/tex/ShaderPingPongTex.h; sourceTree = SOURCE_ROOT; };
 		AD14C95BCEA0241ABC6FF590 /* UltralightTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = UltralightTex.cpp; path = src/tex/UltralightTex.cpp; sourceTree = SOURCE_ROOT; };
-		ADAE582E4696B9BD64E5B2B8 /* IOSystem.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IOSystem.hpp; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/IOSystem.hpp"; sourceTree = VOSC_ADDONS; };
+		ADAE582E4696B9BD64E5B2B8 /* IOSystem.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = IOSystem.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/IOSystem.hpp"; sourceTree = VOSC_ADDONS; };
 		ADD194746185E2DA11468377 /* IpEndpointName.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = IpEndpointName.cpp; path = "ofxOsc/libs/oscpack/src/ip/IpEndpointName.cpp"; sourceTree = VOSC_ADDONS; };
 		AE335EB4709BFD4671EEAC84 /* MessageMappingOscPacketListener.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = MessageMappingOscPacketListener.h; path = "ofxOsc/libs/oscpack/src/osc/MessageMappingOscPacketListener.h"; sourceTree = VOSC_ADDONS; };
 		AE806A26C99C3FB31F2ACF76 /* imstb_textedit.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = imstb_textedit.h; path = "ofxImGui/libs/imgui/src/imstb_textedit.h"; sourceTree = VOSC_ADDONS; };
-		AED6F84D8DABA623CAF59F13 /* color4.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = color4.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/color4.h"; sourceTree = VOSC_ADDONS; };
+		AED6F84D8DABA623CAF59F13 /* color4.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = color4.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/color4.h"; sourceTree = VOSC_ADDONS; };
 		B01394EA79C42507A03541CE /* Pixelsort.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Pixelsort.h; path = "ofxPostProcessing/src/Pixelsort.h"; sourceTree = VOSC_ADDONS; };
 		B1A08DF9109205CC575788CA /* Camera.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Camera.hpp; path = src/Camera.hpp; sourceTree = SOURCE_ROOT; };
 		B2F3289AB405C5BB496FC247 /* PixelatePass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PixelatePass.h; path = "ofxPostProcessing/src/PixelatePass.h"; sourceTree = VOSC_ADDONS; };
@@ -652,7 +652,7 @@
 		B5CEF0B83529626C7E8410B7 /* BloomPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BloomPass.h; path = "ofxPostProcessing/src/BloomPass.h"; sourceTree = VOSC_ADDONS; };
 		B5F48196D9084E19E283D3F1 /* ofxVecExprInputField.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxVecExprInputField.hpp; path = "ofxExpr/src/ofxVecExprInputField.hpp"; sourceTree = VOSC_ADDONS; };
 		B6F2EE44AD04FF549AB13699 /* ofxAssimpTexture.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxAssimpTexture.cpp; path = "ofxAssimpModelLoader/src/ofxAssimpTexture.cpp"; sourceTree = VOSC_ADDONS; };
-		B71F45AC74EC99A2E020142E /* SceneCombiner.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SceneCombiner.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/SceneCombiner.h"; sourceTree = VOSC_ADDONS; };
+		B71F45AC74EC99A2E020142E /* SceneCombiner.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = SceneCombiner.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/SceneCombiner.h"; sourceTree = VOSC_ADDONS; };
 		B76FA489151DBAF1616DF378 /* ofxMidiIn.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxMidiIn.h; path = "ofxMidi/src/ofxMidiIn.h"; sourceTree = VOSC_ADDONS; };
 		BA847296AB5A3AA63ADE748F /* FboPingPongTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = FboPingPongTex.cpp; path = src/tex/FboPingPongTex.cpp; sourceTree = SOURCE_ROOT; };
 		BA986CF673F742569173F979 /* Layer.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Layer.cpp; path = src/layer/Layer.cpp; sourceTree = SOURCE_ROOT; };
@@ -668,9 +668,9 @@
 		C0E7EDA67EDF213FC0E83D17 /* ofxMidiMessage.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxMidiMessage.cpp; path = "ofxMidi/src/ofxMidiMessage.cpp"; sourceTree = VOSC_ADDONS; };
 		C106268F55E1452DDF21E6F9 /* PingPongBuffer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PingPongBuffer.h; path = "ofxDeferredShading/src/PingPongBuffer.h"; sourceTree = VOSC_ADDONS; };
 		C127DCF305861E6D5D6332E6 /* SSAOPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = SSAOPass.cpp; path = "ofxPostProcessing/src/SSAOPass.cpp"; sourceTree = VOSC_ADDONS; };
-		C1638C371AC7701E1A4D6671 /* types.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = types.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/types.h"; sourceTree = VOSC_ADDONS; };
+		C1638C371AC7701E1A4D6671 /* types.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = types.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/types.h"; sourceTree = VOSC_ADDONS; };
 		C186B6EF2841D61846B44394 /* muParserDef.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserDef.h; path = "ofxExpr/libs/muparser/include/muParserDef.h"; sourceTree = VOSC_ADDONS; };
-		C224E0400677911C78D08627 /* poppack1.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = poppack1.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler/poppack1.h"; sourceTree = VOSC_ADDONS; };
+		C224E0400677911C78D08627 /* poppack1.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = poppack1.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/Compiler/poppack1.h"; sourceTree = VOSC_ADDONS; };
 		C24371DCB3F3048760419B1B /* Overlay.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Overlay.h; path = "ofxUltralight/libs/include/AppCore/Overlay.h"; sourceTree = VOSC_ADDONS; };
 		C2FAC65C491D4231379F3298 /* ofxOscReceiver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscReceiver.cpp; path = "ofxOsc/src/ofxOscReceiver.cpp"; sourceTree = VOSC_ADDONS; };
 		C51B7C722313FF3500BD317F /* Monitor.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Monitor.h; path = "ofxUltralight/libs/include/AppCore/Monitor.h"; sourceTree = VOSC_ADDONS; };
@@ -694,18 +694,18 @@
 		CF440498FBC90389444B2B97 /* ScrollEvent.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ScrollEvent.h; path = "ofxUltralight/libs/include/Ultralight/ScrollEvent.h"; sourceTree = VOSC_ADDONS; };
 		D0260744249C053FD9A7C4CF /* RenderTarget.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RenderTarget.h; path = "ofxUltralight/libs/include/Ultralight/RenderTarget.h"; sourceTree = VOSC_ADDONS; };
 		D137AEF3D0655BB96F6362DD /* HPVRenderBridge.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HPVRenderBridge.cpp; path = "ofxHPVPlayer/src/HPVRenderBridge.cpp"; sourceTree = VOSC_ADDONS; };
-		D1B370068072AAB890CD42D2 /* pstdint.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = pstdint.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler/pstdint.h"; sourceTree = VOSC_ADDONS; };
+		D1B370068072AAB890CD42D2 /* pstdint.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = pstdint.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/Compiler/pstdint.h"; sourceTree = VOSC_ADDONS; };
 		D3758E28810CF322608D2DD4 /* JSHelpers.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = JSHelpers.h; path = "ofxUltralight/libs/include/AppCore/JSHelpers.h"; sourceTree = VOSC_ADDONS; };
 		D3A4D576D236D277B2F86CD5 /* DofPass.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DofPass.hpp; path = "ofxDeferredShading/src/pass/DofPass.hpp"; sourceTree = VOSC_ADDONS; };
 		D3BD5DC55422AC68DB877422 /* JSBase.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = JSBase.h; path = "ofxUltralight/libs/include/JavaScriptCore/JSBase.h"; sourceTree = VOSC_ADDONS; };
 		D41ED8C8083845703AA1FDFA /* BloomPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = BloomPass.cpp; path = "ofxPostProcessing/src/BloomPass.cpp"; sourceTree = VOSC_ADDONS; };
-		D501EB9AF5A65F43CB972589 /* matrix3x3.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = matrix3x3.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/matrix3x3.h"; sourceTree = VOSC_ADDONS; };
+		D501EB9AF5A65F43CB972589 /* matrix3x3.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = matrix3x3.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/matrix3x3.h"; sourceTree = VOSC_ADDONS; };
 		D5301F5F302421B58951EA4C /* HPVideoTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVideoTex.h; path = src/tex/HPVideoTex.h; sourceTree = SOURCE_ROOT; };
 		D61DEE3651D29623D73222F6 /* muParserFixes.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = muParserFixes.h; path = "ofxExpr/libs/muparser/include/muParserFixes.h"; sourceTree = VOSC_ADDONS; };
 		D68440B8D0A43403F97D96A6 /* AppCore.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = AppCore.h; path = "ofxUltralight/libs/include/AppCore/AppCore.h"; sourceTree = VOSC_ADDONS; };
 		D6E0F285E0088E6733AC3D70 /* GVVideoTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GVVideoTex.cpp; path = src/tex/GVVideoTex.cpp; sourceTree = SOURCE_ROOT; };
 		D7C7BDAD29F580A47FF56B52 /* BaseEngine.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = BaseEngine.cpp; path = "ofxImGui/src/BaseEngine.cpp"; sourceTree = VOSC_ADDONS; };
-		D825FF1F1EA48B305BB428B7 /* scene.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = scene.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/scene.h"; sourceTree = VOSC_ADDONS; };
+		D825FF1F1EA48B305BB428B7 /* scene.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = scene.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/scene.h"; sourceTree = VOSC_ADDONS; };
 		D8272F96628FECC086D67453 /* FontLoader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FontLoader.h; path = "ofxUltralight/libs/include/Ultralight/platform/FontLoader.h"; sourceTree = VOSC_ADDONS; };
 		D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = WebcamTex.cpp; path = src/tex/WebcamTex.cpp; sourceTree = SOURCE_ROOT; };
 		D91100C1FBA245AD6CB55BD3 /* ofxImGui.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxImGui.h; path = "ofxImGui/src/ofxImGui.h"; sourceTree = VOSC_ADDONS; };
@@ -911,14 +911,14 @@
 		E72E4D1DE4BF0068371A45D3 /* Defines.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Defines.h; path = "ofxUltralight/libs/include/Ultralight/Defines.h"; sourceTree = VOSC_ADDONS; };
 		E73D5C2347DF2FD4913DD347 /* HPVManager.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HPVManager.cpp; path = "ofxHPVPlayer/src/HPVManager.cpp"; sourceTree = VOSC_ADDONS; };
 		E837DEBFAEA1CAD833A377DF /* DofPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DofPass.cpp; path = "ofxPostProcessing/src/DofPass.cpp"; sourceTree = VOSC_ADDONS; };
-		E83EDA0A1919173D8498F392 /* anim.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = anim.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/anim.h"; sourceTree = VOSC_ADDONS; };
+		E83EDA0A1919173D8498F392 /* anim.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = anim.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/anim.h"; sourceTree = VOSC_ADDONS; };
 		E84ADD8443D82E35430385B7 /* RimHighlightingPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RimHighlightingPass.h; path = "ofxPostProcessing/src/RimHighlightingPass.h"; sourceTree = VOSC_ADDONS; };
 		EA2A13781712672758AFD432 /* DofAltPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = DofAltPass.h; path = "ofxPostProcessing/src/DofAltPass.h"; sourceTree = VOSC_ADDONS; };
 		EA83DF139B3F2085C1A56C49 /* ofxAssimpAnimation.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAssimpAnimation.h; path = "ofxAssimpModelLoader/src/ofxAssimpAnimation.h"; sourceTree = VOSC_ADDONS; };
 		ECB946864099706489A6198C /* PointLightPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = PointLightPass.cpp; path = "ofxDeferredShading/src/pass/PointLightPass.cpp"; sourceTree = VOSC_ADDONS; };
 		EDAE40F4409B52242243517B /* ShaderTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ShaderTex.cpp; path = src/tex/ShaderTex.cpp; sourceTree = SOURCE_ROOT; };
 		EDE55D82BD962DAC0E94B708 /* ofxAssimpModelLoader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxAssimpModelLoader.cpp; path = "ofxAssimpModelLoader/src/ofxAssimpModelLoader.cpp"; sourceTree = VOSC_ADDONS; };
-		EED8C389555EA379BDFA5BD5 /* Logger.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Logger.hpp; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/Logger.hpp"; sourceTree = VOSC_ADDONS; };
+		EED8C389555EA379BDFA5BD5 /* Logger.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Logger.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/Logger.hpp"; sourceTree = VOSC_ADDONS; };
 		EF37E038E1DD79E1D9BA939D /* ofxImGuiLoggerChannel.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxImGuiLoggerChannel.h; path = "ofxImGui/src/ofxImGuiLoggerChannel.h"; sourceTree = VOSC_ADDONS; };
 		EF3A04320CF71A9384B887B3 /* ReflectY.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ReflectY.h; path = "ofxPostProcessing/src/ReflectY.h"; sourceTree = VOSC_ADDONS; };
 		EF666DA393251DE1093627D1 /* BlurPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = BlurPass.cpp; path = "ofxDeferredShading/src/pass/BlurPass.cpp"; sourceTree = VOSC_ADDONS; };
@@ -927,7 +927,7 @@
 		F0BBBD032D905D92679D83E6 /* ofxAssimpMeshHelper.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAssimpMeshHelper.h; path = "ofxAssimpModelLoader/src/ofxAssimpMeshHelper.h"; sourceTree = VOSC_ADDONS; };
 		F0E2047B4D03D5151730B52B /* Gui.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Gui.cpp; path = "ofxImGui/src/Gui.cpp"; sourceTree = VOSC_ADDONS; };
 		F171898BD12F77CCAD29B7C1 /* LUTPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LUTPass.cpp; path = "ofxPostProcessing/src/LUTPass.cpp"; sourceTree = VOSC_ADDONS; };
-		F38BBAA2F93DED836503E450 /* pushpack1.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = pushpack1.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler/pushpack1.h"; sourceTree = VOSC_ADDONS; };
+		F38BBAA2F93DED836503E450 /* pushpack1.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = pushpack1.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/Compiler/pushpack1.h"; sourceTree = VOSC_ADDONS; };
 		F3CFD94F37ABC9182A320B79 /* ofxAutoReloadedShader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxAutoReloadedShader.h; path = "ofxAutoReloadedShader/src/ofxAutoReloadedShader.h"; sourceTree = VOSC_ADDONS; };
 		F4F5B6B8BA2BD52C646ED908 /* OscException.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = OscException.h; path = "ofxOsc/libs/oscpack/src/osc/OscException.h"; sourceTree = VOSC_ADDONS; };
 		F5DB1AC24B8010FC3C556AAC /* RenderPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = RenderPass.h; path = "ofxPostProcessing/src/RenderPass.h"; sourceTree = VOSC_ADDONS; };
@@ -944,7 +944,6 @@
 		FAF7EF26FE0FF19EA6D9419D /* HorizontalTiltShifPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = HorizontalTiltShifPass.cpp; path = "ofxPostProcessing/src/HorizontalTiltShifPass.cpp"; sourceTree = VOSC_ADDONS; };
 		FD24C7DBE373C3B79648C23F /* BaseEngine.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = BaseEngine.h; path = "ofxImGui/src/BaseEngine.h"; sourceTree = VOSC_ADDONS; };
 		FE6A0B50D6798FC3BC6A087A /* VariablePool.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VariablePool.cpp; path = src/var/VariablePool.cpp; sourceTree = SOURCE_ROOT; };
-		FE960CC357E122F0C4FF2170 /* Defines.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Defines.h; path = "ofxAssimpModelLoader/libs/assimp/include/assimp/Defines.h"; sourceTree = VOSC_ADDONS; };
 		FF2B018E24837032A4878576 /* ofxEasing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxEasing.h; path = "ofxEasing/src/ofxEasing.h"; sourceTree = VOSC_ADDONS; };
 		0DFB0E8C46F4052A7C81A462 /* CommandSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandSystem.cpp; path = src/systems/CommandSystem.cpp; sourceTree = SOURCE_ROOT; };
 		7ECB28564F164B77A758688A /* SceneFile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/scene/SceneFile.cpp; sourceTree = SOURCE_ROOT; };
@@ -1574,7 +1573,6 @@
 				A8293D5D248661E10813470E /* DefaultIOStream.h */,
 				1E0BC0CEABC90B611234B3BE /* DefaultIOSystem.h */,
 				24814572966A916B92F96257 /* DefaultLogger.hpp */,
-				FE960CC357E122F0C4FF2170 /* Defines.h */,
 				28A42A2103C59E7D30E9D245 /* Exporter.hpp */,
 				18D6965F094E05B40B20AFB8 /* IOStream.hpp */,
 				ADAE582E4696B9BD64E5B2B8 /* IOSystem.hpp */,
@@ -2942,17 +2940,7 @@
 					src/sketches,
 					src/tex,
 					src/var,
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port/AndroidJNI",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/emscripten",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/license",
+					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/src",
 					"$(VOSC_ADDONS)/ofxAutoReloadedShader/src",
 					"$(VOSC_ADDONS)/ofxColorTheory/src",
@@ -3098,17 +3086,7 @@
 					src/sketches,
 					src/tex,
 					src/var,
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port/AndroidJNI",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/emscripten",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/license",
+					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/src",
 					"$(VOSC_ADDONS)/ofxAutoReloadedShader/src",
 					"$(VOSC_ADDONS)/ofxColorTheory/src",
@@ -3233,8 +3211,7 @@
 					"$(OF_CORE_LIBS)",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF)",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx/libIrrXML.a",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx/assimp.a",
+					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/assimp.a",
 					"$(VOSC_ADDONS)/ofxExpr/libs/muparser/lib/osx/libmuparser.a",
 					"$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libWebCore.dylib",
 					"$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libUltralightCore.dylib",
@@ -3278,17 +3255,7 @@
 					src/sketches,
 					src/tex,
 					src/var,
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port/AndroidJNI",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/emscripten",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/license",
+					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/src",
 					"$(VOSC_ADDONS)/ofxAutoReloadedShader/src",
 					"$(VOSC_ADDONS)/ofxColorTheory/src",
@@ -3441,17 +3408,7 @@
 					src/sketches,
 					src/tex,
 					src/var,
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port/AndroidJNI",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/emscripten",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/license",
+					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/src",
 					"$(VOSC_ADDONS)/ofxAutoReloadedShader/src",
 					"$(VOSC_ADDONS)/ofxColorTheory/src",
@@ -3597,17 +3554,7 @@
 					src/sketches,
 					src/tex,
 					src/var,
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port/AndroidJNI",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/emscripten",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/license",
+					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/src",
 					"$(VOSC_ADDONS)/ofxAutoReloadedShader/src",
 					"$(VOSC_ADDONS)/ofxColorTheory/src",
@@ -3732,8 +3679,7 @@
 					"$(OF_CORE_LIBS)",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF_DEBUG)",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx/libIrrXML.a",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx/assimp.a",
+					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/assimp.a",
 					"$(VOSC_ADDONS)/ofxExpr/libs/muparser/lib/osx/libmuparser.a",
 					"$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libWebCore.dylib",
 					"$(VOSC_ADDONS)/ofxUltralight/libs/lib/osx/libUltralightCore.dylib",
@@ -3771,17 +3717,7 @@
 					src/sketches,
 					src/tex,
 					src/var,
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/Compiler",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/include/assimp/port/AndroidJNI",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/emscripten",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/license",
+					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/src",
 					"$(VOSC_ADDONS)/ofxAutoReloadedShader/src",
 					"$(VOSC_ADDONS)/ofxColorTheory/src",
@@ -3906,8 +3842,7 @@
 					"$(OF_CORE_LIBS)",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF)",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx/libIrrXML.a",
-					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/osx/assimp.a",
+					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/assimp.a",
 					"$(VOSC_ADDONS)/ofxExpr/libs/muparser/lib/osx/libmuparser.a",
 					"$(VOSC_RELEASE_ULTRALIGHT_FLAGS)",
 				);
