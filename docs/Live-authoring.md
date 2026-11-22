@@ -10,20 +10,19 @@ SDK and addons, then export both paths in the terminal that will run the launche
 
 ```bash
 python3 scripts/setup_macos.py
-export OF_ROOT="$PWD/.vosc-macos/sdks/of-0.12.1"
-export VOSC_ADDON_SDK="$PWD/.vosc-macos/addon-sdks/of-0.12.1"
+export OF_ROOT="$PWD/.vosc-macos/sdks/of-0.11.1"
+export VOSC_ADDON_SDK="$PWD/.vosc-macos/addon-sdks/of-0.11.1"
 ./scripts/run_authoring.sh
 ```
 
-For openFrameworks 0.11.1, pass `--version 0.11.1` to setup and use
-`of-0.11.1` in both paths. If you use `--dest`, replace `$PWD/.vosc-macos`
-with that directory's absolute path. If your checkout is already under
+If you use `--dest`, replace `$PWD/.vosc-macos` with that directory's absolute
+path. If your checkout is already under
 `apps/myApps/vosc` in a configured installation, run the launcher directly.
 See the [build instructions](../README.md#building-with-xcode-on-macos)
 for details on using an existing installation.
 
-The first launch builds into `~/Library/Caches/vosc-authoring/build-of-<version>`
-if no binary exists. Subsequent launches reuse the build for that SDK version.
+The first launch builds into `~/Library/Caches/vosc-authoring/build-of-0.11.1`
+if no binary exists. Subsequent launches reuse that build.
 
 After changing C++ sources, build a separate candidate explicitly:
 

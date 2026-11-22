@@ -34,7 +34,7 @@ def main():
     except ValueError as error:
         parser.error(str(error))
     core_dir = output / f"core-of-{version}"
-    command = app_build_command(output, "Debug", sdk, addon_sdk, version=version)
+    command = app_build_command(output, "Debug", sdk, addon_sdk)
     command.append(f"VOSC_COMPAT_BUILD_DIR={core_dir}")
     if args.recovery_test_hooks:
         command.append("GCC_PREPROCESSOR_DEFINITIONS=$(inherited) VOSC_RECOVERY_TESTING=1")
@@ -44,7 +44,7 @@ def main():
     if sources != source_identity():
         raise RuntimeError("Application sources changed during the private build")
     copy_data(addon_sdk, output, include_videos=not args.without_videos)
-    core = core_archive(core_dir, "Debug", version)
+    core = core_archive(core_dir, "Debug")
     binary = output / "products/voscDebug.app/Contents/MacOS/voscDebug"
     manifest = {
         "format": "vosc.authoring-build", "version": 1, "status": "built",

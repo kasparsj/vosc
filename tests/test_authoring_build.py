@@ -32,28 +32,26 @@ class AuthoringBuildTests(unittest.TestCase):
                                  (checkout / "alternate sdk", checkout / "alternate addons"))
                 self.assertEqual(authoring.sdk_paths(sdk), (sdk, sdk))
 
-    def test_both_sdk_versions_use_the_standard_debug_scheme(self):
+    def test_maintenance_sdk_uses_the_standard_debug_scheme(self):
         with tempfile.TemporaryDirectory() as directory:
-            for minor in (11, 12):
-                with self.subTest(minor=minor):
-                    sdk = Path(directory).resolve() / f"of-{minor}"
-                    header = sdk / "libs/openFrameworks/utils/ofConstants.h"
-                    header.parent.mkdir(parents=True)
-                    header.write_text(f"#define OF_VERSION_MAJOR 0\n#define OF_VERSION_MINOR {minor}\n"
-                                      "#define OF_VERSION_PATCH 1\n")
-                    args = ["builder", "--of-root", str(sdk), "--output", str(sdk.parent / "build")]
-                    with (patch.object(sys, "argv", args), patch.dict("os.environ", clear=True),
-                          patch.object(authoring.subprocess, "run",
-                                       side_effect=subprocess.CalledProcessError(1, "build")) as run):
-                        with self.assertRaises(subprocess.CalledProcessError):
-                            authoring.main()
-                    command = run.call_args.args[0]
-                    self.assertIn(f"OF_PATH={sdk}", command)
-                    self.assertIn(f"VOSC_ADDON_SDK={sdk}", command)
-                    self.assertIn("vosc Debug", command)
-                    config = Path(command[command.index("-xcconfig") + 1])
-                    self.assertEqual(config.name, f"OpenFrameworks0{minor}.xcconfig")
-                    self.assertNotIn("VOSC_USE_PREBUILT_OF=YES", command)
+            sdk = Path(directory).resolve() / "of-0.11.1"
+            header = sdk / "libs/openFrameworks/utils/ofConstants.h"
+            header.parent.mkdir(parents=True)
+            header.write_text("#define OF_VERSION_MAJOR 0\n#define OF_VERSION_MINOR 11\n"
+                              "#define OF_VERSION_PATCH 1\n")
+            args = ["builder", "--of-root", str(sdk), "--output", str(sdk.parent / "build")]
+            with (patch.object(sys, "argv", args), patch.dict("os.environ", clear=True),
+                  patch.object(authoring.subprocess, "run",
+                               side_effect=subprocess.CalledProcessError(1, "build")) as run):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    authoring.main()
+            command = run.call_args.args[0]
+            self.assertIn(f"OF_PATH={sdk}", command)
+            self.assertIn(f"VOSC_ADDON_SDK={sdk}", command)
+            self.assertIn("vosc Debug", command)
+            self.assertIn('scripts/OpenFrameworks011.xcconfig',
+                          (SCRIPTS.parent / "Project.xcconfig").read_text())
+            self.assertNotIn("VOSC_USE_PREBUILT_OF=YES", command)
 
     def test_in_place_clean_does_not_require_an_installed_sdk(self):
         sdk = "/nonexistent/vosc-sdk"
@@ -77,7 +75,7 @@ class AuthoringBuildTests(unittest.TestCase):
             manifest = output / "build-manifest.json"
             manifest.write_text('{"status":"built"}')
             with patch.object(sys, "argv", ["builder", "--of-root", str(output / "of"), "--output", str(output)]), \
-                    patch.object(authoring, "sdk_version", return_value="0.12.1"), \
+                    patch.object(authoring, "sdk_version", return_value="0.11.1"), \
                     patch.object(authoring.subprocess, "run", side_effect=subprocess.CalledProcessError(1, "build")) as run, \
                     patch.object(authoring, "copy_data") as copy_data:
                 with self.assertRaises(subprocess.CalledProcessError):
@@ -90,7 +88,7 @@ class AuthoringBuildTests(unittest.TestCase):
         for recovery in (False, True):
             with self.subTest(recovery=recovery), tempfile.TemporaryDirectory() as directory:
                 output = Path(directory).resolve()
-                core_dir = output / "core-of-0.12.1"
+                core_dir = output / "core-of-0.11.1"
                 core = authoring.core_archive(core_dir, "Debug")
                 sdk = output / "explicit-sdk"
                 addon_sdk = output / "explicit-addon-sdk"
@@ -110,7 +108,7 @@ class AuthoringBuildTests(unittest.TestCase):
                     args.extend(("--recovery-test-hooks", "--without-videos"))
                 with (
                     patch.object(sys, "argv", args),
-                    patch.object(authoring, "sdk_version", return_value="0.12.1"),
+                    patch.object(authoring, "sdk_version", return_value="0.11.1"),
                     patch.object(authoring.subprocess, "run", side_effect=build),
                     patch.object(authoring, "sdk_revision", return_value=None) as revision,
                     patch.object(authoring, "copy_data") as copy_data,
@@ -122,7 +120,7 @@ class AuthoringBuildTests(unittest.TestCase):
                 self.assertEqual(manifest["core"]["sha256"], hashlib.sha256(b"core").hexdigest())
                 self.assertEqual(manifest["binary"]["sha256"], hashlib.sha256(b"app").hexdigest())
                 self.assertEqual(manifest["requested_sanitizers"], [])
-                self.assertEqual(manifest["sdk_version"], "0.12.1")
+                self.assertEqual(manifest["sdk_version"], "0.11.1")
                 self.assertIsNone(manifest["sdk_revision"])
                 self.assertEqual(manifest["source_sha256"], authoring.source_identity())
                 self.assertEqual(manifest["requested_recovery_test_hooks"], recovery)

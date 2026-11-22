@@ -18,5 +18,5 @@ GCC_PREPROCESSOR_DEFINITIONS = $(inherited) GL_SILENCE_DEPRECATION=1 GLES_SILENC
 ARCHS = arm64
 ENABLE_USER_SCRIPT_SANDBOXING = NO
 
-#include "scripts/OpenFrameworks012.xcconfig"
+#include "scripts/OpenFrameworks011.xcconfig"
 #include? "Project.local.xcconfig"

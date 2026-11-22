@@ -19,7 +19,7 @@ from build_macos_legacy import ROOT, path_within, receiver_inputs, validate_outp
 from build_macos_profile import sdk_version
 
 
-DEFAULT_VERSION = "0.12.1"
+DEFAULT_VERSION = "0.11.1"
 MANIFEST = ROOT / "scripts/setup_macos_dependencies.json"
 RECEIPT = ".vosc-setup.json"
 SDK_PROJECT = "libs/openFrameworksCompiled/project/osx/openFrameworksLib.xcodeproj/project.pbxproj"
@@ -257,8 +257,6 @@ def main():
     mode.add_argument("--sdk-only", action="store_true", help="Extract the SDK only")
     mode.add_argument("--addons-only", action="store_true", help="Stage addons for --of-root")
     parser.add_argument("--of-root", type=Path, help="Existing openFrameworks SDK for --addons-only")
-    parser.add_argument("--version", choices=manifest["sdks"],
-                        help=f"SDK version (default: {DEFAULT_VERSION}, or inferred with --addons-only)")
     parser.add_argument("--dest", type=Path, default=ROOT / ".vosc-macos",
                         help="Local setup directory (default: .vosc-macos in the VOSC checkout)")
     args = parser.parse_args()
@@ -270,7 +268,7 @@ def main():
     try:
         dest = args.dest.expanduser().resolve()
         existing = args.of_root.expanduser().resolve() if args.of_root else None
-        version = args.version or (sdk_version(existing) if existing else DEFAULT_VERSION)
+        version = DEFAULT_VERSION
         if existing is not None:
             validate_sdk(existing, version)
         output = None if args.sdk_only else build_output(dest)
