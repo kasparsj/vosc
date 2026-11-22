@@ -2,8 +2,8 @@
 
 #include "ofMain.h"
 #include "Config.h"
-#if USE_OFX_IMGUI
-#include "ofxImGui.h"
+#if VOSC_OPERATOR_UI
+#include "operator/DiagnosticOverlay.hpp"
 #endif
 #include "Logger.h"
 #include "VOSC.hpp"
@@ -19,17 +19,13 @@ public:
 	void setup();
 	void update();
 	void draw();
-    void drawConsole();
 	void exit();
 
 	void keyPressed(int key);
-	void keyReleased(int key);
-	void mouseMoved(int x, int y);
-	void mouseDragged(int x, int y, int button);
-	void mousePressed(int x, int y, int button);
-	void mouseReleased(int x, int y, int button);
-	void mouseEntered(int x, int y);
-	void mouseExited(int x, int y);
+#if VOSC_OPERATOR_UI
+    void mousePressed(int x, int y, int button) override;
+    void mouseReleased(int x, int y, int button) override;
+#endif
 	void windowResized(int w, int h);
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
@@ -44,9 +40,8 @@ private:
     int frameRate;
     std::function<void()> finishStartup;
 
-    bool showConsole = false;
-    std::shared_ptr<Logger> console;
-#if USE_OFX_IMGUI
-    ofxImGui::Gui gui;
+#if VOSC_OPERATOR_UI
+    std::shared_ptr<Logger> logger;
+    DiagnosticOverlay overlay;
 #endif
 };

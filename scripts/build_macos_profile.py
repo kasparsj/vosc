@@ -9,9 +9,10 @@ import re
 import shutil
 import subprocess
 
+from build_rmlui import build as build_rmlui
 from addon_compat import patch_expression_returns, patch_shadertoy_timestamp
 from macos_build import (
-    ROOT, patch_imgui_glfw, prepare_output, publish_xcode_overlay,
+    ROOT, prepare_output, publish_xcode_overlay,
     receiver_inputs, replace_expected, sdk_paths, write_overlay,
 )
 
@@ -81,10 +82,6 @@ def prepare_addon_overlay(addon_sdk, output):
             "Assimp import flags signed comparison",
         ),
         "ofxExpr/src/ofxExpr.cpp": patch_expression_returns,
-        "ofxImGui/src/EngineGLFW.cpp": patch_imgui_glfw,
-        "ofxImGui/src/ImHelpers.h": lambda text: replace_expected(
-            text, '#include "imgui.h"', '#include "imgui.h"\n#include <stack>', "ImGui helpers include",
-        ),
         "ofxShadertoy/src/ofxShadertoy.cpp": patch_shadertoy_timestamp,
     }
     for relative, patch in patches.items():
@@ -113,6 +110,14 @@ def build_xcode_inputs(sdk, addon_sdk, output, configuration):
     if not archive.is_file():
         raise FileNotFoundError(archive)
     publish_xcode_overlay(overlay, output)
+    operator_ui = os.environ["VOSC_OPERATOR_UI"]
+    if operator_ui == "1":
+        build_rmlui(output / "operator-ui", of_root=sdk,
+                    architectures=os.environ["ARCHS"],
+                    deployment_target=os.environ["MACOSX_DEPLOYMENT_TARGET"],
+                    sysroot=os.environ["SDKROOT"])
+    elif operator_ui != "0":
+        raise ValueError("VOSC_OPERATOR_UI must be 0 or 1")
 
 
 def core_archive(output, configuration):

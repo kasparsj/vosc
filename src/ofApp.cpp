@@ -8,15 +8,18 @@ void ofApp::setup(){
 	ofSetVerticalSync(true);
 	ofBackground(0);
     
-#if USE_OFX_IMGUI
-    gui.setup();
-#endif
     ofDisableArbTex();
 
-    console = std::make_shared<Logger>();
-    ofSetLoggerChannel(console);
+    auto channel = std::make_shared<Logger>();
+    ofSetLoggerChannel(channel);
+#if VOSC_OPERATOR_UI
+    logger = std::move(channel);
+#endif
     
     try {
+#if VOSC_OPERATOR_UI
+        overlay.setup(vosc);
+#endif
         CommandSystem::ScenePrograms programs;
         if (startupScene) {
             programs = CommandSystem::prepareStartupScene(*startupScene);
@@ -36,6 +39,9 @@ void ofApp::setup(){
                     return;
                 }
             }
+#if VOSC_OPERATOR_UI
+            overlay.rememberScene(*startupScene, vosc);
+#endif
             finishStartup();
             std::cout << "VOSC_SCENE_READY frame=" << frame
                       << " title=" << startupScene->title << std::endl;
@@ -64,76 +70,32 @@ void ofApp::update(){
 void ofApp::draw(){
     if (startupFailed) return;
     vosc.draw();
-    drawConsole();
-}
-
-void ofApp::drawConsole() {
-    if (console->hasNewErrors()) {
-        showConsole = true;
-    }
-    if (vosc.showDebug || showConsole) {
-#if USE_OFX_IMGUI
-        gui.begin();
-        
-        console->draw(&showConsole);
-
-        gui.end();
+#if VOSC_OPERATOR_UI
+    if (overlay.isOpen()) overlay.draw(vosc, *logger);
 #endif
-    }
 }
 
 void ofApp::exit() {
+#if VOSC_OPERATOR_UI
+    overlay.shutdown();
+#endif
     vosc.exit();
 }
 
-//--------------------------------------------------------------
-void ofApp::keyPressed(int key){
-    switch (key) {
-        case 'c':
-            showConsole = !showConsole;
-            break;
-        default:
-            vosc.keyPressed(key);
-            break;
-    }
+void ofApp::keyPressed(int key) {
+    vosc.keyPressed(key);
 }
 
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
+#if VOSC_OPERATOR_UI
+void ofApp::mousePressed(int x, int y, int button) {
     vosc.mousePressed(x, y, button);
 }
 
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
+void ofApp::mouseReleased(int x, int y, int button) {
     vosc.mouseReleased(x, y, button);
 }
+#endif
 
-//--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y){
-
-}
-
-//--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
     vosc.windowResized(w, h);
 }

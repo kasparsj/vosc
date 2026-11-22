@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "../Config.h"
 #include "ofxAutoReloadedShader.h"
 #include "ofxOsc.h"
 #include "../Texture.h"
@@ -78,6 +79,9 @@ public:
                              const map<string, vector<float>>& bindings);
     bool restoreDirectSource(const DirectSourceState& state);
     bool ownsProgram(GLuint program) const;
+#if VOSC_OPERATOR_UI
+    std::weak_ptr<const ofShader> operatorProgram() const { return shader; }
+#endif
     bool loadShadertoy(const string& shadertoyId);
     static ShaderPaths getShaderPaths(const string& path);  // Returns vert, frag, and geom paths
     bool loadNativeStages(const ShaderPaths& paths);

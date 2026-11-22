@@ -22,12 +22,16 @@ public:
     void draw();
     void exit();
     
+#if VOSC_OPERATOR_UI
     void mousePressed(int x, int y, int button);
     void mouseReleased(int x, int y, int button);
+    void toggleDebug() { renderSystem.showDebug = !renderSystem.showDebug; }
+    void hideDebug() { renderSystem.showDebug = false; }
+    bool isDebugVisible() const { return renderSystem.showDebug; }
+    const auto& operatorLayers() const { return renderSystem.getLayers(); }
+#endif
     void keyPressed(int key);
     void windowResized(int w, int h);
-    
-    bool showDebug = false;
 
 private:
     void setupControl();

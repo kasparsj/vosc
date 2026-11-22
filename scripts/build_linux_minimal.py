@@ -14,7 +14,7 @@ from addon_compat import (EXPR_COMPILE_LOOP, SHADERTOY_TIMESTAMP, patch_expressi
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXCLUDED_ADDONS = {"ofxDeferredShading", "ofxImGui", "ofxHPVPlayer", "ofxUltralight"}
+EXCLUDED_ADDONS = {"ofxDeferredShading", "ofxHPVPlayer", "ofxUltralight"}
 LINUX_SDK_VERSION = "0.12.1"
 
 
@@ -96,10 +96,14 @@ def main():
     (stage / "Makefile").write_text(
         "APPNAME = vosc\n"
         "PROJECT_ROOT = .\n"
-        "override PROJECT_CFLAGS += -DVOSC_MINIMAL_BUILD=1\n"
+        "override PROJECT_CFLAGS += -DVOSC_MINIMAL_BUILD=1 -DVOSC_OPERATOR_UI=0 -DOFXEXPR_NOGUI\n"
         "include $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk\n"
     )
-    shutil.copytree(ROOT / "src", stage / "src")
+    source = ROOT / "src"
+    def ignore_ui(directory, names):
+        return {"inspector", "operator"} if Path(directory) == source else ()
+
+    shutil.copytree(source, stage / "src", ignore=ignore_ui)
     shutil.copytree(ROOT / "assets", stage / "bin/data", ignore=ignore_assets)
     (stage / "bin/data/videos").mkdir()
     print(f"Building VOSC minimal in {stage}", flush=True)

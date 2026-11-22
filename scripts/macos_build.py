@@ -99,18 +99,6 @@ def prepare_output(output, *of_roots):
     marker.write_text(str(ROOT))
 
 
-def patch_imgui_glfw(text):
-    return text.replace(
-        "const ImDrawIdx* idx_buffer_offset = 0;", "uintptr_t idx_buffer_offset = 0;",
-    ).replace(
-        "GL_UNSIGNED_INT, idx_buffer_offset);",
-        "GL_UNSIGNED_INT, reinterpret_cast<const void*>(idx_buffer_offset));",
-    ).replace(
-        "idx_buffer_offset += pcmd->ElemCount;",
-        "idx_buffer_offset += pcmd->ElemCount * sizeof(ImDrawIdx);",
-    )
-
-
 def write_overlay(output, entries):
     # Dependency files name the virtual installed paths. Change the compiler
     # command whenever replacement bytes change, so an incremental Xcode build

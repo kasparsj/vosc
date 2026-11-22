@@ -2,9 +2,11 @@
 
 #include "../Camera.hpp"
 #include "../layer/Layer.h"
-#include "../inspector/Inspector.hpp"
 #include "../osc/Command.hpp"
 #include "../Config.h"
+#if VOSC_OPERATOR_UI
+#include "../inspector/Inspector.hpp"
+#endif
 #if USE_OFX_DEFERRED_SHADING
 #include "ofxDeferredShading.h"
 #endif
@@ -17,7 +19,7 @@ public:
     void shutdown();
 
     void update(const vector<TidalNote>& notes);
-    void draw(Camera& camera, bool showDebug, const std::function<void()>& afterCompose = {});
+    void draw(Camera& camera, const std::function<void()>& afterCompose = {});
     void resizeBacking(int w, int h);
     void windowResized(int w, int h);
 
@@ -45,9 +47,12 @@ public:
     void allLayersCommand(const string& command, const ofxOscMessage& m);
     bool routeLayerByIndex(int idx, const string& command, const ofxOscMessage& m, osc::ResourceAction action);
 
-    void mousePressed(int x, int y, int button, bool showDebug);
-    void mouseReleased(int x, int y, int button, bool showDebug);
-    void keyPressed(int key, bool showDebug);
+#if VOSC_OPERATOR_UI
+    bool showDebug = false;
+    void mousePressed(int x, int y, int button);
+    void mouseReleased(int x, int y, int button);
+#endif
+    void keyPressed(int key);
 
     vector<shared_ptr<Layer>>& getLayers() {
         return layers;
@@ -71,7 +76,9 @@ private:
 
     vector<shared_ptr<Layer>> layers;
     Layout layout = Layout::STACK;
+#if VOSC_OPERATOR_UI
     Inspector inspector;
+#endif
     vector<PostPass> shadingPasses;
     bool deferredShading = false;
     std::unique_ptr<ofxPostProcessing> post;

@@ -35,11 +35,14 @@ Use the Linux openFrameworks 0.12.1 SDK with the retained addons from
 make Release VOSC_PROFILE=minimal OF_ROOT=/absolute/path/to/openFrameworks
 ```
 
-The profile skips ofxDeferredShading, ofxImGui, ofxHPVPlayer, and ofxUltralight.
+The profile skips ofxDeferredShading, ofxHPVPlayer, and ofxUltralight.
 It stages its executable and runtime assets in a fresh `.vosc-linux/minimal-*`
 directory and prints the run location. It includes forward post-processing,
-OSC, image and shader layers, and shader feedback. Put any regular video
-files you need in the staged `bin/data/videos` directory.
+OSC, image and shader layers, and shader feedback. The minimal profile uses
+`VOSC_OPERATOR_UI=0`, excluding the diagnostic overlay, the debug Inspector,
+both input routes, and the RmlUi build. Terminal and retained engine
+diagnostics remain available.
+Put any regular video files you need in the staged `bin/data/videos` directory.
 
 From the printed run location, this command opens a scene at 1280×720 with a
 30 FPS cap.
@@ -58,13 +61,33 @@ The minimal profile uses the existing desktop OpenGL 4.1 renderer. Verify
 hardware-accelerated context creation and the intended shaders on the target
 board and OS before relying on it in an installation.
 
+### Desktop Linux build
+
+The default Linux Make build uses a desktop OpenGL 4.1 context and RmlUi for
+the operator overlay. It needs the complete `addons.make` set, CMake 3.16 or
+later, curl, and the FreeType development package. The first UI-enabled build
+fetches and verifies its pinned RmlUi source archive. Use
+`make Release VOSC_OPERATOR_UI=0 OF_ROOT=/absolute/path/to/openFrameworks` to
+build the desktop profile with the operator overlay and debug Inspector
+excluded. Use the minimal profile above to also reduce the addon set.
+
 ## Building with Xcode on macOS
 
 Use the macOS release of openFrameworks [0.12.1](https://github.com/openframeworks/openFrameworks/releases/tag/0.12.1).
 Debug targets Apple Silicon. Release targets Apple Silicon and Intel
 (`arm64` and `x86_64`) in a single Universal app. The build targets macOS 12.6
-or later and uses Python 3.10 or later. For openFrameworks 0.11.1, use the
+or later and uses Python 3.10 or later. UI-enabled builds also use CMake 3.16
+or later, curl, and the openFrameworks SDK's bundled FreeType.
+For openFrameworks 0.11.1, use the
 [maintenance branch](https://github.com/kasparsj/vosc/tree/of-0.11.1).
+
+The desktop build enables `VOSC_OPERATOR_UI=1`. Its first build fetches the
+pinned RmlUi 6.3 sources and verifies their archive digest. It compiles RmlUi
+core and the upstream OpenGL 3 backend, and embeds the pinned Lato Latin
+Regular and Bold faces in the executable. Build with
+`make Debug VOSC_OPERATOR_UI=0` or the Xcode setting `VOSC_OPERATOR_UI=0`
+to omit those inputs and the diagnostic overlay and debug Inspector. Rendering,
+OSC, and terminal and retained diagnostic logging remain available.
 
 ### Set up a local SDK and addons
 
@@ -275,7 +298,6 @@ The engine is built on openFrameworks and uses the following addons:
 - ofxEasing
 - ofxExpr
 - ofxHPVPlayer
-- ofxImGui
 - ofxLooper
 - ofxMidi
 - ofxOsc
@@ -283,3 +305,8 @@ The engine is built on openFrameworks and uses the following addons:
 - ofxShadertoy
 - ofxTidalCycles
 - ofxUltralight (optional)
+
+The desktop diagnostic overlay uses [RmlUi 6.3](https://github.com/mikke89/RmlUi/tree/6.3)
+and its Lato Latin sample fonts. Their license texts are in the pinned
+[RmlUi archive](https://github.com/mikke89/RmlUi/blob/6.3/LICENSE.txt) and
+[font sample directory](https://github.com/mikke89/RmlUi/blob/6.3/Samples/assets/LICENSE.txt).

@@ -10,6 +10,13 @@ ICON_FILE_PATH = $(OF_PATH)/libs/openFrameworksCompiled/project/osx/
 
 // The core build phase prepares the overlay before app sources compile.
 VOSC_COMPAT_BUILD_DIR = $(PROJECT_TEMP_DIR)/vosc-of-$(VOSC_OF_VERSION)/$(CONFIGURATION)
+// The numeric build setting selects operator sources, headers, and link inputs.
+VOSC_OPERATOR_UI = 1
+VOSC_RMLUI_DIR = $(VOSC_COMPAT_BUILD_DIR)/operator-ui
+VOSC_RMLUI_HEADERS_1 = "$(VOSC_RMLUI_DIR)/source/Include" "$(VOSC_RMLUI_DIR)/source/Backends" "$(VOSC_RMLUI_DIR)/generated"
+VOSC_RMLUI_LIBRARIES_1 = "$(VOSC_RMLUI_DIR)/lib/libvosc_rmlui_gl3.a" "$(VOSC_RMLUI_DIR)/lib/librmlui.a"
+VOSC_OPERATOR_UI_SOURCE_EXCLUSIONS_0 = DiagnosticOverlay.cpp Inspector.cpp ShaderInspector.cpp TextureInspector.cpp VarsInspector.cpp TextureArrayDraw.cpp
+EXCLUDED_SOURCE_FILE_NAMES = $(VOSC_OPERATOR_UI_SOURCE_EXCLUSIONS_$(VOSC_OPERATOR_UI))
 MACOSX_DEPLOYMENT_TARGET = 12.6
 CLANG_CXX_LIBRARY = libc++
 CLANG_C_LANGUAGE_STANDARD = c17

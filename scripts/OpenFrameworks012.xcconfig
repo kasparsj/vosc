@@ -31,7 +31,7 @@ OF_CORE_HEADERS = $(HEADER_OF) $(HEADER_FREETYPE) $(HEADER_FREETYPE2) $(HEADER_G
 
 // The forced header invalidates app objects when replacement source bytes change.
 VOSC_COMPAT_CXXFLAGS = -ivfsoverlay "$(VOSC_COMPAT_BUILD_DIR)/filesystem-overlay.json" -include "$(VOSC_COMPAT_BUILD_DIR)/overlay-inputs.h" -include ofUtils.h -include ofAppRunner.h
-OTHER_CPLUSPLUSFLAGS = $(VOSC_COMPAT_CXXFLAGS) -D__MACOSX_CORE__
+OTHER_CPLUSPLUSFLAGS = $(VOSC_COMPAT_CXXFLAGS) -D__MACOSX_CORE__ -DVOSC_OPERATOR_UI=$(VOSC_OPERATOR_UI)
 LIB_OF = "$(VOSC_COMPAT_BUILD_DIR)/sdk/libs/openFrameworksCompiled/lib/osx/openFrameworks.a"
 LIB_OF_DEBUG = "$(VOSC_COMPAT_BUILD_DIR)/sdk/libs/openFrameworksCompiled/lib/osx/openFrameworksDebug.a"
 OF_CORE_FRAMEWORKS = -framework Accelerate -framework AppKit -framework ApplicationServices -framework AudioToolbox -framework AVFoundation -framework Cocoa -framework CoreAudio -framework CoreFoundation -framework CoreMedia -framework CoreServices -framework CoreVideo -framework Foundation -framework IOKit -framework OpenGL -framework QuartzCore -framework Security -framework SystemConfiguration -framework Metal

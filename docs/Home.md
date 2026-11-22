@@ -12,11 +12,28 @@ This documentation tracks the current OSC and local authoring interfaces in `mai
 ## Keyboard shortcuts
 
 - `f` toggle fullscreen
-- `c` toggle console window
-- `TAB` toggle debug inspector
+- `O` open the diagnostic overlay in Overview
+- `C` open the overlay in Console
+- `Tab` toggle the debug Inspector on clean output
+- `Tab` / `Shift+Tab` move focus while the overlay is visible
+- `Left` / `Right` switch destinations when a dock button has focus
+- `Up` / `Down` move between focused Console rows
+- `Enter` / `Space` activate the focused overlay control
+- `Escape` or **Return to output** dismiss the overlay and keep the current window mode
 - `r` reload textures on all layers
 - `u` apply the layer reset action to each layer
 - `w` toggle wireframe on all geometries
+
+An unmodified primary click on clean output opens Overview while the debug
+Inspector is hidden. Open a layer from Overview or the dock’s Inspector, choose
+its shader, and follow **View error in Console** when a retained reload diagnostic
+is available.
+
+In Console, search and **Errors only** narrow the visible messages and **Copy
+filtered log**. Scroll back to pause following, then use **Jump to latest** to
+resume. **Clear view** resets the local log view and Overview error summary.
+Runtime errors are retained without opening the overlay. The minimal Linux
+profile excludes the operator UI and its shortcuts.
 
 ## Command overview
 

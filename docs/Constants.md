@@ -7,7 +7,8 @@ From `src/Config.h`:
 - `USE_OFX_ULTRALIGHT = 0`
 - `USE_OFX_EXTREME_GPU_VIDEO = 0`
 - `USE_OFX_HPVPLAYER = 0`
-- `USE_OFX_IMGUI = 1`
+- `VOSC_OPERATOR_UI = 1` on the desktop profile and `0` on minimal Linux
+- The UI-enabled build compiles RmlUi. The UI-disabled profile excludes its sources and font.
 - `INITIAL_LAYERS = 9`
 - `MAX_NOTES = 10`
 - `ALLOW_TEX_2D_ARRAY = 0`

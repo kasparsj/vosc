@@ -5,7 +5,6 @@ ofxDeferredShading
 ofxEasing
 ofxExpr
 ofxHPVPlayer
-ofxImGui
 ofxLooper
 ofxMidi
 ofxOsc

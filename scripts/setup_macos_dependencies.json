@@ -45,12 +45,6 @@
       "repository": "https://github.com/vjacob/ofxHPVPlayer",
       "commit": "ed2d0e94dbce14038bc6ac8bb2e25a8f0a300b4c"
     },
-    "ofxImGui": {
-      "url": "https://codeload.github.com/jvcleave/ofxImGui/tar.gz/330e1425a88de7babd53ceb2fb93f8109b61724c",
-      "sha256": "78878cce56c9bfd505a6c3b45bc590f8000f016cdc2001db4aa7d9e10ffc1398",
-      "repository": "https://github.com/jvcleave/ofxImGui",
-      "commit": "330e1425a88de7babd53ceb2fb93f8109b61724c"
-    },
     "ofxLooper": {
       "url": "https://codeload.github.com/kasparsj/ofxLooper/tar.gz/cff072464235a5b6e9c20f318038ecb9a4704665",
       "sha256": "d4912c78ff878f2d19b6e634a6e1570ad650d089544485a8ae910fec30b284e1",
