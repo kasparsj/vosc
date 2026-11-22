@@ -76,8 +76,9 @@ python3 scripts/setup_macos.py
 ```
 
 This prepares openFrameworks 0.12.1 and the pinned VOSC addons under
-`.vosc-macos/`. Run the printed command to build the Debug app. For setup
-directories inside the checkout, build output goes under
+`.vosc-macos/`. It stages ofxAssimpModelLoader and ofxOsc from the same
+verified 0.12.1 macOS archive as the core. Run the printed command to build the
+Debug app. For setup directories inside the checkout, build output goes under
 `~/Library/Caches/VOSC/builds/`. For setup directories outside the checkout,
 build output goes in the destination's `build/` directory.
 Use `--dest PATH` to choose a setup directory. For MCP, follow the
@@ -92,7 +93,8 @@ SDK-only prints the follow-up command for staging addons. Addon-only verifies
 openFrameworks 0.12.1, leaves the supplied installation untouched, and prints
 the build command. Setup reuses matching files on reruns. If a
 destination contains a changed or unmanaged dependency tree, choose another
-`--dest`.
+`--dest`. Use a fresh destination for managed addon trees created before this
+migration.
 
 ### Build with an existing installation
 
@@ -106,9 +108,8 @@ cd vosc
 ```
 
 Install the dependencies listed in [addons.make](addons.make) under the same
-openFrameworks installation's `addons/` directory. Use the `ofxOsc` and
-`ofxAssimpModelLoader` addon sources and macOS libraries bundled with openFrameworks
-0.11.1. Managed setup extracts just those two addons from that pinned archive.
+openFrameworks installation's `addons/` directory. Use the bundled 0.12.1
+`ofxOsc` and `ofxAssimpModelLoader`, including Assimp's macOS xcframework.
 Use libraries with both architecture slices for a Universal build. The `ofxExpr`
 addon needs its macOS muparser archive. Keep the optional Ultralight headers and
 dylibs for Apple Silicon Debug. Universal Release excludes Ultralight.

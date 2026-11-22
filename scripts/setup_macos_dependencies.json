@@ -4,17 +4,10 @@
     "sha256": "e4a2dd6e75805320aac905f9f82f7b85e67a8b799137d47f35d40f7c4c195c9b",
     "root": "of_v0.12.1_osx_release"
   },
-  "bundled_addons": {
-    "names": [
-      "ofxAssimpModelLoader",
-      "ofxOsc"
-    ],
-    "archive": {
-      "url": "https://openframeworks.cc/versions/v0.11.1/of_v0.11.1_osx_release.zip",
-      "sha256": "815d578512ee328aaa9592951298f88716abb6a7e4bbcb4993aa755f477ed004",
-      "root": "of_v0.11.1_osx_release"
-    }
-  },
+  "bundled_addons": [
+    "ofxAssimpModelLoader",
+    "ofxOsc"
+  ],
   "addons": {
     "ofxAutoReloadedShader": {
       "url": "https://codeload.github.com/kasparsj/ofxAutoReloadedShader/tar.gz/9d2f690e7ceb3d6c956e78762c18649fb6836875",
@@ -103,8 +96,6 @@
     "path": "ofxExpr/libs/muparser/src"
   },
   "arm64_libraries": [
-    "ofxAssimpModelLoader/libs/assimp/lib/osx/assimp.a",
-    "ofxAssimpModelLoader/libs/assimp/lib/osx/libIrrXML.a",
     "ofxExpr/libs/muparser/lib/osx/libmuparser.a"
   ],
   "ultralight_libraries": [
@@ -112,5 +103,8 @@
     "ofxUltralight/libs/lib/osx/libUltralight.dylib",
     "ofxUltralight/libs/lib/osx/libUltralightCore.dylib",
     "ofxUltralight/libs/lib/osx/libWebCore.dylib"
+  ],
+  "universal_libraries": [
+    "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/assimp.a"
   ]
 }

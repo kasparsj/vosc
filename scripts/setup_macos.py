@@ -119,9 +119,10 @@ def require_files(root, paths):
             raise ValueError(f"Missing required build input: {root / relative}")
 
 
-def require_arm64(path):
-    if subprocess.run(["xcrun", "lipo", "-verify_arch", "arm64", str(path)]).returncode:
-        raise ValueError(f"Missing arm64 architecture: {path}")
+def require_architectures(path, *architectures):
+    for architecture in architectures:
+        if subprocess.run(["xcrun", "lipo", "-verify_arch", architecture, str(path)]).returncode:
+            raise ValueError(f"Missing {architecture} architecture: {path}")
 
 
 def validate_sdk(root):
@@ -132,11 +133,11 @@ def validate_sdk(root):
 def addon_inputs(manifest):
     bundled = manifest["bundled_addons"]
     expected = set((ROOT / "addons.make").read_text().split())
-    actual = set(bundled["names"]) | manifest["addons"].keys()
+    actual = set(bundled) | manifest["addons"].keys()
     if actual != expected:
         raise ValueError("Setup dependency manifest does not match addons.make")
     return {
-        "bundled": bundled,
+        "bundled": {"names": bundled, "archive": manifest["sdk"]},
         "addons": manifest["addons"],
         "muparser": manifest["muparser_source"],
     }
@@ -164,15 +165,18 @@ def validate_addons(target, manifest):
     project = (ROOT / "vosc.xcodeproj/project.pbxproj").read_text()
     project_inputs = set(re.findall(r'path = "?([^;"]+)"?; sourceTree = VOSC_ADDONS;', project))
     libraries = manifest["arm64_libraries"]
+    universal = manifest["universal_libraries"]
     ultralight = manifest["ultralight_libraries"]
-    require_files(addons, sorted(project_inputs | set(libraries) | set(ultralight)))
+    require_files(addons, sorted(project_inputs | set(libraries) | set(universal) | set(ultralight)))
     receiver_inputs(target)
     for relative in libraries:
-        require_arm64(addons / relative)
+        require_architectures(addons / relative, "arm64")
+    for relative in universal:
+        require_architectures(addons / relative, "arm64", "x86_64")
     config = (ROOT / "src/Config.h").read_text()
     if not re.search(r"^\s*#define\s+USE_OFX_ULTRALIGHT\s+0\s*$", config, re.MULTILINE):
         for relative in ultralight:
-            require_arm64(addons / relative)
+            require_architectures(addons / relative, "arm64")
     if not (addons / "ofxDeferredShading/data/shaders/deferred").is_dir():
         raise ValueError("Missing runtime shaders from ofxDeferredShading")
 

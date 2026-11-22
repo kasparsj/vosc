@@ -76,6 +76,10 @@ def prepare_addon_overlay(addon_sdk, output):
     entries = [{"type": "file", "name": item["source"], "external-contents": item["replacement"]}
                for item in receiver_inputs(addon_sdk)]
     patches = {
+        "ofxAssimpModelLoader/src/ofxAssimpModelLoader.cpp": lambda text: replace_expected(
+            text, "if( flags <= OPTIMIZE_HIGH )", "if( assimpOptimizeFlags <= OPTIMIZE_HIGH )",
+            "Assimp import flags signed comparison",
+        ),
         "ofxExpr/src/ofxExpr.cpp": patch_expression_returns,
         "ofxImGui/src/EngineGLFW.cpp": patch_imgui_glfw,
         "ofxImGui/src/ImHelpers.h": lambda text: replace_expected(
@@ -83,10 +87,6 @@ def prepare_addon_overlay(addon_sdk, output):
         ),
         "ofxShadertoy/src/ofxShadertoy.cpp": patch_shadertoy_timestamp,
     }
-    for filename in ("ofxOscSender.h", "ofxOscSender.cpp", "ofxOscParameterSync.h"):
-        patches[f"ofxOsc/src/{filename}"] = lambda text: replace_expected(
-            text, '"ofParameterGroup.h"', '"ofParameter.h"', "OSC parameter include",
-        )
     for relative, patch in patches.items():
         source = addons / relative
         target = output / "addons" / relative
