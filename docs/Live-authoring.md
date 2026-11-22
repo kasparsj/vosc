@@ -15,15 +15,14 @@ export VOSC_ADDON_SDK="$PWD/.vosc-macos/addon-sdks/of-0.12.1"
 ./scripts/run_authoring.sh
 ```
 
-For openFrameworks 0.11.1, pass `--version 0.11.1` to setup and use
-`of-0.11.1` in both paths. If you use `--dest`, replace `$PWD/.vosc-macos`
-with that directory's absolute path. If your checkout is already under
-`apps/myApps/vosc` in a configured installation, run the launcher directly.
+If you use `--dest`, replace `$PWD/.vosc-macos` with that directory's absolute
+path. If your checkout is already under `apps/myApps/vosc` in a configured
+installation, run the launcher directly.
 See the [build instructions](../README.md#building-with-xcode-on-macos)
 for details on using an existing installation.
 
-The first launch builds into `~/Library/Caches/vosc-authoring/build-of-<version>`
-if no binary exists. Subsequent launches reuse the build for that SDK version.
+The first launch builds into `~/Library/Caches/vosc-authoring/build-of-0.12.1`
+if no binary exists. Subsequent launches reuse that build.
 
 After changing C++ sources, build a separate candidate explicitly:
 
@@ -32,15 +31,10 @@ python3 scripts/build_macos_authoring.py \
   --output "$HOME/Library/Caches/vosc-authoring/releases/next"
 ```
 
-This builds the Debug scheme for the selected SDK with a private core and
+This builds the Debug scheme for openFrameworks 0.12.1 with a private core and
 copies the runtime data into the output directory. `build-manifest.json` records
 the app and core hashes and the Xcode command. Once the current renderer has been closed, launch the candidate with
 `VOSC_BUILD_DIR="$HOME/Library/Caches/vosc-authoring/releases/next" ./scripts/run_authoring.sh`.
-
-The lower-level `build_macos_legacy.py` helper remains available for explicit
-prebuilt-core or sanitizer workflows. The private-core helper defaults to ASAN
-for existing callers; use `--no-sanitizers` for an ordinary core. These modes are
-mutually exclusive.
 
 The default socket is `~/.local/share/vosc/control.sock`. Its parent directory
 is private. The launcher refuses to start over an existing socket or a UDP 33333

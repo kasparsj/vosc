@@ -60,12 +60,11 @@ board and OS before relying on it in an installation.
 
 ## Building with Xcode on macOS
 
-Use the macOS release of openFrameworks [0.11.1](https://openframeworks.cc/versions/v0.11.1/)
-or [0.12.1](https://github.com/openframeworks/openFrameworks/releases/tag/0.12.1).
-With openFrameworks 0.12.1, the Release build targets Apple Silicon and Intel
-(`arm64` and `x86_64`) in a single Universal app. Debug builds and the
-openFrameworks 0.11.1 profile target Apple Silicon. The build targets macOS
-12.6 or later and uses Python 3.10 or later.
+Use the macOS release of openFrameworks [0.12.1](https://github.com/openframeworks/openFrameworks/releases/tag/0.12.1).
+Debug targets Apple Silicon. Release targets Apple Silicon and Intel
+(`arm64` and `x86_64`) in a single Universal app. The build targets macOS 12.6
+or later and uses Python 3.10 or later. For openFrameworks 0.11.1, use the
+[maintenance branch](https://github.com/kasparsj/vosc/tree/of-0.11.1).
 
 ### Set up a local SDK and addons
 
@@ -81,17 +80,17 @@ This prepares openFrameworks 0.12.1 and the pinned VOSC addons under
 directories inside the checkout, build output goes under
 `~/Library/Caches/VOSC/builds/`. For setup directories outside the checkout,
 build output goes in the destination's `build/` directory.
-Use `--version 0.11.1` for the older SDK or `--dest PATH` for another setup
-directory. For MCP, follow the [live authoring setup](docs/Live-authoring.md#start-the-renderer).
+Use `--dest PATH` to choose a setup directory. For MCP, follow the
+[live authoring setup](docs/Live-authoring.md#start-the-renderer).
 
 ```bash
-python3 scripts/setup_macos.py --sdk-only --version 0.11.1
+python3 scripts/setup_macos.py --sdk-only
 python3 scripts/setup_macos.py --addons-only --of-root /path/to/openFrameworks
 ```
 
-SDK-only prints the follow-up command for staging addons. Addon-only reads
-the SDK version from the supplied installation, leaves it untouched, and
-prints the build command. Setup reuses matching files on reruns. If a
+SDK-only prints the follow-up command for staging addons. Addon-only verifies
+openFrameworks 0.12.1, leaves the supplied installation untouched, and prints
+the build command. Setup reuses matching files on reruns. If a
 destination contains a changed or unmanaged dependency tree, choose another
 `--dest`.
 
@@ -107,13 +106,12 @@ cd vosc
 ```
 
 Install the dependencies listed in [addons.make](addons.make) under the same
-openFrameworks installation's `addons/` directory. The project uses the
-0.11.1 layout of `ofxOsc` and `ofxAssimpModelLoader` for both builds. For 0.12.1,
-use those addon sources from the 0.11.1 release, with their macOS libraries.
-Use libraries with both architecture slices for a Universal build. In particular,
-`ofxExpr` needs its macOS muparser archive. The Universal Release excludes
-the optional Ultralight addon. Keep its headers and dylibs in the addon tree
-for the Apple Silicon Debug and openFrameworks 0.11.1 builds.
+openFrameworks installation's `addons/` directory. Use the `ofxOsc` and
+`ofxAssimpModelLoader` addon sources and macOS libraries bundled with openFrameworks
+0.11.1. Managed setup extracts just those two addons from that pinned archive.
+Use libraries with both architecture slices for a Universal build. The `ofxExpr`
+addon needs its macOS muparser archive. Keep the optional Ultralight headers and
+dylibs for Apple Silicon Debug. Universal Release excludes Ultralight.
 
 From the VOSC checkout, build with either command.
 
@@ -122,19 +120,13 @@ make Debug
 make Release
 ```
 
-The build reads the SDK version from its headers and selects C++17 for 0.11.1
-or C++23 for 0.12.1. It prepares a private core and compiler overlays in Xcode's
-build directory. Debug produces `bin/voscDebug.app` and Release produces
-`bin/vosc.app`. Use `make RunDebug` or `make RunRelease` from the checkout to launch it.
+The build verifies the SDK version and uses C++23. It prepares a private core
+and compiler overlays in Xcode's build directory. Debug produces
+`bin/voscDebug.app` and Release produces `bin/vosc.app`. Use `make RunDebug`
+or `make RunRelease` from the checkout to launch it.
 
 For the Xcode GUI, open `vosc.xcodeproj` and select `vosc Debug` or
-`vosc Release`. The project uses 0.12.1 settings by default. For 0.11.1, add
-this line to the ignored `Project.local.xcconfig` at the VOSC root before
-opening the project.
-
-```xcconfig
-#include "scripts/OpenFrameworks011.xcconfig"
-```
+`vosc Release`. Both schemes use openFrameworks 0.12.1 settings.
 
 For a separate build directory, run
 `python3 scripts/build_macos_profile.py --configuration Release --output /path/to/build`.
@@ -143,7 +135,7 @@ Verify the Release executable with
 For a standalone run, put the runtime assets from `bin/data` next to the app
 and copy `ofxDeferredShading/data/shaders/deferred` from the addon tree into
 `data/shaders`. With the setup script, the addon tree is under
-`.vosc-macos/addon-sdks/of-VERSION/addons/` by default. The
+`.vosc-macos/addon-sdks/of-0.12.1/addons/` by default. The
 [authoring build](docs/Live-authoring.md) copies these assets into its
 private output directory.
 

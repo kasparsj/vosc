@@ -116,7 +116,7 @@ measurement and does not establish protected-authoring acceptance.
 
 The local legacy build helper already strips AGL/QTKit link flags. Its documented
 reuse of a prebuilt OF Debug library is not a clean rebuild of OF/dependencies.
-[Legacy build helper](../scripts/build_macos_legacy.py)
+[Legacy build helper](https://github.com/kasparsj/vosc/blob/of-0.11.1/scripts/build_macos_legacy.py)
 
 ## OF's Metal/WebGPU work and PR consensus
 

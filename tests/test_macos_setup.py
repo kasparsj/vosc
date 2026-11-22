@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-import build_macos_legacy
+import macos_build
 import setup_macos
 
 
@@ -22,16 +22,16 @@ class SetupPathTests(unittest.TestCase):
             addons = destination / "addon-sdks/of-0.12.1"
             with (
                 patch.object(setup_macos, "ROOT", checkout),
-                patch.object(build_macos_legacy, "ROOT", checkout),
+                patch.object(macos_build, "ROOT", checkout),
                 patch.object(Path, "home", return_value=root / "home"),
             ):
                 output = setup_macos.build_output(destination)
                 self.assertEqual(output.parent, root / "home/Library/Caches/VOSC/builds")
                 self.assertEqual(output, setup_macos.build_output(destination))
                 self.assertNotEqual(output, setup_macos.build_output(checkout / "other"))
-                build_macos_legacy.prepare_output(output / "of-0.12.1/Debug", sdk, addons)
+                macos_build.prepare_output(output / "of-0.12.1/Debug", sdk, addons)
                 with self.assertRaisesRegex(ValueError, "outside the checkout"):
-                    build_macos_legacy.prepare_output(destination / "build", sdk, addons)
+                    macos_build.prepare_output(destination / "build", sdk, addons)
 
     def test_external_destination_keeps_build_root(self):
         with TemporaryDirectory() as temporary:
@@ -48,5 +48,5 @@ class SetupPathTests(unittest.TestCase):
                 self.skipTest("requires a case-insensitive filesystem")
             manifest = setup_macos.json.loads(setup_macos.MANIFEST.read_text())
             with self.assertRaisesRegex(ValueError, "overlaps the supplied SDK"):
-                setup_macos.prepare(alias / "missing", "0.12.1", sdk, root / "build", manifest)
+                setup_macos.prepare(alias / "missing", sdk, root / "build", manifest)
             self.assertEqual(list(sdk.iterdir()), [])

@@ -15,11 +15,10 @@ import subprocess
 import sys
 import tempfile
 
-from build_macos_legacy import ROOT, path_within, receiver_inputs, validate_output_path
-from build_macos_profile import sdk_version
+from macos_build import ROOT, path_within, receiver_inputs, validate_output_path
+from build_macos_profile import SDK_VERSION, sdk_version
 
 
-DEFAULT_VERSION = "0.12.1"
 MANIFEST = ROOT / "scripts/setup_macos_dependencies.json"
 RECEIPT = ".vosc-setup.json"
 SDK_PROJECT = "libs/openFrameworksCompiled/project/osx/openFrameworksLib.xcodeproj/project.pbxproj"
@@ -125,21 +124,19 @@ def require_arm64(path):
         raise ValueError(f"Missing arm64 architecture: {path}")
 
 
-def validate_sdk(root, version):
-    if sdk_version(root) != version:
-        raise ValueError(f"Expected openFrameworks {version} at {root}")
+def validate_sdk(root):
+    sdk_version(root)
     require_files(root, [SDK_PROJECT])
 
 
 def addon_inputs(manifest):
     bundled = manifest["bundled_addons"]
-    version = bundled["sdk_version"]
     expected = set((ROOT / "addons.make").read_text().split())
     actual = set(bundled["names"]) | manifest["addons"].keys()
     if actual != expected:
         raise ValueError("Setup dependency manifest does not match addons.make")
     return {
-        "bundled": {"names": bundled["names"], "archive": manifest["sdks"][version]},
+        "bundled": bundled,
         "addons": manifest["addons"],
         "muparser": manifest["muparser_source"],
     }
@@ -196,16 +193,16 @@ def build_output(dest):
     return dest / "build"
 
 
-def prepare(dest, version, sdk, output, manifest):
-    addon_sdk = dest / "addon-sdks" / f"of-{version}"
-    managed_sdk = dest / "sdks" / f"of-{version}"
+def prepare(dest, sdk, output, manifest):
+    addon_sdk = dest / "addon-sdks" / f"of-{SDK_VERSION}"
+    managed_sdk = dest / "sdks" / f"of-{SDK_VERSION}"
     cache = dest / "cache"
     if sdk is not None and any(
         path_within(path, sdk) or path_within(sdk, path)
         for path in (addon_sdk, cache, output)
     ):
         raise ValueError("The setup destination overlaps the supplied SDK. Choose another --dest.")
-    sdk_pin = manifest["sdks"][version]
+    sdk_pin = manifest["sdk"]
     if output is not None:
         validate_output_path(output, sdk or managed_sdk, addon_sdk)
     inputs = addon_inputs(manifest) if output is not None else None
@@ -233,7 +230,7 @@ def prepare(dest, version, sdk, output, manifest):
                 new_addons = staging / "addon-sdk"
                 if needs_sdk:
                     unpack(cached_archive(sdk_pin, cache, staging), new_sdk)
-                    validate_sdk(new_sdk, version)
+                    validate_sdk(new_sdk)
                     record_tree(new_sdk, sdk_pin)
                 if needs_addons:
                     prepare_addons(new_addons, inputs, manifest, cache, staging)
@@ -257,8 +254,6 @@ def main():
     mode.add_argument("--sdk-only", action="store_true", help="Extract the SDK only")
     mode.add_argument("--addons-only", action="store_true", help="Stage addons for --of-root")
     parser.add_argument("--of-root", type=Path, help="Existing openFrameworks SDK for --addons-only")
-    parser.add_argument("--version", choices=manifest["sdks"],
-                        help=f"SDK version (default: {DEFAULT_VERSION}, or inferred with --addons-only)")
     parser.add_argument("--dest", type=Path, default=ROOT / ".vosc-macos",
                         help="Local setup directory (default: .vosc-macos in the VOSC checkout)")
     args = parser.parse_args()
@@ -270,16 +265,15 @@ def main():
     try:
         dest = args.dest.expanduser().resolve()
         existing = args.of_root.expanduser().resolve() if args.of_root else None
-        version = args.version or (sdk_version(existing) if existing else DEFAULT_VERSION)
         if existing is not None:
-            validate_sdk(existing, version)
+            validate_sdk(existing)
         output = None if args.sdk_only else build_output(dest)
-        sdk, addon_sdk = prepare(dest, version, existing, output, manifest)
+        sdk, addon_sdk = prepare(dest, existing, output, manifest)
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
         parser.exit(1, f"{parser.prog}: {error}\n")
 
     if args.sdk_only:
-        print(f"openFrameworks {version} SDK: {sdk}", file=sys.stderr)
+        print(f"openFrameworks {SDK_VERSION} SDK: {sdk}", file=sys.stderr)
         print(shlex.join(["python3", str(ROOT / "scripts/setup_macos.py"),
                           "--addons-only", "--of-root", str(sdk), "--dest", str(dest)]))
     else:
