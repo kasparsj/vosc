@@ -465,7 +465,7 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
     uint64_t focusOrigin = 0;
     vosc::operator_ui::BrowseView browse;
     std::vector<Action> browseChanges;
-    std::string browseHeading, browseSummary;
+    std::string browseHeading, browseSummary, browseStatus;
     bool syncingBrowse = false;
     vosc::operator_ui::InspectorView inspector;
     vosc::operator_ui::InspectorPreview previews;
@@ -988,6 +988,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     refreshEntries(logger);
     if (view == View::Console) refreshMatches();
     if (view == View::Browse) {
+        ui.browse.refresh();
         for (const auto& change : std::exchange(ui.browseChanges, {})) {
             if (change.id == "browse-use") ui.browse.selectUse(change.target);
             else ui.browse.selectTarget(renderer, change.target);
@@ -1035,6 +1036,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
         ui.document->GetElementById(dest.id)->SetClass("selected", dest.view == view);
 
     std::string markup;
+    const std::string* contentMarkup = &markup;
     ui.inspector.beginMarkup();
     switch (view) {
         case View::Overview: markup = overviewMarkup(renderer, viewport); break;
@@ -1045,12 +1047,14 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
         }
         case View::Console: break;
         case View::Browse:
-            markup = ui.browse.markup(renderer);
+            contentMarkup = &ui.browse.markup(renderer);
             ui.panel->SetProperty("height", std::to_string(ui.browse.height(ui.document->IsClassSet("compact"))) + "dp");
             ui.setReading("browse-heading", ui.browseHeading, ui.browse.heading());
             ui.document->GetElementById("browse-assets")->SetClass("selected", !ui.browse.builtins());
             ui.document->GetElementById("browse-builtins")->SetClass("selected", ui.browse.builtins());
             ui.setReading("browse-summary", ui.browseSummary, ui.browse.summary());
+            ui.setReading("browse-status", ui.browseStatus, ui.browse.status());
+            ui.document->GetElementById("browse-status")->SetClass("present", !ui.browseStatus.empty());
             break;
         case View::Count: break;
     }
@@ -1062,11 +1066,11 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
         toolbar->SetInnerRML(tools);
         ui.renderedTools = tools;
     }
-    const bool contentChanged = markup != ui.renderedContent;
+    const bool contentChanged = *contentMarkup != ui.renderedContent;
     ui.syncingBrowse = true;
     if (contentChanged) {
-        ui.content->SetInnerRML(markup);
-        ui.renderedContent = markup;
+        ui.content->SetInnerRML(*contentMarkup);
+        ui.renderedContent = *contentMarkup;
     }
     if (inspector) ui.inspector.syncReadings(*ui.content, contentChanged);
 
@@ -1081,6 +1085,8 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     ui.syncingBrowse = false;
     auto wantedFocus = std::exchange(ui.focusRequest, {});
     auto origin = std::exchange(ui.focusOrigin, 0);
+    const bool returningToAsset = browse && wantedFocus.rfind("asset-row-", 0) == 0;
+    Rml::Element* returningRow = nullptr;
     if (wantedFocus.empty() && !focusId.empty() &&
         (!ui.context->GetFocusElement() || ui.context->GetFocusElement()->GetId() != focusId ||
          (rowOrigin && !ui.inspector.matches(focusId, rowOrigin)))) {
@@ -1095,11 +1101,12 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
             else if (console) fallback = "console-search";
             else if (browse) fallback = ui.browse.builtins() ? "browse-builtins" : "browse-search";
             element = ui.document->GetElementById(fallback);
-        }
+        } else if (returningToAsset) returningRow = element;
         element->Focus(true);
     }
     if (console) ui.placeLogScroll(rowsChanged);
     else if (ui.restoreScroll || contentChanged) ui.content->SetScrollTop(scrollTop);
+    if (returningRow) returningRow->ScrollIntoView(Rml::ScrollAlignment::Adaptive);
     ui.restoreScroll = false;
 
     ui.paint(viewport);

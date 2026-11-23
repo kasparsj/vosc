@@ -3,12 +3,17 @@
 #if VOSC_OPERATOR_UI
 #include "../VOSC.hpp"
 #include "../layer/Layer.h"
+#include "ofUtils.h"
 #include <RmlUi/Core/StringUtilities.h>
 #include <algorithm>
+#include <string_view>
+#include <unordered_set>
 #include <utility>
 
 namespace vosc::operator_ui {
 namespace {
+constexpr std::string_view rowPrefix = "asset-row-";
+
 std::string escaped(const std::string& text) {
     return Rml::StringUtilities::EncodeRml(text);
 }
@@ -35,6 +40,7 @@ bool BrowseView::switchCatalog(bool builtins) {
     if (canGoBack() || showingBuiltins == builtins) return false;
     showingBuiltins = builtins;
     selectedRow.clear();
+    rowsDirty = true;
     return true;
 }
 
@@ -45,6 +51,7 @@ bool BrowseView::setFilters(std::string name, std::string kind) {
     catalogScroll = 0;
     query = std::move(name);
     category = std::move(kind);
+    rowsDirty = true;
     return true;
 }
 
@@ -52,16 +59,10 @@ bool BrowseView::matches(const Asset& entry) const {
     return (category.empty() || category == entry.kind) && Rml::StringUtilities::ToLower(entry.name).find(query) != std::string::npos;
 }
 
-bool BrowseView::visible(const Asset& entry) const {
-    const bool builtin = entry.kind == "Built-in";
-    if (showingBuiltins) return builtin;
-    if (builtin || entry.parent != folder) return false;
-    if (!entry.folder) return matches(entry);
-    if (category.empty() && query.empty()) return true;
-    const auto prefix = entry.path + '/';
-    return std::any_of(catalog.assets().begin(), catalog.assets().end(), [&](const auto& child) {
-        return !child.folder && child.path.rfind(prefix, 0) == 0 && matches(child);
-    });
+const BrowseCatalog::Entries& BrowseView::entries() const {
+    static const BrowseCatalog::Entries empty;
+    if (showingBuiltins) return catalog.builtins;
+    return catalog.files ? *catalog.files : empty;
 }
 
 std::string BrowseView::heading() const {
@@ -69,57 +70,107 @@ std::string BrowseView::heading() const {
     return folder.empty() ? "Assets" : "Assets / " + folder;
 }
 
-std::string BrowseView::summary() const {
-    if (detail() || !catalog.available()) return {};
-    const auto prefix = folder + '/';
-    unsigned total = 0, filtered = 0;
-    for (const auto& entry : catalog.assets()) {
-        if (entry.folder || showingBuiltins != (entry.kind == "Built-in")
-            || (!folder.empty() && entry.path.rfind(prefix, 0) != 0)) continue;
-        ++total;
-        if (showingBuiltins || matches(entry)) ++filtered;
+const std::string& BrowseView::summary() const {
+    static const std::string empty;
+    return detail() ? empty : countText;
+}
+
+std::string BrowseView::status() const {
+    std::string message;
+    if (catalog.scanFailed && !showingBuiltins) {
+        message = catalog.files
+            ? "Asset refresh failed. Showing the last listing."
+            : "Asset refresh failed. The asset folder is unavailable.";
     }
-    if (total == filtered)
-        return std::to_string(total) + (total == 1 ? " asset" : " assets");
-    return std::to_string(filtered) + " of " + std::to_string(total) + " assets";
+    if (catalog.metadataFailed) {
+        if (!message.empty()) message += '\n';
+        message += "OSC command metadata unavailable.";
+    }
+    return message;
 }
 
 std::string BrowseView::rowId(size_t row) const {
-    return "asset-row-" + catalog.assets()[row].id;
+    return std::string(rowPrefix) + entries()[row].id;
 }
 
-std::string BrowseView::catalogMarkup() const {
-    if (!catalog.available()) return "<p class='message error'>The asset folder is unavailable.</p>";
-    const auto& assets = catalog.assets();
-    std::string result;
+void BrowseView::updateRows() {
+    rowsDirty = false;
+    rowsMarkup.clear();
+    countText.clear();
+    if (!scanned) {
+        rowsMarkup = "<p class='message'>Scanning assets…</p>";
+        return;
+    }
+    if (showingBuiltins ? catalog.metadataFailed : !catalog.files) return;
+
+    const auto& assets = entries();
+    const bool filtering = !showingBuiltins && (!query.empty() || !category.empty());
+    const auto prefix = folder + '/';
+    unsigned total = 0, filtered = 0;
+    std::unordered_set<std::string> matchingFolders;
+    std::vector<bool> matchingFiles(assets.size(), false);
     for (size_t index = 0; index < assets.size(); ++index) {
         const auto& entry = assets[index];
-        if (!visible(entry)) continue;
+        if (entry.folder || (!folder.empty() && entry.path.rfind(prefix, 0) != 0)) continue;
+        ++total;
+        if (filtering && !matches(entry)) continue;
+        ++filtered;
+        matchingFiles[index] = true;
+        if (filtering && entry.parent != folder) {
+            const auto start = folder.empty() ? 0 : prefix.size();
+            matchingFolders.insert(entry.path.substr(0, entry.path.find('/', start)));
+        }
+    }
+    countText = total == filtered
+        ? std::to_string(total) + (total == 1 ? " asset" : " assets")
+        : std::to_string(filtered) + " of " + std::to_string(total) + " assets";
+
+    for (size_t index = 0; index < assets.size(); ++index) {
+        const auto& entry = assets[index];
+        if (entry.parent != folder) continue;
+        if (entry.folder ? filtering && matchingFolders.count(entry.path) == 0 : !matchingFiles[index])
+            continue;
         const auto id = rowId(index);
-        result += "<button id=\"" + escaped(id) + "\" data-target='" + std::to_string(index + 1)
+        rowsMarkup += "<button id=\"" + escaped(id) + "\" data-target='" + std::to_string(index + 1)
             + "' class='inspect-row asset-row" + (selectedRow == id ? " selected" : "")
             + "'><span class='inspect-row-label'>" + escaped(entry.name)
             + "</span><span class='inspect-kind'>" + escaped(entry.kind)
             + "</span><img class='browse-chevron' src='browse:catalog/chevron.png' /></button>";
     }
-    if (!result.empty()) return result;
-    if (showingBuiltins) return "<p class='message'>No built-in sources are available.</p>";
-    if (query.empty() && category.empty()) return "<p class='message'>This folder is empty.</p>";
-    return "<p class='message'>No assets match this search and category.</p>"
-        "<button id='browse-clear'>Clear search and category</button>";
+    if (!rowsMarkup.empty()) return;
+    if (showingBuiltins)
+        rowsMarkup += "<p class='message'>No built-in sources are available.</p>";
+    else if (!filtering)
+        rowsMarkup += "<p class='message'>This folder is empty.</p>";
+    else
+        rowsMarkup += "<p class='message'>No assets match this search and category.</p>"
+            "<button id='browse-clear'>Clear search and category</button>";
 }
 
 bool BrowseView::openItem(const std::string& id, uint64_t row, float scroll) {
-    if (!row || row > catalog.assets().size() || id != rowId(row - 1)) return false;
-    const auto& entry = catalog.assets()[row - 1];
-    if (!visible(entry)) return false;
+    const std::string_view actionId = id;
+    if (!row || actionId.substr(0, rowPrefix.size()) != rowPrefix) return false;
+    const auto entryId = actionId.substr(rowPrefix.size());
+    const auto& assets = entries();
+    auto found = row <= assets.size() ? assets.begin() + (row - 1) : assets.end();
+    if (found == assets.end() || found->id != entryId) {
+        // A published refresh may have moved this asset since the click was queued.
+        found = std::find_if(assets.begin(), assets.end(), [&](const auto& entry) {
+            return entry.id == entryId;
+        });
+        if (found == assets.end()) return false;
+    }
+    const auto& entry = *found;
+    if (entry.parent != folder || (!showingBuiltins && !entry.folder && !matches(entry))) return false;
+    rowsDirty = true;
     if (entry.folder) {
         parents.push_back({folder, id, scroll});
         folder = entry.path;
         selectedRow.clear();
         return true;
     }
-    item = row - 1;
+    item = entry;
+    registration.reset();
     selectedRow = id;
     catalogScroll = scroll;
     availableUses.clear();
@@ -132,6 +183,7 @@ bool BrowseView::openItem(const std::string& id, uint64_t row, float scroll) {
 }
 
 std::string BrowseView::backItem() {
+    rowsDirty = true;
     if (detail()) {
         item.reset();
         return selectedRow;
@@ -151,10 +203,24 @@ void BrowseView::invalidateCopy() {
 
 void BrowseView::checkAsset() {
     nextAssetCheck = std::chrono::steady_clock::now() + std::chrono::milliseconds(250);
+    const auto* current = catalog.registration(*item);
+    if (current) {
+        if (!registration || !(*registration == *current)) {
+            registration = *current;
+            invalidateCopy();
+        }
+    } else if (registration) {
+        registration.reset();
+        invalidateCopy();
+    }
     std::vector<AssetUse> valid;
-    for (const auto candidate : asset().uses)
-        if (asset().available(candidate)) valid.push_back(candidate);
-    preview = stagedBrowseFile(asset().preview);
+    auto previewName = asset().preview;
+    if (previewName.empty() && item->kind == "Image") previewName = item->path;
+    preview = stagedBrowseFile(previewName);
+    if (registration) {
+        for (const auto candidate : registration->uses)
+            if (registration->available(candidate)) valid.push_back(candidate);
+    }
     if (availableUses == valid) return;
     availableUses = std::move(valid);
     if (!use || std::find(availableUses.begin(), availableUses.end(), *use) == availableUses.end())
@@ -224,8 +290,8 @@ void BrowseView::selectTarget(const VOSC& renderer, uint64_t option) {
 }
 
 std::optional<AssetCommand> BrowseView::command() const {
-    if (!use || !selectedTarget) return std::nullopt;
-    return assetCommand(asset(), *use, selectedTarget->index);
+    if (!registration || !use || !selectedTarget) return std::nullopt;
+    return assetCommand(*registration, *use, selectedTarget->index);
 }
 
 std::optional<std::string> BrowseView::copyCommand(const VOSC& renderer, uint64_t token) {
@@ -243,17 +309,19 @@ void BrowseView::finishCopy(bool success) {
 
 std::string BrowseView::detailMarkup() const {
     const auto& entry = asset();
-    std::string result = "<div class='inspect-label'>" + escaped(entry.name) + "</div>"
+    std::string result = "<div class='inspect-label'>" + escaped(item->name) + "</div>"
         "<div class='browse-facts'>" + fact("Kind", entry.kind) + fact("Source", entry.sourceLabel())
         + "</div><div class='browse-origin'>" + escaped(entry.origin)
         + "</div>";
     if (!entry.requirements.empty())
         result += "<p class='browse-requirements'>" + escaped(entry.requirements) + "</p>";
+    const auto previewName = entry.preview.empty() ? item->path : entry.preview;
     const auto previewMarkup = preview
         ? "<div class='browse-preview'><img alt='Saved asset preview' src=\"browse:"
-            + escaped(entry.preview) + "\" /></div>"
+            + escaped(previewName) + "\" /></div>"
         : std::string{};
-    if (entry.uses.empty())
+    if (catalog.metadataFailed) return result + previewMarkup;
+    if (!registration)
         return result + "<p class='browse-requirements'>No verified OSC use.</p>" + previewMarkup;
     if (availableUses.empty())
         return result + "<p class='message error'>Asset unavailable. Check the staged source and dependencies.</p>" + previewMarkup;
@@ -295,18 +363,49 @@ std::string BrowseView::detailMarkup() const {
           "<span class='browse-feedback'>" + escaped(feedback) + "</span></div>" + previewMarkup;
 }
 
-std::string BrowseView::markup(const VOSC& renderer) {
-    if (!detail()) {
-        const auto now = std::chrono::steady_clock::now();
-        if (now >= nextCatalogCheck) {
-            catalog.load();
-            nextCatalogCheck = now + std::chrono::seconds(1);
+void BrowseView::refresh() {
+    const auto now = std::chrono::steady_clock::now();
+    try {
+        if (pendingScan.valid()) {
+            if (pendingScan.wait_for(std::chrono::seconds(0)) != std::future_status::ready) return;
+            auto snapshot = pendingScan.get();
+            if (!scanned || (showingBuiltins
+                    ? catalog.builtins != snapshot.builtins || catalog.metadataFailed != snapshot.metadataFailed
+                    : catalog.files != snapshot.files))
+                rowsDirty = true;
+            if (detail() && (catalog.registeredFiles != snapshot.registeredFiles
+                             || catalog.builtins != snapshot.builtins))
+                nextAssetCheck = {};
+            catalog = std::move(snapshot);
+            scanned = true;
         }
-        return catalogMarkup();
+        if (now >= nextCatalogCheck) {
+            nextCatalogCheck = now + std::chrono::seconds(1);
+            const std::filesystem::path staged = ofToDataPath("", true);
+            pendingScan = std::async(std::launch::async, BrowseCatalog::scan, staged, catalog.files);
+        }
+    } catch (const std::system_error&) {
+        catalog.scanFailed = true;
+        catalog.metadataFailed = true;
+        catalog.builtins.clear();
+        catalog.registeredFiles.clear();
+        nextCatalogCheck = now + std::chrono::seconds(1);
+        nextAssetCheck = {};
+        scanned = rowsDirty = true;
+    }
+}
+
+const std::string& BrowseView::markup(const VOSC& renderer) {
+    if (!detail()) {
+        if (rowsDirty) {
+            updateRows();
+        }
+        return rowsMarkup;
     }
     syncTargets(renderer);
     if (std::chrono::steady_clock::now() >= nextAssetCheck) checkAsset();
-    return detailMarkup();
+    detailContent = detailMarkup();
+    return detailContent;
 }
 
 int BrowseView::height(bool compact) const {

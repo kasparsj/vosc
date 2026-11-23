@@ -7,8 +7,8 @@
 #include "ofUtils.h"
 #include <algorithm>
 #include <fstream>
-#include <map>
 #include <stdexcept>
+#include <tuple>
 
 namespace vosc::operator_ui {
 namespace {
@@ -122,36 +122,14 @@ fs::path browseRoot(const fs::path& staged) {
     const auto checkout = products.parent_path();
     std::error_code error;
     // Xcode's normal bin/data layout has a source library beside bin.
-    if (products.filename() == "bin" && fs::is_regular_file(checkout / "vosc.xcodeproj/project.pbxproj", error)
-        && fs::is_directory(fs::symlink_status(checkout / "assets", error)))
+    if (products.filename() == "bin" && fs::is_regular_file(checkout / "vosc.xcodeproj/project.pbxproj", error))
         return checkout / "assets";
     return staged;
 }
 
-std::vector<Asset> readMetadata() {
-    const auto path = stagedBrowseFile("catalog/browse-assets.json");
-    std::error_code error;
-    if (!path || fs::file_size(*path, error) > 64 * 1024 || error) return {};
-    std::ifstream stream(*path, std::ios::binary);
-    try {
-        const auto manifest = ofJson::parse(stream);
-        if (!manifest.is_array() || manifest.size() > 64) return {};
-        std::vector<Asset> result;
-        for (const auto& item : manifest) result.push_back(readAsset(item));
-        return result;
-    } catch (const std::exception&) {
-        // The file tree is useful even when optional command metadata is invalid.
-        return {};
-    }
-}
-
-}
-
-std::optional<fs::path> stagedBrowseFile(const std::string& name) {
+std::optional<fs::path> stagedFile(const fs::path& root, const std::string& name) {
     if (!localName(name)) return std::nullopt;
     std::error_code error;
-    const auto root = fs::canonical(ofToDataPath("", true), error);
-    if (error) return std::nullopt;
     const auto path = fs::canonical(root / name, error);
     if (error) return std::nullopt;
     const auto relative = path.lexically_relative(root);
@@ -160,6 +138,59 @@ std::optional<fs::path> stagedBrowseFile(const std::string& name) {
     std::ifstream file(path, std::ios::binary);
     if (file.peek() == std::ifstream::traits_type::eof()) return std::nullopt;
     return path;
+}
+
+std::vector<Asset> readMetadata(const fs::path& staged) {
+    const auto path = stagedFile(staged, "catalog/browse-assets.json");
+    std::error_code error;
+    constexpr size_t limit = 64 * 1024;
+    if (!path || fs::file_size(*path, error) > limit || error)
+        throw std::runtime_error("Browse command metadata unavailable");
+    std::ifstream stream(*path, std::ios::binary);
+    std::string contents(limit + 1, '\0');
+    stream.read(contents.data(), contents.size());
+    if (stream.bad() || static_cast<size_t>(stream.gcount()) > limit)
+        throw std::runtime_error("Could not read Browse command metadata");
+    contents.resize(static_cast<size_t>(stream.gcount()));
+    const auto manifest = ofJson::parse(contents);
+    if (!manifest.is_array() || manifest.size() > 64)
+        throw std::runtime_error("Invalid Browse command metadata");
+    std::vector<Asset> result;
+    for (const auto& item : manifest) {
+        auto asset = readAsset(item);
+        const bool builtin = asset.kind == "Built-in";
+        const auto source = asset.sourceLabel();
+        asset.id = builtin ? "builtin-" + ofToHex(asset.id) : "file-" + ofToHex(source);
+        if (std::any_of(result.begin(), result.end(), [&](const auto& previous) {
+                return previous.id == asset.id || previous.sourceLabel() == source;
+            }))
+            throw std::runtime_error("Duplicate Browse command registration");
+        result.push_back(std::move(asset));
+    }
+    return result;
+}
+
+}
+
+std::optional<fs::path> stagedBrowseFile(const std::string& name) {
+    if (name.empty()) return std::nullopt;
+    try {
+        std::error_code error;
+        const auto root = fs::canonical(ofToDataPath("", true), error);
+        if (error) return std::nullopt;
+        return stagedFile(root, name);
+    } catch (const fs::filesystem_error&) {
+        return std::nullopt;
+    }
+}
+
+bool Asset::operator==(const Asset& other) const {
+    const auto fields = [](const Asset& asset) {
+        return std::tie(asset.id, asset.path, asset.parent, asset.name, asset.kind, asset.source, asset.origin,
+                        asset.requirements, asset.folder, asset.preview, asset.vertex, asset.geometry,
+                        asset.dependencies, asset.uses);
+    };
+    return fields(*this) == fields(other);
 }
 
 std::string Asset::sourceLabel() const {
@@ -186,10 +217,14 @@ bool Asset::available(AssetUse use) const {
     for (const auto& dependency : dependencies)
         if (!stagedBrowseFile(dependency)) return false;
     if (use == AssetUse::ShaderTexture || use == AssetUse::LayerProgram) {
-        const auto paths = Shader::getShaderPaths(source);
-        return matchesStage(paths.fragPath, source)
-            && matchesStage(paths.vertPath, vertex.empty() ? "shaders/passthru.vert" : vertex)
-            && matchesStage(paths.geomPath, geometry);
+        try {
+            const auto paths = Shader::getShaderPaths(source);
+            return matchesStage(paths.fragPath, source)
+                && matchesStage(paths.vertPath, vertex.empty() ? "shaders/passthru.vert" : vertex)
+                && matchesStage(paths.geomPath, geometry);
+        } catch (const fs::filesystem_error&) {
+            return false;
+        }
     }
     return true;
 }
@@ -215,24 +250,36 @@ std::string AssetCommand::snippet() const {
     return text + ");";
 }
 
-void BrowseCatalog::load() {
+BrowseCatalog BrowseCatalog::scan(const fs::path& dataPath, std::shared_ptr<const Entries> previous) {
+    BrowseCatalog result;
+    result.files = std::move(previous);
     std::error_code error;
-    const auto staged = fs::canonical(ofToDataPath("", true), error);
-    if (error) return;
-    const auto root = browseRoot(staged);
-    std::vector<Asset> discovered;
-    std::map<std::string, Asset> metadata;
-    for (auto& asset : readMetadata()) {
-        if (asset.kind == "Built-in") {
-            asset.id = "builtin-" + ofToHex(asset.id);
-            discovered.push_back(std::move(asset));
+    const auto staged = fs::canonical(dataPath, error);
+    try {
+        if (error) {
+            result.metadataFailed = true;
         } else {
-            const auto source = asset.sourceLabel();
-            metadata.emplace(source, std::move(asset));
+            for (auto& asset : readMetadata(staged)) {
+                auto& entries = asset.kind == "Built-in" ? result.builtins : result.registeredFiles;
+                entries.push_back(std::move(asset));
+            }
+            std::sort(result.builtins.begin(), result.builtins.end(),
+                      [](const auto& lhs, const auto& rhs) { return lhs.id < rhs.id; });
         }
+    } catch (const std::exception&) {
+        result.metadataFailed = true;
+        result.builtins.clear();
+        result.registeredFiles.clear();
     }
 
-    fs::recursive_directory_iterator file(root, fs::directory_options::skip_permission_denied, error);
+    auto root = browseRoot(dataPath);
+    if (root == dataPath) root = staged;
+    if (!fs::is_directory(fs::symlink_status(root, error)) || error) {
+        result.scanFailed = true;
+        return result;
+    }
+    Entries discovered;
+    fs::recursive_directory_iterator file(root, error);
     for (const fs::recursive_directory_iterator end; !error && file != end; file.increment(error)) {
         const auto path = file->path().lexically_relative(root);
         const auto name = path.filename().string();
@@ -246,25 +293,35 @@ void BrowseCatalog::load() {
         if (!fs::is_directory(status) && !fs::is_regular_file(status)) continue;
 
         Asset asset;
-        if (const auto known = metadata.find(relative); known != metadata.end()) asset = known->second;
         asset.folder = fs::is_directory(status);
         asset.id = (asset.folder ? "folder-" : "file-") + ofToHex(relative);
         asset.path = relative;
         asset.parent = path.parent_path().generic_string();
         asset.name = name;
-        if (asset.kind.empty()) asset.kind = asset.folder ? "Folder" : fileKind(path);
-        if (asset.origin.empty()) asset.origin = "VOSC shared library";
-        if (asset.kind == "Image" && asset.preview.empty()) asset.preview = relative;
+        asset.kind = asset.folder ? "Folder" : fileKind(path);
+        asset.origin = "VOSC shared library";
         discovered.push_back(std::move(asset));
     }
-    if (error) return;
+    if (error) {
+        result.scanFailed = true;
+        return result;
+    }
 
     std::sort(discovered.begin(), discovered.end(), [](const auto& lhs, const auto& rhs) {
         if (lhs.folder != rhs.folder) return lhs.folder;
         return lhs.path == rhs.path ? lhs.id < rhs.id : lhs.path < rhs.path;
     });
-    entries = std::move(discovered);
-    loaded = true;
+    if (!result.files || *result.files != discovered)
+        result.files = std::make_shared<const Entries>(std::move(discovered));
+    return result;
+}
+
+const Asset* BrowseCatalog::registration(const Asset& entry) const {
+    const auto& candidates = entry.kind == "Built-in" ? builtins : registeredFiles;
+    const auto found = std::find_if(candidates.begin(), candidates.end(), [&](const auto& candidate) {
+        return candidate.id == entry.id;
+    });
+    return found == candidates.end() ? nullptr : &*found;
 }
 
 } // namespace vosc::operator_ui

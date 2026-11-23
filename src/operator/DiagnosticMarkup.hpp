@@ -192,6 +192,8 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
     color: #c5d4e5; font-size: 12dp;
 }
 #browse-filters { margin-top: 5dp; }
+#browse-status { display: none; font-size: 12dp; margin: 5dp 0 0; }
+#browse-status.present { display: block; }
 #panel.detail #browse-filters, #panel.browse-builtins #browse-filters { display: none; }
 #browse-search, #panel.browse select {
     box-sizing: border-box; height: 30dp; padding: 5dp 7dp; font-size: 13dp;
@@ -273,6 +275,7 @@ body.compact .browse-preview img { height: 60dp; }
                 <option value="File">File</option>
             </select>
         </div>
+        <div id="browse-status" class="message error"></div>
     </div>
     <div id="content"></div>
     <div id="console-controls">
