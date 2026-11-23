@@ -24,6 +24,13 @@ body {
 }
 #panel.console { height: 468dp; }
 #panel.overview.quiet { height: 170dp; }
+#panel.overview.camera { height: 244dp; }
+#panel.overview.quiet.camera { height: 204dp; }
+#camera-reading { display: none; }
+#panel.overview.camera #camera-reading {
+    display: block; flex: none; margin: 0 12dp; padding-bottom: 5dp; border-bottom: 1dp #d2e1fc29;
+}
+#camera-reading .readout-label { display: inline; margin-right: 6dp; }
 #panel.enlarged { width: 620dp; }
 #panel.browse { height: 116dp; }
 body.compact #dock { width: 341dp; height: 43dp; bottom: 12dp; padding: 4dp; border-radius: 21.5dp; }
@@ -106,8 +113,10 @@ body.short #readings { padding: 4dp 0; }
 .message { display: block; white-space: pre-wrap; word-break: break-word; margin-bottom: 5dp; }
 .message.error { background-color: #ffc2b312; border-radius: 8dp; padding: 6dp 8dp; }
 #panel.inspecting #content { padding-top: 7dp; }
-.inspect-tabs { display: block; padding: 1dp 0 3dp; margin-bottom: 7dp; border-bottom: 1dp #d2e1fc29; }
-.inspect-tabs button { font-size: 12dp; margin-bottom: 4dp; }
+#panel.inspecting .caption { word-break: break-word; }
+#inspector-tools { display: none; flex: none; padding: 6dp 12dp; border-bottom: 1dp #d2e1fc29; }
+#inspector-tools.present { display: block; }
+#inspector-tools button { font-size: 12dp; margin-bottom: 0; }
 .inspect-label { display: block; margin: 4dp 0 5dp; font-size: 17dp; font-weight: bold; word-break: break-word; }
 .inspect-heading { display: block; margin: 8dp 0 4dp; font-size: 12dp; font-weight: bold; color: #c5d4e5; }
 button.inspect-row {
@@ -129,6 +138,25 @@ button.inspect-row:focus-visible { border-color: #a9dcff; background-color: #b6d
 button.inspect-rail-row { padding: 4dp; font-size: 12dp; }
 .inspect-rail-row .inspect-kind { display: none; }
 body.compact .inspect-rail { display: none; }
+span.inspect-thumb {
+    display: block; flex: none; width: 39dp; height: 29dp; margin-right: 8dp;
+    border-radius: 3dp; background-color: #0b1018;
+}
+.inspect-figure {
+    display: block; height: 139dp; margin: 7dp 0; background-color: #0b1018;
+}
+#panel.enlarged .inspect-figure { height: 292dp; }
+body.compact .inspect-figure { height: 109dp; }
+body.compact #panel.enlarged .inspect-figure { height: 222dp; }
+.inspect-disclosure { display: block; margin: 5dp 0; border-top: 1dp #d2e1fc29; padding-top: 5dp; }
+.inspect-disclosure button { margin-bottom: 0; }
+.inspect-value-row {
+    display: flex; align-items: flex-start; min-height: 23dp; padding: 4dp 3dp;
+    font-size: 12dp; border-bottom: 1dp #d2e1fc29; word-break: break-word;
+}
+.inspect-value-name { display: block; flex: 0 0 33%; padding-right: 5dp; }
+.inspect-value-type { display: block; flex: 0 0 23%; color: #c5d4e5; padding-right: 5dp; }
+.inspect-value-row .inspect-reading { display: block; flex: 1; min-width: 0; }
 button.log-row {
     display: flex; align-items: flex-start; box-sizing: border-box; width: 100%;
     margin: 0; padding: 5dp 7dp; text-align: left; white-space: normal;
@@ -168,6 +196,8 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
         <div class="readout"><span class="readout-label">Render size</span><span id="render-size"></span></div>
         <div class="readout"><span class="readout-label">Observed FPS</span><span id="observed-fps"></span></div>
     </div>
+    <div id="camera-reading"><span class="readout-label">Camera position</span><span id="camera-position"></span></div>
+    <div id="inspector-tools"></div>
     <div id="content"></div>
     <div id="console-controls">
         <div class="console-toolbar">

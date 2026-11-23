@@ -392,6 +392,7 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
     std::string focusRequest;
     uint64_t focusOrigin = 0;
     vosc::operator_ui::InspectorView inspector;
+    vosc::operator_ui::InspectorPreview previews;
     uint64_t revealSequence = 0;
     uint64_t highlighted = 0, anchorSequence = 0;
     float observedScroll = 0, anchorOffset = 0, lastScrollLimit = 0;
@@ -401,7 +402,7 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
     std::vector<const LoggerLine*> matches;
     std::vector<uint64_t> renderedSequences;
     std::map<int, Rml::Input::KeyIdentifier> forwardedKeys;
-    std::string renderedContent, viewTitle, title, dimensions, fps;
+    std::string renderedContent, renderedTools, viewTitle, title, dimensions, fps, cameraPosition;
     bool restoreScroll = false;
     std::array<float, static_cast<size_t>(View::Count)> scroll{};
 };
@@ -462,17 +463,7 @@ void DiagnosticOverlay::shutdown() {
 void DiagnosticOverlay::rememberScene(const scene::File& scene, const VOSC& renderer) {
     sceneTitle = scene.title;
     sceneLayers.clear();
-    for (const auto& layer : renderer.operatorLayers()) {
-        if (layer) sceneLayers.push_back({layer, layer->shader.operatorProgram(),
-            layer->shader.isShaderLoaded() ? layer->shader.getShader().getProgram() : 0, {}});
-        else sceneLayers.emplace_back();
-    }
-    for (const auto& command : scene.commands) {
-        if (command.asset.empty() || command.message.getArgAsString(2) != "/shader") continue;
-        const auto layer = command.message.getArgAsInt32(3);
-        if (layer >= 0 && static_cast<size_t>(layer) < sceneLayers.size())
-            sceneLayers[layer].asset = command.asset.filename().string();
-    }
+    for (const auto& layer : renderer.operatorLayers()) sceneLayers.emplace_back(layer);
 }
 
 void DiagnosticOverlay::show(View next, const std::string& focus) {
@@ -776,11 +767,14 @@ std::string DiagnosticOverlay::overviewMarkup(const VOSC& renderer, const GLint*
     const auto& layers = renderer.operatorLayers();
     const bool knownScene = !sceneLayers.empty() && layers.size() == sceneLayers.size() &&
         std::equal(layers.begin(), layers.end(), sceneLayers.begin(),
-            [](const auto& live, const auto& original) { return live && live == original.layer.lock(); });
+            [](const auto& live, const auto& original) { return live && live == original.lock(); });
     surface->setReading("scene-title", surface->title,
         knownScene && !sceneTitle.empty() ? sceneTitle : "Unnamed scene");
     surface->setReading("render-size", surface->dimensions,
         std::to_string(viewport[2]) + " × " + std::to_string(viewport[3]) + " px");
+    const auto camera = renderer.operatorCameraPosition();
+    surface->panel->SetClass("camera", camera.has_value());
+    if (camera) surface->setReading("camera-position", surface->cameraPosition, ofToString(*camera, 2));
     const auto fps = ofGetFrameRate();
     surface->setReading("observed-fps", surface->fps,
         fps > 0 ? ofToString(fps, 1) + " fps" : "Unavailable");
@@ -882,7 +876,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     ui.panel->SetClass("inspecting", inspector);
     ui.panel->SetClass("enlarged", inspector && ui.inspector.expanded());
     if (inspector)
-        ui.panel->SetProperty("height", std::to_string(ui.inspector.height(ui.document->IsClassSet("compact"))) + "dp");
+        ui.panel->SetProperty("height", std::to_string(ui.inspector.height(renderer, ui.document->IsClassSet("compact"))) + "dp");
     else ui.panel->RemoveProperty("height");
     ui.panel->SetClass("console", console);
     if (!console) ui.document->GetElementById("console-status")->SetClass("present", false);
@@ -899,11 +893,20 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
         case View::Count: break;
     }
     ui.inspector.endMarkup();
+    const auto tools = inspector ? ui.inspector.toolbar() : std::string{};
+    if (tools != ui.renderedTools) {
+        auto* toolbar = ui.document->GetElementById("inspector-tools");
+        toolbar->SetClass("present", !tools.empty());
+        toolbar->SetInnerRML(tools);
+        ui.renderedTools = tools;
+    }
     const bool contentChanged = markup != ui.renderedContent;
     if (contentChanged) {
         ui.content->SetInnerRML(markup);
         ui.renderedContent = markup;
     }
+    if (inspector) ui.inspector.syncReadings(*ui.content, contentChanged);
+
     bool rowsChanged = false;
     if (console) {
         refreshMatches();
@@ -928,5 +931,6 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     ui.restoreScroll = false;
 
     ui.paint(viewport);
+    if (inspector) ui.previews.paint(*ui.content, ui.inspector.previews(), viewport);
 }
 #endif

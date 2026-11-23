@@ -1,10 +1,13 @@
 #pragma once
 
+#include "Config.h"
+
 #include "TexData.h"
 #include "tex/BaseTex.h"
 #include "ofFbo.h"
 #include "ofxLooper.h"
 #include "shader/ShaderPass.h"
+#include <cstdint>
 #include <memory>
 
 class Texture : public VarsHolder {
@@ -45,6 +48,9 @@ public:
         return tex != nullptr;
     }
     bool hasShader() const;
+#if VOSC_OPERATOR_UI
+    uint64_t operatorSourceRevision() const { return sourceRevision; }
+#endif
     bool hasLooper() const { return looper != nullptr; }
     void setLooper(const ofxOscMessage& m);
 
@@ -76,5 +82,8 @@ private:
     const ofTexture& getSingleFrameTexture(int att) const;
     ofTexture& getSingleFrameTexture(int att);
     
+#if VOSC_OPERATOR_UI
+    uint64_t sourceRevision = 0;
+#endif
     std::unique_ptr<ofxLooper> looper;
 };

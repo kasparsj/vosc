@@ -131,6 +131,20 @@ void VOSC::mouseReleased(int x, int y, int button) {
     renderSystem.mouseReleased(x, y, button);
 }
 
+void VOSC::applyOperatorTextureFlag(const std::function<std::shared_ptr<Texture>()>& resolve,
+                                    bool Texture::*flag, bool value) {
+    auto texture = resolve();
+    if (!texture || texture.get()->*flag == value) return;
+    texture.reset();
+    engineControl.interruptTrial();
+    // Trial interruption can replace the program or the texture's backing source.
+    texture = resolve();
+    if (!texture || texture.get()->*flag == value) return;
+    texture.get()->*flag = value;
+    engineControl.noteExternalChange();
+}
+
+
 #endif
 
 void VOSC::keyPressed(int key) {
@@ -234,6 +248,30 @@ void VOSC::recoveryTestUpdate(bool beforeDraw) {
         for (const auto& value : command.at("programs")) programs.push_back(value.get<unsigned>());
         recoveryTestRecord({{"event", "command_complete"}, {"id", id}, {"operation", operation},
             {"result", engineControl.recoveryTestInspectPrograms(programs)}});
+#if VOSC_OPERATOR_UI
+    } else if (operation == "inspector_texture_probe") {
+        const auto name = command.value("texture", std::string(DEFAULT_TEX));
+        std::shared_ptr<Texture> texture;
+        if (command.value("shared", false)) {
+            const auto& pool = resourceSystem.registry().textureSharedPool;
+            if (auto found = pool.find(name); found != pool.end()) texture = found->second;
+        } else {
+            const auto index = command.value("layer", size_t{0});
+            const auto& layers = renderSystem.getLayers();
+            if (index < layers.size() && layers[index]) {
+                const auto& textures = layers[index]->shader.getTextures();
+                if (auto found = textures.find(name); found != textures.end()) texture = found->second;
+            }
+        }
+        ofJson result;
+        if (texture) {
+            if (command.contains("hold")) texture->feedbackSetupPending = command.at("hold").get<bool>();
+            result = {{"owner", texture->getId()}, {"source_revision", texture->operatorSourceRevision()},
+                      {"static", texture->isStatic}, {"pending", texture->needsUpdate},
+                      {"held", texture->feedbackSetupPending}};
+        }
+        recoveryTestRecord({{"event", "command_complete"}, {"id", id}, {"operation", operation}, {"result", result}});
+#endif
     } else if (operation == "emit_diagnostics") {
         const int count = std::max(0, std::min(command.value("count", 513), 1024));
         for (int index = 0; index < count; ++index) {

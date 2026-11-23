@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Config.h"
+
 #include "ofMain.h"
 #include "ofxOsc.h"
 #include "ofxAssimpModelLoader.h"
@@ -29,7 +31,10 @@ public:
     void update();
     void oscCommand(const string& command, const ofxOscMessage& m);
     void draw() const;
-    bool hasMesh() { return mesh != NULL; }
+    bool hasMesh() const { return mesh != NULL; }
+#if VOSC_OPERATOR_UI
+    const std::string& operatorSource() const { return path; }
+#endif
     ofMesh& getMesh() { return *mesh; }
     glm::vec3 getSize() {
         return boundingBox.max - boundingBox.min;

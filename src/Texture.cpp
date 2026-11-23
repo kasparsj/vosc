@@ -152,6 +152,9 @@ shared_ptr<BaseTex> Texture::chooseTex(string type, const vector<float>& args) {
 }
 
 void Texture::_unload() {
+#if VOSC_OPERATOR_UI
+    ++sourceRevision;
+#endif
     if (std::dynamic_pointer_cast<ShaderPingPongTex>(tex)) ShaderPingPongTex::invalidateFeedbackGeneration();
     feedbackSetupPending = false;
     frames.clear();
@@ -168,6 +171,9 @@ void Texture::unload() {
 
 void Texture::reload() {
     if (tex != nullptr) {
+#if VOSC_OPERATOR_UI
+        ++sourceRevision;
+#endif
         tex->reload();
     }
     else {

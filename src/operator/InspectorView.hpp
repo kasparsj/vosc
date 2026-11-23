@@ -4,6 +4,8 @@
 
 #if VOSC_OPERATOR_UI
 
+#include "InspectorPreview.hpp"
+
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -11,6 +13,7 @@
 #include <string>
 #include <vector>
 
+class BaseVar;
 class Buffer;
 class Geom;
 class Layer;
@@ -36,13 +39,16 @@ public:
     std::string layerLink(const Layer& layer, const VOSC& renderer, bool diagnostic = false);
     std::string markup(const VOSC& renderer, const std::string& shaderDiagnostic);
     std::string title() const;
+    std::string toolbar() const;
+    void syncReadings(Rml::Element& content, bool layoutChanged);
+    const auto& previews() const { return previewSlots; }
     std::optional<Navigation> activate(VOSC& renderer, const std::string& id, uint64_t token,
                                        float scroll, bool fromOverview);
     bool matches(const std::string& id, uint64_t token) const;
     bool detail() const { return !pages.empty(); }
     bool expanded() const;
     bool isLayerShader() const;
-    int height(bool compact) const;
+    int height(const VOSC& renderer, bool compact) const;
     std::shared_ptr<Layer> selectedLayer(const VOSC& renderer) const;
 
 private:
@@ -56,6 +62,7 @@ private:
         std::weak_ptr<const void> owner;
         std::weak_ptr<const void> backend;
         unsigned program = 0;
+        uint64_t sourceRevision = 0;
         std::string source;
         bool operator==(const Identity& other) const;
     };
@@ -81,6 +88,11 @@ private:
         Navigation back;
         Row origin;
         std::string section = "bindings";
+        bool sampling = false;
+        bool passes = false;
+        bool variables = false;
+        bool choosingSlice = false;
+        int slice = 0;
     };
     enum class State { Live, Changed, Unavailable };
     struct Resolved {
@@ -91,9 +103,21 @@ private:
 
     static Resource resolve(const VOSC& renderer, const Key& key, const Resource& parent);
     Resolved resolvePages(const VOSC& renderer);
+    static std::string rowId(const Key& key, bool rail = false);
     std::string row(const Key& key, const Resource& current, const std::string& label,
                     const std::string& subtitle = {}, const std::string& kind = {}, bool rail = false);
     std::string bindings(const VOSC& renderer, const Resource& shader, bool fromLayer);
+    std::string globalsMarkup(const VOSC& renderer);
+    std::string shaderMarkup(const VOSC& renderer, const Resource& resource,
+                             const std::string& diagnostic);
+    std::string textureMarkup(const VOSC& renderer, const Resource& resource);
+    std::string auxiliaryMarkup(const Resource& resource);
+    std::string preview(const Resource& resource, bool thumbnail, int slice = 0);
+    std::string reading(std::string value);
+    std::string valueRow(const std::string& name, const std::string& type, std::string value);
+    std::string variableRows(const std::map<std::string, std::shared_ptr<BaseVar>>& variables);
+    std::vector<InspectorPreviewSlot> previewSlots;
+    std::vector<std::string> nextReadings, renderedReadings;
     std::vector<Page> pages;
     std::map<std::string, Row> visibleRows, nextRows;
     std::optional<std::pair<std::string, Row>> restoreRow;

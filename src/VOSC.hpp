@@ -7,7 +7,9 @@
 #include "systems/RenderSystem.hpp"
 #include "systems/ResourceSystem.hpp"
 #include "control/EngineControl.hpp"
+#include <functional>
 #include <memory>
+#include <optional>
 #ifdef VOSC_RECOVERY_TESTING
 #include <string>
 #endif
@@ -29,6 +31,12 @@ public:
     void hideDebug() { renderSystem.showDebug = false; }
     bool isDebugVisible() const { return renderSystem.showDebug; }
     const auto& operatorLayers() const { return renderSystem.getLayers(); }
+    std::optional<glm::vec3> operatorCameraPosition() const {
+        if (!runtime.camera.isEnabled()) return std::nullopt;
+        return runtime.camera.getCamera().getPosition();
+    }
+    void applyOperatorTextureFlag(const std::function<std::shared_ptr<Texture>()>& resolve,
+                                  bool Texture::*flag, bool value);
 #endif
     void keyPressed(int key);
     void windowResized(int w, int h);

@@ -22,12 +22,6 @@ public:
 
 private:
     enum class View { Overview, Inspector, Console, Browse, Count };
-    struct SceneLayer {
-        std::weak_ptr<Layer> layer;
-        std::weak_ptr<const ofShader> shader;
-        GLuint program = 0;
-        std::string asset;
-    };
     struct Surface;
     struct CleanClick {
         glm::vec2 eventPosition;
@@ -56,7 +50,7 @@ private:
     bool open = false;
     View view = View::Overview;
     std::string sceneTitle;
-    std::vector<SceneLayer> sceneLayers;
+    std::vector<std::weak_ptr<Layer>> sceneLayers;
     std::vector<LoggerLine> entries;
     uint64_t clearCursor = 0;
     uint64_t cachedSequence = 0;

@@ -85,6 +85,9 @@ public:
         if (shadertoy) return shadertoy;
         return shader;
     }
+    std::string operatorSourcePath() const {
+        return watchedSourcePath.empty() ? shaderPath : watchedSourcePath;
+    }
     GLuint operatorLinkedProgram() const {
         if (!isShaderLoaded()) return 0;
         // Keep a watched program name alive across a subsequent relink.
