@@ -229,6 +229,15 @@ with TemporaryDirectory(prefix="vosc-expr-") as directory:
 PY
 ```
 
+## Verification status
+
+The source tree in `d640cc2` passed a clean SDK build on Ubuntu 24.04.5 ARM64
+on 2026-11-23 using checksum-verified cached archives. The muParser and
+Linux staging tests passed, the executable linked as AArch64, all shared
+libraries resolved, and the installed ofxMidi files matched their pre-build
+checksums. Under Xvfb with Mesa llvmpipe, VOSC evaluated `0.125+0.25` to layer
+alpha `0.375`.
+
 Physical Raspberry Pi qualification requires an idle board and attached
 display. Check hardware-accelerated desktop OpenGL 4.1, visible Organic
 Trails output, a visible OSC cue from a separate controller, and sustained
