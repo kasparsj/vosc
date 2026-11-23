@@ -60,6 +60,7 @@ OF_ROOT ?= ../../..
 PROJECT_ROOT ?= .
 override PROJECT_CFLAGS += -DVOSC_OPERATOR_UI=$(VOSC_OPERATOR_UI)
 ifeq ($(VOSC_OPERATOR_UI),1)
+override PROJECT_EXCLUSIONS += $(PROJECT_ROOT)/src/operator/macos $(PROJECT_ROOT)/src/operator/macos/%
 VOSC_RMLUI_DIR ?= $(abspath .vosc-linux/operator-ui/$(or $(ABI),native))
 VOSC_RMLUI_FONT := $(VOSC_RMLUI_DIR)/generated/VoscOperatorFont.hpp
 VOSC_RMLUI_LIBS := $(VOSC_RMLUI_DIR)/lib/libvosc_rmlui_gl3.a $(VOSC_RMLUI_DIR)/lib/librmlui.a
@@ -88,6 +89,6 @@ endif
 ReleaseABI DebugABI: | vosc-stage-assets
 
 vosc-stage-assets:
-	python3 scripts/stage_assets.py bin/data
+	python3 scripts/stage_assets.py bin/data --addon-sdk "$(OF_ROOT)"
 endif
 endif

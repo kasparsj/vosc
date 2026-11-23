@@ -1,0 +1,141 @@
+{
+  "editable-scene": {
+    "category": "Recipe",
+    "summary": "Plays immediately with its bundled solid shader.",
+    "cues": "Use the replay companion in a separate owned renderer to demonstrate editing and export.",
+    "requirements": "Wrapped replay needs VisualsQuark replay API 1.",
+    "attach": "replay"
+  },
+  "sieve": {
+    "category": "Recipe",
+    "summary": "Masks the bundled photograph with a tiled image.",
+    "cues": "The SuperCollider companion configures a separate renderer through ordinary OSC replay.",
+    "requirements": "Keep the bundled JPEG and mask with the scene.",
+    "attach": "replay"
+  },
+  "organic-trails": {
+    "category": "Recipe",
+    "summary": "Animated particle trails accumulate through shader feedback.",
+    "cues": "The authoring guide describes live edits and controls.",
+    "requirements": ""
+  },
+  "sound-data": {
+    "category": "Recipe",
+    "summary": "The bundled shader displays a baseline color before receiving analysis values.",
+    "cues": "SuperCollider audio analysis drives color and intensity.",
+    "requirements": "Live response needs a SuperCollider audio server and a microphone or local audio file.",
+    "attach": "audio"
+  },
+  "intro": {
+    "category": "Built-in",
+    "summary": "A grid opens with a shader texture in its first layer.",
+    "cues": "Cues demonstrate layouts, images, sketches, layer controls and a synthetic amplitude sample.",
+    "requirements": "",
+    "attach": "attach"
+  },
+  "shaders": {
+    "category": "Built-in",
+    "summary": "The bundled RotStringsV shader runs as a texture.",
+    "cues": "Cues demonstrate sine and input-controlled glow and color, unload and grid reload.",
+    "requirements": "",
+    "attach": "attach"
+  },
+  "sketches": {
+    "category": "Built-in",
+    "summary": "Spiral runs as a built-in sketch texture.",
+    "cues": "Cues switch between built-in sketches.",
+    "requirements": "",
+    "attach": "attach"
+  },
+  "performance": {
+    "category": "Built-in",
+    "summary": "Three layers open with sketch and shader sources ready for transitions.",
+    "cues": "Run the companion cues for two ten-second fades.",
+    "requirements": "",
+    "attach": "attach"
+  },
+  "test": {
+    "category": "Built-in",
+    "summary": "Shows an image, shader texture, sketch and solid color in a grid.",
+    "cues": "Cues exercise transforms, reset and unload.",
+    "requirements": "",
+    "attach": "attach"
+  },
+  "camera": {
+    "category": "Geometry & rendering",
+    "summary": "Displays a lit penguin model through the scene camera.",
+    "cues": "Cues demonstrate camera moves, orbit and FXAA.",
+    "requirements": "Uses OpenGL 4.1 and the bundled model and texture.",
+    "attach": "attach"
+  },
+  "geom": {
+    "category": "Geometry & rendering",
+    "summary": "Displays boxes textured with the bundled photograph.",
+    "cues": "Cues switch to 100 transformed penguins.",
+    "requirements": "Uses OpenGL 4.1 and the bundled model assets for the cue.",
+    "attach": "attach"
+  },
+  "buffer": {
+    "category": "Geometry & rendering",
+    "summary": "Draws 4,356 instanced boxes driven by shader buffers.",
+    "cues": "The companion provides a setup with expressions and camera clipping.",
+    "requirements": "Requires OpenGL 4.1, GPU instancing and buffer support.",
+    "attach": "attach"
+  },
+  "deferred": {
+    "category": "Geometry & rendering",
+    "summary": "Lights a box through the deferred pipeline.",
+    "cues": "The companion setup demonstrates the original randomized red channel.",
+    "requirements": "Requires OpenGL 4.1, deferred shading and its staged shaders.",
+    "attach": "attach"
+  },
+  "clouds": {
+    "category": "Geometry & rendering",
+    "summary": "Ray marches a cloud volume using tiled noise.",
+    "cues": "The companion supplies its own blank-renderer setup.",
+    "requirements": "Uses OpenGL 4.1, the bundled noise image and shader includes.",
+    "attach": "attach"
+  },
+  "grass": {
+    "category": "Geometry & rendering",
+    "summary": "Runs a procedural ground grid and a geometry-stage grass shader.",
+    "cues": "The companion supplies its own blank-renderer setup.",
+    "requirements": "Requires OpenGL 4.1 and geometry shader support.",
+    "attach": "attach"
+  },
+  "particles-gpu": {
+    "category": "Geometry & rendering",
+    "summary": "Animates 16,384 instanced particles with a shared ping-pong source.",
+    "cues": "The companion supplies its own blank-renderer setup.",
+    "requirements": "Requires OpenGL 4.1, instancing, buffers and a floating-point render target.",
+    "attach": "attach"
+  },
+  "video": {
+    "category": "Media & capture",
+    "summary": "Plays a user-selected local clip.",
+    "cues": "Cues seek, trigger playback and switch to double speed.",
+    "requirements": "Choose a readable MOV or MP4 with a codec the renderer supports.",
+    "attach": "attach"
+  },
+  "webcam-delay": {
+    "category": "Media & capture",
+    "summary": "Shows live camera output and delayed camera samples.",
+    "cues": "The companion has a separate history cue for blank-renderer setup.",
+    "requirements": "Requires a connected camera and Camera permission for VOSC.",
+    "attach": "attach"
+  },
+  "webcam-looper": {
+    "category": "Media & capture",
+    "summary": "Shows the selected live camera feed.",
+    "cues": "Cues record and repeat a two-second loop and return to live video.",
+    "requirements": "Requires a connected camera and Camera permission for VOSC.",
+    "attach": "attach"
+  },
+  "ultralight": {
+    "category": "Media & capture",
+    "summary": "Renders the NASA Astronomy Picture of the Day page as an HTML texture.",
+    "cues": "The companion supplies its own blank-renderer setup.",
+    "requirements": "Requires USE_OFX_ULTRALIGHT, matching runtime libraries and a reachable page.",
+    "attach": "attach"
+  }
+}

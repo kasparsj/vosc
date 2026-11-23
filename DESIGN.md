@@ -4,11 +4,11 @@
 
 Draft · 2026-11-22 · Approved direction: on-demand floating controls in the VOSC render window. Diagnostics may briefly cover part of the visual. One shortcut returns to clean output in the current window mode. [Codebase audit and mockup inventory](docs/Render-machine-ui-audit.md)
 
-Milestone 1 adds the on-demand RmlUi dock, Overview, shader-error walkthrough and Console. Runtime errors are retained while the renderer continues to show clean output. Milestone 2 brings Layers and Globals into that same RmlUi surface and retires the bitmap debug Inspector. Milestone 3 adds Browse Assets with a live folder browser and layer-targeted SuperCollider snippets. [App and console routing](src/ofApp.cpp) · [Shortcuts](docs/Home.md#keyboard-shortcuts)
+Milestone 1 adds the on-demand RmlUi dock, Overview, shader-error walkthrough and Console. Runtime errors are retained while the renderer continues to show clean output. Milestone 2 brings Layers and Globals into that same RmlUi surface and retires the bitmap debug Inspector. Milestone 3 adds Browse Assets with a live folder browser and layer-targeted SuperCollider snippets. Milestone 4 adds the live Examples catalog and one owned preview window. [App and console routing](src/ofApp.cpp) · [Shortcuts](docs/Home.md#keyboard-shortcuts)
 
 The Linux minimal profile omits the operator UI. The optional native control API uses a local Unix socket and captures the composed scene before operator overlays. [Build profiles](README.md#minimal-linux-build-and-render-settings) · [Engine API](docs/Engine-api.md)
 
-Isolated macOS arm64 tests verified the dock and Console at 1024×768 and bright 640×480. A failed Layer 0 reload preserved the previous shader and animation, and both diagnostic routes copied the same retained message. Browse Examples and its preview window are planned for milestone 4.
+Isolated macOS arm64 tests verified the dock and Console at 1024×768 and bright 640×480. A failed Layer 0 reload preserved the previous shader and animation, and both diagnostic routes copied the same retained message.
 
 ## Brand
 
@@ -34,7 +34,7 @@ Quiet and precise, with the scene as the dominant visual. Use stable readings, c
 2. **Overview.** Show scene identity when available, render dimensions, observed frame rate, and recent error status. Disclose camera position when a camera is enabled. Link to the relevant diagnostic or resource when it can be identified.
 3. **Inspector.** Choose Globals or a layer. Open geometry previews, input histories, shaders, textures, and buffer textures from that scope. Reveal bindings, uniforms, variables, sampling metadata, and preview slices in resource detail. Keep texture-update controls within the owning resource.
 4. **Console.** Keep recent messages with severity, source, and message text where available. Preserve copy and clear actions and the operator's reading position when new messages arrive. Offer filters on demand.
-5. **Browse.** Open one destination with two views. **Examples** lists complete scenes and opens them in an independent preview window. **Assets** lists reusable sources and copies the OSC command for a selected layer.
+5. **Browse.** **Assets** is the default and lists reusable sources with layer-targeted OSC commands. **Built-ins** lists renderer primitives. **Examples** discovers native scene manifests and can open one in an independent preview window.
 
 The [view specification](docs/Render-machine-ui.md) maps each current capability to a proposed view and records the first-version priorities. Use its [review criteria](docs/Render-machine-ui.md#first-version-review-criteria) for the next mockup and native verification.
 
@@ -95,7 +95,7 @@ Design for pointer and keyboard in windowed and fullscreen use. Show the scene a
 | No named scene or no inspectable resources | Show the available runtime status. Explain missing identity or empty resource lists without implying a fault. |
 | Recoverable runtime error | Show concise context and provide access to the console from the open UI. Preserve the existing render outcome. |
 | Reading unavailable | Give the reason when available. Avoid substituting a zero for missing performance data. |
-| Example preview | Show required inputs before launch. Indicate starting, ready, or failed in Browse. The active render continues independently. |
+| Example preview | Prepare inputs before launch. Starting offers Cancel, Ready offers Focus Preview and Close Preview, and Failed offers Retry with a diagnostic. The primary renderer continues independently. |
 | Asset ready to use | Show the selected layer and source role before copying. If the asset or target is unavailable, explain the reason at the action. |
 | Fatal startup failure | The existing startup path reports the cause to stderr and exits. An in-window recovery experience would require a separate scope decision. [Startup path](src/main.cpp) · [App startup errors](src/ofApp.cpp) |
 
@@ -118,11 +118,13 @@ For Browse, review opening a working example in a separate preview window, resol
 
 The floating-controls study established the look and the basic shader-error walkthrough. The Current design page in Figma is the visual reference for the wide and bright compact dock, Console, Inspector, and Browse Assets. The historical density review records simulated Inspector and Browse interactions. Browse Assets uses the existing native shell and mirrors the asset folder hierarchy. The live scene replaces the design backdrop, and runtime availability and clipboard results replace the mockup's fixture controls. [Wide Console](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-209) · [Bright compact Console](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-2494) · [Density review](docs/mockups/render-machine-overlay-density-review/verification.md)
 
+The Examples tab uses the same live folder model as Assets. The catalog reflects discovered manifests, and the installed stage includes the example folders, their files, and optional display metadata. The actual scene, preview port, and native window title replace the mockup fixtures. The OS window may cover part of a single display while focused. [Wide catalog](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-1786) · [Wide detail](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-1890) · [Starting](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-1940) · [Ready](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-1993) · [Wide preview window](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-2048) · [Compact catalog](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-2557) · [Compact detail](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-2773) · [Compact preview window](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-2823)
+
 ## Open questions
 
 - [ ] Product review: Does the Overview need only scene identity, output size, observed FPS, and recent errors, or is another reading essential during a show? This determines the default view.
 - [ ] Product review: Which preserved Inspector actions belong on the first level? Confirm shortcut assignments and the placement of scene-changing texture controls.
 - [ ] Product review: Is the first release macOS only? This determines which build profiles need overlay support.
 - [ ] Product review: Where does the operator discover and open the overlay from clean output? Confirm the opener and direct Console shortcut against the focus model.
-- [ ] Product review: Confirm the one-preview-at-a-time design and how a windowed preview behaves when the primary render is fullscreen on the only display.
+- [x] VOSC owns one preview window at a time and preserves the primary renderer's window mode.
 - [x] Assets copy a SuperCollider snippet for an already connected `~visuals` client.

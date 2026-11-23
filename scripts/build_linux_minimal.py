@@ -11,6 +11,7 @@ import tempfile
 
 from addon_compat import (EXPR_COMPILE_LOOP, SHADERTOY_TIMESTAMP, patch_expression_returns,
                           patch_shadertoy_timestamp, replace_addon_anchor)
+from stage_assets import stage_examples
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -106,6 +107,7 @@ def main():
     shutil.copytree(source, stage / "src", ignore=ignore_ui)
     shutil.copytree(ROOT / "assets", stage / "bin/data", ignore=ignore_assets)
     (stage / "bin/data/videos").mkdir()
+    stage_examples(stage / "bin/data/examples")
     print(f"Building VOSC minimal in {stage}", flush=True)
     result = subprocess.run([*shlex.split(args.make), f"OF_ROOT={sdk}", "Release"], cwd=stage)
     if result.returncode:

@@ -12,6 +12,21 @@ ROOT = Path(__file__).resolve().parents[1]
 EXCLUDED = {"ofxDeferredShading", "ofxHPVPlayer", "ofxUltralight"}
 
 
+def verify_example_stage(source, staged):
+    def contents(root):
+        return {
+            path.relative_to(root): path.read_bytes()
+            for path in root.rglob("*")
+            if path.is_file() and all(not part.startswith(".") for part in path.relative_to(root).parts)
+        }
+
+    expected = contents(source)
+    assert Path("README.md") in expected
+    assert Path("browse.json") in expected
+    assert Path("organic-trails/preview.png") in expected
+    assert contents(staged) == expected
+
+
 def verify_desktop_selection(project, sdk, rules, run):
     helper = project / "scripts/build_rmlui.py"
     helper.write_text(
@@ -39,6 +54,9 @@ def verify_desktop_selection(project, sdk, rules, run):
         "\t@printf '%s\\n' '$(PROJECT_CFLAGS)' '$(PROJECT_EXCLUSIONS)' > obj/compile-inputs\n"
         "\t@touch $@\n"
     )
+    deferred = sdk / "addons/ofxDeferredShading/data/shaders/deferred"
+    deferred.mkdir(parents=True)
+    (deferred / "gbuffer.frag").write_text("Deferred shader fixture.\n")
     desktop = [f"OF_ROOT={sdk}", "VOSC_PROFILE=default"]
     enabled = project / "rmlui-enabled"
     disabled = project / "rmlui-disabled"
@@ -49,6 +67,13 @@ def verify_desktop_selection(project, sdk, rules, run):
     assert "-DVOSC_OPERATOR_UI=1" in (project / "obj/compile-inputs").read_text()
     assert f"-I{enabled}/generated" in (project / "obj/compile-inputs").read_text()
     assert f"{enabled}/lib/libvosc_rmlui_gl3.a" in (project / "bin/link-inputs").read_text()
+    picker_inputs = (project / "obj/compile-inputs").read_text()
+    assert "./src/operator/macos ./src/operator/macos/%" in picker_inputs
+    staged_shader = project / "bin/data/shaders/deferred/gbuffer.frag"
+    assert staged_shader.read_bytes() == (deferred / "gbuffer.frag").read_bytes()
+    verify_example_stage(project / "examples", project / "bin/data/examples")
+    manifest = project / "bin/data/examples/video/scene.vosc.json"
+    first_mtime = manifest.stat().st_mtime_ns
 
     result = run(["make", "-j2", "Release", *desktop, "VOSC_OPERATOR_UI=0", f"VOSC_RMLUI_DIR={disabled}"])
     assert result.returncode == 0, result
@@ -58,6 +83,8 @@ def verify_desktop_selection(project, sdk, rules, run):
     assert "/src/operator" in inputs
     assert "/generated" not in inputs
     assert not (project / "bin/link-inputs").read_text().strip()
+    assert manifest.stat().st_mtime_ns == first_mtime
+    verify_example_stage(project / "examples", project / "bin/data/examples")
 
 
 def main():
@@ -74,6 +101,7 @@ def main():
             target = project / "src" / ui_source
             target.parent.mkdir(exist_ok=True)
             target.touch()
+        shutil.copytree(ROOT / "examples", project / "examples")
         data = project / "assets/shaders"
         (data / "deferred").mkdir(parents=True)
         (data / "direct.frag").touch()
@@ -129,6 +157,7 @@ def main():
         assert not (stage / "bin/data/shaders/deferred").exists()
         assert list((stage / "bin/data/videos").iterdir()) == []
         assert not list(stage.rglob("*RmlUi*"))
+        verify_example_stage(project / "examples", stage / "bin/data/examples")
         verify_desktop_selection(project, sdk, rules, run)
     print("PASS Linux minimal staging and desktop operator UI input selection with a fixture SDK")
 

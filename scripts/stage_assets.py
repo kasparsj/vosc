@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Refresh shared assets in a writable VOSC runtime data directory."""
+"""Refresh shared assets and examples in a writable VOSC runtime data directory."""
 
 import argparse
 import filecmp
@@ -17,7 +17,7 @@ DEFERRED_SHADERS = "addons/ofxDeferredShading/data/shaders/deferred"
 def stage_assets(destination, *, addon_sdk=None, include_videos=False):
     sources = [
         (ROOT / "assets", Path(".")),
-        (ROOT / "examples/editable-scene", Path("examples/editable-scene")),
+        (ROOT / "examples", Path("examples")),
     ]
     if addon_sdk is not None:
         sources.append((addon_sdk / DEFERRED_SHADERS, Path("shaders/deferred")))
@@ -25,12 +25,22 @@ def stage_assets(destination, *, addon_sdk=None, include_videos=False):
     if include_videos and media.exists():
         sources.append((media, Path("videos")))
 
+    stage_files(destination, sources, (destination / "videos",))
+
+
+def stage_examples(destination):
+    stage_files(destination, [(ROOT / "examples", Path("."))])
+
+
+def stage_files(destination, sources, extra_directories=()):
     files = []
-    directories = {destination, destination / "videos"}
+    directories = {destination, *extra_directories}
     resolved = destination.resolve()
     for source, relative in sources:
         if not source.is_dir():
             raise ValueError(f"Missing asset source directory: {source}")
+        if source == ROOT / "examples" and source.is_symlink():
+            raise ValueError(f"Refusing a linked examples directory: {source}")
         source_root = source.resolve()
         if resolved.is_relative_to(source_root) or source_root.is_relative_to(resolved):
             raise ValueError(f"Runtime directory overlaps asset source: {destination}")

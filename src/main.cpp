@@ -2,6 +2,9 @@
 #include "ofApp.h"
 #include "Config.h"
 #include "control/OscPort.hpp"
+#if VOSC_OPERATOR_UI
+#include "tex/WebcamTex.h"
+#endif
 #include <charconv>
 #include <condition_variable>
 #include <cstdio>
@@ -93,6 +96,22 @@ StartupOptions parseOptions(int argc, char** argv) {
     return options;
 }
 
+#if VOSC_OPERATOR_UI
+void validatePreviewCamera(const scene::File& scene) {
+    for (const auto& command : scene.nativeCommands) {
+        if (command.sourceKind != "camera") continue;
+        // Native V2 decoding has already normalized the input to "webcam:<index>".
+        constexpr std::string_view prefix = "webcam:";
+        const auto source = command.message.getArgAsString(1);
+        const int device = std::stoi(source.substr(prefix.size()));
+        if (!WebcamTex::exists(device))
+            throw std::runtime_error("camera device " + std::to_string(device) +
+                                     " is unavailable. Choose a connected camera and retry.");
+        return;
+    }
+}
+#endif
+
 class StartupDeadline {
 public:
     explicit StartupDeadline(const scene::File& file)
@@ -150,10 +169,19 @@ int main(int argc, char** argv) {
         preview = options.preview;
         if (preview) previewChild.emplace();
 #endif
+#if defined(TARGET_OSX) && defined(APPSTORE) && APPSTORE
+        if (!preview) {
+            const auto contents = ofFilePath::getCurrentExePathFS().parent_path().parent_path();
+            ofSetDataPathRoot(contents / "Resources/data");
+        }
+#endif
         oscPort = control::oscPortFromEnvironment();
         if (!options.scenePath.empty()) {
             startupScene = scene::load(options.scenePath, options.inputs);
             CommandSystem::validateStartupScene(*startupScene);
+#if VOSC_OPERATOR_UI
+            if (preview) validatePreviewCamera(*startupScene);
+#endif
             if (options.size) {
                 // Keep window creation and startup replay on the same effective size.
                 startupScene->width = options.size->first;

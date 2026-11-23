@@ -199,12 +199,12 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
 #browse-status.present { display: block; }
 #panel.detail .browse-filters, #panel.browse-builtins #browse-filters { display: none; }
 #panel.browse-examples.detail #browse-example-filters { display: none; }
-.browse-search, #panel.browse select {
+.browse-search, .example-input, #panel.browse select {
     box-sizing: border-box; height: 30dp; padding: 5dp 7dp; font-size: 13dp;
     border: 1dp #b9d2f54a; border-radius: 5dp; background-color: #182130; color: #f3f6fc;
 }
 .browse-search { flex: 1; min-width: 0; margin-right: 6dp; }
-.browse-search:focus, #panel.browse select:focus { border-color: #a9dcff; }
+.browse-search:focus, .example-input:focus, #panel.browse select:focus { border-color: #a9dcff; }
 .browse-search:placeholder-shown { color: #c5d4e5; }
 .browse-category { flex: none; width: 129dp; }
 #panel.browse select selectarrow {
@@ -248,8 +248,17 @@ body.compact .browse-preview img { height: 60dp; }
     color: #dbeaff; font-size: 12dp;
 }
 #panel.browse-examples .browse-origin { display: block; word-break: break-word; }
-.example-preview-actions { display: block; margin-top: 8dp; }
+button.example-row { min-height: 34dp; }
+button.example-row .example-thumb {
+    flex: none; width: 36dp; height: 23dp; margin-right: 8dp; pointer-events: none;
+}
+.example-preview-actions, .example-input-actions, .example-files { display: block; margin-top: 8dp; }
 .example-preview-actions .message { color: #dbeaff; font-size: 12dp; }
+.example-input-label { display: block; color: #dbeaff; font-size: 12dp; margin-bottom: 5dp; }
+.example-input { display: block; width: 100%; margin-bottom: 6dp; }
+.example-input.camera-index { display: inline-block; width: 44dp; margin: 0 0 0 8dp; }
+.example-input-actions button.inactive { color: #aab5c5; focus: none; pointer-events: none; }
+.example-files button { margin-top: 5dp; }
 </style>
 </head>
 <body>
@@ -291,6 +300,9 @@ body.compact .browse-preview img { height: 60dp; }
             <select id="browse-example-category" class="browse-category" aria-label="Example category">
                 <option value="" selected>All categories</option>
                 <option value="Recipe">Recipe</option>
+                <option value="Built-in">Built-in</option>
+                <option value="Geometry &amp; rendering">Geometry &amp; rendering</option>
+                <option value="Media &amp; capture">Media &amp; capture</option>
             </select>
         </div>
         <div id="browse-status" class="message error"></div>

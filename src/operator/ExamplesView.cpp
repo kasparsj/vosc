@@ -1,35 +1,119 @@
 #include "ExamplesView.hpp"
 
 #if VOSC_OPERATOR_UI
-#include "BrowseCatalog.hpp"
+#include "ExampleFiles.hpp"
 #include "PreviewProcess.hpp"
-#include "ofJson.h"
 #include <RmlUi/Core/StringUtilities.h>
+#include <algorithm>
+#include <charconv>
+#include <chrono>
 #include <fstream>
 #include <string_view>
 #include <utility>
 
+#if defined(__linux__)
+#include <cerrno>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <thread>
+#endif
+
+#if defined(__linux__) && defined(__GLIBC_PREREQ)
+#if __GLIBC_PREREQ(2, 34)
+#define VOSC_EXAMPLE_REVEAL_LINUX 1
+extern char** environ;
+#endif
+#endif
+
 namespace vosc::operator_ui {
 namespace {
-
-constexpr auto manifestName = "examples/editable-scene/scene.vosc.json";
-constexpr auto rowId = "example-row-editable-scene";
-constexpr auto categoryName = "Recipe";
+namespace fs = std::filesystem;
 using State = PreviewProcess::State;
+constexpr std::string_view rowPrefix = "example-row-";
 
 std::string escaped(const std::string& text) {
     return Rml::StringUtilities::EncodeRml(text);
+}
+
+std::string note(const std::string& text, const char* kind = "browse-origin") {
+    return text.empty() ? "" : "<p class='" + std::string(kind) + "'>" + escaped(text) + "</p>";
 }
 
 bool active(State state) {
     return state == State::Starting || state == State::Ready || state == State::Stopping;
 }
 
+std::optional<fs::path> readableClip(const fs::path& selection) {
+    if (!selection.is_absolute()) return std::nullopt;
+    std::error_code error;
+    const auto path = fs::canonical(selection, error);
+    if (error || !fs::is_regular_file(path, error) || error) return std::nullopt;
+    const auto extension = Rml::StringUtilities::ToLower(path.extension().string());
+    const auto name = path.string();
+    if ((extension != ".mov" && extension != ".mp4") || name.size() > 2048 || name.find(':') != std::string::npos
+        || !std::ifstream(path, std::ios::binary)) return std::nullopt;
+    return path;
 }
 
-bool ExamplesView::matches() const {
-    return (category.empty() || category == categoryName)
-        && Rml::StringUtilities::ToLower(title).find(query) != std::string::npos;
+bool cameraIndex(const std::string& selection) {
+    int value = 0;
+    const auto* end = selection.data() + selection.size();
+    const auto parsed = std::from_chars(selection.data(), end, value);
+    return selection.size() <= 2 && parsed.ec == std::errc{} && parsed.ptr == end && value >= 0 && value <= 63
+        && selection.front() >= '0' && selection.front() <= '9';
+}
+
+#if !defined(__APPLE__)
+bool revealExampleFile(const fs::path& path) {
+#if defined(VOSC_EXAMPLE_REVEAL_LINUX)
+    // The file manager receives only the containing directory. Do not inherit the renderer's sockets.
+    posix_spawn_file_actions_t actions;
+    if (::posix_spawn_file_actions_init(&actions)) return false;
+    const auto closeResult = ::posix_spawn_file_actions_addclosefrom_np(&actions, 3);
+    std::string directory = path.parent_path().string();
+    char executable[] = "xdg-open";
+    char* args[] = {executable, directory.data(), nullptr};
+    pid_t opener = -1;
+    const auto result = closeResult ? closeResult : ::posix_spawnp(&opener, executable, &actions, nullptr, args, environ);
+    ::posix_spawn_file_actions_destroy(&actions);
+    if (result) return false;
+    std::thread([opener] {
+        while (::waitpid(opener, nullptr, 0) < 0 && errno == EINTR) {}
+    }).detach();
+    return true;
+#else
+    (void)path;
+    return false;
+#endif
+}
+#endif
+
+}
+
+struct ExamplesView::ClipRequest {
+#if defined(__APPLE__)
+    std::string item;
+    std::optional<ClipPickResult> result;
+    fs::path path;
+#endif
+};
+
+const ExampleEntry* ExamplesView::find(const std::string& id) const {
+    const auto match = std::find_if(catalog.rows.begin(), catalog.rows.end(), [&](const auto& entry) {
+        return entry.id == id;
+    });
+    return match == catalog.rows.end() ? nullptr : &*match;
+}
+
+const ExamplesView::InputState& ExamplesView::media(const ExampleEntry& example) const {
+    static const InputState empty;
+    const auto found = inputs.find(example.id);
+    return found == inputs.end() ? empty : found->second;
+}
+
+bool ExamplesView::matches(const ExampleEntry& example) const {
+    return (category.empty() || category == example.category)
+        && Rml::StringUtilities::ToLower(example.title).find(query) != std::string::npos;
 }
 
 bool ExamplesView::setFilters(std::string name, std::string kind) {
@@ -37,59 +121,123 @@ bool ExamplesView::setFilters(std::string name, std::string kind) {
     if (name == query && kind == category) return false;
     query = std::move(name);
     category = std::move(kind);
-    selected = false;
+    selected.clear();
     catalogScroll = 0;
     return true;
 }
 
 bool ExamplesView::openItem(const std::string& id, float scroll) {
-    if (detailOpen || id != rowId || !matches()) return false;
-    detailOpen = selected = true;
+    if (detail() || id.compare(0, rowPrefix.size(), rowPrefix) != 0) return false;
+    const auto* example = find(id.substr(rowPrefix.size()));
+    if (!example || !matches(*example)) return false;
+    selected = item = example->id;
     catalogScroll = scroll;
+    revealFeedback.clear();
+    if (example->inputKind == "camera") {
+        const auto [state, inserted] = inputs.try_emplace(item);
+        if (inserted) state->second.draft = example->inputDefault;
+    }
     return true;
 }
 
 std::string ExamplesView::backItem() {
-    detailOpen = false;
-    return rowId;
+    return std::string(rowPrefix) + std::exchange(item, {});
+}
+
+void ExamplesView::requestCatalog() {
+    if (pendingCatalog.valid()) return;
+    nextCatalogCheck = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+    directories = exampleDirectories();
+    auto load = [roots = directories] {
+        Catalog fresh;
+        fresh.rows = readExamples(roots, fresh.error);
+        return fresh;
+    };
+    try {
+        pendingCatalog = std::async(std::launch::async, load);
+    } catch (const std::system_error&) {
+        catalog.error = "Could not start the catalog scan. Refresh examples to retry.";
+        loaded = true;
+    }
 }
 
 void ExamplesView::refresh() {
-    const auto now = std::chrono::steady_clock::now();
-    if (now < nextCheck) return;
-    nextCheck = now + std::chrono::seconds(1);
-    unavailable.clear();
-    const auto manifest = stagedBrowseFile(manifestName);
-    if (!manifest) {
-        unavailable = "The packaged scene manifest is missing. Restage the renderer data.";
-        return;
+    if (pendingCatalog.valid()) {
+        if (pendingCatalog.wait_for(std::chrono::seconds(0)) != std::future_status::ready) return;
+        try {
+            catalog = pendingCatalog.get();
+        } catch (const std::exception&) {
+            catalog.error = "Could not refresh examples. Showing the previous catalog.";
+        }
+        loaded = true;
     }
-    constexpr size_t limit = 64 * 1024;
-    std::ifstream input(*manifest, std::ios::binary);
-    std::string bytes(limit + 1, '\0');
-    input.read(bytes.data(), bytes.size());
-    bytes.resize(static_cast<size_t>(input.gcount()));
-    const auto scene = ofJson::parse(bytes, nullptr, false);
-    if (input.bad() || bytes.size() > limit || !scene.is_object() || !scene.contains("title")
-        || !scene["title"].is_string() || scene["title"].get_ref<const std::string&>().empty()) {
-        unavailable = "The packaged scene manifest could not be read. Restage the renderer data.";
-        return;
+    if (std::chrono::steady_clock::now() >= nextCatalogCheck) requestCatalog();
+}
+
+void ExamplesView::selectClip(const std::string& example, const fs::path& path) {
+    auto& input = inputs[example];
+    if (const auto clip = readableClip(path)) {
+        input.clip = *clip;
+        input.draft = clip->string();
+        input.feedback.clear();
+        input.choosing = false;
+        if (example == launched) launchIssue.clear();
+    } else {
+        input.feedback = "Choose a readable local MOV or MP4.";
     }
-    title = scene["title"].get<std::string>();
-    if (!stagedBrowseFile("examples/editable-scene/assets/solid.frag"))
-        unavailable = "The packaged shader is missing. Restage the renderer data.";
+}
+
+std::optional<std::string> ExamplesView::update() {
+#if defined(__APPLE__)
+    if (clipRequest && clipRequest->result) {
+        auto finished = std::exchange(clipRequest, {});
+        auto& input = inputs[finished->item];
+        switch (*finished->result) {
+            case ClipPickResult::Chosen:
+                selectClip(finished->item, finished->path);
+                break;
+            case ClipPickResult::Cancelled:
+                input.feedback = "Clip selection cancelled.";
+                break;
+            case ClipPickResult::Unavailable:
+                input.feedback = "The clip picker could not open a local file. Try Choose clip again.";
+                break;
+        }
+        if (item == finished->item) return "example-choose-clip";
+    }
+#endif
+    return std::nullopt;
+}
+
+void ExamplesView::rememberInput(std::string value) {
+    if (const auto* example = find(item)) inputs[example->id].draft = std::move(value);
+}
+
+std::string ExamplesView::inputValue() const {
+    if (const auto* example = find(item)) return media(*example).draft;
+    return {};
 }
 
 std::string ExamplesView::summary() const {
-    if (detailOpen) return {};
-    return matches() ? "1 of 1 examples" : "0 of 1 examples";
+    if (detail() || catalog.rows.empty()) return {};
+    const auto count = std::count_if(catalog.rows.begin(), catalog.rows.end(), [&](const auto& example) {
+        return matches(example);
+    });
+    return std::to_string(count) + " of " + std::to_string(catalog.rows.size()) + " examples";
+}
+
+std::string ExamplesView::blockReason(const ExampleEntry& example) const {
+    if (!example.blocked.empty()) return example.blocked;
+    if (!PreviewProcess::supported()) return "Preview windows are unavailable in this build.";
+    if (example.inputKind == "video" && media(example).clip.empty()) return "Choose a local MOV or MP4 to preview Video.";
+    return {};
 }
 
 std::string ExamplesView::previewMarkup(const PreviewProcess& preview) const {
-    std::string status;
-    std::string controls;
-    if (detailOpen && !active(preview.state()) && preview.state() != State::Failed
-        && unavailable.empty()) {
+    std::string status, controls;
+    const auto* example = find(item);
+    if (example && !active(preview.state()) && (preview.state() != State::Failed || item != launched)
+        && blockReason(*example).empty()) {
         controls = "<button id='preview-launch'>Open in Preview Window</button>";
     }
     switch (preview.state()) {
@@ -112,63 +260,197 @@ std::string ExamplesView::previewMarkup(const PreviewProcess& preview) const {
         case State::Failed:
             status = "<span class='error-summary'>Preview failed · " + escaped(preview.title())
                 + "</span><br />" + escaped(preview.diagnostic());
-            if (unavailable.empty()) controls = "<button id='preview-retry'>Retry</button>";
+            if (const auto* target = find(launched); target && blockReason(*target).empty())
+                controls += "<button id='preview-retry'>Retry</button>";
             break;
     }
+    if (!launchIssue.empty()) status += (status.empty() ? "" : "<br />") + escaped(launchIssue);
     if (status.empty() && controls.empty()) return {};
     return "<div class='example-preview-actions'>" + controls
         + (status.empty() ? "" : "<p class='message'>" + status + "</p>") + "</div>";
 }
 
-std::string ExamplesView::markup(const PreviewProcess& preview) const {
-    if (!detailOpen) {
-        auto result = previewMarkup(preview);
-        if (!matches()) return result
-            + "<p class='message'>No examples match this search and category.</p>"
-              "<button id='example-clear'>Clear search and category</button>";
-        return result + "<button id='" + rowId + "' class='inspect-row asset-row"
-            + (selected ? " selected" : "")
-            + "'><span class='inspect-row-label'>" + escaped(title)
-            + "</span><span class='inspect-kind'>" + categoryName
-            + "</span><img class='browse-chevron' src='browse:catalog/chevron.png' /></button>";
+std::string ExamplesView::detailMarkup(const ExampleEntry& example, const PreviewProcess& preview) const {
+    std::string result = "<div class='inspect-label'>" + escaped(example.title) + "</div>";
+    if (!example.preview.empty())
+        result += "<div class='browse-preview'><img alt='Saved example preview' src=\"example:" + escaped(example.preview) + "\" /></div>";
+    else
+        result += "<div class='example-placeholder'>" + escaped(example.category) + " · no saved frame</div>";
+
+    result += note(example.summary, "browse-requirements") + note(example.requirements) + note(example.cues);
+    const auto& input = media(example);
+    if (example.inputKind == "video") {
+        const char* label = input.clip.empty() ? "Choose clip" : "Change clip";
+        result += "<div class='example-input-actions'><button id='example-choose-clip'"
+            + std::string(clipRequest || input.choosing ? " class='inactive'" : "") + ">" + label + "</button>";
+        if (input.choosing) {
+            result += "<div class='example-input-label'>Absolute path to a local MOV or MP4</div>"
+                "<input type='text' id='example-input' class='example-input' maxlength='2048' aria-label='Local clip path' />"
+                "<button id='example-use-clip'>Use clip</button><button id='example-cancel-clip'>Cancel</button>";
+        }
+        result += "</div>" + note(input.clip.empty() ? "" : input.clip.string()) + note(input.feedback);
+    } else if (example.inputKind == "camera") {
+        result += "<div class='example-input-actions'><label for='example-input'>Camera device index (0–63)</label>"
+            "<input type='text' id='example-input' class='example-input camera-index' maxlength='2' "
+            "aria-label='Camera device index' />"
+            "</div>" + note(input.feedback);
+    } else if (example.inputKind == "html") {
+        result += note("Destination · " + example.inputDefault);
+    }
+    const auto blocked = blockReason(example);
+    if (!blocked.empty()) {
+        result += note(blocked, "message error");
+        if (!example.blocked.empty() && example.inputKind != "html")
+            result += "<button id='example-refresh'>Refresh examples</button>";
     }
 
-    std::string result = "<div class='inspect-label'>" + escaped(title) + "</div>"
-        "<div class='example-placeholder'>Recipe · no saved frame</div>"
-        "<p class='browse-requirements'>Plays immediately with its bundled solid shader.</p>"
-        "<p class='browse-origin'>" + manifestName + "</p>"
-        "<p class='browse-origin'>Companion scene.scd uses VisualsQuark replay API 1 with a separate owned renderer.</p>";
-    if (!unavailable.empty()) result += "<p class='message error'>" + escaped(unavailable) + "</p>";
-    return result + previewMarkup(preview);
+    result += previewMarkup(preview);
+    result += "<div class='example-files'>" + note("examples/" + example.manifest);
+    if (!example.manifest.empty()) result += "<button id='example-reveal-scene'>Reveal scene file</button>";
+    if (!example.companion.empty()) result += "<button id='example-reveal-companion'>Reveal companion file</button>";
+    result += note(revealFeedback) + "</div>";
+
+    if (example.attach == "attach" && example.id == launched && preview.state() == State::Ready) {
+        result += note("SuperCollider · Open the saved companion. Set ~rendererHost = \"127.0.0.1\" and ~rendererPort = "
+            + std::to_string(preview.port()) + ". Evaluate only the Attach block before the live cues. Setup resets its target.");
+        const auto path = directories.examples / fs::path(example.manifest).parent_path();
+        result += note("If evaluating from an unsaved buffer, set ~rendererRoot to this folder · " + path.string());
+    } else if (example.attach == "replay") {
+        result += note("The SuperCollider replay companion configures a separate blank renderer. It has no Attach block.");
+    } else if (example.attach == "audio") {
+        result += note("The audio analysis companion uses port 33333. See the Sound Data guide for separate SuperCollider setup. The script needs endpoint edits to attach to this preview.");
+    }
+    return result;
 }
 
-bool ExamplesView::activate(const std::string& id, PreviewProcess& preview) {
-    switch (preview.state()) {
-        case State::Starting:
-            if (id != "preview-cancel") return false;
-            preview.stop();
-            return true;
-        case State::Ready:
-            if (id == "preview-close") preview.stop();
-            else if (id == "preview-focus") preview.focus();
-            else return false;
-            return true;
-        case State::Stopping:
-            return false;
-        case State::Idle:
-            if (!detailOpen || id != "preview-launch") return false;
-            break;
-        case State::Failed:
-            if (id != "preview-retry") return false;
-            break;
+std::string ExamplesView::markup(const PreviewProcess& preview) const {
+    if (const auto* example = find(item)) return detailMarkup(*example, preview);
+    if (detail())
+        return note("Example no longer available. The scene may have moved or been removed.", "message error")
+            + previewMarkup(preview);
+
+    auto result = previewMarkup(preview);
+    if (!loaded) result += note("Loading examples…", "message");
+    if (!catalog.error.empty())
+        result += note(catalog.error, "message error") + "<button id='example-refresh'>Refresh examples</button>";
+    unsigned count = 0;
+    for (const auto& example : catalog.rows) {
+        if (!matches(example)) continue;
+        ++count;
+        result += "<button id='" + std::string(rowPrefix) + escaped(example.id) + "' class='inspect-row asset-row example-row"
+            + (selected == example.id ? " selected" : "") + "'>";
+        if (!example.preview.empty())
+            result += "<img class='example-thumb' src=\"example:" + escaped(example.preview) + "\" />";
+        result += "<span class='inspect-row-label'>" + escaped(example.title)
+            + "</span><span class='inspect-kind'>" + escaped(example.category)
+            + "</span><img class='browse-chevron' src='browse:catalog/chevron.png' /></button>";
     }
-    nextCheck = {};
-    refresh();
-    if (unavailable.empty()) {
-        if (const auto manifest = stagedBrowseFile(manifestName)) preview.start(*manifest, title);
-        else unavailable = "The packaged scene manifest is missing. Restage the renderer data.";
+    if (!count && !catalog.rows.empty())
+        result += "<p class='message'>No examples match this search and category.</p>"
+            "<button id='example-clear'>Clear search and category</button>";
+    else if (loaded && catalog.rows.empty() && catalog.error.empty())
+        result += note("No examples found.", "message");
+    return result;
+}
+
+void ExamplesView::launch(const ExampleEntry& example, PreviewProcess& preview) {
+    if (active(preview.state())) return;
+    const auto blocked = blockReason(example);
+    if (!blocked.empty()) {
+        launchIssue = blocked;
+        return;
     }
-    return true;
+    const auto manifest = resolveExampleFile(directories.examples, example.manifest);
+    if (!manifest) {
+        launchIssue = "The packaged scene file is missing. Restage the renderer data, then retry.";
+        return;
+    }
+    std::map<std::string, std::string> arguments;
+    auto& input = inputs[example.id];
+    if (example.inputKind == "video") {
+        const auto clip = readableClip(input.clip);
+        if (!clip) {
+            launchIssue = "The selected clip is unavailable. Choose a readable MOV or MP4.";
+            return;
+        }
+        arguments.emplace(example.inputName, clip->string());
+    } else if (example.inputKind == "camera") {
+        if (!cameraIndex(input.draft)) {
+            input.feedback = "Enter a camera device index from 0 to 63.";
+            return;
+        }
+        input.feedback.clear();
+        arguments.emplace(example.inputName, input.draft);
+    }
+    launchIssue.clear();
+    launched = example.id;
+    preview.start(*manifest, example.title, arguments);
+}
+
+std::optional<std::string> ExamplesView::activate(const std::string& id, PreviewProcess& preview) {
+    if (id == "preview-focus" && preview.state() == State::Ready) {
+        preview.focus();
+        return previewFocus(preview);
+    }
+    if ((id == "preview-close" && preview.state() == State::Ready)
+        || (id == "preview-cancel" && preview.state() == State::Starting)) {
+        preview.stop();
+        return previewFocus(preview);
+    }
+    if (id == "preview-retry" && preview.state() == State::Failed) {
+        if (const auto* attempt = find(launched)) launch(*attempt, preview);
+        return previewFocus(preview);
+    }
+    if (id == "example-refresh") {
+        requestCatalog();
+        return detail() ? "back" : "browse-example-search";
+    }
+    const auto* example = find(item);
+    if (!example) return std::nullopt;
+    if (id == "preview-launch") {
+        launch(*example, preview);
+        if (example->inputKind == "camera" && !media(*example).feedback.empty()) return "example-input";
+        return previewFocus(preview);
+    }
+    if (id == "example-reveal-scene" || id == "example-reveal-companion") {
+        const auto path = resolveExampleFile(directories.examples,
+            id == "example-reveal-scene" ? example->manifest : example->companion);
+        revealFeedback = !path ? "The packaged file is missing. Restage the renderer data."
+            : revealExampleFile(*path) ? "" : "The file browser could not open. Use the staged path shown above.";
+        return id;
+    }
+    if (example->inputKind != "video") return std::nullopt;
+    if (id == "example-choose-clip") {
+#if defined(__APPLE__)
+        if (clipRequest) return id;
+        clipRequest = std::make_shared<ClipRequest>();
+        clipRequest->item = item;
+        chooseExampleClip([request = std::weak_ptr(clipRequest)](ClipPickResult result, fs::path path) {
+            if (auto current = request.lock()) {
+                current->path = std::move(path);
+                current->result = result;
+            }
+        });
+        return id;
+#else
+        auto& input = inputs[item];
+        input.choosing = true;
+        input.draft = input.clip.string();
+        input.feedback.clear();
+        return "example-input";
+#endif
+    }
+    if (id == "example-use-clip" && media(*example).choosing) {
+        selectClip(item, media(*example).draft);
+        return media(*example).choosing ? "example-input" : "example-choose-clip";
+    }
+    if (id == "example-cancel-clip" && media(*example).choosing) {
+        auto& input = inputs[item];
+        input.choosing = false;
+        input.feedback = "Clip selection cancelled.";
+        return "example-choose-clip";
+    }
+    return std::nullopt;
 }
 
 const char* ExamplesView::previewFocus(const PreviewProcess& preview) const {
@@ -176,20 +458,19 @@ const char* ExamplesView::previewFocus(const PreviewProcess& preview) const {
         case State::Starting: return "preview-cancel";
         case State::Ready: return "preview-focus";
         case State::Failed:
-            if (unavailable.empty()) return "preview-retry";
+            if (const auto* attempt = find(launched); attempt && blockReason(*attempt).empty()) return "preview-retry";
             break;
         case State::Idle:
-            if (detailOpen && unavailable.empty()) return "preview-launch";
+            if (const auto* example = find(item); example && blockReason(*example).empty()) return "preview-launch";
             break;
         case State::Stopping: break;
     }
-    return detailOpen ? "back" : "browse-example-search";
+    return detail() ? "back" : "browse-example-search";
 }
 
-int ExamplesView::height(bool compact, const PreviewProcess& preview) const {
-    if (!detailOpen) return compact ? 264 : 468;
-    if (preview.state() == State::Failed || !unavailable.empty()) return compact ? 339 : 370;
-    return compact ? 313 : 316;
+int ExamplesView::height(bool compact) const {
+    if (!detail()) return compact ? 264 : 468;
+    return compact ? 359 : 404;
 }
 
 } // namespace vosc::operator_ui
