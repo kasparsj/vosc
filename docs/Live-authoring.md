@@ -52,6 +52,26 @@ renderer is running before removing that specific stale path.
 The optional `VOSC_BUILD_DIR` and `VOSC_CONTROL_SOCKET` environment variables
 change the build and socket locations. Match any socket override in MCP settings.
 
+## Run the native regressions
+
+After staging an Apple Silicon authoring build, run this from the checkout.
+Set `build_dir` to the build command's `--output` path and choose a fresh
+evidence path under an existing parent directory.
+
+```bash
+python3 scripts/test_native_regressions.py \
+  --binary "$build_dir/products/voscDebug.app/Contents/MacOS/voscDebug" \
+  --cwd "$build_dir/products" \
+  --output /path/to/new-evidence
+```
+
+The command runs `explicit`, `watcher`, `texture`, and `local-image` in order.
+Each case owns its renderer and private control socket and OSC port. Each case
+directory contains `harness.log` with the harness console output and
+`artifacts/` with any renderer logs, captures, and evidence it produced.
+The command prints a result for every case and exits with status 1 if any case
+fails.
+
 ## Connect Codex
 
 Install the locked adapter environment once:
