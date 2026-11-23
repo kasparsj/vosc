@@ -262,7 +262,7 @@ std::vector<ExampleEntry> readExamples(const ExampleDirectories& roots, std::str
         useManifestDetails(entry);
         entries.push_back(std::move(entry));
     }
-    if (failure) error = "Part of the Examples folder could not be read. Try opening it again.";
+    if (failure) throw fs::filesystem_error("Could not finish scanning examples", roots.examples, failure);
     const auto rank = [&](const ExampleEntry& entry) {
         const auto found = order.find(fs::path(entry.manifest).parent_path().generic_string());
         return found == order.end() ? order.size() : found->second;

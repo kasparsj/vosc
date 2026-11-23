@@ -22,7 +22,9 @@
 #include <array>
 #include <charconv>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
+#include <fstream>
 #include <optional>
 #include <stdexcept>
 #include <string_view>
@@ -204,19 +206,52 @@ private:
     GLboolean srgb = GL_FALSE;
     std::array<GLboolean, 4> colorMask{};
 };
+
+bool loadExampleThumbnail(ofPixels& pixels, const std::filesystem::path& path) {
+    // Examples can supply thumbnails at runtime. Bound the input before decoding on the primary renderer.
+    constexpr std::streamsize maxBytes = 8 * 1024 * 1024;
+    constexpr std::uint32_t maxSide = 2048;
+    constexpr std::array<unsigned char, 16> pngHeader{
+        0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n', 0, 0, 0, 13, 'I', 'H', 'D', 'R',
+    };
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    const auto byteCount = static_cast<std::streamsize>(file.tellg());
+    if (byteCount < 24 || byteCount > maxBytes) return false;
+    ofBuffer encoded;
+    encoded.allocate(static_cast<size_t>(byteCount));
+    file.seekg(0);
+    if (!file.read(encoded.getData(), byteCount) || file.peek() != std::ifstream::traits_type::eof()) return false;
+
+    const auto* bytes = reinterpret_cast<const unsigned char*>(encoded.getData());
+    if (!std::equal(pngHeader.begin(), pngHeader.end(), bytes)) return false;
+    const auto dimension = [bytes](size_t offset) {
+        std::uint32_t value = 0;
+        for (size_t i = 0; i < 4; ++i) value = (value << 8) | bytes[offset + i];
+        return value;
+    };
+    const auto width = dimension(16);
+    const auto height = dimension(20);
+    if (!width || !height || width > maxSide || height > maxSide) return false;
+    return ofLoadImage(pixels, encoded);
+}
+
 class OperatorRenderInterface final : public RenderInterface_GL3 {
     Rml::TextureHandle LoadTexture(Rml::Vector2i& size, const Rml::String& source) override {
         constexpr std::string_view browsePrefix = "browse:";
         constexpr std::string_view examplePrefix = "example:";
+        const bool example = source.compare(0, examplePrefix.size(), examplePrefix) == 0;
         std::optional<std::filesystem::path> path;
         if (source.compare(0, browsePrefix.size(), browsePrefix) == 0)
             path = vosc::operator_ui::stagedBrowseFile(source.substr(browsePrefix.size()));
-        else if (source.compare(0, examplePrefix.size(), examplePrefix) == 0)
+        else if (example)
             path = vosc::operator_ui::resolveExampleFile(vosc::operator_ui::exampleDirectories().examples,
                                                         source.substr(examplePrefix.size()));
         else return RenderInterface_GL3::LoadTexture(size, source);
+        if (!path) return {};
         ofPixels pixels;
-        if (!path || !ofLoadImage(pixels, *path)) return {};
+        if (example) {
+            if (!loadExampleThumbnail(pixels, *path)) return {};
+        } else if (!ofLoadImage(pixels, *path)) return {};
         const auto longest = std::max(pixels.getWidth(), pixels.getHeight());
         if (longest > 480) {
             pixels.resize(std::max<size_t>(1, pixels.getWidth() * 480 / longest),
