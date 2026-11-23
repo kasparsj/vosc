@@ -31,6 +31,13 @@ std::shared_ptr<Layer> currentLayer(const VOSC& renderer, int32_t index) {
 }
 }
 
+bool BrowseView::switchCatalog(bool builtins) {
+    if (canGoBack() || showingBuiltins == builtins) return false;
+    showingBuiltins = builtins;
+    selectedRow.clear();
+    return true;
+}
+
 bool BrowseView::setFilters(std::string name, std::string kind) {
     name = Rml::StringUtilities::ToLower(std::move(name));
     if (name == query && kind == category) return false;
@@ -46,7 +53,9 @@ bool BrowseView::matches(const Asset& entry) const {
 }
 
 bool BrowseView::visible(const Asset& entry) const {
-    if (entry.parent != folder) return false;
+    const bool builtin = entry.kind == "Built-in";
+    if (showingBuiltins) return builtin;
+    if (builtin || entry.parent != folder) return false;
     if (!entry.folder) return matches(entry);
     if (category.empty() && query.empty()) return true;
     const auto prefix = entry.path + '/';
@@ -56,6 +65,7 @@ bool BrowseView::visible(const Asset& entry) const {
 }
 
 std::string BrowseView::heading() const {
+    if (showingBuiltins) return "Built-ins";
     return folder.empty() ? "Assets" : "Assets / " + folder;
 }
 
@@ -64,9 +74,10 @@ std::string BrowseView::summary() const {
     const auto prefix = folder + '/';
     unsigned total = 0, filtered = 0;
     for (const auto& entry : catalog.assets()) {
-        if (entry.folder || (!folder.empty() && entry.path.rfind(prefix, 0) != 0)) continue;
+        if (entry.folder || showingBuiltins != (entry.kind == "Built-in")
+            || (!folder.empty() && entry.path.rfind(prefix, 0) != 0)) continue;
         ++total;
-        if (matches(entry)) ++filtered;
+        if (showingBuiltins || matches(entry)) ++filtered;
     }
     if (total == filtered)
         return std::to_string(total) + (total == 1 ? " asset" : " assets");
@@ -92,6 +103,7 @@ std::string BrowseView::catalogMarkup() const {
             + "</span><img class='browse-chevron' src='browse:catalog/chevron.png' /></button>";
     }
     if (!result.empty()) return result;
+    if (showingBuiltins) return "<p class='message'>No built-in sources are available.</p>";
     if (query.empty() && category.empty()) return "<p class='message'>This folder is empty.</p>";
     return "<p class='message'>No assets match this search and category.</p>"
         "<button id='browse-clear'>Clear search and category</button>";
@@ -298,7 +310,7 @@ std::string BrowseView::markup(const VOSC& renderer) {
 }
 
 int BrowseView::height(bool compact) const {
-    if (!detail()) return compact ? 264 : 468;
+    if (!detail()) return showingBuiltins ? 156 : compact ? 264 : 468;
     const bool hasCommand = use && selectedTarget;
     if (compact) return hasCommand || preview ? 339 : 264;
     if (hasCommand) return preview ? 478 : 430;

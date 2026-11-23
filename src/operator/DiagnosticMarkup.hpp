@@ -184,11 +184,15 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
 #browse-header { justify-content: space-between; height: 25dp; }
 #browse-heading { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 13dp; font-weight: bold; }
 #browse-summary { flex: none; margin-left: 6dp; }
+#browse-catalogs { display: none; flex: 1; }
+#panel.browse-root #browse-catalogs { display: flex; }
+#panel.browse-root #browse-heading { display: none; }
+#browse-catalogs button { margin: 0 5dp 0 0; padding: 3dp 8dp; font-size: 12dp; }
 #browse-summary, .browse-origin, .browse-requirements, .browse-feedback {
     color: #c5d4e5; font-size: 12dp;
 }
 #browse-filters { margin-top: 5dp; }
-#panel.detail #browse-filters { display: none; }
+#panel.detail #browse-filters, #panel.browse-builtins #browse-filters { display: none; }
 #browse-search, #panel.browse select {
     box-sizing: border-box; height: 30dp; padding: 5dp 7dp; font-size: 13dp;
     border: 1dp #b9d2f54a; border-radius: 5dp; background-color: #182130; color: #f3f6fc;
@@ -254,7 +258,10 @@ body.compact .browse-preview img { height: 60dp; }
     <div id="camera-reading"><span class="readout-label">Camera position</span><span id="camera-position"></span></div>
     <div id="inspector-tools"></div>
     <div id="browse-tools">
-        <div id="browse-header"><span id="browse-heading">Assets</span><span id="browse-summary"></span></div>
+        <div id="browse-header">
+            <div id="browse-catalogs"><button id="browse-assets">Assets</button><button id="browse-builtins">Built-ins</button></div>
+            <span id="browse-heading">Assets</span><span id="browse-summary"></span>
+        </div>
         <div id="browse-filters">
             <input id="browse-search" type="text" placeholder="Search by name" aria-label="Search assets by name" />
             <select id="browse-category" aria-label="Asset category">
@@ -264,7 +271,6 @@ body.compact .browse-preview img { height: 60dp; }
                 <option value="Model">Model</option>
                 <option value="Shader source">Shader source</option>
                 <option value="File">File</option>
-                <option value="Built-in">Built-in</option>
             </select>
         </div>
     </div>

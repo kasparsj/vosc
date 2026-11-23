@@ -15,6 +15,8 @@ class BrowseView {
 public:
     bool detail() const { return item.has_value(); }
     bool canGoBack() const { return detail() || !parents.empty(); }
+    bool builtins() const { return showingBuiltins; }
+    bool switchCatalog(bool builtins);
     std::string heading() const;
     bool setFilters(std::string query, std::string category);
     std::string summary() const;
@@ -58,6 +60,7 @@ private:
     std::optional<size_t> item;
     std::string folder, selectedRow, query, category, feedback;
     float catalogScroll = 0;
+    bool showingBuiltins = false;
 
     std::optional<AssetUse> use;
     std::vector<AssetUse> availableUses;

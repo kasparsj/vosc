@@ -2,7 +2,7 @@
 
 Milestone 3 operator reference. [Design contract](../DESIGN.md) · [Codebase audit and mockup inventory](Render-machine-ui-audit.md)
 
-The floating dock has four destinations: **Overview**, **Inspector**, **Console**, and **Browse**. Details open above the dock. **Back** returns to the originating item with its selection and scroll position. **Escape** returns directly to clean output. The scene continues rendering. Browse opens Assets. Examples and its preview window are planned for milestone 4.
+The floating dock has four destinations: **Overview**, **Inspector**, **Console**, and **Browse**. Details open above the dock. **Back** returns to the originating item with its selection and scroll position. **Escape** returns directly to clean output. The scene continues rendering. Browse opens Assets and offers a separate Built-ins view. Examples and its preview window are planned for milestone 4.
 
 ## Output and Overview
 
@@ -55,7 +55,7 @@ An example is a complete runnable scene. Use the existing example manifests and 
 
 ### Assets
 
-Browse opens the asset folder tree. Open a subfolder to see the files and folders inside it. Search by filename and filter by kind. Matching subfolders stay visible so results can be reached in their original location. Open a file to see its source, origin, requirements when documented, and a saved preview where available. Back restores the filter, originating row and reading position.
+Assets mirrors the folder tree. The separate **Built-ins** view lists renderer primitives such as Box. Open a subfolder to see the files and folders inside it. Search by filename and filter by kind. Matching subfolders stay visible so results can be reached in their original location. Open a file to see its source, origin, requirements when documented, and a saved preview where available. Back restores the filter, originating row and reading position.
 
 The Xcode checkout browses `assets/` directly. A standalone renderer browses its staged `data/` tree. Browse refreshes while the folder list is visible, so additions appear without restarting. OSC uses are defined separately for verified entries and resolve against staged data. Shader entries check required stages and includes. Penguin checks its linked material and image. [OSC use metadata](../assets/catalog/browse-assets.json) · [Shared assets and local media](../README.md#shared-assets-and-local-media) · [Staging](../scripts/stage_assets.py) · [Shader path resolution](../src/shader/Shader.cpp)
 

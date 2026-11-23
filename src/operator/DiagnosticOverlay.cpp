@@ -811,6 +811,11 @@ void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std
                 show(View::Browse, "back");
                 ui.scroll[static_cast<size_t>(View::Browse)] = 0;
             }
+        } else if (id == "browse-assets" || id == "browse-builtins") {
+            if (ui.browse.switchCatalog(id == "browse-builtins")) {
+                show(View::Browse, id);
+                ui.scroll[static_cast<size_t>(View::Browse)] = 0;
+            }
         } else if (id == "browse-clear") {
             ui.browseSearch->SetValue("");
             ui.browseCategory->SetSelection(0);
@@ -999,7 +1004,8 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     const auto focusToken = currentFocus ? currentFocus->GetAttribute<uint64_t>("data-target", 0) : 0;
     const auto rowOrigin = focusToken && ui.inspector.matches(focusId, focusToken) ? focusToken : 0;
     const bool browse = view == View::Browse;
-    if (browse && !ui.browse.detail() && ui.browse.setFilters(ui.browseSearch->GetValue(), ui.browseCategory->GetValue())) {
+    if (browse && !ui.browse.detail() && !ui.browse.builtins()
+        && ui.browse.setFilters(ui.browseSearch->GetValue(), ui.browseCategory->GetValue())) {
         ui.scroll[static_cast<size_t>(View::Browse)] = 0;
         ui.restoreScroll = true;
     }
@@ -1015,6 +1021,8 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     ui.panel->SetClass("overview", view == View::Overview);
     ui.panel->SetClass("browse", browse);
     ui.panel->SetClass("browse-folder", browse && ui.browse.canGoBack());
+    ui.panel->SetClass("browse-root", browse && !ui.browse.canGoBack());
+    ui.panel->SetClass("browse-builtins", browse && ui.browse.builtins());
     ui.panel->SetClass("detail", detail);
     ui.panel->SetClass("inspecting", inspector);
     ui.panel->SetClass("enlarged", inspector && ui.inspector.expanded());
@@ -1040,6 +1048,8 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
             markup = ui.browse.markup(renderer);
             ui.panel->SetProperty("height", std::to_string(ui.browse.height(ui.document->IsClassSet("compact"))) + "dp");
             ui.setReading("browse-heading", ui.browseHeading, ui.browse.heading());
+            ui.document->GetElementById("browse-assets")->SetClass("selected", !ui.browse.builtins());
+            ui.document->GetElementById("browse-builtins")->SetClass("selected", ui.browse.builtins());
             ui.setReading("browse-summary", ui.browseSummary, ui.browse.summary());
             break;
         case View::Count: break;
@@ -1079,8 +1089,13 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     }
     if (!wantedFocus.empty()) {
         auto* element = ui.document->GetElementById(wantedFocus);
-        if (!element || element->IsClassSet("inactive") || (origin && !ui.inspector.matches(wantedFocus, origin)))
-            element = ui.document->GetElementById(console ? "console-search" : browse && !detail ? "browse-search" : detail ? "back" : destination->id);
+        if (!element || element->IsClassSet("inactive") || (origin && !ui.inspector.matches(wantedFocus, origin))) {
+            const char* fallback = destination->id;
+            if (detail) fallback = "back";
+            else if (console) fallback = "console-search";
+            else if (browse) fallback = ui.browse.builtins() ? "browse-builtins" : "browse-search";
+            element = ui.document->GetElementById(fallback);
+        }
         element->Focus(true);
     }
     if (console) ui.placeLogScroll(rowsChanged);
