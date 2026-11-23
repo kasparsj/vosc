@@ -620,12 +620,20 @@ EngineControl::EngineControl(RenderSystem& render, CommandSystem& commands, Runt
     });
 }
 
-void EngineControl::setup() {
+void EngineControl::setup(bool required) {
     const char* path = std::getenv("VOSC_CONTROL_SOCKET");
-    if (path && *path) {
-        if (!server.start(path)) ofLogError("control") << server.getLastError();
-        else { telemetry.setup(); updateTelemetry.setup(); }
+    if (!path || !*path) {
+        if (required) throw std::runtime_error("Preview control socket path is missing.");
+        return;
     }
+    if (!server.start(path)) {
+        if (required)
+            throw std::runtime_error("Could not start the isolated preview control endpoint: " + server.getLastError());
+        ofLogError("control") << server.getLastError();
+        return;
+    }
+    telemetry.setup();
+    updateTelemetry.setup();
 }
 
 void EngineControl::shutdown() {

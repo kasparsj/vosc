@@ -180,29 +180,33 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
 
 #browse-tools { display: none; flex: none; padding: 6dp 12dp; border-bottom: 1dp #d2e1fc29; }
 #panel.browse #browse-tools { display: block; }
-#browse-header, #browse-filters, .browse-choice, .browse-facts { display: flex; align-items: center; }
+#browse-header, .browse-filters, .browse-choice, .browse-facts { display: flex; align-items: center; }
 #browse-header { justify-content: space-between; height: 25dp; }
 #browse-heading { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 13dp; font-weight: bold; }
 #browse-summary { flex: none; margin-left: 6dp; }
 #browse-catalogs { display: none; flex: 1; }
-#panel.browse-root #browse-catalogs { display: flex; }
-#panel.browse-root #browse-heading { display: none; }
+#panel.browse-root #browse-catalogs, #panel.browse-examples #browse-catalogs { display: flex; }
+#panel.browse-root #browse-heading, #panel.browse-examples #browse-heading { display: none; }
 #browse-catalogs button { margin: 0 5dp 0 0; padding: 3dp 8dp; font-size: 12dp; }
 #browse-summary, .browse-origin, .browse-requirements, .browse-feedback {
     color: #c5d4e5; font-size: 12dp;
 }
-#browse-filters { margin-top: 5dp; }
+.browse-filters { margin-top: 5dp; }
+#browse-example-filters { display: none; }
+#panel.browse-examples #browse-example-filters { display: flex; }
+#panel.browse-examples #browse-filters { display: none; }
 #browse-status { display: none; font-size: 12dp; margin: 5dp 0 0; }
 #browse-status.present { display: block; }
-#panel.detail #browse-filters, #panel.browse-builtins #browse-filters { display: none; }
-#browse-search, #panel.browse select {
+#panel.detail .browse-filters, #panel.browse-builtins #browse-filters { display: none; }
+#panel.browse-examples.detail #browse-example-filters { display: none; }
+.browse-search, #panel.browse select {
     box-sizing: border-box; height: 30dp; padding: 5dp 7dp; font-size: 13dp;
     border: 1dp #b9d2f54a; border-radius: 5dp; background-color: #182130; color: #f3f6fc;
 }
-#browse-search { flex: 1; min-width: 0; margin-right: 6dp; }
-#browse-search:focus, #panel.browse select:focus { border-color: #a9dcff; }
-#browse-search:placeholder-shown { color: #c5d4e5; }
-#browse-category { flex: none; width: 129dp; }
+.browse-search { flex: 1; min-width: 0; margin-right: 6dp; }
+.browse-search:focus, #panel.browse select:focus { border-color: #a9dcff; }
+.browse-search:placeholder-shown { color: #c5d4e5; }
+.browse-category { flex: none; width: 129dp; }
 #panel.browse select selectarrow {
     width: 14dp; height: 28dp; background-color: transparent; decorator: none;
 }
@@ -239,6 +243,13 @@ body.compact .browse-preview img { height: 60dp; }
     font-size: 13dp; white-space: pre-wrap; word-break: break-word;
 }
 .browse-feedback { display: inline; }
+.example-placeholder {
+    display: block; text-align: center; padding: 13dp 5dp; background-color: #263448;
+    color: #dbeaff; font-size: 12dp;
+}
+#panel.browse-examples .browse-origin { display: block; word-break: break-word; }
+.example-preview-actions { display: block; margin-top: 8dp; }
+.example-preview-actions .message { color: #dbeaff; font-size: 12dp; }
 </style>
 </head>
 <body>
@@ -261,18 +272,25 @@ body.compact .browse-preview img { height: 60dp; }
     <div id="inspector-tools"></div>
     <div id="browse-tools">
         <div id="browse-header">
-            <div id="browse-catalogs"><button id="browse-assets">Assets</button><button id="browse-builtins">Built-ins</button></div>
+            <div id="browse-catalogs"><button id="browse-examples">Examples</button><button id="browse-assets">Assets</button><button id="browse-builtins">Built-ins</button></div>
             <span id="browse-heading">Assets</span><span id="browse-summary"></span>
         </div>
-        <div id="browse-filters">
-            <input id="browse-search" type="text" placeholder="Search by name" aria-label="Search assets by name" />
-            <select id="browse-category" aria-label="Asset category">
+        <div id="browse-filters" class="browse-filters">
+            <input id="browse-search" class="browse-search" type="text" placeholder="Search by name" aria-label="Search assets by name" />
+            <select id="browse-category" class="browse-category" aria-label="Asset category">
                 <option value="" selected>All categories</option>
                 <option value="Fragment shader">Fragment shader</option>
                 <option value="Image">Image</option>
                 <option value="Model">Model</option>
                 <option value="Shader source">Shader source</option>
                 <option value="File">File</option>
+            </select>
+        </div>
+        <div id="browse-example-filters" class="browse-filters">
+            <input id="browse-example-search" class="browse-search" type="text" placeholder="Search by name" aria-label="Search examples by name" />
+            <select id="browse-example-category" class="browse-category" aria-label="Example category">
+                <option value="" selected>All categories</option>
+                <option value="Recipe">Recipe</option>
             </select>
         </div>
         <div id="browse-status" class="message error"></div>

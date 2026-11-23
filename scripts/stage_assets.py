@@ -15,7 +15,10 @@ DEFERRED_SHADERS = "addons/ofxDeferredShading/data/shaders/deferred"
 
 
 def stage_assets(destination, *, addon_sdk=None, include_videos=False):
-    sources = [(ROOT / "assets", Path("."))]
+    sources = [
+        (ROOT / "assets", Path(".")),
+        (ROOT / "examples/editable-scene", Path("examples/editable-scene")),
+    ]
     if addon_sdk is not None:
         sources.append((addon_sdk / DEFERRED_SHADERS, Path("shaders/deferred")))
     media = ROOT / "media/videos"

@@ -15,6 +15,7 @@ public:
     DiagnosticOverlay();
     ~DiagnosticOverlay();
     void setup();
+    void update();
     void rememberScene(const scene::File& scene, const VOSC& renderer);
     void draw(VOSC& renderer, const Logger& logger);
     bool isOpen() const { return open; }

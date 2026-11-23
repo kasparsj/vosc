@@ -23,7 +23,7 @@ VOSC::VOSC()
     , engineControl(renderSystem, commandSystem, runtime) {}
 
 void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::ScenePrograms& programs,
-                 CommandSystem::SceneResult result) {
+                 CommandSystem::SceneResult result, bool preview) {
     resourceSystem.setup();
     initialized = true;
 #ifdef VOSC_RECOVERY_TESTING
@@ -31,7 +31,8 @@ void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::Sce
         throw std::runtime_error("forced no-argument setup failure");
     CommandSystem::traceStartupBoundary("receiver");
 #endif
-    inputSystem.setup(port);
+    if (!inputSystem.setup(port, preview) && preview)
+        throw std::runtime_error("Could not bind preview OSC to 127.0.0.1:" + std::to_string(port));
     runtime.camera.setup();
     renderSystem.setup(INITIAL_LAYERS);
     commandSystem.setup();
@@ -43,9 +44,10 @@ void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::Sce
     renderSystem.windowResized(ofGetWidth(), ofGetHeight());
     settledWindowWidth = ofGetWidth();
     settledWindowHeight = ofGetHeight();
+    if (preview) setupControl(true);
     if (scene && scene->version == 2) {
-        commandSystem.applyStartupScene(*scene, programs, [this, result = std::move(result)](int frame, const std::string& detail) {
-            if (frame >= 0) setupControl();
+        commandSystem.applyStartupScene(*scene, programs, [this, preview, result = std::move(result)](int frame, const std::string& detail) {
+            if (frame >= 0 && !preview) setupControl();
             result(frame, detail);
         });
     } else {
@@ -53,7 +55,7 @@ void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::Sce
             commandSystem.applyStartupScene(*scene, programs, std::move(result));
             if (!commandSystem.startupScenePending()) return;
         }
-        setupControl();
+        if (!preview) setupControl();
     }
 
 #if defined(__arm64__) || defined(__aarch64__)
@@ -67,8 +69,8 @@ void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::Sce
     ofLog() << ("GLSL ver. " + ofToString(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 }
 
-void VOSC::setupControl() {
-    engineControl.setup();
+void VOSC::setupControl(bool required) {
+    engineControl.setup(required);
 #ifdef VOSC_RECOVERY_TESTING
     if (const char* directory = std::getenv("VOSC_RECOVERY_TEST_DIR")) {
         recoveryTestDirectory = directory;
@@ -77,7 +79,6 @@ void VOSC::setupControl() {
         recoveryTestRecord({{"event", "started"}, {"snapshot", engineControl.recoveryTestSnapshot()}});
     }
 #endif
-
 }
 
 void VOSC::update() {

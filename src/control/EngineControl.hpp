@@ -19,7 +19,7 @@ namespace control {
 class EngineControl {
 public:
     EngineControl(RenderSystem& render, CommandSystem& commands, RuntimeContext& runtime);
-    void setup();
+    void setup(bool required);
     void update();
     void beforeUpdate();
     void afterUpdate();

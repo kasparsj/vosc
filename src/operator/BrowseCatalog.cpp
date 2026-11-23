@@ -273,7 +273,8 @@ BrowseCatalog BrowseCatalog::scan(const fs::path& dataPath, std::shared_ptr<cons
     }
 
     auto root = browseRoot(dataPath);
-    if (root == dataPath) root = staged;
+    const bool stagedInventory = root == dataPath;
+    if (stagedInventory) root = staged;
     if (!fs::is_directory(fs::symlink_status(root, error)) || error) {
         result.scanFailed = true;
         return result;
@@ -284,7 +285,8 @@ BrowseCatalog BrowseCatalog::scan(const fs::path& dataPath, std::shared_ptr<cons
         const auto path = file->path().lexically_relative(root);
         const auto name = path.filename().string();
         const auto relative = path.generic_string();
-        if (!name.empty() && name.front() == '.') {
+        // Packaged examples have their own tab, outside the installed shared library.
+        if ((stagedInventory && path == "examples") || (!name.empty() && name.front() == '.')) {
             file.disable_recursion_pending();
             continue;
         }

@@ -11,6 +11,8 @@
 		6D1A436780B345DF902813A1 /* InspectorView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902813A2 /* InspectorView.cpp */; };
 		6D1A436780B345DF902815A1 /* BrowseCatalog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902815A2 /* BrowseCatalog.cpp */; };
 		6D1A436780B345DF902816A1 /* BrowseView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902816A2 /* BrowseView.cpp */; };
+		6D1A436780B345DF902817A1 /* ExamplesView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902817A2 /* ExamplesView.cpp */; };
+		6D1A436780B345DF902818A1 /* PreviewProcess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902818A2 /* PreviewProcess.cpp */; };
 		6D1A436780B345DF902814A1 /* InspectorPreview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902814A2 /* InspectorPreview.cpp */; };
 		01B036F302D9F069DEDCD4F7 /* GeomPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 553241ABDCDFB7E8685963FC /* GeomPool.cpp */; };
 		04C13EEA813A786CC1D8137A /* FxaaPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9425843AEC3118B8FDEF1B0B /* FxaaPass.cpp */; };
@@ -183,6 +185,10 @@
 		6D1A436780B345DF902813A3 /* InspectorView.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/InspectorView.hpp; sourceTree = SOURCE_ROOT; };
 		6D1A436780B345DF902815A3 /* BrowseCatalog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/BrowseCatalog.hpp; sourceTree = SOURCE_ROOT; };
 		6D1A436780B345DF902816A3 /* BrowseView.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/BrowseView.hpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902817A2 /* ExamplesView.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/operator/ExamplesView.cpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902817A3 /* ExamplesView.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/ExamplesView.hpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902818A2 /* PreviewProcess.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/operator/PreviewProcess.cpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902818A3 /* PreviewProcess.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/PreviewProcess.hpp; sourceTree = SOURCE_ROOT; };
 		6D1A436780B345DF902814A3 /* InspectorPreview.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/InspectorPreview.hpp; sourceTree = SOURCE_ROOT; };
 		0007F94E72255780D908645A /* VideoTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VideoTex.h; path = src/tex/VideoTex.h; sourceTree = SOURCE_ROOT; };
 		00D6D32B84B099226431108C /* ofxOsc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOsc.h; path = "ofxOsc/src/ofxOsc.h"; sourceTree = VOSC_ADDONS; };
@@ -2387,6 +2393,10 @@
 				6D1A436780B345DF902813A3 /* InspectorView.hpp */,
 				6D1A436780B345DF902815A3 /* BrowseCatalog.hpp */,
 				6D1A436780B345DF902816A3 /* BrowseView.hpp */,
+				6D1A436780B345DF902817A2 /* ExamplesView.cpp */,
+				6D1A436780B345DF902817A3 /* ExamplesView.hpp */,
+				6D1A436780B345DF902818A2 /* PreviewProcess.cpp */,
+				6D1A436780B345DF902818A3 /* PreviewProcess.hpp */,
 				6D1A436780B345DF902814A3 /* InspectorPreview.hpp */,
 				42EEF41412CD072D7A17504A /* Logger.h */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
@@ -2684,6 +2694,8 @@
 				6D1A436780B345DF902813A1 /* InspectorView.cpp in Sources */,
 				6D1A436780B345DF902815A1 /* BrowseCatalog.cpp in Sources */,
 				6D1A436780B345DF902816A1 /* BrowseView.cpp in Sources */,
+				6D1A436780B345DF902817A1 /* ExamplesView.cpp in Sources */,
+				6D1A436780B345DF902818A1 /* PreviewProcess.cpp in Sources */,
 				6D1A436780B345DF902814A1 /* InspectorPreview.cpp in Sources */,
 				A1D2F32CDE34F3703ECD8A01 /* Geom.cpp in Sources */,
 				F7D4F1045C3F5CE0000DE92F /* Material.cpp in Sources */,

@@ -11,8 +11,10 @@
 #include <stdexcept>
 #include <string_view>
 #include <utility>
-#ifdef VOSC_RECOVERY_TESTING
+#if VOSC_OPERATOR_UI || defined(VOSC_RECOVERY_TESTING)
 #include "ofAppGLFWWindow.h"
+#endif
+#ifdef VOSC_RECOVERY_TESTING
 #include <cstdlib>
 #endif
 
@@ -30,6 +32,9 @@ struct StartupOptions {
     scene::Inputs inputs;
     std::optional<std::pair<int, int>> size;
     std::optional<int> fps;
+#if VOSC_OPERATOR_UI
+    bool preview = false;
+#endif
 };
 
 int positiveInteger(std::string_view value, int maximum, const char* option) {
@@ -46,7 +51,11 @@ StartupOptions parseOptions(int argc, char** argv) {
     StartupOptions options;
     for (int i = 1; i < argc; ++i) {
         const std::string_view flag = argv[i];
-        if (flag != "--scene" && flag != "--size" && flag != "--fps" && flag != "--scene-input")
+        if (flag != "--scene" && flag != "--size" && flag != "--fps" && flag != "--scene-input"
+#if VOSC_OPERATOR_UI
+            && flag != "--preview-child"
+#endif
+        )
             throw std::invalid_argument("unknown option " + std::string(flag));
         if (i + 1 == argc || std::string_view(argv[i + 1]).rfind("--", 0) == 0 || !argv[i + 1][0])
             throw std::invalid_argument("missing value for " + std::string(flag));
@@ -67,12 +76,20 @@ StartupOptions parseOptions(int argc, char** argv) {
                              positiveInteger(value.substr(separator + 1), 8192, "--size")}};
         } else if (flag == "--fps" && !options.fps) {
             options.fps = positiveInteger(value, 1000, "--fps");
+#if VOSC_OPERATOR_UI
+        } else if (flag == "--preview-child" && !options.preview && value == "1") {
+            options.preview = true;
+#endif
         } else {
             throw std::invalid_argument("duplicate option " + std::string(flag));
         }
     }
     if (!options.inputs.empty() && options.scenePath.empty())
         throw std::invalid_argument("--scene-input requires --scene");
+#if VOSC_OPERATOR_UI
+    if (options.preview && options.scenePath.empty())
+        throw std::invalid_argument("preview requires --scene");
+#endif
     return options;
 }
 
@@ -124,7 +141,15 @@ int main(int argc, char** argv) {
 
     unsigned int oscPort;
     std::optional<scene::File> startupScene;
+    bool preview = false;
+#if VOSC_OPERATOR_UI
+    std::optional<vosc::operator_ui::PreviewChild> previewChild;
+#endif
     try {
+#if VOSC_OPERATOR_UI
+        preview = options.preview;
+        if (preview) previewChild.emplace();
+#endif
         oscPort = control::oscPortFromEnvironment();
         if (!options.scenePath.empty()) {
             startupScene = scene::load(options.scenePath, options.inputs);
@@ -148,7 +173,7 @@ int main(int argc, char** argv) {
 #endif
 
     std::optional<StartupDeadline> deadline;
-    if (startupScene && startupScene->version == 2) deadline.emplace(*startupScene);
+    if (startupScene && (preview || startupScene->version == 2)) deadline.emplace(*startupScene);
 #ifdef USE_PROGRAMMABLE_RENDERER
     ofGLWindowSettings settings;
     settings.setGLVersion(GL_VERSION_MAJOR, GL_VERSION_MINOR);
@@ -156,6 +181,17 @@ int main(int argc, char** argv) {
     settings.setProfile(GL_PROFILE);
 #endif
     settings.setSize(width, height);
+#if VOSC_OPERATOR_UI
+    if (preview) {
+        ofGLFWWindowSettings previewSettings(settings);
+        previewSettings.visible = false;
+        auto window = std::dynamic_pointer_cast<ofAppGLFWWindow>(ofCreateWindow(previewSettings));
+        if (!window || !window->getGLFWWindow()) {
+            std::cerr << "vosc: could not create the preview window" << std::endl;
+            return EXIT_FAILURE;
+        }
+    } else
+#endif
 #ifdef VOSC_RECOVERY_TESTING
     const char* testSamples = std::getenv("VOSC_TEST_WINDOW_SAMPLES");
     if (testSamples && (std::string_view(testSamples) == "0" || std::string_view(testSamples) == "4")) {
@@ -172,7 +208,11 @@ int main(int argc, char** argv) {
     bool startupFailed = false;
     const int status = ofRunApp(new ofApp(oscPort, std::move(startupScene), startupFailed, options.fps.value_or(60), [&] {
         if (deadline) deadline->stop();
-    }));
+    }
+#if VOSC_OPERATOR_UI
+    , previewChild ? &*previewChild : nullptr
+#endif
+    ));
     if (startupFailed) return EXIT_FAILURE;
     return options.scenePath.empty() ? EXIT_SUCCESS : status;
 

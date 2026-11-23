@@ -19,7 +19,7 @@ public:
     VOSC();
 
     void setup(unsigned int port, const scene::File* scene, CommandSystem::ScenePrograms& programs,
-               CommandSystem::SceneResult result);
+               CommandSystem::SceneResult result, bool preview);
     void update();
     void draw();
     void exit();
@@ -37,7 +37,7 @@ public:
     void windowResized(int w, int h);
 
 private:
-    void setupControl();
+    void setupControl(bool required = false);
 #ifdef VOSC_RECOVERY_TESTING
     void recoveryTestUpdate(bool beforeDraw = false);
     void recoveryTestRecord(const ofJson& event);
