@@ -6,6 +6,8 @@
 #include "ofJson.h"
 #include "ofUtils.h"
 #include <algorithm>
+#include <cctype>
+#include <string_view>
 #include <fstream>
 #include <stdexcept>
 #include <tuple>
@@ -58,20 +60,6 @@ bool matchesStage(const std::string& resolved, const std::string& expected) {
     if (!file || resolved.empty()) return false;
     std::error_code error;
     return fs::canonical(ofToDataPath(resolved, true), error) == *file && !error;
-}
-
-std::string scString(const std::string& text) {
-    std::string result = "\"";
-    for (const auto character : text) {
-        switch (character) {
-            case '\\': result += "\\\\"; break;
-            case '"': result += "\\\""; break;
-            case '\n': result += "\\n"; break;
-            case '\r': result += "\\r"; break;
-            default: result += character; break;
-        }
-    }
-    return result + '"';
 }
 
 Asset readAsset(const ofJson& item) {
@@ -140,21 +128,106 @@ std::optional<fs::path> stagedFile(const fs::path& root, const std::string& name
     return path;
 }
 
+bool identifierStart(char ch) {
+    return std::isalpha(static_cast<unsigned char>(ch)) || ch == '_';
+}
+
+std::string_view shaderToken(std::string_view& remaining) {
+    while (!remaining.empty()) {
+        if (std::isspace(static_cast<unsigned char>(remaining.front()))) {
+            remaining.remove_prefix(1);
+        } else if (remaining.substr(0, 2) == "//" || remaining.front() == '#') {
+            auto end = remaining.find('\n');
+            if (remaining.front() == '#') {
+                while (end != std::string_view::npos &&
+                       (remaining[end - 1] == '\\' || (end > 1 && remaining[end - 1] == '\r' && remaining[end - 2] == '\\')))
+                    end = remaining.find('\n', end + 1);
+            }
+            remaining.remove_prefix(end == std::string_view::npos ? remaining.size() : end + 1);
+        } else if (remaining.substr(0, 2) == "/*") {
+            const auto end = remaining.find("*/", 2);
+            remaining.remove_prefix(end == std::string_view::npos ? remaining.size() : end + 2);
+        } else {
+            size_t size = 1;
+            if (identifierStart(remaining.front()))
+                while (size < remaining.size() &&
+                       (identifierStart(remaining[size]) || std::isdigit(static_cast<unsigned char>(remaining[size]))))
+                    ++size;
+            const auto token = remaining.substr(0, size);
+            remaining.remove_prefix(size);
+            return token;
+        }
+    }
+    return {};
+}
+
+void readUniforms(std::string_view source, std::vector<ShaderUniform>& uniforms) {
+    for (auto token = shaderToken(source); !token.empty(); token = shaderToken(source)) {
+        if (token != "uniform") continue;
+        auto type = shaderToken(source);
+        if (type == "highp" || type == "mediump" || type == "lowp") type = shaderToken(source);
+        if (type.empty() || !identifierStart(type.front())) continue;
+        token = shaderToken(source);
+        // A block declares an interface, rather than individual standalone uniforms.
+        while (!token.empty() && identifierStart(token.front())) {
+            std::string name(token);
+            token = shaderToken(source);
+            while (token == "[") {
+                int brackets = 0;
+                do {
+                    name.append(token);
+                    if (token == "[") ++brackets;
+                    if (token == "]") --brackets;
+                    token = shaderToken(source);
+                } while (!token.empty() && brackets > 0);
+            }
+            if (token == "=") {
+                int depth = 0;
+                do {
+                    token = shaderToken(source);
+                    if (token == "(" || token == "[" || token == "{") ++depth;
+                    if (token == ")" || token == "]" || token == "}") --depth;
+                } while (!token.empty() && token != ";" && (depth != 0 || token != ","));
+            }
+            if (token != "," && token != ";") break;
+            ShaderUniform uniform{std::move(name), std::string(type)};
+            if (std::find(uniforms.begin(), uniforms.end(), uniform) == uniforms.end())
+                uniforms.push_back(std::move(uniform));
+            if (token == ";") break;
+            token = shaderToken(source);
+        }
+    }
+}
+
+bool appendUniforms(const fs::path& root, const std::string& name, std::vector<ShaderUniform>& uniforms) {
+    const auto path = stagedFile(root, name);
+    if (!path) return false;
+    constexpr size_t limit = 128 * 1024;
+    std::error_code error;
+    const auto size = fs::file_size(*path, error);
+    if (error || size > limit) return false;
+    std::ifstream file(*path, std::ios::binary);
+    std::string contents(static_cast<size_t>(size), '\0');
+    if (!file.read(contents.data(), contents.size())) return false;
+    readUniforms(contents, uniforms);
+    return true;
+}
+
 std::vector<Asset> readMetadata(const fs::path& staged) {
     const auto path = stagedFile(staged, "catalog/browse-assets.json");
     std::error_code error;
     constexpr size_t limit = 64 * 1024;
     if (!path || fs::file_size(*path, error) > limit || error)
-        throw std::runtime_error("Browse command metadata unavailable");
+        throw std::runtime_error("Browse asset metadata unavailable");
     std::ifstream stream(*path, std::ios::binary);
     std::string contents(limit + 1, '\0');
     stream.read(contents.data(), contents.size());
     if (stream.bad() || static_cast<size_t>(stream.gcount()) > limit)
-        throw std::runtime_error("Could not read Browse command metadata");
+        throw std::runtime_error("Could not read Browse asset metadata");
     contents.resize(static_cast<size_t>(stream.gcount()));
     const auto manifest = ofJson::parse(contents);
     if (!manifest.is_array() || manifest.size() > 64)
-        throw std::runtime_error("Invalid Browse command metadata");
+        throw std::runtime_error("Invalid Browse asset metadata");
     std::vector<Asset> result;
     for (const auto& item : manifest) {
         auto asset = readAsset(item);
@@ -164,7 +237,7 @@ std::vector<Asset> readMetadata(const fs::path& staged) {
         if (std::any_of(result.begin(), result.end(), [&](const auto& previous) {
                 return previous.id == asset.id || previous.sourceLabel() == source;
             }))
-            throw std::runtime_error("Duplicate Browse command registration");
+            throw std::runtime_error("Duplicate Browse asset registration");
         result.push_back(std::move(asset));
     }
     return result;
@@ -229,27 +302,6 @@ bool Asset::available(AssetUse use) const {
     return true;
 }
 
-AssetCommand assetCommand(const Asset& asset, AssetUse use, int32_t layer) {
-    const char* address = "/tex";
-    if (use == AssetUse::LayerProgram) address = "/shader";
-    if (use == AssetUse::Model || use == AssetUse::Box) address = "/geom";
-    AssetCommand command{address, {layer, asset.source}};
-    if (use == AssetUse::Box) {
-        for (int i = 0; i < 3; ++i) command.arguments.emplace_back(int32_t{200});
-    }
-    return command;
-}
-
-std::string AssetCommand::snippet() const {
-    std::string text = "~visuals.sendMsg('" + std::string(address) + "'";
-    for (const auto& arg : arguments) {
-        text += ", ";
-        if (const auto* string = std::get_if<std::string>(&arg)) text += scString(*string);
-        else text += std::to_string(std::get<int32_t>(arg));
-    }
-    return text + ");";
-}
-
 BrowseCatalog BrowseCatalog::scan(const fs::path& dataPath, std::shared_ptr<const Entries> previous) {
     BrowseCatalog result;
     result.files = std::move(previous);
@@ -276,6 +328,11 @@ BrowseCatalog BrowseCatalog::scan(const fs::path& dataPath, std::shared_ptr<cons
     const bool stagedInventory = root == dataPath;
     if (stagedInventory) root = staged;
     if (!fs::is_directory(fs::symlink_status(root, error)) || error) {
+        result.scanFailed = true;
+        return result;
+    }
+    result.root = fs::canonical(root, error);
+    if (error) {
         result.scanFailed = true;
         return result;
     }
@@ -316,6 +373,19 @@ BrowseCatalog BrowseCatalog::scan(const fs::path& dataPath, std::shared_ptr<cons
     if (!result.files || *result.files != discovered)
         result.files = std::make_shared<const Entries>(std::move(discovered));
     return result;
+}
+
+std::optional<std::vector<ShaderUniform>> BrowseCatalog::uniforms(const Asset& entry) const {
+    if (root.empty() || (entry.kind != "Fragment shader" && entry.kind != "Shader source"))
+        return std::nullopt;
+    std::vector<ShaderUniform> uniforms;
+    if (!appendUniforms(root, entry.path, uniforms)) return std::nullopt;
+    if (entry.kind == "Fragment shader") {
+        auto sibling = fs::path(entry.path);
+        appendUniforms(root, sibling.replace_extension(".vert").generic_string(), uniforms);
+        appendUniforms(root, sibling.replace_extension(".geom").generic_string(), uniforms);
+    }
+    return uniforms;
 }
 
 const Asset* BrowseCatalog::registration(const Asset& entry) const {

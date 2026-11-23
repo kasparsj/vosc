@@ -8,7 +8,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <variant>
 #include <vector>
 
 namespace vosc::operator_ui {
@@ -28,21 +27,21 @@ struct Asset {
     bool available(AssetUse use) const;
 };
 
-struct AssetCommand {
-    const char* address;
-    std::vector<std::variant<int32_t, std::string>> arguments;
-
-    std::string snippet() const;
-};
-
-AssetCommand assetCommand(const Asset& asset, AssetUse use, int32_t layer);
 std::optional<std::filesystem::path> stagedBrowseFile(const std::string& name);
+
+struct ShaderUniform {
+    std::string name, type;
+    bool operator==(const ShaderUniform& other) const { return name == other.name && type == other.type; }
+};
 
 struct BrowseCatalog {
     using Entries = std::vector<Asset>;
 
     static BrowseCatalog scan(const std::filesystem::path& staged, std::shared_ptr<const Entries> previous);
     const Asset* registration(const Asset& entry) const;
+    std::optional<std::vector<ShaderUniform>> uniforms(const Asset& entry) const;
+
+    std::filesystem::path root;
 
     std::shared_ptr<const Entries> files;
     Entries builtins, registeredFiles;

@@ -127,23 +127,6 @@ class OperatorClipboard final : public Rml::SystemInterface {
 public:
     void SetClipboardText(const Rml::String& text) override { ofSetClipboardString(text); }
     void GetClipboardText(Rml::String& text) override { text = ofGetClipboardString(); }
-
-    bool copyBrowseCommand(const Rml::String& text) {
-#if defined(VOSC_BROWSE_CLIPBOARD_TEST) && VOSC_BROWSE_CLIPBOARD_TEST
-        if (!std::exchange(testedFailure, true)) return false;
-#endif
-        glfwGetError(nullptr);
-        SetClipboardText(text);
-        if (glfwGetError(nullptr) != GLFW_NO_ERROR) return false;
-        Rml::String actual;
-        GetClipboardText(actual);
-        return glfwGetError(nullptr) == GLFW_NO_ERROR && actual == text;
-    }
-
-private:
-#if defined(VOSC_BROWSE_CLIPBOARD_TEST) && VOSC_BROWSE_CLIPBOARD_TEST
-    bool testedFailure = false;
-#endif
 };
 
 int modifiers(int ofModifiers) {
@@ -397,15 +380,7 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
             if (syncingBrowse) return;
             const auto& id = target->GetId();
             const auto value = event.GetParameter<Rml::String>("value", "");
-            if (id == "example-input" && examplesActive) {
-                examples.rememberInput(value);
-                return;
-            }
-            if (id != "browse-use" && id != "browse-target") return;
-            uint64_t token = 0;
-            const auto parsed = std::from_chars(value.data(), value.data() + value.size(), token);
-            if (parsed.ec == std::errc{} && parsed.ptr == value.data() + value.size())
-                browseChanges.push_back({id, token});
+            if (id == "example-input" && examplesActive) examples.rememberInput(value);
             return;
         }
         if (target->GetTagName() != "button") target = target->Closest("button");
@@ -422,8 +397,7 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
             if (id == "back" || id == "browse-example-search" || id == "browse-example-category"
                 || id.rfind("example-", 0) == 0) examplesFocus = id;
         } else if (id == "back" || id == "browse-search" || id == "browse-category" || id == "browse-clear"
-                   || id == "browse-use" || id == "browse-target" || id == "browse-copy"
-                   || id.rfind("asset-row-", 0) == 0) {
+                    || id.rfind("asset-row-", 0) == 0) {
             assetsFocus = id;
         }
     }
@@ -597,7 +571,6 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
     std::string assetsFocus, examplesFocus;
     float assetsScroll = 0, examplesScroll = 0;
     bool examplesActive = false, keepCatalogScroll = false;
-    std::vector<Action> browseChanges;
     std::string browseHeading, browseSummary, browseStatus;
     bool syncingBrowse = false;
     vosc::operator_ui::InspectorView inspector;
@@ -693,7 +666,6 @@ void DiagnosticOverlay::rememberScene(const scene::File& scene, const VOSC& rend
 
 void DiagnosticOverlay::show(View next, const std::string& focus) {
     surface->action.reset();
-    surface->browseChanges.clear();
     cleanClick.reset();
     if (!open) {
         surface->document->Show(Rml::ModalFlag::None, Rml::FocusFlag::None, Rml::ScrollFlag::None);
@@ -725,7 +697,6 @@ void DiagnosticOverlay::close() {
         welcome = false;
     }
     surface->action.reset();
-    surface->browseChanges.clear();
     surface->focusRequest.clear();
     surface->revealSequence = 0;
     surface->inspector.reset();
@@ -1022,9 +993,6 @@ void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std
             ui.browseSearch->SetValue("");
             ui.browseCategory->SetSelection(0);
             ui.focusRequest = "browse-search";
-        } else if (id == "browse-copy") {
-            if (const auto command = ui.browse.copyCommand(renderer, target))
-                ui.browse.finishCopy(ui.clipboard.copyBrowseCommand(*command));
         }
     } else if (id == "diagnostic" || id == "shader-diagnostic") showDiagnostic(target);
     else if (id == "back" || id.compare(0, 8, "inspect-") == 0) {
@@ -1212,10 +1180,6 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     if (view == View::Browse) {
         if (ui.examplesActive) ui.examples.refresh();
         else ui.browse.refresh();
-        for (const auto& change : std::exchange(ui.browseChanges, {})) {
-            if (change.id == "browse-use") ui.browse.selectUse(change.target);
-            else ui.browse.selectTarget(renderer, change.target);
-        }
     }
     if (ui.action) {
         const auto action = std::exchange(ui.action, std::nullopt);
@@ -1280,7 +1244,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
         case View::Browse: {
             const bool compact = ui.document->IsClassSet("compact");
             if (examples) markup = ui.examples.markup(oscPort, sceneIsCurrent(renderer));
-            else contentMarkup = &ui.browse.markup(renderer);
+            else contentMarkup = &ui.browse.markup();
             const int height = examples ? ui.examples.height(compact) : ui.browse.height(compact);
             ui.panel->SetProperty("height", std::to_string(height) + "dp");
             ui.setReading("browse-heading", ui.browseHeading, examples ? "Examples" : ui.browse.heading());

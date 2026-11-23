@@ -1,9 +1,7 @@
 #include "BrowseView.hpp"
 
 #if VOSC_OPERATOR_UI
-#include "../VOSC.hpp"
-#include "../layer/Layer.h"
-#include "ofUtils.h"
+#include "ofFileUtils.h"
 #include <RmlUi/Core/StringUtilities.h>
 #include <algorithm>
 #include <string_view>
@@ -18,22 +16,11 @@ std::string escaped(const std::string& text) {
     return Rml::StringUtilities::EncodeRml(text);
 }
 
-std::string option(uint64_t value, const std::string& label, bool selected) {
-    return "<option value='" + std::to_string(value) + "'" + (selected ? " selected" : "")
-        + ">" + escaped(label) + "</option>";
-}
-
 std::string fact(const char* title, const std::string& value) {
     return "<div class='browse-fact'><span class='readout-label'>" + std::string(title)
         + "</span>" + escaped(value) + "</div>";
 }
 
-std::shared_ptr<Layer> currentLayer(const VOSC& renderer, int32_t index) {
-    const auto& layers = renderer.operatorLayers();
-    if (index < 0 || static_cast<size_t>(index) >= layers.size()) return {};
-    const auto& layer = layers[index];
-    return layer && layer->index == index ? layer : nullptr;
-}
 }
 
 bool BrowseView::switchCatalog(bool builtins) {
@@ -84,7 +71,7 @@ std::string BrowseView::status() const {
     }
     if (catalog.metadataFailed) {
         if (!message.empty()) message += '\n';
-        message += "OSC command metadata unavailable.";
+        message += "Asset metadata unavailable.";
     }
     return message;
 }
@@ -173,12 +160,8 @@ bool BrowseView::openItem(const std::string& id, uint64_t row, float scroll) {
     registration.reset();
     selectedRow = id;
     catalogScroll = scroll;
-    availableUses.clear();
-    use.reset();
-    selectedTarget.reset();
-    stale = false;
+    uniforms = catalog.uniforms(entry);
     checkAsset();
-    invalidateCopy();
     return true;
 }
 
@@ -196,116 +179,19 @@ std::string BrowseView::backItem() {
     return selectedRow;
 }
 
-void BrowseView::invalidateCopy() {
-    ++commandToken;
-    feedback.clear();
-}
-
 void BrowseView::checkAsset() {
     nextAssetCheck = std::chrono::steady_clock::now() + std::chrono::milliseconds(250);
     const auto* current = catalog.registration(*item);
-    if (current) {
-        if (!registration || !(*registration == *current)) {
-            registration = *current;
-            invalidateCopy();
-        }
-    } else if (registration) {
-        registration.reset();
-        invalidateCopy();
-    }
-    std::vector<AssetUse> valid;
+    if (current) registration = *current;
+    else registration.reset();
+    availableUses.clear();
     preview.clear();
-    if (registration) {
-        auto name = registration->preview;
-        if (name.empty() && registration->kind == "Image") name = registration->sourceLabel();
-        if (stagedBrowseFile(name)) preview = std::move(name);
-        for (const auto candidate : registration->uses)
-            if (registration->available(candidate)) valid.push_back(candidate);
-    }
-    if (availableUses == valid) return;
-    availableUses = std::move(valid);
-    if (!use || std::find(availableUses.begin(), availableUses.end(), *use) == availableUses.end())
-        use = availableUses.empty() ? std::nullopt : std::optional{availableUses.front()};
-    invalidateCopy();
-}
-
-void BrowseView::revalidateTarget(const VOSC& renderer) {
-    if (!selectedTarget) return;
-    const auto owner = selectedTarget->owner.lock();
-    if (owner && currentLayer(renderer, selectedTarget->index) == owner) return;
-    selectedTarget.reset();
-    stale = true;
-    invalidateCopy();
-}
-
-void BrowseView::syncTargets(const VOSC& renderer) {
-    revalidateTarget(renderer);
-    const auto& layers = renderer.operatorLayers();
-    const auto isSame = [](const Target& target, const std::shared_ptr<Layer>& layer) {
-        return layer && target.index == layer->index && target.owner.lock() == layer;
-    };
-    if (std::equal(visibleTargets.begin(), visibleTargets.end(), layers.begin(), layers.end(), isSame)) return;
-
-    std::vector<Target> current;
-    current.reserve(layers.size());
-    for (const auto& layer : layers) {
-        if (!layer) continue;
-        const auto previous = std::find_if(visibleTargets.begin(), visibleTargets.end(),
-            [&](const auto& target) { return isSame(target, layer); });
-        current.push_back(previous == visibleTargets.end()
-            ? Target{layer->index, ++nextTargetToken, layer} : *previous);
-    }
-    visibleTargets = std::move(current);
-}
-
-void BrowseView::selectUse(uint64_t option) {
-    if (!detail() || !option) return;
-    const auto found = std::find_if(availableUses.begin(), availableUses.end(), [&](auto candidate) {
-        return static_cast<uint64_t>(candidate) + 1 == option;
-    });
-    if (found == availableUses.end() || use == *found) return;
-    use = *found;
-    invalidateCopy();
-}
-
-void BrowseView::selectTarget(const VOSC& renderer, uint64_t option) {
-    if (!detail()) return;
-    revalidateTarget(renderer);
-    if (!option) {
-        selectedTarget.reset();
-    } else {
-        const auto previous = std::find_if(visibleTargets.begin(), visibleTargets.end(), [&](const auto& target) {
-            return target.token == option;
-        });
-        const auto owner = previous == visibleTargets.end() ? nullptr : previous->owner.lock();
-        if (!owner || currentLayer(renderer, previous->index) != owner) {
-            selectedTarget.reset();
-            stale = true;
-            invalidateCopy();
-            return;
-        }
-        selectedTarget = *previous;
-        stale = false;
-    }
-    invalidateCopy();
-}
-
-std::optional<AssetCommand> BrowseView::command() const {
-    if (!registration || !use || !selectedTarget) return std::nullopt;
-    return assetCommand(*registration, *use, selectedTarget->index);
-}
-
-std::optional<std::string> BrowseView::copyCommand(const VOSC& renderer, uint64_t token) {
-    if (!detail()) return std::nullopt;
-    checkAsset();
-    revalidateTarget(renderer);
-    if (token != commandToken) return std::nullopt;
-    if (const auto ready = command()) return ready->snippet();
-    return std::nullopt;
-}
-
-void BrowseView::finishCopy(bool success) {
-    feedback = success ? "Command copied." : "Clipboard unavailable. Try copying again.";
+    if (!registration) return;
+    auto name = registration->preview;
+    if (name.empty() && registration->kind == "Image") name = registration->sourceLabel();
+    if (stagedBrowseFile(name)) preview = std::move(name);
+    for (const auto use : registration->uses)
+        if (registration->available(use)) availableUses.push_back(use);
 }
 
 std::string BrowseView::detailMarkup() const {
@@ -320,47 +206,31 @@ std::string BrowseView::detailMarkup() const {
         ? "<div class='browse-preview'><img alt='Saved asset preview' src=\"browse:"
             + escaped(preview) + "\" /></div>"
         : std::string{};
-    if (catalog.metadataFailed) return result + previewMarkup;
-    if (!registration)
-        return result + "<p class='browse-requirements'>No verified OSC use.</p>" + previewMarkup;
-    if (availableUses.empty())
-        return result + "<p class='message error'>Asset unavailable. Check the staged source and dependencies.</p>" + previewMarkup;
-    if (visibleTargets.empty())
-        result += "<p class='message error'>No layers available. Add a layer before choosing a target.</p>";
-    else if (stale)
-        result += "<p class='message error'>Target replaced. Select a current layer.</p>";
-
-    result += "<div class='browse-choice'><div class='browse-field'><span>Source use</span>"
-        "<select id='browse-use' aria-label='Source use'>";
-    for (auto candidate : availableUses)
-        result += option(static_cast<uint64_t>(candidate) + 1, entry.useLabel(candidate), use == candidate);
-    result += "</select></div><div class='browse-field'><span>OSC target</span>"
-        "<select id='browse-target' aria-label='OSC target'";
-    if (visibleTargets.empty()) result += " disabled";
-    result += ">" + option(0, "Choose a layer", !selectedTarget);
-    for (const auto& target : visibleTargets)
-        result += option(target.token, "Layer " + std::to_string(target.index),
-                         selectedTarget && selectedTarget->token == target.token);
-    result += "</select></div></div>";
-    const auto ready = command();
-    if (!ready) {
-        if (!visibleTargets.empty() && !stale)
-            result += "<p class='browse-origin'>Choose a layer to preview the OSC command.</p>";
-        return result + previewMarkup;
+    if (registration) {
+        if (availableUses.empty()) {
+            result += "<p class='message error'>Asset unavailable. Check the staged source and dependencies.</p>";
+        } else if (availableUses.size() > 1 || entry.kind == "Fragment shader") {
+            std::string uses;
+            for (const auto use : availableUses) {
+                if (!uses.empty()) uses += " · ";
+                uses += entry.useLabel(use);
+            }
+            result += "<div class='browse-origin'>" + fact("Source uses", uses) + "</div>";
+        }
     }
-
-    std::string types;
-    for (const auto& arg : ready->arguments) {
-        if (!types.empty()) types += " · ";
-        if (const auto* number = std::get_if<int32_t>(&arg)) types += "i: " + std::to_string(*number);
-        else types += "s: " + std::get<std::string>(arg);
+    if (item->kind == "Fragment shader" || item->kind == "Shader source") {
+        result += "<div class='browse-requirements'><span class='readout-label'>Declared uniforms</span>";
+        if (!uniforms) result += "<div>Could not read shader uniforms.</div>";
+        else if (uniforms->empty()) result += "<div>No standalone uniforms found in the source.</div>";
+        if (uniforms) {
+            for (const auto& uniform : *uniforms) {
+                result += "<div class='browse-uniform'><span>" + escaped(uniform.name)
+                    + "</span><span>" + escaped(uniform.type) + "</span></div>";
+            }
+        }
+        result += "</div>";
     }
-    return result + "<div class='browse-command'><div class='browse-facts'>"
-        + fact("OSC address", ready->address) + fact("Typed arguments", types)
-        + "</div><span class='readout-label'>SuperCollider snippet · connected ~visuals client</span>"
-          "<div class='browse-snippet'>" + escaped(ready->snippet()) + "</div>"
-          "<button id='browse-copy' data-target='" + std::to_string(commandToken) + "'>Copy OSC command</button>"
-          "<span class='browse-feedback'>" + escaped(feedback) + "</span></div>" + previewMarkup;
+    return result + previewMarkup;
 }
 
 void BrowseView::refresh() {
@@ -395,14 +265,13 @@ void BrowseView::refresh() {
     }
 }
 
-const std::string& BrowseView::markup(const VOSC& renderer) {
+const std::string& BrowseView::markup() {
     if (!detail()) {
         if (rowsDirty) {
             updateRows();
         }
         return rowsMarkup;
     }
-    syncTargets(renderer);
     if (std::chrono::steady_clock::now() >= nextAssetCheck) checkAsset();
     detailContent = detailMarkup();
     return detailContent;
@@ -410,10 +279,10 @@ const std::string& BrowseView::markup(const VOSC& renderer) {
 
 int BrowseView::height(bool compact) const {
     if (!detail()) return showingBuiltins ? 156 : compact ? 264 : 468;
-    const bool hasCommand = use && selectedTarget;
     const bool hasPreview = !preview.empty();
-    if (compact) return hasCommand || hasPreview ? 339 : 264;
-    if (hasCommand) return hasPreview ? 478 : 430;
+    const bool hasUniforms = uniforms && !uniforms->empty();
+    if (compact) return hasPreview || hasUniforms ? 339 : 264;
+    if (hasUniforms) return 430;
     return hasPreview ? 372 : 300;
 }
 
