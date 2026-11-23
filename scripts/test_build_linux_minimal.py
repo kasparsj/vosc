@@ -69,7 +69,8 @@ def main():
             target = project / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, target)
-        for ui_source in ("operator/DiagnosticOverlay.cpp", "operator/InspectorView.cpp", "operator/InspectorPreview.cpp"):
+        for ui_source in ("operator/DiagnosticOverlay.cpp", "operator/InspectorView.cpp",
+                          "operator/InspectorPreview.cpp", "operator/BrowseCatalog.cpp", "operator/BrowseView.cpp"):
             target = project / "src" / ui_source
             target.parent.mkdir(exist_ok=True)
             target.touch()

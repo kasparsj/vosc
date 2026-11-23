@@ -1,8 +1,8 @@
 # Render-machine UI views
 
-Milestone 2 operator reference. [Design contract](../DESIGN.md) · [Codebase audit and mockup inventory](Render-machine-ui-audit.md)
+Milestone 3 operator reference. [Design contract](../DESIGN.md) · [Codebase audit and mockup inventory](Render-machine-ui-audit.md)
 
-The floating dock has four destinations: **Overview**, **Inspector**, **Console**, and **Browse**. Details open above the dock. **Back** returns to the originating item with its selection and scroll position. **Escape** returns directly to clean output. The scene continues rendering. The Browse catalogs are planned for later milestones.
+The floating dock has four destinations: **Overview**, **Inspector**, **Console**, and **Browse**. Details open above the dock. **Back** returns to the originating item with its selection and scroll position. **Escape** returns directly to clean output. The scene continues rendering. Browse opens Assets and offers a separate Built-ins view. Examples and its preview window are planned for milestone 4.
 
 ## Output and Overview
 
@@ -42,7 +42,7 @@ Keep chronological messages, copy, clear, and the ability to read older entries 
 
 ## Browse
 
-Open **Examples** or **Assets** inside Browse. Both use the same pattern: search by name, narrow by category, select an item, and open its details. Keep selection, filter, and scroll position when returning from details or switching between catalogs. Show a saved thumbnail where one exists and a type-labeled placeholder otherwise. Browsing and selecting leave the running scene alone.
+Browse opens **Assets** in milestone 3. The **Examples** view below specifies the milestone 4 flow. Both use the same pattern: search by name, narrow by category, select an item, and open its details. Keep selection, filter, and scroll position when returning from details or switching between catalogs. Show a saved thumbnail where one exists and a type-labeled placeholder otherwise. Browsing and selecting leave the running scene alone.
 
 ### Examples
 
@@ -55,12 +55,14 @@ An example is a complete runnable scene. Use the existing example manifests and 
 
 ### Assets
 
-An asset is a reusable source. Start with a curated local catalog of supported shaders, textures, models, and built-in sources. Store each entry's stable ID, display name, kind, source reference, preview if available, origin, and requirements. A shader entry represents the usable entry point with any required companion stages or includes. A model entry carries its linked files. Keep the catalog entries and the files they depend on together in packaged builds. Show attribution where known. Author shared assets in `assets/` and resolve commands against the installed renderer's staged `data/` tree. Scene-local example assets, local clips, caches, and renderer support files have separate purposes. [Shared assets and local media](../README.md#shared-assets-and-local-media) · [Staging](../scripts/stage_assets.py) · [Shader path resolution](../src/shader/Shader.cpp)
+Assets mirrors the folder tree. The separate **Built-ins** view lists renderer primitives such as Box. Open a subfolder to see the files and folders inside it. Search by filename and filter by kind. Matching subfolders stay visible so results can be reached in their original location. Open a file to see its source, origin, requirements when documented, and a saved preview where available. Back restores the filter, originating row and reading position.
+
+The Xcode checkout browses `assets/` directly. A standalone renderer browses its staged `data/` tree. Browse refreshes while the folder list is visible, so additions appear without restarting. OSC uses are defined separately for verified entries and resolve against staged data. Shader entries check required stages and includes. Penguin checks its linked material and image. [OSC use metadata](../assets/catalog/browse-assets.json) · [Shared assets and local media](../README.md#shared-assets-and-local-media) · [Staging](../scripts/stage_assets.py) · [Shader path resolution](../src/shader/Shader.cpp)
 
 - **Details.** Show the asset's type, preview, source and requirements. Distinguish a shader used as a texture source from a shader applied to a layer program. These are separate uses with different commands.
 - **Target.** Choose a current layer by its OSC identifier. Keep that choice visible. Require a new selection if the target disappears or a replacement scene reuses the same index. Show the empty layer list and what to do next when no target exists.
 - **Use.** Show the OSC address, typed arguments, use, and target before copying. Generate the correct source form for that use. Texture sources use `/tex`, layer programs use `/shader`, and model or primitive sources use `/geom`. Use source references resolvable by this renderer. Mark sources requiring extra setup as such and offer a command only when it represents a valid supported use. Show copy success or failure. Copy never sends a message. [Texture commands](Texture-commands.md) · [Shader commands](Shader-commands.md) · [Geometry commands](Geometry-commands.md)
-- **Mockup default for review.** Label the copied text as a SuperCollider snippet for an already connected `~visuals` client, with a separate human-readable address/arguments preview. Confirm this format before implementation. The repository already serializes SuperCollider string and float arguments for scene companions. [Serialization](../scripts/scene_recipe.py) · [Example usage](../scripts/generate_example_scd.py)
+- **Clipboard format.** The address and typed arguments appear above the SuperCollider snippet for an already connected `~visuals` client. Choose the texture or layer-program use for a multi-use shader. The string escaping follows the repository's scene companion convention. [Serialization](../scripts/scene_recipe.py) · [Example usage](../scripts/generate_example_scd.py)
 
 Keep direct asset application and replacing the current scene for a later decision about live-state replacement and failure handling. Use the Browse catalog and explicit copy or preview action for v1. [Current scene reset during startup](../src/systems/CommandSystem.cpp)
 

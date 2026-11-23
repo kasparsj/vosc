@@ -1,0 +1,139 @@
+[
+  {
+    "id": "black-hole",
+    "name": "Black Hole",
+    "kind": "Image",
+    "source": "black_hole.jpg",
+    "uses": [
+      "image"
+    ],
+    "origin": "VOSC shared library",
+    "requirements": "Bundled JPEG.",
+    "preview": "images/black_hole.jpg"
+  },
+  {
+    "id": "box",
+    "name": "Box",
+    "kind": "Built-in",
+    "source": "box",
+    "uses": [
+      "box"
+    ],
+    "origin": "VOSC geometry",
+    "requirements": "200 × 200 × 200 sample dimensions."
+  },
+  {
+    "id": "color",
+    "name": "color.frag",
+    "kind": "Fragment shader",
+    "source": "shaders/color.frag",
+    "uses": [
+      "shader-texture",
+      "layer-program"
+    ],
+    "origin": "VOSC shared library",
+    "requirements": "Uses the default vertex stage. Set the color uniform for the intended output.",
+    "dependencies": [
+      "shaders/include/of_default_uniforms.glsl",
+      "shaders/include/of_default_vertex_in_attributes.glsl"
+    ]
+  },
+  {
+    "id": "light-shader",
+    "name": "lightShader.frag",
+    "kind": "Fragment shader",
+    "source": "shaders/instanced/lightShader.frag",
+    "uses": [
+      "layer-program"
+    ],
+    "origin": "VOSC shared library",
+    "requirements": "Paired lightShader.vert. The Shader Buffers example uses instancing, the colors and tex buffers, and lightLocation.",
+    "vertex": "shaders/instanced/lightShader.vert"
+  },
+  {
+    "id": "noise",
+    "name": "Noise",
+    "kind": "Image",
+    "source": "noise.png",
+    "uses": [
+      "image"
+    ],
+    "origin": "VOSC shared library",
+    "requirements": "Bundled PNG.",
+    "preview": "images/noise.png"
+  },
+  {
+    "id": "osc-circle",
+    "name": "OscCircle.frag",
+    "kind": "Fragment shader",
+    "source": "shaders/100fragments/OscCircle.frag",
+    "uses": [
+      "shader-texture",
+      "layer-program"
+    ],
+    "origin": "VOSC shared library",
+    "requirements": "Uses the default vertex stage and renderer time and resolution.",
+    "dependencies": [
+      "shaders/include/of_default_uniforms.glsl",
+      "shaders/include/of_default_vertex_in_attributes.glsl"
+    ]
+  },
+  {
+    "id": "penguin",
+    "name": "Penguin",
+    "kind": "Model",
+    "source": "models/penguin/penguin.obj",
+    "uses": [
+      "model"
+    ],
+    "origin": "VOSC shared library",
+    "requirements": "OBJ with a linked MTL and JPEG. The preview shows its material image.",
+    "dependencies": [
+      "models/penguin/penguin.obj.mtl",
+      "models/penguin/penguin.jpg"
+    ],
+    "preview": "models/penguin/penguin.jpg"
+  },
+  {
+    "id": "scan-grid",
+    "name": "ScanGrid.frag",
+    "kind": "Fragment shader",
+    "source": "shaders/100fragments/ScanGrid.frag",
+    "uses": [
+      "layer-program"
+    ],
+    "origin": "VOSC shared library",
+    "requirements": "Uses the default vertex stage and renderer time and resolution.",
+    "dependencies": [
+      "shaders/include/of_default_uniforms.glsl",
+      "shaders/include/of_default_vertex_in_attributes.glsl"
+    ]
+  },
+  {
+    "id": "scan-lines",
+    "name": "ScanLines.frag",
+    "kind": "Fragment shader",
+    "source": "shaders/100fragments/ScanLines.frag",
+    "uses": [
+      "layer-program"
+    ],
+    "origin": "VOSC shared library",
+    "requirements": "Uses the default vertex stage and renderer time and resolution.",
+    "dependencies": [
+      "shaders/include/of_default_uniforms.glsl",
+      "shaders/include/of_default_vertex_in_attributes.glsl"
+    ]
+  },
+  {
+    "id": "square-grid",
+    "name": "Square Grid",
+    "kind": "Image",
+    "source": "square_3x3.png",
+    "uses": [
+      "image"
+    ],
+    "origin": "VOSC shared library",
+    "requirements": "Bundled PNG.",
+    "preview": "images/square_3x3.png"
+  }
+]

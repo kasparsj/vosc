@@ -32,7 +32,6 @@ body {
 }
 #camera-reading .readout-label { display: inline; margin-right: 6dp; }
 #panel.enlarged { width: 620dp; }
-#panel.browse { height: 116dp; }
 body.compact #dock { width: 341dp; height: 43dp; bottom: 12dp; padding: 4dp; border-radius: 21.5dp; }
 body.compact #panel { width: 390dp; bottom: 61dp; }
 body.compact #panel.console { height: 264dp; }
@@ -51,7 +50,7 @@ button {
 }
 #panel-header button { flex: none; margin: 0; padding: 6dp 7dp; font-size: 12dp; }
 #panel-header #back { display: none; margin-right: 8dp; }
-#panel.detail #back { display: block; }
+#panel.detail #back, #panel.browse-folder #back { display: block; }
 #return { background-color: transparent; border-color: transparent; }
 #return span { padding: 1dp 4dp; margin-left: 4dp; border: 1dp #b4c4dc52; border-radius: 4dp; font-size: 11dp; }
 #dock button {
@@ -178,6 +177,68 @@ scrollbarvertical { width: 8dp; background-color: #182334; }
 scrollbarvertical slidertrack { background-color: #182334; }
 scrollbarvertical sliderbar { min-height: 18dp; background-color: #566c88; border-radius: 4dp; }
 scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: none; }
+
+#browse-tools { display: none; flex: none; padding: 6dp 12dp; border-bottom: 1dp #d2e1fc29; }
+#panel.browse #browse-tools { display: block; }
+#browse-header, #browse-filters, .browse-choice, .browse-facts { display: flex; align-items: center; }
+#browse-header { justify-content: space-between; height: 25dp; }
+#browse-heading { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 13dp; font-weight: bold; }
+#browse-summary { flex: none; margin-left: 6dp; }
+#browse-catalogs { display: none; flex: 1; }
+#panel.browse-root #browse-catalogs { display: flex; }
+#panel.browse-root #browse-heading { display: none; }
+#browse-catalogs button { margin: 0 5dp 0 0; padding: 3dp 8dp; font-size: 12dp; }
+#browse-summary, .browse-origin, .browse-requirements, .browse-feedback {
+    color: #c5d4e5; font-size: 12dp;
+}
+#browse-filters { margin-top: 5dp; }
+#browse-status { display: none; font-size: 12dp; margin: 5dp 0 0; }
+#browse-status.present { display: block; }
+#panel.detail #browse-filters, #panel.browse-builtins #browse-filters { display: none; }
+#browse-search, #panel.browse select {
+    box-sizing: border-box; height: 30dp; padding: 5dp 7dp; font-size: 13dp;
+    border: 1dp #b9d2f54a; border-radius: 5dp; background-color: #182130; color: #f3f6fc;
+}
+#browse-search { flex: 1; min-width: 0; margin-right: 6dp; }
+#browse-search:focus, #panel.browse select:focus { border-color: #a9dcff; }
+#browse-search:placeholder-shown { color: #c5d4e5; }
+#browse-category { flex: none; width: 129dp; }
+#panel.browse select selectarrow {
+    width: 14dp; height: 28dp; background-color: transparent; decorator: none;
+}
+#panel.browse select selectvalue { margin: 0; padding: 0 12dp 0 0; }
+#panel.browse select selectbox {
+    background-color: #1b2534; border: 1dp #b9d2f56b; border-radius: 4dp;
+    max-height: 152dp; overflow-y: auto;
+}
+#panel.browse select option { padding: 5dp 8dp; color: #f3f6fc; }
+#panel.browse select option:hover, #panel.browse select option:checked { background-color: #304054; }
+#panel.browse select:disabled { color: #bfc9d9; }
+#panel.browse #content { padding-top: 5dp; }
+button.asset-row { min-height: 43dp; padding: 5dp 7dp; }
+button.asset-row.selected { background-color: #304054; }
+.asset-row .browse-chevron { flex: none; width: 12dp; height: 12dp; margin-left: 7dp; pointer-events: none; }
+.browse-facts { align-items: flex-start; }
+.browse-fact { flex: 1; min-width: 0; margin-right: 5dp; word-break: break-word; font-size: 13dp; }
+.browse-origin { margin-top: 5dp; }
+.browse-requirements, .browse-command {
+    display: block; margin-top: 7dp; padding-top: 7dp; border-top: 1dp #d2e1fc29; word-break: break-word;
+}
+.browse-preview { display: block; margin: 7dp 0; }
+.browse-preview img { height: 78dp; max-width: 100%; }
+.browse-choice { margin-top: 5dp; }
+.browse-field { display: flex; flex: 1; min-width: 0; align-items: center; margin-right: 8dp; }
+.browse-field span { flex: none; margin: 0 5dp 0 0; font-size: 12dp; }
+.browse-field select { flex: 1; min-width: 0; }
+body.compact .browse-field { display: block; }
+body.compact .browse-field span { display: block; margin-bottom: 2dp; }
+body.compact .browse-field select { display: block; width: 100%; }
+body.compact .browse-preview img { height: 60dp; }
+.browse-snippet {
+    display: block; margin: 4dp 0 7dp; padding: 6dp; border-radius: 4dp; background-color: #0c121c;
+    font-size: 13dp; white-space: pre-wrap; word-break: break-word;
+}
+.browse-feedback { display: inline; }
 </style>
 </head>
 <body>
@@ -198,6 +259,24 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
     </div>
     <div id="camera-reading"><span class="readout-label">Camera position</span><span id="camera-position"></span></div>
     <div id="inspector-tools"></div>
+    <div id="browse-tools">
+        <div id="browse-header">
+            <div id="browse-catalogs"><button id="browse-assets">Assets</button><button id="browse-builtins">Built-ins</button></div>
+            <span id="browse-heading">Assets</span><span id="browse-summary"></span>
+        </div>
+        <div id="browse-filters">
+            <input id="browse-search" type="text" placeholder="Search by name" aria-label="Search assets by name" />
+            <select id="browse-category" aria-label="Asset category">
+                <option value="" selected>All categories</option>
+                <option value="Fragment shader">Fragment shader</option>
+                <option value="Image">Image</option>
+                <option value="Model">Model</option>
+                <option value="Shader source">Shader source</option>
+                <option value="File">File</option>
+            </select>
+        </div>
+        <div id="browse-status" class="message error"></div>
+    </div>
     <div id="content"></div>
     <div id="console-controls">
         <div class="console-toolbar">
