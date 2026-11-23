@@ -16,12 +16,12 @@ public:
     ~DiagnosticOverlay();
     void setup(VOSC& renderer);
     void rememberScene(const scene::File& scene, const VOSC& renderer);
-    void draw(const VOSC& renderer, const Logger& logger);
+    void draw(VOSC& renderer, const Logger& logger);
     bool isOpen() const { return open; }
     void shutdown();
 
 private:
-    enum class View { Overview, Inspector, Layer, Shader, Console, Browse, Count };
+    enum class View { Overview, Inspector, Console, Browse, Count };
     struct SceneLayer {
         std::weak_ptr<Layer> layer;
         std::weak_ptr<const ofShader> shader;
@@ -39,14 +39,13 @@ private:
     void showDiagnostic(uint64_t sequence);
     bool keyPressed(ofKeyEventArgs& event);
     bool pointerEvent(ofMouseEventArgs& event, const VOSC& renderer);
-    void activate(const VOSC& renderer, const Logger& logger, const std::string& id, uint64_t target);
+    void activate(VOSC& renderer, const Logger& logger, const std::string& id, uint64_t target);
     void refreshEntries(const Logger& logger);
     void refreshMatches();
     void syncConsoleControls();
     const LoggerLine* diagnostic(uint64_t sequence) const;
-    std::shared_ptr<Layer> liveLayer(const VOSC& renderer) const;
     std::string overviewMarkup(const VOSC& renderer, const GLint* viewport);
-    std::string layerMarkup(const VOSC& renderer) const;
+    std::string shaderDiagnostic(const VOSC& renderer) const;
 
     std::unique_ptr<Surface> surface;
     ofEventListeners listeners;
@@ -56,12 +55,6 @@ private:
     std::optional<CleanClick> cleanClick;
     bool open = false;
     View view = View::Overview;
-    std::weak_ptr<Layer> layerSelection;
-    std::weak_ptr<const ofShader> shaderSelection;
-    GLuint shaderSelectionId = 0;
-    std::string shaderSelectionPath;
-    View layerOriginView = View::Overview;
-    std::string layerOrigin;
     std::string sceneTitle;
     std::vector<SceneLayer> sceneLayers;
     std::vector<LoggerLine> entries;

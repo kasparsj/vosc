@@ -81,6 +81,16 @@ public:
     bool ownsProgram(GLuint program) const;
 #if VOSC_OPERATOR_UI
     std::weak_ptr<const ofShader> operatorProgram() const { return shader; }
+    std::weak_ptr<const void> operatorBackend() const {
+        if (shadertoy) return shadertoy;
+        return shader;
+    }
+    GLuint operatorLinkedProgram() const {
+        if (!isShaderLoaded()) return 0;
+        // Keep a watched program name alive across a subsequent relink.
+        if (watchedShader()) getUniforms();
+        return shader->getProgram();
+    }
 #endif
     bool loadShadertoy(const string& shadertoyId);
     static ShaderPaths getShaderPaths(const string& path);  // Returns vert, frag, and geom paths

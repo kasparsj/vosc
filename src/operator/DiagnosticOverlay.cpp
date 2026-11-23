@@ -2,6 +2,7 @@
 
 #if VOSC_OPERATOR_UI
 #include "DiagnosticMarkup.hpp"
+#include "InspectorView.hpp"
 #include "LocalizedDockBlur.hpp"
 
 #include <RmlUi/Core.h>
@@ -132,19 +133,6 @@ std::string message(const std::string& text, bool error = false) {
 std::string button(const std::string& id, const std::string& label, uint64_t target = 0) {
     return "<button id='" + id + "' data-target='" + std::to_string(target) + "'>"
         + Rml::StringUtilities::EncodeRml(label) + "</button>";
-}
-
-std::string layerButton(const Layer& layer, bool affected = false) {
-    const auto index = std::to_string(layer.index);
-    return button("layer-" + index, (affected ? "Inspect Layer " : "Layer ") + index, layer.index);
-}
-
-std::string layerButtons(const VOSC& renderer, const Layer* skip = nullptr) {
-    std::string markup;
-    for (const auto& layer : renderer.operatorLayers()) {
-        if (layer && layer.get() != skip) markup += layerButton(*layer);
-    }
-    return markup;
 }
 
 // The reference backend restores raster state but does not restore these bindings.
@@ -402,6 +390,8 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
     float dockRadius = 25.0f;
     std::optional<Action> action;
     std::string focusRequest;
+    uint64_t focusOrigin = 0;
+    vosc::operator_ui::InspectorView inspector;
     uint64_t revealSequence = 0;
     uint64_t highlighted = 0, anchorSequence = 0;
     float observedScroll = 0, anchorOffset = 0, lastScrollLimit = 0;
@@ -497,6 +487,7 @@ void DiagnosticOverlay::show(View next, const std::string& focus) {
     open = true;
     view = next;
     surface->focusRequest = focus;
+    surface->focusOrigin = 0;
     surface->restoreScroll = true;
 }
 
@@ -514,8 +505,7 @@ void DiagnosticOverlay::close() {
     surface->action.reset();
     surface->focusRequest.clear();
     surface->revealSequence = 0;
-    layerSelection.reset();
-    shaderSelection.reset();
+    surface->inspector.reset();
     open = false;
 }
 
@@ -557,6 +547,7 @@ bool DiagnosticOverlay::keyPressed(ofKeyEventArgs& event) {
         return true;
     }
     if (first && console && view != View::Console) {
+        ui.inspector.reset();
         show(View::Console, "console");
         return true;
     }
@@ -568,19 +559,26 @@ bool DiagnosticOverlay::keyPressed(ofKeyEventArgs& event) {
         if (current != docks.end()) {
             const auto step = event.key == OF_KEY_RIGHT ? 1 : docks.size() - 1;
             const auto& next = docks[(std::distance(docks.begin(), current) + step) % docks.size()];
+            ui.inspector.reset();
             show(next.view, next.id);
         }
         return true;
     }
     if (!ui.focusRequest.empty()) return true;
-    if (shortcut && focused && focused->IsClassSet("log-row")
-        && (event.key == OF_KEY_UP || event.key == OF_KEY_DOWN)) {
-        auto* next = event.key == OF_KEY_UP ? focused->GetPreviousSibling() : focused->GetNextSibling();
-        if (next && next->IsClassSet("log-row")) {
-            next->Focus(true);
-            next->ScrollIntoView(Rml::ScrollAlignment::Adaptive);
+    if (shortcut && focused && (event.key == OF_KEY_UP || event.key == OF_KEY_DOWN)) {
+        const char* rowClass = focused->IsClassSet("log-row") ? "log-row"
+            : focused->IsClassSet("inspect-row") ? "inspect-row" : nullptr;
+        if (rowClass) {
+            auto* next = focused;
+            do {
+                next = event.key == OF_KEY_UP ? next->GetPreviousSibling() : next->GetNextSibling();
+            } while (next && !next->IsClassSet(rowClass));
+            if (next) {
+                next->Focus(true);
+                next->ScrollIntoView(Rml::ScrollAlignment::Adaptive);
+            }
+            return true;
         }
-        return true;
     }
 
     using namespace Rml::Input;
@@ -700,44 +698,28 @@ const LoggerLine* DiagnosticOverlay::diagnostic(uint64_t sequence) const {
     return at != entries.end() && at->sequence == sequence ? &*at : nullptr;
 }
 
-std::shared_ptr<Layer> DiagnosticOverlay::liveLayer(const VOSC& renderer) const {
-    const auto layer = layerSelection.lock();
-    const auto& layers = renderer.operatorLayers();
-    if (layer && layer->index >= 0 && static_cast<size_t>(layer->index) < layers.size()
-        && layers[layer->index] == layer) return layer;
-    return {};
-}
-
-void DiagnosticOverlay::activate(const VOSC& renderer, const Logger& logger, const std::string& id, uint64_t target) {
+void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std::string& id, uint64_t target) {
     const auto& docks = Surface::destinations;
     const auto destination = std::find_if(docks.begin(), docks.end(),
         [&](const auto& dest) { return id == dest.id; });
     if (destination != docks.end()) {
-        if (view != destination->view) show(destination->view, id);
+        if (view != destination->view || (view == View::Inspector && surface->inspector.detail())) {
+            surface->inspector.reset();
+            show(destination->view, id);
+        }
         return;
     }
     if (id == "return") close();
     else if (id == "diagnostic" || id == "shader-diagnostic") showDiagnostic(target);
-    else if (id.compare(0, 6, "layer-") == 0) {
-        const auto& layers = renderer.operatorLayers();
-        if (target >= layers.size() || !layers[target] || layers[target]->index != target) return;
-        layerSelection = layers[target];
-        layerOriginView = view;
-        layerOrigin = id;
-        surface->scroll[static_cast<size_t>(View::Layer)] = 0;
-        show(View::Layer, "shader");
-    } else if (id == "shader") {
-        if (const auto layer = liveLayer(renderer)) {
-            shaderSelection = layer->shader.operatorProgram();
-            shaderSelectionId = layer->shader.isShaderLoaded() ? layer->shader.getShader().getProgram() : 0;
-            shaderSelectionPath = layer->shader.getShaderPath();
-            surface->scroll[static_cast<size_t>(View::Shader)] = 0;
-            show(View::Shader, "shader-diagnostic");
+    else if (id == "back" || id.compare(0, 8, "inspect-") == 0) {
+        auto& ui = *surface;
+        if (auto nav = ui.inspector.activate(renderer, id, target, ui.content->GetScrollTop(),
+                                             view == View::Overview)) {
+            const auto next = nav->toOverview ? View::Overview : View::Inspector;
+            show(next, nav->focus);
+            ui.scroll[static_cast<size_t>(next)] = nav->scroll;
+            ui.focusOrigin = nav->origin;
         }
-    } else if (id == "back") {
-        const bool live = static_cast<bool>(liveLayer(renderer));
-        if (view == View::Shader && live) show(View::Layer, "shader");
-        else show(layerOriginView, live ? layerOrigin : layerOriginView == View::Inspector ? "inspector" : "overview");
     } else if (id == "errors-only") {
         surface->errorsOnly = !surface->errorsOnly;
         surface->matchesDirty = true;
@@ -815,46 +797,30 @@ std::string DiagnosticOverlay::overviewMarkup(const VOSC& renderer, const GLint*
         affected = attributed->get();
         markup = "<div class='error-summary'>Shader reload failed · Layer " + std::to_string(affected->index)
             + "</div><div class='caption'>The previous shader is still rendering.</div>"
-            + layerButton(*affected, true);
+            + surface->inspector.layerLink(*affected, renderer, true);
     } else if (latest != entries.rend()) {
         markup = message(latest->message, true);
     } else {
         markup = "<div class='caption'>No retained errors</div>";
     }
     if (latest != entries.rend()) markup += button("diagnostic", "View diagnostic", latest->sequence);
-    return markup + layerButtons(renderer, affected);
+    for (const auto& layer : layers) {
+        if (layer && layer.get() != affected) markup += surface->inspector.layerLink(*layer, renderer);
+    }
+    return markup;
 }
 
-std::string DiagnosticOverlay::layerMarkup(const VOSC& renderer) const {
-    const auto layer = liveLayer(renderer);
-    if (!layer) return message("Layer unavailable");
-
-    auto markup = "<div class='caption'>Layer " + std::to_string(layer->index) + "</div>";
-    if (view == View::Layer) return markup + button("shader", "Shader");
-    markup += "<div class='caption'>Shader</div>";
-    const bool linked = layer->shader.isShaderLoaded();
-    const auto program = linked ? layer->shader.getShader().getProgram() : 0;
-    const auto shader = layer->shader.operatorProgram().lock();
-    std::string label = layer->shader.getShaderPath();
-    if (shaderSelectionId != program || shaderSelection.lock() != shader || shaderSelectionPath != label)
-        return markup + message("Shader changed. Go back to inspect the current shader.");
-
-    if (linked && static_cast<size_t>(layer->index) < sceneLayers.size()) {
-        const auto& original = sceneLayers[layer->index];
-        if (original.layer.lock() == layer && original.shader.lock() == shader &&
-            layer->shader.ownsProgram(original.program) && !original.asset.empty()) label = original.asset;
-    }
-    if (layer->shader.isLoaded() && !label.empty()) markup += message(label);
-    else markup += message(layer->shader.isLoaded() ? "Shader source unavailable" : "No shader loaded");
-
+std::string DiagnosticOverlay::shaderDiagnostic(const VOSC& renderer) const {
+    if (!surface->inspector.isLayerShader()) return {};
+    const auto layer = surface->inspector.selectedLayer(renderer);
+    if (!layer) return {};
     const auto sequence = layer->reloadDiagnostic();
     if (diagnostic(sequence))
-        return markup + message("Reload failed", true)
+        return message("Reload failed", true)
             + "<div class='caption'>The previous shader is still rendering.</div>"
             + button("shader-diagnostic", "View error in Console", sequence);
-    if (linked) markup += message("Program linked");
-    if (sequence > clearCursor) markup += message("Diagnostic is no longer retained");
-    return markup;
+    if (sequence > clearCursor) return message("Diagnostic is no longer retained");
+    return {};
 }
 
 void DiagnosticOverlay::syncConsoleControls() {
@@ -884,7 +850,7 @@ void DiagnosticOverlay::syncConsoleControls() {
     ui.setReading("console-status", ui.consoleStatus, std::move(status));
 }
 
-void DiagnosticOverlay::draw(const VOSC& renderer, const Logger& logger) {
+void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     GLint viewport[4] = {};
     glGetIntegerv(GL_VIEWPORT, viewport);
     if (viewport[2] <= 0 || viewport[3] <= 0) return;
@@ -904,35 +870,35 @@ void DiagnosticOverlay::draw(const VOSC& renderer, const Logger& logger) {
     const auto scrollTop = ui.restoreScroll
         ? ui.scroll[static_cast<size_t>(view)] : ui.content->GetScrollTop();
     const bool console = view == View::Console;
-    const bool detail = view == View::Layer || view == View::Shader;
-    const auto active = detail ? View::Inspector : view;
+    const bool inspector = view == View::Inspector;
+    const bool detail = inspector && ui.inspector.detail();
     const auto& docks = Surface::destinations;
     const auto destination = std::find_if(docks.begin(), docks.end(),
-        [&](const auto& dest) { return dest.view == active; });
-    ui.setReading("panel-title", ui.viewTitle, destination->title);
+        [&](const auto& dest) { return dest.view == view; });
+    ui.setReading("panel-title", ui.viewTitle, inspector ? ui.inspector.title() : destination->title);
     ui.panel->SetClass("overview", view == View::Overview);
     ui.panel->SetClass("browse", view == View::Browse);
     ui.panel->SetClass("detail", detail);
-    ui.panel->SetClass("layer", view == View::Layer);
+    ui.panel->SetClass("inspecting", inspector);
+    ui.panel->SetClass("enlarged", inspector && ui.inspector.expanded());
+    if (inspector)
+        ui.panel->SetProperty("height", std::to_string(ui.inspector.height(ui.document->IsClassSet("compact"))) + "dp");
+    else ui.panel->RemoveProperty("height");
     ui.panel->SetClass("console", console);
     if (!console) ui.document->GetElementById("console-status")->SetClass("present", false);
     for (const auto& dest : docks)
-        ui.document->GetElementById(dest.id)->SetClass("selected", dest.view == active);
+        ui.document->GetElementById(dest.id)->SetClass("selected", dest.view == view);
 
     std::string markup;
+    ui.inspector.beginMarkup();
     switch (view) {
         case View::Overview: markup = overviewMarkup(renderer, viewport); break;
-        case View::Inspector: {
-            const auto layers = layerButtons(renderer);
-            markup = layers.empty() ? message("No layers") : "<div class='caption'>Layers</div>" + layers;
-            break;
-        }
-        case View::Layer:
-        case View::Shader: markup = layerMarkup(renderer); break;
+        case View::Inspector: markup = ui.inspector.markup(renderer, shaderDiagnostic(renderer)); break;
         case View::Console: break;
         case View::Browse: markup = message("Example and asset catalogs are deferred."); break;
         case View::Count: break;
     }
+    ui.inspector.endMarkup();
     const bool contentChanged = markup != ui.renderedContent;
     if (contentChanged) {
         ui.content->SetInnerRML(markup);
@@ -952,7 +918,8 @@ void DiagnosticOverlay::draw(const VOSC& renderer, const Logger& logger) {
         wantedFocus = focusId;
     if (!wantedFocus.empty()) {
         auto* element = ui.document->GetElementById(wantedFocus);
-        if (!element || element->IsClassSet("inactive"))
+        const auto origin = std::exchange(ui.focusOrigin, 0);
+        if (!element || element->IsClassSet("inactive") || (origin && !ui.inspector.matches(wantedFocus, origin)))
             element = ui.document->GetElementById(console ? "console-search" : detail ? "back" : destination->id);
         element->Focus(true);
     }

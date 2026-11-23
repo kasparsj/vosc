@@ -24,7 +24,7 @@ body {
 }
 #panel.console { height: 468dp; }
 #panel.overview.quiet { height: 170dp; }
-#panel.layer { height: 151dp; }
+#panel.enlarged { width: 620dp; }
 #panel.browse { height: 116dp; }
 body.compact #dock { width: 341dp; height: 43dp; bottom: 12dp; padding: 4dp; border-radius: 21.5dp; }
 body.compact #panel { width: 390dp; bottom: 61dp; }
@@ -105,6 +105,30 @@ body.short #readings { padding: 4dp 0; }
 .error { color: #ffd0c3; }
 .message { display: block; white-space: pre-wrap; word-break: break-word; margin-bottom: 5dp; }
 .message.error { background-color: #ffc2b312; border-radius: 8dp; padding: 6dp 8dp; }
+#panel.inspecting #content { padding-top: 7dp; }
+.inspect-tabs { display: block; padding: 1dp 0 3dp; margin-bottom: 7dp; border-bottom: 1dp #d2e1fc29; }
+.inspect-tabs button { font-size: 12dp; margin-bottom: 4dp; }
+.inspect-label { display: block; margin: 4dp 0 5dp; font-size: 17dp; font-weight: bold; word-break: break-word; }
+.inspect-heading { display: block; margin: 8dp 0 4dp; font-size: 12dp; font-weight: bold; color: #c5d4e5; }
+button.inspect-row {
+    display: flex; box-sizing: border-box; width: 100%; margin: 0 0 2dp; padding: 5dp 6dp;
+    justify-content: space-between; align-items: center; text-align: left;
+    background-color: transparent; border: 1dp transparent; border-bottom-color: #d2e1fc29;
+    border-radius: 5dp; white-space: normal;
+}
+button.inspect-row span { focus: none; pointer-events: none; }
+button.inspect-row:hover { background-color: #b6d4fa29; }
+button.inspect-row:focus-visible { border-color: #a9dcff; background-color: #b6d4fa32; }
+.inspect-row-label { display: block; flex: 1; min-width: 0; word-break: break-word; font-weight: bold; }
+.inspect-row-label span { display: block; }
+.inspect-row-label .inspect-subtitle, .inspect-kind { color: #c5d4e5; font-size: 12dp; font-weight: normal; }
+.inspect-kind { flex: none; margin-left: 8dp; }
+.inspect-layer-columns { display: flex; }
+.inspect-layer-body { flex: 1; min-width: 0; }
+.inspect-rail { flex: none; width: 76dp; margin-right: 7dp; border-right: 1dp #d2e1fc29; padding-right: 5dp; }
+button.inspect-rail-row { padding: 4dp; font-size: 12dp; }
+.inspect-rail-row .inspect-kind { display: none; }
+body.compact .inspect-rail { display: none; }
 button.log-row {
     display: flex; align-items: flex-start; box-sizing: border-box; width: 100%;
     margin: 0; padding: 5dp 7dp; text-align: left; white-space: normal;

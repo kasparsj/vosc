@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6D1A436780B345DF902812A1 /* DiagnosticOverlay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902812A2 /* DiagnosticOverlay.cpp */; };
+		6D1A436780B345DF902813A1 /* InspectorView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902813A2 /* InspectorView.cpp */; };
 		01B036F302D9F069DEDCD4F7 /* GeomPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 553241ABDCDFB7E8685963FC /* GeomPool.cpp */; };
 		04C13EEA813A786CC1D8137A /* FxaaPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9425843AEC3118B8FDEF1B0B /* FxaaPass.cpp */; };
 		0546D1A38E13BD319CC9755B /* OscReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9BF3AA0D4FAA89D0F8A0E545 /* OscReceivedElements.cpp */; };
@@ -176,7 +177,9 @@
 
 /* Begin PBXFileReference section */
 		6D1A436780B345DF902812A2 /* DiagnosticOverlay.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/operator/DiagnosticOverlay.cpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902813A2 /* InspectorView.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/operator/InspectorView.cpp; sourceTree = SOURCE_ROOT; };
 		6D1A436780B345DF902812A3 /* DiagnosticOverlay.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/DiagnosticOverlay.hpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902813A3 /* InspectorView.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/InspectorView.hpp; sourceTree = SOURCE_ROOT; };
 		0007F94E72255780D908645A /* VideoTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VideoTex.h; path = src/tex/VideoTex.h; sourceTree = SOURCE_ROOT; };
 		00D6D32B84B099226431108C /* ofxOsc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOsc.h; path = "ofxOsc/src/ofxOsc.h"; sourceTree = VOSC_ADDONS; };
 		01455AAEF0E0EDFB4DEFABB5 /* WaveClock.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = WaveClock.h; path = src/sketches/WaveClock.h; sourceTree = SOURCE_ROOT; };
@@ -2400,7 +2403,9 @@
 				31E2146EA24A0C366D3753DB /* light */,
 				372124C2D4BE337F66C4B210 /* Logger.cpp */,
 				6D1A436780B345DF902812A2 /* DiagnosticOverlay.cpp */,
+				6D1A436780B345DF902813A2 /* InspectorView.cpp */,
 				6D1A436780B345DF902812A3 /* DiagnosticOverlay.hpp */,
+				6D1A436780B345DF902813A3 /* InspectorView.hpp */,
 				42EEF41412CD072D7A17504A /* Logger.h */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				AB551F763F5655B9681EABB4 /* Material.cpp */,
@@ -2695,6 +2700,7 @@
 				90BB2D10988A91408820D432 /* Light.cpp in Sources */,
 				DD70F1493421AE507A4C0156 /* Logger.cpp in Sources */,
 				6D1A436780B345DF902812A1 /* DiagnosticOverlay.cpp in Sources */,
+				6D1A436780B345DF902813A1 /* InspectorView.cpp in Sources */,
 				A1D2F32CDE34F3703ECD8A01 /* Geom.cpp in Sources */,
 				F7D4F1045C3F5CE0000DE92F /* Material.cpp in Sources */,
 				3B8120368B4FCCD80883BAF3 /* ofxAssimpAnimation.cpp in Sources */,
