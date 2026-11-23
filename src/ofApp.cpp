@@ -18,7 +18,7 @@ void ofApp::setup(){
     
     try {
 #if VOSC_OPERATOR_UI
-        overlay.setup(vosc);
+        overlay.setup();
 #endif
         CommandSystem::ScenePrograms programs;
         if (startupScene) {
@@ -85,16 +85,6 @@ void ofApp::exit() {
 void ofApp::keyPressed(int key) {
     vosc.keyPressed(key);
 }
-
-#if VOSC_OPERATOR_UI
-void ofApp::mousePressed(int x, int y, int button) {
-    vosc.mousePressed(x, y, button);
-}
-
-void ofApp::mouseReleased(int x, int y, int button) {
-    vosc.mouseReleased(x, y, button);
-}
-#endif
 
 void ofApp::windowResized(int w, int h){
     vosc.windowResized(w, h);

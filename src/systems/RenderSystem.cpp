@@ -214,15 +214,6 @@ void RenderSystem::draw(Camera& camera, const std::function<void()>& afterCompos
     endDraw();
     if (afterCompose) afterCompose();
 
-#if VOSC_OPERATOR_UI
-    if (showDebug) {
-        if (camera.isEnabled()) {
-            ofDrawBitmapString(ofToString(camera.getPosition()), 20, 20);
-        }
-        ofDrawBitmapString(ofToString(ofGetFrameRate()), ofGetWidth()-100, 20);
-        inspector.inspect(layers);
-    }
-#endif
 }
 
 void RenderSystem::resizeBacking(int w, int h) {
@@ -475,21 +466,6 @@ void RenderSystem::toggleWireframeAll() {
     }
 }
 
-#if VOSC_OPERATOR_UI
-void RenderSystem::mousePressed(int x, int y, int button) {
-    if (showDebug) {
-        inspector.mousePressed(x, y, button);
-    }
-}
-
-void RenderSystem::mouseReleased(int x, int y, int button) {
-    if (showDebug) {
-        inspector.mouseReleased(x, y, button);
-    }
-}
-
-#endif
-
 void RenderSystem::keyPressed(int key) {
     switch (key) {
         case '1':
@@ -502,12 +478,6 @@ void RenderSystem::keyPressed(int key) {
         case '8':
         case '9':
         case '0': {
-#if VOSC_OPERATOR_UI
-            if (showDebug) {
-                inspector.keyPressed(key);
-                break;
-            }
-#endif
             ofxOscMessage m;
             m.addIntArg(key == '0' ? OF_BLENDMODE_DISABLED : static_cast<ofBlendMode>(key - '1' + 1));
             allLayersCommand("/blendmode", m);

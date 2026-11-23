@@ -27,6 +27,7 @@ struct InspectorPreviewSlot {
 
 const ofTexture* inspectorTextureOutput(const Texture& texture);
 int inspectorArrayDepth(const ofTexture& output);
+bool inspectorCanPreviewTexture(const ofTexture& output);
 std::size_t inspectorBufferTexels(const Buffer& buffer);
 
 class InspectorPreview {

@@ -7,6 +7,7 @@
 #include "InspectorPreview.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -36,8 +37,10 @@ public:
     void reset();
     void beginMarkup();
     void endMarkup();
-    std::string layerLink(const Layer& layer, const VOSC& renderer, bool diagnostic = false);
-    std::string markup(const VOSC& renderer, const std::string& shaderDiagnostic);
+    std::string layerLink(const Layer& layer, const VOSC& renderer, const std::string& shaderName,
+                          bool diagnostic = false);
+    std::string markup(const VOSC& renderer, const std::string& shaderDiagnostic,
+                       const std::function<std::string(const Layer&)>& knownShaderName);
     std::string title() const;
     std::string toolbar() const;
     void syncReadings(Rml::Element& content, bool layoutChanged);
@@ -61,9 +64,11 @@ private:
     struct Identity {
         std::weak_ptr<const void> owner;
         std::weak_ptr<const void> backend;
+        std::weak_ptr<const void> textureProgramBackend;
         unsigned program = 0;
         uint64_t sourceRevision = 0;
         std::string source;
+        std::string textureProgramSource;
         bool operator==(const Identity& other) const;
     };
     struct Resource {
@@ -109,7 +114,7 @@ private:
     std::string bindings(const VOSC& renderer, const Resource& shader, bool fromLayer);
     std::string globalsMarkup(const VOSC& renderer);
     std::string shaderMarkup(const VOSC& renderer, const Resource& resource,
-                             const std::string& diagnostic);
+                             const std::string& diagnostic, const std::string& layerShaderName);
     std::string textureMarkup(const VOSC& renderer, const Resource& resource);
     std::string auxiliaryMarkup(const Resource& resource);
     std::string preview(const Resource& resource, bool thumbnail, int slice = 0);

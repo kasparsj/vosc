@@ -55,7 +55,7 @@ def verify_desktop_selection(project, sdk, rules, run):
     assert not disabled.exists()
     inputs = (project / "obj/compile-inputs").read_text()
     assert "-DVOSC_OPERATOR_UI=0" in inputs
-    assert "/src/operator" in inputs and "/src/inspector" in inputs
+    assert "/src/operator" in inputs
     assert "/generated" not in inputs
     assert not (project / "bin/link-inputs").read_text().strip()
 
@@ -69,9 +69,9 @@ def main():
             target = project / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, target)
-        for ui_source in ("inspector/Inspector.cpp", "operator/DiagnosticOverlay.cpp"):
+        for ui_source in ("operator/DiagnosticOverlay.cpp", "operator/InspectorView.cpp", "operator/InspectorPreview.cpp"):
             target = project / "src" / ui_source
-            target.parent.mkdir()
+            target.parent.mkdir(exist_ok=True)
             target.touch()
         data = project / "assets/shaders"
         (data / "deferred").mkdir(parents=True)
@@ -123,7 +123,6 @@ def main():
         assert set((stage / "addons.make").read_text().split()) == (retained - {"ofxExpr"}) | {"addons/ofxExpr"}
         assert '#include "ofUtils.h"' in (stage / "addons/ofxExpr/src/ofxExprParser.hpp").read_text()
         assert '#include "ofUtils.h"' not in expr_header.read_text()
-        assert not (stage / "src/inspector").exists()
         assert not (stage / "src/operator").exists()
         assert (stage / "bin/data/shaders/direct.frag").is_file()
         assert not (stage / "bin/data/shaders/deferred").exists()

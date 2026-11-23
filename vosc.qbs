@@ -15,7 +15,7 @@ Project{
         Group {
             name: "Renderer sources"
             files: ["src/**"]
-            excludeFiles: ["src/operator/**", "src/inspector/**"]
+            excludeFiles: ["src/operator/**"]
         }
 
         Group {

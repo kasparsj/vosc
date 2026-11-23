@@ -39,8 +39,7 @@ The profile skips ofxDeferredShading, ofxHPVPlayer, and ofxUltralight.
 It stages its executable and runtime assets in a fresh `.vosc-linux/minimal-*`
 directory and prints the run location. It includes forward post-processing,
 OSC, image and shader layers, and shader feedback. The minimal profile uses
-`VOSC_OPERATOR_UI=0`, excluding the diagnostic overlay, the debug Inspector,
-both input routes, and the RmlUi build. Terminal and retained engine
+`VOSC_OPERATOR_UI=0`, excluding the RmlUi operator overlay and its input controls. Terminal and retained engine
 diagnostics remain available.
 Put any regular video files you need in the staged `bin/data/videos` directory.
 
@@ -68,8 +67,7 @@ the operator overlay. It needs the complete `addons.make` set, CMake 3.16 or
 later, curl, and the FreeType development package. The first UI-enabled build
 fetches and verifies its pinned RmlUi source archive. Use
 `make Release VOSC_OPERATOR_UI=0 OF_ROOT=/absolute/path/to/openFrameworks` to
-build the desktop profile with the operator overlay and debug Inspector
-excluded. Use the minimal profile above to also reduce the addon set.
+build the desktop profile with the operator overlay excluded. Use the minimal profile above to also reduce the addon set.
 
 ## Building with Xcode on macOS
 
@@ -86,7 +84,7 @@ pinned RmlUi 6.3 sources and verifies their archive digest. It compiles RmlUi
 core and the upstream OpenGL 3 backend, and embeds the pinned Lato Latin
 Regular and Bold faces in the executable. Build with
 `make Debug VOSC_OPERATOR_UI=0` or the Xcode setting `VOSC_OPERATOR_UI=0`
-to omit those inputs and the diagnostic overlay and debug Inspector. Rendering,
+to omit those inputs and the operator overlay. Rendering,
 OSC, and terminal and retained diagnostic logging remain available.
 
 ### Set up a local SDK and addons

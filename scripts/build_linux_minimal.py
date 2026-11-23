@@ -101,7 +101,7 @@ def main():
     )
     source = ROOT / "src"
     def ignore_ui(directory, names):
-        return {"inspector", "operator"} if Path(directory) == source else ()
+        return {"operator"} if Path(directory) == source else ()
 
     shutil.copytree(source, stage / "src", ignore=ignore_ui)
     shutil.copytree(ROOT / "assets", stage / "bin/data", ignore=ignore_assets)

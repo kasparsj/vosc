@@ -14,20 +14,23 @@ This documentation tracks the current OSC and local authoring interfaces in `mai
 - `f` toggle fullscreen
 - `O` open the diagnostic overlay in Overview
 - `C` open the overlay in Console
-- `Tab` toggle the debug Inspector on clean output
+- `Tab` open Inspector from clean output
 - `Tab` / `Shift+Tab` move focus while the overlay is visible
 - `Left` / `Right` switch destinations when a dock button has focus
-- `Up` / `Down` move between focused Console rows
+- `Up` / `Down` move within a focused Inspector or Console list
 - `Enter` / `Space` activate the focused overlay control
 - `Escape` or **Return to output** dismiss the overlay and keep the current window mode
 - `r` reload textures on all layers
 - `u` apply the layer reset action to each layer
 - `w` toggle wireframe on all geometries
 
-An unmodified primary click on clean output opens Overview while the debug
-Inspector is hidden. Open a layer from Overview or the dock’s Inspector, choose
+An unmodified primary click on clean output opens Overview. Open a layer from Overview or the dock’s Inspector, choose
 its shader, and follow **View error in Console** when a retained reload diagnostic
-is available.
+is available. In Inspector, choose **Layers** or **Globals**. Layer labels
+match OSC identifiers. **Back** restores the originating row and its scroll
+position while that resource exists. Read-only navigation leaves the scene
+running. **Texture updates** can affect all bindings that share the selected
+texture.
 
 In Console, search and **Errors only** narrow the visible messages and **Copy
 filtered log**. Scroll back to pause following, then use **Jump to latest** to

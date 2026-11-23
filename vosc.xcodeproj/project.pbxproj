@@ -34,11 +34,6 @@
 		2B56EC0A2951C6AF00808AC5 /* BaseVar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B56EC092951C6AF00808AC5 /* BaseVar.cpp */; };
 		2B6C21052B66FA87004C7B00 /* Inputs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B6C21032B66FA87004C7B00 /* Inputs.cpp */; };
 		2B7546752EC0C26F00494ADF /* BaseTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2B7546742EC0C26F00494ADF /* BaseTex.cpp */; };
-		2BF8BE242EC39AC100CB0DE9 /* Inspector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF8BE192EC39AC100CB0DE9 /* Inspector.cpp */; };
-		2BF8BE252EC39AC100CB0DE9 /* ShaderInspector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF8BE1B2EC39AC100CB0DE9 /* ShaderInspector.cpp */; };
-		2BF8BE262EC39AC100CB0DE9 /* TextureArrayDraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF8BE1D2EC39AC100CB0DE9 /* TextureArrayDraw.cpp */; };
-		2BF8BE272EC39AC100CB0DE9 /* TextureInspector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF8BE1F2EC39AC100CB0DE9 /* TextureInspector.cpp */; };
-		2BF8BE282EC39AC100CB0DE9 /* VarsInspector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF8BE212EC39AC100CB0DE9 /* VarsInspector.cpp */; };
 		2BF8BE302EC39AC900CB0DE9 /* Shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF8BE292EC39AC900CB0DE9 /* Shader.cpp */; };
 		2BF8BE312EC39AC900CB0DE9 /* ShaderPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF8BE2B2EC39AC900CB0DE9 /* ShaderPass.cpp */; };
 		2BF8BE322EC39AC900CB0DE9 /* ShaderPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2BF8BE2D2EC39AC900CB0DE9 /* ShaderPool.cpp */; };
@@ -404,16 +399,6 @@
 		2BEBE6BE2B67FBC300C88BDD /* MdlXz8.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = MdlXz8.frag; sourceTree = "<group>"; };
 		2BEBE6BF2B67FBC300C88BDD /* Star.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = Star.frag; sourceTree = "<group>"; };
 		2BF170BF7B01F0B07513390B /* lz4hc.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4hc.c; path = "ofxHPVPlayer/src/lz4hc.c"; sourceTree = VOSC_ADDONS; };
-		2BF8BE192EC39AC100CB0DE9 /* Inspector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Inspector.cpp; sourceTree = "<group>"; };
-		2BF8BE1A2EC39AC100CB0DE9 /* Inspector.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Inspector.hpp; sourceTree = "<group>"; };
-		2BF8BE1B2EC39AC100CB0DE9 /* ShaderInspector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ShaderInspector.cpp; sourceTree = "<group>"; };
-		2BF8BE1C2EC39AC100CB0DE9 /* ShaderInspector.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ShaderInspector.hpp; sourceTree = "<group>"; };
-		2BF8BE1D2EC39AC100CB0DE9 /* TextureArrayDraw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextureArrayDraw.cpp; sourceTree = "<group>"; };
-		2BF8BE1E2EC39AC100CB0DE9 /* TextureArrayDraw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextureArrayDraw.h; sourceTree = "<group>"; };
-		2BF8BE1F2EC39AC100CB0DE9 /* TextureInspector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextureInspector.cpp; sourceTree = "<group>"; };
-		2BF8BE202EC39AC100CB0DE9 /* TextureInspector.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TextureInspector.hpp; sourceTree = "<group>"; };
-		2BF8BE212EC39AC100CB0DE9 /* VarsInspector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VarsInspector.cpp; sourceTree = "<group>"; };
-		2BF8BE222EC39AC100CB0DE9 /* VarsInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VarsInspector.h; sourceTree = "<group>"; };
 		2BF8BE292EC39AC900CB0DE9 /* Shader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Shader.cpp; sourceTree = "<group>"; };
 		2BF8BE2A2EC39AC900CB0DE9 /* Shader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Shader.h; sourceTree = "<group>"; };
 		2BF8BE2B2EC39AC900CB0DE9 /* ShaderPass.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ShaderPass.cpp; sourceTree = "<group>"; };
@@ -1307,23 +1292,6 @@
 				2BEBE6BF2B67FBC300C88BDD /* Star.frag */,
 			);
 			path = shaders_todo;
-			sourceTree = "<group>";
-		};
-		2BF8BE232EC39AC100CB0DE9 /* inspector */ = {
-			isa = PBXGroup;
-			children = (
-				2BF8BE192EC39AC100CB0DE9 /* Inspector.cpp */,
-				2BF8BE1A2EC39AC100CB0DE9 /* Inspector.hpp */,
-				2BF8BE1B2EC39AC100CB0DE9 /* ShaderInspector.cpp */,
-				2BF8BE1C2EC39AC100CB0DE9 /* ShaderInspector.hpp */,
-				2BF8BE1D2EC39AC100CB0DE9 /* TextureArrayDraw.cpp */,
-				2BF8BE1E2EC39AC100CB0DE9 /* TextureArrayDraw.h */,
-				2BF8BE1F2EC39AC100CB0DE9 /* TextureInspector.cpp */,
-				2BF8BE202EC39AC100CB0DE9 /* TextureInspector.hpp */,
-				2BF8BE212EC39AC100CB0DE9 /* VarsInspector.cpp */,
-				2BF8BE222EC39AC100CB0DE9 /* VarsInspector.h */,
-			);
-			path = inspector;
 			sourceTree = "<group>";
 		};
 		2BF8BE2F2EC39AC900CB0DE9 /* shader */ = {
@@ -2401,7 +2369,6 @@
 				553241ABDCDFB7E8685963FC /* GeomPool.cpp */,
 				476684E60F0DDA0792F989BB /* GeomPool.h */,
 				C8F905A850B56EB1DCC856BB /* input */,
-				2BF8BE232EC39AC100CB0DE9 /* inspector */,
 				1BF4AF61A21BC0CB4D19CFDE /* layer */,
 				31E2146EA24A0C366D3753DB /* light */,
 				372124C2D4BE337F66C4B210 /* Logger.cpp */,
@@ -2666,7 +2633,6 @@
 				6B12CF6CEB568B4460ABF472 /* InputSystem.cpp in Sources */,
 				2E6C8A8EBD1D878477D6C1F3 /* CommandSystem.cpp in Sources */,
 				7ECB28564F164B77A7586889 /* SceneFile.cpp in Sources */,
-				2BF8BE282EC39AC100CB0DE9 /* VarsInspector.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
 				2BF8BE312EC39AC900CB0DE9 /* ShaderPass.cpp in Sources */,
 				6D05523FAB0501580B1205C7 /* TexturePool.cpp in Sources */,
@@ -2736,10 +2702,8 @@
 				CEA24AEB74ADBDFB0AE926F3 /* lz4.c in Sources */,
 				B16D9E639BA367E8246322E8 /* lz4hc.c in Sources */,
 				D736C6549BC0F3AC000D3E46 /* ofxHPVPLayer.cpp in Sources */,
-				2BF8BE242EC39AC100CB0DE9 /* Inspector.cpp in Sources */,
 				2BF8BE322EC39AC900CB0DE9 /* ShaderPool.cpp in Sources */,
 				1DABF50C769AD89161B557AE /* FramesBuffer.cpp in Sources */,
-				2BF8BE252EC39AC100CB0DE9 /* ShaderInspector.cpp in Sources */,
 				B5A6983EFC656071DB3EFFBF /* ofxLooper.cpp in Sources */,
 				63D0FD8734D5760B8080C901 /* RtMidi.cpp in Sources */,
 				BCC8D420CBA9217E437D2D76 /* ofxRtMidiIn.cpp in Sources */,
@@ -2754,7 +2718,6 @@
 				1030C647FD06E4D3E054F65D /* ofxMidiTimecode.cpp in Sources */,
 				ADE367465D2A8EBAD4C7A8D9 /* IpEndpointName.cpp in Sources */,
 				67FE4C7B15C2F0478C8126C2 /* NetworkingUtils.cpp in Sources */,
-				2BF8BE262EC39AC100CB0DE9 /* TextureArrayDraw.cpp in Sources */,
 				510CAFE035E576A4E1502D52 /* UdpSocket.cpp in Sources */,
 				2BF8BE302EC39AC900CB0DE9 /* Shader.cpp in Sources */,
 				62545D179C94265CA1389D4A /* OscOutboundPacketStream.cpp in Sources */,
@@ -2769,7 +2732,6 @@
 				8F5205AEF8861EF234F0651A /* ofxOscSender.cpp in Sources */,
 				D04ED2A93B5FDDA28935E888 /* Beyoon.cpp in Sources */,
 				79308B05C4D0A9B9E404FFED /* BleachBypassPass.cpp in Sources */,
-				2BF8BE272EC39AC100CB0DE9 /* TextureInspector.cpp in Sources */,
 				3A499904889C490DCF533C6E /* BloomPass.cpp in Sources */,
 				DFB75F1EBE744A456AC999F4 /* ContrastPass.cpp in Sources */,
 				778DCA6792476E5B9F57F175 /* ConvolutionPass.cpp in Sources */,

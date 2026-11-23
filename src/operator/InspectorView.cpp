@@ -3,7 +3,6 @@
 #if VOSC_OPERATOR_UI
 #include "../VOSC.hpp"
 #include "../ResourceRegistry.hpp"
-#include "../tex/ShaderTex.h"
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/StringUtilities.h>
 #include <array>
@@ -181,13 +180,17 @@ bool sameOwner(const std::weak_ptr<const void>& a, const std::weak_ptr<const voi
 
 bool InspectorView::Identity::operator==(const Identity& other) const {
     return sameOwner(owner, other.owner) && sameOwner(backend, other.backend) &&
-        program == other.program && sourceRevision == other.sourceRevision && source == other.source;
+        sameOwner(textureProgramBackend, other.textureProgramBackend) &&
+        program == other.program && sourceRevision == other.sourceRevision &&
+        source == other.source && textureProgramSource == other.textureProgramSource;
 }
 
 InspectorView::Resource InspectorView::resolve(const VOSC& renderer, const Key& key, const Resource& parent) {
     Resource result;
     const auto* registry = ResourceRegistry::current();
     const auto& layers = renderer.operatorLayers();
+    const auto* boundShader = parent.shader ? parent.shader.get()
+        : parent.layer ? &parent.layer->shader : nullptr;
     switch (key.kind) {
         case Kind::Layer:
             if (key.layer < 0 || static_cast<size_t>(key.layer) >= layers.size()) break;
@@ -199,21 +202,19 @@ InspectorView::Resource InspectorView::resolve(const VOSC& renderer, const Key& 
             if (parent.layer)
                 result.shader = std::shared_ptr<const Shader>(parent.layer, &parent.layer->shader);
             else if (parent.texture)
-                result.shader = std::dynamic_pointer_cast<const ShaderTex>(parent.texture->tex);
+                result.shader = std::dynamic_pointer_cast<const Shader>(parent.texture->tex);
             break;
         case Kind::SharedShader:
             if (registry) result.shader = find(registry->shaderSharedPool, key.name);
             break;
         case Kind::Texture:
-            if (parent.shader) result.texture = find(parent.shader->getTextures(), key.name);
-            else if (parent.layer) result.texture = find(parent.layer->shader.getTextures(), key.name);
+            if (boundShader) result.texture = find(boundShader->getTextures(), key.name);
             break;
         case Kind::SharedTexture:
             if (registry) result.texture = find(registry->textureSharedPool, key.name);
             break;
         case Kind::Buffer:
-            if (parent.shader) result.buffer = find(parent.shader->getBuffers(), key.name);
-            else if (parent.layer) result.buffer = find(parent.layer->shader.getBuffers(), key.name);
+            if (boundShader) result.buffer = find(boundShader->getBuffers(), key.name);
             if (result.buffer) result.identity.owner = result.buffer;
             break;
         case Kind::Geometry: {
@@ -244,6 +245,12 @@ InspectorView::Resource InspectorView::resolve(const VOSC& renderer, const Key& 
         result.identity.backend = result.texture->tex;
         result.identity.source = textureSource(*result.texture);
         result.identity.sourceRevision = result.texture->operatorSourceRevision();
+        // A shader-backed texture can relink without replacing its BaseTex.
+        if (const auto source = std::dynamic_pointer_cast<const Shader>(result.texture->tex)) {
+            result.identity.textureProgramBackend = source->operatorBackend();
+            result.identity.program = source->operatorLinkedProgram();
+            result.identity.textureProgramSource = source->operatorSourcePath();
+        }
     }
     return result;
 }
@@ -276,6 +283,7 @@ InspectorView::Resolved InspectorView::resolvePages(const VOSC& renderer) {
 
 void InspectorView::reset() {
     pages.clear();
+    visibleRows.clear();
     restoreRow.reset();
     invalid = State::Live;
 }
@@ -320,11 +328,13 @@ std::string InspectorView::row(const Key& key, const Resource& current, const st
         + "</span><span class='inspect-kind'>" + encode(kind) + " &#8250;</span></button>";
 }
 
-std::string InspectorView::layerLink(const Layer& layer, const VOSC& renderer, bool diagnostic) {
+std::string InspectorView::layerLink(const Layer& layer, const VOSC& renderer, const std::string& shaderName,
+                                     bool diagnostic) {
     const Key key{Kind::Layer, {}, layer.index};
     const std::string title = (diagnostic ? "Inspect Layer " : "Layer ") + std::to_string(layer.index);
     return row(key, resolve(renderer, key, {}), title,
-               diagnostic ? "" : sourceName(layer.shader), layer.reloadDiagnostic() ? "Reload failed" : "");
+               diagnostic ? "" : shaderName.empty() ? sourceName(layer.shader) : shaderName,
+               layer.reloadDiagnostic() ? "Reload failed" : "");
 }
 
 std::optional<InspectorView::Navigation> InspectorView::activate(
@@ -528,12 +538,14 @@ std::string InspectorView::globalsMarkup(const VOSC& renderer) {
 }
 
 std::string InspectorView::shaderMarkup(const VOSC& renderer, const Resource& resource,
-                                        const std::string& diagnostic) {
+                                        const std::string& diagnostic, const std::string& layerShaderName) {
     const auto& page = pages.back();
     const auto& shader = *resource.shader;
-    std::string out = label(page.item.key.name.empty() ? sourceName(shader) : page.item.key.name)
-        + quiet(shaderDescription(shader));
-    if (!shader.operatorSourcePath().empty()) out += quiet(shader.operatorSourcePath());
+    const auto title = !layerShaderName.empty() ? layerShaderName
+        : page.item.key.name.empty() ? sourceName(shader) : page.item.key.name;
+    std::string out = label(title) + quiet(shaderDescription(shader));
+    const auto path = shader.operatorSourcePath();
+    if (!path.empty() && path != title && (path != "source" || layerShaderName.empty())) out += quiet(path);
     out += diagnostic;
     if (page.section == "bindings") return out + bindings(renderer, resource, false);
     if (page.section == "variables")
@@ -580,17 +592,20 @@ std::string InspectorView::textureMarkup(const VOSC& renderer, const Resource& r
     if (output) {
         const auto depth = inspectorArrayDepth(*output);
         page.slice = depth > 0 ? std::clamp(page.slice, 0, depth - 1) : 0;
-        out += preview(resource, false, page.slice);
+        const auto texels = buffer ? inspectorBufferTexels(*resource.buffer) : 0;
+        const bool previewable = buffer ? texels > 0 : inspectorCanPreviewTexture(*output);
+        out += previewable ? preview(resource, false, page.slice)
+                           : quiet("Preview unavailable for this texture format");
         if (buffer) {
-            out += quiet(std::to_string(inspectorBufferTexels(*resource.buffer)) + " texels · "
-                + std::to_string(resource.buffer->buf.size()) + " bytes · RGB preview");
+            out += quiet(std::to_string(texels) + " texels · "
+                + std::to_string(resource.buffer->buf.size()) + (previewable ? " bytes · RGB preview" : " bytes"));
         } else {
             out += quiet(std::to_string(static_cast<int>(output->getWidth())) + " × "
                 + std::to_string(static_cast<int>(output->getHeight()))
                 + (depth > 0 ? " × " + std::to_string(depth) : "") + " · Texture output");
         }
         if (large) {
-            if (depth > 1) {
+            if (previewable && depth > 1) {
                 out += control("inspect-slice-prev", "Previous slice")
                     + control("inspect-slice-select", "Slice " + std::to_string(page.slice + 1)
                               + " of " + std::to_string(depth), page.choosingSlice)
@@ -603,10 +618,10 @@ std::string InspectorView::textureMarkup(const VOSC& renderer, const Resource& r
             }
             return out;
         }
-        out += row({Kind::Preview, {}}, resource, "Enlarge preview");
+        if (previewable) out += row({Kind::Preview, {}}, resource, "Enlarge preview");
     } else out += quiet(buffer ? "Buffer preview unavailable" : "Texture output unavailable");
     if (large) return out;
-    if (!buffer && resource.texture->hasShader()) {
+    if (!buffer) {
         const Key shaderKey{Kind::Shader, {}};
         const auto source = resolve(renderer, shaderKey, resource);
         if (source.shader) out += row(shaderKey, source, "Inspect source shader", sourceName(*source.shader), "Shader");
@@ -654,12 +669,13 @@ std::string InspectorView::auxiliaryMarkup(const Resource& resource) {
     return {};
 }
 
-std::string InspectorView::markup(const VOSC& renderer, const std::string& shaderDiagnostic) {
+std::string InspectorView::markup(const VOSC& renderer, const std::string& shaderDiagnostic,
+                                   const std::function<std::string(const Layer&)>& knownShaderName) {
     const auto& layers = renderer.operatorLayers();
     if (pages.empty()) {
         if (globals) return globalsMarkup(renderer);
         std::string out = heading("OSC layers · " + std::to_string(layers.size()));
-        for (const auto& layer : layers) if (layer) out += layerLink(*layer, renderer);
+        for (const auto& layer : layers) if (layer) out += layerLink(*layer, renderer, knownShaderName(*layer));
         return out;
     }
 
@@ -680,16 +696,21 @@ std::string InspectorView::markup(const VOSC& renderer, const std::string& shade
         const Key geometryKey{Kind::Geometry, {}, resource.layer->index};
         const auto geometry = resolve(renderer, geometryKey, resource);
         const Key shaderKey{Kind::Shader, {}};
+        const auto layerShaderName = knownShaderName(*resource.layer);
         return "<div class='inspect-layer-columns'>" + rail + "</div><div class='inspect-layer-body'>"
             + label("Layer " + std::to_string(resource.layer->index)) + heading("Geometry")
             + (geometry.geometry ? row(geometryKey, geometry, geometry.geometry->operatorSource(), {}, "Wireframe")
                                  : quiet("No geometry"))
             + heading("Shader")
-            + row(shaderKey, resolve(renderer, shaderKey, resource), sourceName(resource.layer->shader),
+             + row(shaderKey, resolve(renderer, shaderKey, resource),
+                  layerShaderName.empty() ? sourceName(resource.layer->shader) : layerShaderName,
                   shaderDescription(resource.layer->shader), resource.layer->reloadDiagnostic() ? "Reload failed" : "Shader")
             + bindings(renderer, resource, true) + "</div></div>";
     }
-    if (resource.shader) return shaderMarkup(renderer, resource, shaderDiagnostic);
+    if (resource.shader) {
+        const auto layer = isLayerShader() ? selectedLayer(renderer) : nullptr;
+        return shaderMarkup(renderer, resource, shaderDiagnostic, layer ? knownShaderName(*layer) : std::string{});
+    }
     if (resource.texture || resource.buffer) return textureMarkup(renderer, resource);
     return auxiliaryMarkup(resource);
 }

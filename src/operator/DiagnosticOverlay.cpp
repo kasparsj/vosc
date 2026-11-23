@@ -410,24 +410,16 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
 DiagnosticOverlay::DiagnosticOverlay() = default;
 DiagnosticOverlay::~DiagnosticOverlay() = default;
 
-void DiagnosticOverlay::setup(VOSC& renderer) {
+void DiagnosticOverlay::setup() {
     auto ui = std::make_unique<Surface>();
     ui->setup();
     surface = std::move(ui);
 
     auto& events = ofEvents();
     constexpr int priority = OF_EVENT_ORDER_BEFORE_APP;
-    listeners.push(events.keyPressed.newListener([this, &renderer](ofKeyEventArgs& event) {
+    listeners.push(events.keyPressed.newListener([this](ofKeyEventArgs& event) {
         if (!open && ownedKeys.count(event.keycode)) return true;
-        if (!open && !event.isRepeat && event.modifiers == 0 && event.key == OF_KEY_TAB) {
-            renderer.toggleDebug();
-            ownedKeys.insert(event.keycode);
-            return true;
-        }
-        const bool wasOpen = open;
-        const bool consumed = keyPressed(event);
-        if (!wasOpen && open) renderer.hideDebug();
-        return consumed;
+        return keyPressed(event);
     }, priority));
     listeners.push(events.keyReleased.newListener([this](ofKeyEventArgs& event) {
         const auto key = surface->forwardedKeys.extract(event.keycode);
@@ -444,7 +436,7 @@ void DiagnosticOverlay::setup(VOSC& renderer) {
         return true;
     }, priority));
 
-    const auto pointer = [this, &renderer](ofMouseEventArgs& event) { return pointerEvent(event, renderer); };
+    const auto pointer = [this](ofMouseEventArgs& event) { return pointerEvent(event); };
     listeners.push(events.mouseMoved.newListener(pointer, priority));
     listeners.push(events.mouseDragged.newListener(pointer, priority));
     listeners.push(events.mousePressed.newListener(pointer, priority));
@@ -463,7 +455,17 @@ void DiagnosticOverlay::shutdown() {
 void DiagnosticOverlay::rememberScene(const scene::File& scene, const VOSC& renderer) {
     sceneTitle = scene.title;
     sceneLayers.clear();
-    for (const auto& layer : renderer.operatorLayers()) sceneLayers.emplace_back(layer);
+    for (const auto& layer : renderer.operatorLayers()) {
+        if (layer) sceneLayers.push_back({layer, layer->shader.operatorProgram(),
+            layer->shader.isShaderLoaded() ? layer->shader.getShader().getProgram() : 0, {}});
+        else sceneLayers.emplace_back();
+    }
+    for (const auto& command : scene.commands) {
+        if (command.asset.empty() || command.message.getArgAsString(2) != "/shader") continue;
+        const auto layer = command.message.getArgAsInt32(3);
+        if (layer >= 0 && static_cast<size_t>(layer) < sceneLayers.size())
+            sceneLayers[layer].asset = command.asset.filename().string();
+    }
 }
 
 void DiagnosticOverlay::show(View next, const std::string& focus) {
@@ -502,6 +504,7 @@ void DiagnosticOverlay::close() {
 
 void DiagnosticOverlay::showDiagnostic(uint64_t sequence) {
     const auto* entry = diagnostic(sequence);
+    surface->inspector.reset();
     show(View::Console, entry ? "copy" : "console-search");
     selectedSequence = sequence;
     surface->revealSequence = sequence;
@@ -524,11 +527,13 @@ bool DiagnosticOverlay::keyPressed(ofKeyEventArgs& event) {
     const bool shortcut = !(event.modifiers & (OF_KEY_CONTROL | OF_KEY_ALT | OF_KEY_SUPER));
     const bool overview = shortcut && (event.key == 'o' || event.key == 'O');
     const bool console = shortcut && !textFocus && (event.key == 'c' || event.key == 'C');
-    if (!open && !overview && !console) return false;
+    const bool inspector = event.modifiers == 0 && event.key == OF_KEY_TAB;
+    if (!open && !overview && !console && !inspector) return false;
 
     const bool first = ownedKeys.insert(event.keycode).second && !event.isRepeat;
     if (first && !open) {
         if (overview) show(View::Overview, "overview");
+        else if (inspector) show(View::Inspector, "inspector");
         else show(View::Console, "console");
         return true;
     }
@@ -570,6 +575,11 @@ bool DiagnosticOverlay::keyPressed(ofKeyEventArgs& event) {
             }
             return true;
         }
+        if (view == View::Inspector) {
+            const float step = 32 * ui.context->GetDensityIndependentPixelRatio();
+            ui.content->SetScrollTop(ui.content->GetScrollTop() + (event.key == OF_KEY_UP ? -step : step));
+            return true;
+        }
     }
 
     using namespace Rml::Input;
@@ -589,7 +599,7 @@ bool DiagnosticOverlay::keyPressed(ofKeyEventArgs& event) {
     return true;
 }
 
-bool DiagnosticOverlay::pointerEvent(ofMouseEventArgs& event, const VOSC& renderer) {
+bool DiagnosticOverlay::pointerEvent(ofMouseEventArgs& event) {
     const bool pressed = event.type == ofMouseEventArgs::Pressed;
     const bool released = event.type == ofMouseEventArgs::Released;
     const glm::vec2 eventPosition{event.x, event.y};
@@ -619,7 +629,7 @@ bool DiagnosticOverlay::pointerEvent(ofMouseEventArgs& event, const VOSC& render
         // Button events can carry the last motion coordinates instead of the current cursor.
         const bool activateOpener = click && eventPosition == click->eventPosition
             && cursorPosition == click->cursorPosition;
-        if (activateOpener && !open && inWindow && event.modifiers == 0 && !renderer.isDebugVisible())
+        if (activateOpener && !open && inWindow && event.modifiers == 0)
             show(View::Overview, "overview");
         return true;
     }
@@ -628,7 +638,7 @@ bool DiagnosticOverlay::pointerEvent(ofMouseEventArgs& event, const VOSC& render
             || event.type == ofMouseEventArgs::Exited
             || (event.type == ofMouseEventArgs::Moved && eventPosition != cleanClick->eventPosition)))
             cleanClick.reset();
-        if (pressed && inWindow && event.modifiers == 0 && !renderer.isDebugVisible()
+        if (pressed && inWindow && event.modifiers == 0
             && physicalButton == GLFW_MOUSE_BUTTON_LEFT && physicalButtons == 1u && ownedButtons.empty()) {
             ownedButtons.emplace(physicalButton, cleanOutputPress);
             cleanClick = CleanClick{eventPosition, cursorPosition};
@@ -767,7 +777,7 @@ std::string DiagnosticOverlay::overviewMarkup(const VOSC& renderer, const GLint*
     const auto& layers = renderer.operatorLayers();
     const bool knownScene = !sceneLayers.empty() && layers.size() == sceneLayers.size() &&
         std::equal(layers.begin(), layers.end(), sceneLayers.begin(),
-            [](const auto& live, const auto& original) { return live && live == original.lock(); });
+            [](const auto& live, const auto& original) { return live && live == original.layer.lock(); });
     surface->setReading("scene-title", surface->title,
         knownScene && !sceneTitle.empty() ? sceneTitle : "Unnamed scene");
     surface->setReading("render-size", surface->dimensions,
@@ -791,7 +801,7 @@ std::string DiagnosticOverlay::overviewMarkup(const VOSC& renderer, const GLint*
         affected = attributed->get();
         markup = "<div class='error-summary'>Shader reload failed · Layer " + std::to_string(affected->index)
             + "</div><div class='caption'>The previous shader is still rendering.</div>"
-            + surface->inspector.layerLink(*affected, renderer, true);
+            + surface->inspector.layerLink(*affected, renderer, {}, true);
     } else if (latest != entries.rend()) {
         markup = message(latest->message, true);
     } else {
@@ -799,9 +809,20 @@ std::string DiagnosticOverlay::overviewMarkup(const VOSC& renderer, const GLint*
     }
     if (latest != entries.rend()) markup += button("diagnostic", "View diagnostic", latest->sequence);
     for (const auto& layer : layers) {
-        if (layer && layer.get() != affected) markup += surface->inspector.layerLink(*layer, renderer);
+        if (layer && layer.get() != affected)
+            markup += surface->inspector.layerLink(*layer, renderer, knownShaderName(*layer));
     }
     return markup;
+}
+
+std::string DiagnosticOverlay::knownShaderName(const Layer& layer) const {
+    if (layer.index < 0 || static_cast<size_t>(layer.index) >= sceneLayers.size()) return {};
+    const auto& original = sceneLayers[layer.index];
+    const auto originalProgram = original.shader.lock();
+    if (original.layer.lock().get() != &layer || !originalProgram
+        || layer.shader.operatorProgram().lock() != originalProgram
+        || !layer.shader.ownsProgram(original.program)) return {};
+    return original.asset;
 }
 
 std::string DiagnosticOverlay::shaderDiagnostic(const VOSC& renderer) const {
@@ -861,6 +882,8 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
 
     const auto* currentFocus = ui.context->GetFocusElement();
     const auto focusId = currentFocus ? currentFocus->GetId() : "";
+    const auto focusToken = currentFocus ? currentFocus->GetAttribute<uint64_t>("data-target", 0) : 0;
+    const auto rowOrigin = focusToken && ui.inspector.matches(focusId, focusToken) ? focusToken : 0;
     const auto scrollTop = ui.restoreScroll
         ? ui.scroll[static_cast<size_t>(view)] : ui.content->GetScrollTop();
     const bool console = view == View::Console;
@@ -887,7 +910,11 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     ui.inspector.beginMarkup();
     switch (view) {
         case View::Overview: markup = overviewMarkup(renderer, viewport); break;
-        case View::Inspector: markup = ui.inspector.markup(renderer, shaderDiagnostic(renderer)); break;
+        case View::Inspector: {
+            markup = ui.inspector.markup(renderer, shaderDiagnostic(renderer),
+                                         [this](const Layer& layer) { return knownShaderName(layer); });
+            break;
+        }
         case View::Console: break;
         case View::Browse: markup = message("Example and asset catalogs are deferred."); break;
         case View::Count: break;
@@ -916,12 +943,15 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
 
     ui.context->Update();
     auto wantedFocus = std::exchange(ui.focusRequest, {});
+    auto origin = std::exchange(ui.focusOrigin, 0);
     if (wantedFocus.empty() && !focusId.empty() &&
-        (!ui.context->GetFocusElement() || ui.context->GetFocusElement()->GetId() != focusId))
+        (!ui.context->GetFocusElement() || ui.context->GetFocusElement()->GetId() != focusId ||
+         (rowOrigin && !ui.inspector.matches(focusId, rowOrigin)))) {
         wantedFocus = focusId;
+        origin = rowOrigin;
+    }
     if (!wantedFocus.empty()) {
         auto* element = ui.document->GetElementById(wantedFocus);
-        const auto origin = std::exchange(ui.focusOrigin, 0);
         if (!element || element->IsClassSet("inactive") || (origin && !ui.inspector.matches(wantedFocus, origin)))
             element = ui.document->GetElementById(console ? "console-search" : detail ? "back" : destination->id);
         element->Focus(true);

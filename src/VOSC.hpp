@@ -25,11 +25,6 @@ public:
     void exit();
     
 #if VOSC_OPERATOR_UI
-    void mousePressed(int x, int y, int button);
-    void mouseReleased(int x, int y, int button);
-    void toggleDebug() { renderSystem.showDebug = !renderSystem.showDebug; }
-    void hideDebug() { renderSystem.showDebug = false; }
-    bool isDebugVisible() const { return renderSystem.showDebug; }
     const auto& operatorLayers() const { return renderSystem.getLayers(); }
     std::optional<glm::vec3> operatorCameraPosition() const {
         if (!runtime.camera.isEnabled()) return std::nullopt;

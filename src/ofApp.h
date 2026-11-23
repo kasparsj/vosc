@@ -22,10 +22,6 @@ public:
 	void exit();
 
 	void keyPressed(int key);
-#if VOSC_OPERATOR_UI
-    void mousePressed(int x, int y, int button) override;
-    void mouseReleased(int x, int y, int button) override;
-#endif
 	void windowResized(int w, int h);
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);

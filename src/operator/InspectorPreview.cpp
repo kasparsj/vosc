@@ -393,6 +393,13 @@ int inspectorArrayDepth(const ofTexture& output) {
 #endif
 }
 
+bool inspectorCanPreviewTexture(const ofTexture& output) {
+    const auto& data = output.getTextureData();
+    return !integerFormat(data.glInternalFormat)
+        && (data.textureTarget == GL_TEXTURE_2D || data.textureTarget == GL_TEXTURE_RECTANGLE_ARB
+            || inspectorArrayDepth(output) > 0);
+}
+
 std::size_t inspectorBufferTexels(const Buffer& buffer) {
     const auto& data = buffer.getTexture().getTextureData();
     if (!data.bAllocated || !data.textureID || data.textureTarget != GL_TEXTURE_BUFFER
@@ -430,7 +437,7 @@ struct InspectorPreview::Renderer {
 
     void drawTexture(const ofTexture& texture, int layer) {
         const auto& data = texture.getTextureData();
-        if (integerFormat(data.glInternalFormat)) return;
+        if (!inspectorCanPreviewTexture(texture)) return;
         Program* current = nullptr;
         if (data.textureTarget == GL_TEXTURE_2D) {
             static const auto fragment = imageFragment("sampler2D", "pos");

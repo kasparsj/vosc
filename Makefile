@@ -66,7 +66,7 @@ VOSC_RMLUI_LIBS := $(VOSC_RMLUI_DIR)/lib/libvosc_rmlui_gl3.a $(VOSC_RMLUI_DIR)/l
 override PROJECT_CFLAGS += -I$(VOSC_RMLUI_DIR)/source/Include -I$(VOSC_RMLUI_DIR)/source/Backends -I$(VOSC_RMLUI_DIR)/generated
 override PROJECT_LDFLAGS += $(VOSC_RMLUI_LIBS) -lfreetype -ldl
 else
-override PROJECT_EXCLUSIONS += $(PROJECT_ROOT)/src/operator $(PROJECT_ROOT)/src/operator/% $(PROJECT_ROOT)/src/inspector $(PROJECT_ROOT)/src/inspector/%
+override PROJECT_EXCLUSIONS += $(PROJECT_ROOT)/src/operator $(PROJECT_ROOT)/src/operator/%
 endif
 
 include $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk

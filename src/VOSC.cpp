@@ -119,18 +119,6 @@ void VOSC::draw() {
 }
 
 #if VOSC_OPERATOR_UI
-void VOSC::mousePressed(int x, int y, int button) {
-    engineControl.interruptTrial();
-    engineControl.noteExternalChange();
-    renderSystem.mousePressed(x, y, button);
-}
-
-void VOSC::mouseReleased(int x, int y, int button) {
-    engineControl.interruptTrial();
-    engineControl.noteExternalChange();
-    renderSystem.mouseReleased(x, y, button);
-}
-
 void VOSC::applyOperatorTextureFlag(const std::function<std::shared_ptr<Texture>()>& resolve,
                                     bool Texture::*flag, bool value) {
     auto texture = resolve();
@@ -143,8 +131,6 @@ void VOSC::applyOperatorTextureFlag(const std::function<std::shared_ptr<Texture>
     texture.get()->*flag = value;
     engineControl.noteExternalChange();
 }
-
-
 #endif
 
 void VOSC::keyPressed(int key) {

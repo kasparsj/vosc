@@ -4,9 +4,6 @@
 #include "../layer/Layer.h"
 #include "../osc/Command.hpp"
 #include "../Config.h"
-#if VOSC_OPERATOR_UI
-#include "../inspector/Inspector.hpp"
-#endif
 #if USE_OFX_DEFERRED_SHADING
 #include "ofxDeferredShading.h"
 #endif
@@ -47,11 +44,6 @@ public:
     void allLayersCommand(const string& command, const ofxOscMessage& m);
     bool routeLayerByIndex(int idx, const string& command, const ofxOscMessage& m, osc::ResourceAction action);
 
-#if VOSC_OPERATOR_UI
-    bool showDebug = false;
-    void mousePressed(int x, int y, int button);
-    void mouseReleased(int x, int y, int button);
-#endif
     void keyPressed(int key);
 
     vector<shared_ptr<Layer>>& getLayers() {
@@ -76,9 +68,6 @@ private:
 
     vector<shared_ptr<Layer>> layers;
     Layout layout = Layout::STACK;
-#if VOSC_OPERATOR_UI
-    Inspector inspector;
-#endif
     vector<PostPass> shadingPasses;
     bool deferredShading = false;
     std::unique_ptr<ofxPostProcessing> post;
