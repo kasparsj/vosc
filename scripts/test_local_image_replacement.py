@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify layer and named shared local-image replacement through OSC."""
+"""Verify layer, named shared, and shader sampler local-image replacement through OSC."""
 
 import argparse
 from contextlib import closing
@@ -17,9 +17,9 @@ def diagnostics(client, **params):
     return reply["result"]
 
 
-def replace_with_failed_image(renderer, client, target, path):
+def replace_with_failed_image(renderer, client, address, args, path):
     cursor = diagnostics(client)["latest_cursor"]
-    osc(renderer.port, "/tex", target, str(path))
+    osc(renderer.port, address, *args, str(path))
     deadline = time.monotonic() + 5
     while True:
         entries = diagnostics(client, after=cursor)["entries"]
@@ -32,6 +32,15 @@ def replace_with_failed_image(renderer, client, target, path):
 
 def has_colors(frame, colors):
     return all(frame.count(color) > len(frame) // 5 for color in colors)
+
+
+def capture_row(client, path):
+    width, height, frame, _ = capture(client, path, max_width=320)
+    assert (width, height) == (320, 240), (width, height)
+    half = width // 2
+    return tuple([pixel for row in range(height)
+                  for pixel in frame[row * width + start:row * width + start + half]]
+                 for start in (0, half))
 
 
 def verify_replacement(renderer, client, fixtures, output, evidence):
@@ -57,7 +66,7 @@ def verify_replacement(renderer, client, fixtures, output, evidence):
 
     evidence["failures"] = {}
     for path in (missing, corrupt):
-        reported, entries = replace_with_failed_image(renderer, client, 0, path)
+        reported, entries = replace_with_failed_image(renderer, client, "/tex", (0,), path)
         evidence["failures"][path.name] = {
             "reported_source": reported,
             "retained_a": pixels(f"after-{path.stem}") == before,
@@ -88,12 +97,7 @@ def verify_shared_replacement(renderer, client, fixtures, output, evidence):
     corrupt.write_bytes(b"\x89PNG\r\n\x1a\ntruncated PNG fixture")
 
     def layer_pixels(name):
-        width, height, frame, _ = capture(client, output / f"shared-{name}.png", max_width=320)
-        assert (width, height) == (320, 240), (width, height)
-        half = width // 2
-        return tuple([pixel for row in range(height)
-                      for pixel in frame[row * width + start:row * width + start + half]]
-                     for start in (0, half))
+        return capture_row(client, output / f"shared-{name}.png")
 
     applied(client, "configure_layers", {"count": 2, "layout": "row"})
     osc(renderer.port, "/tex", shared, str(image_a))
@@ -106,7 +110,7 @@ def verify_shared_replacement(renderer, client, fixtures, output, evidence):
 
     evidence["failures"] = {}
     for path in (missing, corrupt):
-        reported, entries = replace_with_failed_image(renderer, client, shared, path)
+        reported, entries = replace_with_failed_image(renderer, client, "/tex", (shared,), path)
         after = layer_pixels(f"after-{path.stem}")
         evidence["failures"][path.name] = {
             "reported_source": reported,
@@ -121,6 +125,86 @@ def verify_shared_replacement(renderer, client, fixtures, output, evidence):
     for name, outcome in evidence["failures"].items():
         assert outcome["reported_source"], f"diagnostics did not identify {name}"
         assert all(outcome["retained_a_by_layer"]), f"{name} removed image A: {outcome['retained_a_by_layer']}"
+
+
+SAMPLER_FRAGMENT = """#version 330
+uniform sampler2D imageTex;
+out vec4 fragColor;
+void main() {
+    fragColor = vec4(texture(imageTex, vec2(0.25, 0.25)).rgb, 1.0);
+}
+"""
+
+
+def verify_sampler_replacement(renderer, client, fixtures, output, evidence, *, shared):
+    shared_name = "sharedSamplerImage"
+    image_a, image_b, missing, corrupt = (fixtures / f"sampler-{name}.png" for name in
+                                         ("a", "b", "missing", "corrupt"))
+    color_a, color_b = (240, 20, 30, 255), (10, 235, 45, 255)
+    image_a.write_bytes(png_rgba(32, 32, color_a, color_a))
+    image_b.write_bytes(png_rgba(32, 32, color_b, color_b))
+    corrupt.write_bytes(b"\x89PNG\r\n\x1a\ntruncated PNG fixture")
+
+    def bind(layer, source):
+        osc(renderer.port, "/shader/texture", layer, "imageTex", str(source))
+
+    def pixels(name):
+        return capture_row(client, output / f"sampler-{name}.png")
+
+    applied(client, "configure_layers", {"count": 0, "layout": "row"})
+    applied(client, "configure_layers", {"count": 2, "layout": "row"})
+    for layer in (0, 1):
+        applied(client, "publish_shader", {"layer": layer, "source": SAMPLER_FRAGMENT})
+    source_a = shared_name if shared else image_a
+    if shared:
+        osc(renderer.port, "/tex", shared_name, str(image_a))
+    bind(1, source_a)
+    bind(0, source_a)
+    baseline = pixels("baseline")
+    expected_a = tuple([color_a] * len(region) for region in baseline)
+    assert baseline == expected_a, "both samplers must render image A"
+    expected_b = tuple([color_b] * len(region) for region in baseline)
+
+    failures = evidence["failures"] = {}
+    for path in (missing, corrupt):
+        reported, entries = replace_with_failed_image(
+            renderer, client, "/shader/texture", (0, "imageTex"), path)
+        after = pixels(f"after-{path.stem}")
+        outcome = failures[path.name] = {
+            "reported_source": reported,
+            "retained_a_by_layer": [current == baseline[index] for index, current in enumerate(after)],
+            "diagnostics": entries,
+        }
+        if shared:
+            # Updating the named source without rebinding detects a detached sampler.
+            osc(renderer.port, "/tex", shared_name, str(image_b))
+            updated = pixels(f"shared-update-after-{path.stem}")
+            outcome["followed_shared_update_by_layer"] = [
+                current == expected_b[index] for index, current in enumerate(updated)
+            ]
+            osc(renderer.port, "/tex", shared_name, str(image_a))
+        bind(0, source_a)
+        assert pixels(f"restored-{path.stem}") == baseline, "baseline was not restored"
+
+    bind(0, image_b)
+    after = pixels("image-b")
+    evidence["rendered_b_on_addressed_sampler"] = after[0] == expected_b[0]
+    evidence["retained_a_on_second_sampler"] = after[1] == baseline[1]
+
+
+def assert_sampler_replacement(evidence):
+    failures = []
+    for scope, case in evidence.items():
+        for name, outcome in case["failures"].items():
+            if not outcome["reported_source"]:
+                failures.append(f"{scope}: diagnostics did not identify {name}")
+            if not all(outcome["retained_a_by_layer"]):
+                failures.append(f"{scope}: {name} removed image A: {outcome['retained_a_by_layer']}")
+            if scope == "shared" and not all(outcome["followed_shared_update_by_layer"]):
+                failures.append(f"{scope}: {name} detached a sampler from the named texture")
+        if not case["rendered_b_on_addressed_sampler"] or not case["retained_a_on_second_sampler"]:
+            failures.append(f"{scope}: image B must reach only the addressed sampler")
+    assert not failures, "\n".join(failures)
 
 
 def main():
@@ -142,11 +226,19 @@ def main():
                 verify_replacement(renderer, client, Path(fixtures), output, evidence)
                 evidence["shared"] = {}
                 verify_shared_replacement(renderer, client, Path(fixtures), output, evidence["shared"])
+                samplers = evidence["samplers"] = {}
+                for scope in ("local", "shared"):
+                    case_output = output / f"sampler-{scope}"
+                    case_output.mkdir()
+                    samplers[scope] = {}
+                    verify_sampler_replacement(renderer, client, Path(fixtures), case_output,
+                                               samplers[scope], shared=(scope == "shared"))
     finally:
         evidence["cleanup"], cleanup_error = collect_cleanup(renderer)
         (output / "evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
     assert cleanup_error is None, cleanup_error
-    print(f"PASS layer and named shared local-image replacement, and layer unload. Evidence in {output}")
+    assert_sampler_replacement(evidence["samplers"])
+    print(f"PASS layer, named shared, and shader sampler local-image replacement. Evidence in {output}")
 
 
 if __name__ == "__main__":

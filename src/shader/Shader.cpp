@@ -1429,17 +1429,19 @@ void Shader::setTexture(const ofxOscMessage& m) {
 
 void Shader::setTexture(const string& name, const ofxOscMessage& m, int arg) {
     string source = m.getArgAsString(arg);
+    shared_ptr<Texture> texture;
     if (TexturePool::hasShared(source)) {
-        textures[name] = TexturePool::getShared(source);
+        texture = TexturePool::getShared(source);
     }
     else {
-        textures[name] = TexturePool::getOrCreate(name, this);
-        textures[name]->load(m, arg);
+        texture = TexturePool::getOrCreate(name, this);
+        if (!texture->loadOscSource(m, arg)) return;
     }
-    const auto size = textures[name]->data.getSize();
+    textures[name] = texture;
+    const auto size = texture->data.getSize();
     if (size.x <= 0 || size.y <= 0) {
-        textures[name]->data.setSize(size.x > 0 ? size.x : std::max(1, ofGetWidth()),
-                                     size.y > 0 ? size.y : std::max(1, ofGetHeight()));
+        texture->data.setSize(size.x > 0 ? size.x : std::max(1, ofGetWidth()),
+                              size.y > 0 ? size.y : std::max(1, ofGetHeight()));
     }
 }
 

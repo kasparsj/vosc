@@ -85,8 +85,8 @@ void Texture::load(const ofxOscMessage &m, int arg) {
     load(source, textureArguments(m, arg));
 }
 
-bool Texture::loadOscSource(const ofxOscMessage& m) {
-    const auto source = m.getArgAsString(1);
+bool Texture::loadOscSource(const ofxOscMessage& m, int sourceIndex) {
+    const auto source = m.getArgAsString(sourceIndex);
     const auto separator = source.find(':');
     const bool explicitImage = source.starts_with("image:") && separator + 1 < source.size();
     const auto path = explicitImage ? source.substr(separator + 1) : source;
@@ -94,11 +94,13 @@ bool Texture::loadOscSource(const ofxOscMessage& m) {
     const bool localImage = (explicitImage || (type && std::string_view(type) == "image")) &&
         !path.starts_with("http://") && !path.starts_with("https://");
     if (!localImage) {
-        oscCommand("/tex", m);
+        // Preserve the /tex command bookkeeping for layer and shared sources.
+        if (sourceIndex == 1) oscCommand("/tex", m);
+        else load(m, sourceIndex);
         return true;
     }
 
-    auto candidate = make_shared<ImageTex>(path, textureArguments(m, 1));
+    auto candidate = make_shared<ImageTex>(path, textureArguments(m, sourceIndex));
     if (!candidate->loadImage()) return false;
     _unload();
     tex = std::move(candidate);
