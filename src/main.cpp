@@ -2,6 +2,10 @@
 #include "ofApp.h"
 #include "Config.h"
 #include "control/OscPort.hpp"
+#if defined(TARGET_OSX) && !(defined(APPSTORE) && APPSTORE)
+#include "macos/ManagedData.hpp"
+#include <unistd.h>
+#endif
 #include <charconv>
 #include <condition_variable>
 #include <cstdio>
@@ -132,11 +136,17 @@ int main(int argc, char** argv) {
 #if defined(APPSTORE) && APPSTORE
         ofSetDataPathRoot(bundledData);
 #else
-        // Gatekeeper may launch the app from a location without its adjacent data.
-        std::error_code error;
-        if (std::filesystem::is_directory(bundledData, error) &&
-            !std::filesystem::is_directory(contents.parent_path().parent_path() / "data", error)) {
-            ofSetDataPathRoot(bundledData);
+        if (vosc::macos::initializeManagedData(argc == 1 && getppid() == 1)) {
+            const auto& root = vosc::macos::managedDataRoot();
+            ofSetDataPathRoot(root);
+            std::cout << "VOSC_DATA_ROOT " << root.string() << std::endl;
+        } else {
+            // Non-distribution builds may stage data beside the app.
+            std::error_code error;
+            if (std::filesystem::is_directory(bundledData, error) &&
+                !std::filesystem::is_directory(contents.parent_path().parent_path() / "data", error)) {
+                ofSetDataPathRoot(bundledData);
+            }
         }
 #endif
 #endif

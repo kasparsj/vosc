@@ -223,6 +223,8 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
 #panel.browse-root #browse-catalogs, #panel.browse-examples #browse-catalogs { display: flex; }
 #panel.browse-root #browse-heading, #panel.browse-examples #browse-heading { display: none; }
 #browse-catalogs button { margin: 0 5dp 0 0; padding: 3dp 8dp; font-size: 12dp; }
+#browse-open-data { display: none; flex: none; margin: 0 0 0 6dp; padding: 3dp 8dp; font-size: 12dp; }
+#browse-open-data.present { display: block; }
 #browse-summary, .browse-origin, .browse-requirements {
     color: #c5d4e5; font-size: 12dp;
 }
@@ -335,6 +337,7 @@ button.example-row .example-thumb {
         <div id="browse-header">
             <div id="browse-catalogs"><button id="browse-examples">Examples</button><button id="browse-assets">Assets</button></div>
             <span id="browse-heading">Assets</span><span id="browse-summary"></span>
+            <button id="browse-open-data">Open Data Folder</button>
         </div>
         <div id="browse-filters" class="browse-filters">
             <input id="browse-search" class="browse-search" type="text" placeholder="Search by name" aria-label="Search assets by name" />
