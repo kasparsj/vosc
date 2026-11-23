@@ -7,6 +7,11 @@
 #include "InspectorView.hpp"
 #include "LocalizedDockBlur.hpp"
 
+#ifdef TARGET_OSX
+#include "ExampleFiles.hpp"
+#include "../macos/ManagedData.hpp"
+#endif
+
 #include <RmlUi/Core.h>
 #include <RmlUi/Core/Elements/ElementFormControlInput.h>
 #include <RmlUi/Core/Elements/ElementFormControlSelect.h>
@@ -360,6 +365,9 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
         panel = document->GetElementById("panel");
         content = document->GetElementById("content");
         rows = document->GetElementById("log-rows");
+#ifdef TARGET_OSX
+        document->GetElementById("browse-open-data")->SetClass("present", !vosc::macos::managedDataRoot().empty());
+#endif
         auto* input = document->GetElementById("console-search");
         if (!input || input->GetTagName() != "input")
             throw std::runtime_error("RmlUi could not load the Console search input");
@@ -572,6 +580,9 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
     float assetsScroll = 0, examplesScroll = 0;
     bool examplesActive = false, keepCatalogScroll = false;
     std::string browseHeading, browseSummary, browseStatus;
+#ifdef TARGET_OSX
+    std::string browseDataError;
+#endif
     bool syncingBrowse = false;
     vosc::operator_ui::InspectorView inspector;
     vosc::operator_ui::InspectorPreview previews;
@@ -929,6 +940,17 @@ void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std
     if (id == "return") close();
     else if (view == View::Browse) {
         auto& ui = *surface;
+#ifdef TARGET_OSX
+        if (id == "browse-open-data") {
+            const auto& root = vosc::macos::managedDataRoot();
+            if (!root.empty()) {
+                ui.browseDataError = vosc::operator_ui::openDataFolder(root)
+                    ? "" : "Finder could not open " + root.string() + ". Check that the folder is accessible and try again.";
+                ui.focusRequest = id;
+            }
+            return;
+        }
+#endif
         if (id == "browse-examples" && !ui.examplesActive) {
             ui.assetsScroll = ui.content->GetScrollTop();
             ui.examplesActive = true;
@@ -1239,7 +1261,14 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
             ui.document->GetElementById("browse-examples")->SetClass("selected", examples);
             ui.document->GetElementById("browse-assets")->SetClass("selected", !examples);
             ui.setReading("browse-summary", ui.browseSummary, examples ? ui.examples.summary() : ui.browse.summary());
-            ui.setReading("browse-status", ui.browseStatus, examples ? std::string{} : ui.browse.status());
+            auto status = examples ? std::string{} : ui.browse.status();
+#ifdef TARGET_OSX
+            if (!ui.browseDataError.empty()) {
+                if (!status.empty()) status += " ";
+                status += ui.browseDataError;
+            }
+#endif
+            ui.setReading("browse-status", ui.browseStatus, std::move(status));
             ui.document->GetElementById("browse-status")->SetClass("present", !ui.browseStatus.empty());
             break;
         }

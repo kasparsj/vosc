@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test the signed VOSC binary and Sieve example on a read-only macOS DMG."""
+"""Smoke-test an app-only macOS DMG and its editable Sieve example."""
 
 import argparse
 from contextlib import closing, contextmanager
@@ -26,8 +26,8 @@ WHITE = (1, 1, 1, 1)
 BLACK = (0, 0, 0, 1)
 
 
-def command(*args):
-    result = subprocess.run(args, capture_output=True, timeout=60)
+def command(*args, env=None):
+    result = subprocess.run(args, capture_output=True, timeout=60, env=env)
     require(result.returncode == 0,
             f"{args[0]} exited {result.returncode}: {result.stderr.decode(errors='replace').strip()}")
     return result.stdout
@@ -77,11 +77,26 @@ def mount_read_only(dmg, point, evidence):
         require(evidence["detached"], f"could not detach the run's mount at {point}")
 
 
+def disposable_home(scratch, label):
+    home = scratch / label
+    home.mkdir(mode=0o700)
+    env = dict(os.environ, HOME=str(home), CFFIXED_USER_HOME=str(home))
+    probe = ('ObjC.import("Foundation"); ObjC.unwrap($.NSFileManager.defaultManager.'
+             'URLsForDirectoryInDomains($.NSApplicationSupportDirectory, $.NSUserDomainMask).'
+             'objectAtIndex(0).path)')
+    support = command("/usr/bin/osascript", "-l", "JavaScript", "-e", probe, env=env).decode().strip()
+    expected = home.resolve(strict=True) / "Library/Application Support"
+    require(Path(support).resolve() == expected,
+            f"Foundation selected {support} instead of the disposable home")
+    return home, expected / "VOSC/data"
+
+
 class ReleaseRenderer:
-    def __init__(self, binary, manifest, scratch, log):
+    def __init__(self, binary, manifest, scratch, log, home):
         self.binary = binary
         self.manifest = manifest
         self.cwd = scratch
+        self.home = home
         self.log = log
         self.runtime = Path(tempfile.mkdtemp(prefix="renderer-", dir=scratch))
         self.socket = self.runtime / "control.sock"
@@ -93,7 +108,8 @@ class ReleaseRenderer:
     @contextmanager
     def run(self, evidence, *, negative=False):
         env = {name: value for name, value in os.environ.items() if not name.startswith("VOSC_")}
-        env.update(LC_ALL="C", VOSC_CONTROL_SOCKET=str(self.socket), VOSC_OSC_PORT=str(self.port))
+        env.update(LC_ALL="C", HOME=str(self.home), CFFIXED_USER_HOME=str(self.home),
+                   VOSC_CONTROL_SOCKET=str(self.socket), VOSC_OSC_PORT=str(self.port))
         with self.log.open("wb") as stream:
             self.process = subprocess.Popen(
                 [self.binary, "--scene", self.manifest], cwd=self.cwd, env=env,
@@ -149,17 +165,26 @@ def pixel_change(before, after):
             "white_to_black_fraction": expected / len(before), "unchanged_rgb_colors": len(unchanged)}
 
 
-def prove_sieve(renderer, root, output, label, evidence, host_arch):
+def prove_sieve(renderer, root, output, label, evidence, host_arch, *, title="Sieve", clipped=False):
     before, observation = observe(renderer, output, f"{label}-before", SIZE, native=True, sieve=True)
     ready, = observation["ready"]
-    require(re.fullmatch(r"VOSC_SCENE_READY frame=[1-9][0-9]* title=Sieve", ready), ready)
+    require(re.fullmatch(r"VOSC_SCENE_READY frame=[1-9][0-9]* title=" + re.escape(title), ready), ready)
     log = renderer.log.read_text(errors="replace")
+    selected, = [line.removeprefix("VOSC_DATA_ROOT ") for line in log.splitlines()
+                 if line.startswith("VOSC_DATA_ROOT ")]
+    require(Path(selected).resolve(strict=True) == root.resolve(strict=True),
+            f"expected {root} as the managed root, got {selected}")
+    evidence["selected_root"] = selected
     arch = re.search(r"ARM64: (Yes|No)", log)
     require(arch, "renderer did not report its executing architecture")
     evidence["executing_architecture"] = "arm64" if arch[1] == "Yes" else "x86_64"
     require(evidence["executing_architecture"] == host_arch, "renderer is not running natively")
     shader = observation["state"]["layers"][0]["shader"]
-    evidence.update(ready=ready, textures=shader["textures"], before=observation["capture"])
+    evidence.update(ready=ready, textures=shader["textures"], before=observation["capture"],
+                    vertex_fixture=str(root / "shaders/passthru.vert"),
+                    baseline_pixels_sha256=hashlib.sha256(bytes(channel for pixel in before
+                                                               for channel in pixel)).hexdigest())
+    require(shader["path"] == "source", f"unexpected Sieve shader mode {shader['path']}")
     for sampler, filename in TEXTURES.items():
         source = Path(shader["textures"][sampler]["source"]).resolve(strict=True)
         require(source == root / "examples/sieve/assets" / filename, f"{sampler} loaded from {source}")
@@ -168,8 +193,13 @@ def prove_sieve(renderer, root, output, label, evidence, host_arch):
 
     with closing(renderer.client()) as client:
         repeat, _ = matching_capture(client, output / f"{label}-baseline-repeat.png")
-        require(before == repeat and any(pixel[:3] != before[0][:3] for pixel in before),
-                "Sieve baseline changed or is flat")
+        require(before == repeat, "Sieve baseline changed between captures")
+        colors = {pixel[:3] for pixel in before}
+        if clipped:
+            require(len(colors) == 1, "edited vertex shader did not clip Sieve")
+            evidence["clipped_by_edited_vertex"] = True
+            return
+        require(len(colors) > 1, "Sieve baseline is flat")
         osc(renderer.port, "/shader/var", 0, "vColor", *map(float, BLACK))
         deadline = time.monotonic() + 10
         while time.monotonic() < deadline:
@@ -187,20 +217,15 @@ def prove_sieve(renderer, root, output, label, evidence, host_arch):
         raise RuntimeError(f"Sieve cue did not produce the expected pixel change: {evidence.get('pixels')}")
 
 
-def check_layout(binary, root, scratch, output, label, evidence, host_arch):
-    root = root.resolve(strict=True)
+def check_layout(binary, home, root, scratch, output, label, evidence, host_arch, **sieve_options):
     example = root / "examples/sieve"
-    for path in (example / "scene.vosc.json", example / "assets/sieve.frag",
-                 root / "shaders/passthru.vert",
-                 *(example / "assets" / name for name in TEXTURES.values())):
-        require(path.is_file() and path.resolve().is_relative_to(root), f"missing packaged file {path}")
     evidence["data_root"] = str(root)
     evidence["attempts"] = []
     for attempt in (1, 2):
         run = {}
         evidence["attempts"].append(run)
         renderer = ReleaseRenderer(binary, example / "scene.vosc.json", scratch,
-                                   output / f"{label}-{attempt}.log")
+                                   output / f"{label}-{attempt}.log", home)
         with renderer.run(run):
             wait_socket(renderer.process, renderer.socket, renderer.log)
             udp = subprocess.run(
@@ -212,24 +237,80 @@ def check_layout(binary, root, scratch, output, label, evidence, host_arch):
                 run["setup_error"] = "renderer did not bind its assigned OSC port"
                 continue
             require(udp.returncode == 0 and run["udp_listener"], f"could not verify OSC port: {udp.stderr}")
-            prove_sieve(renderer, root, output, label, run, host_arch)
+            for path in (example / "scene.vosc.json", example / "assets/sieve.frag",
+                         root / "shaders/passthru.vert",
+                         *(example / "assets" / name for name in TEXTURES.values())):
+                require(path.is_file() and path.resolve().is_relative_to(root),
+                        f"missing seeded file {path}")
+                require(path.stat().st_mode & 0o200, f"seeded file is read-only: {path}")
+            prove_sieve(renderer, root, output, label, run, host_arch, **sieve_options)
         return
     raise RuntimeError("renderer did not bind either assigned OSC port")
 
 
-def check_missing_asset(binary, shipped_scene, scratch, output, evidence):
+def check_missing_asset(binary, home, shipped_scene, scratch, output, evidence):
     fixture = scratch / "missing-sieve"
     shutil.copytree(shipped_scene, fixture)
     missing = fixture / "assets" / TEXTURES["sieve"]
     missing.unlink()
     evidence["removed_asset"] = str(missing)
-    renderer = ReleaseRenderer(binary, fixture / "scene.vosc.json", scratch, output / "missing-asset.log")
+    renderer = ReleaseRenderer(binary, fixture / "scene.vosc.json", scratch, output / "missing-asset.log", home)
     with renderer.run(evidence, negative=True):
         require(renderer.process.wait(timeout=20) == 1, "missing asset must exit with status 1")
     log = renderer.log.read_text(errors="replace")
     require("command 4 /shader/texture" in log and str(missing) in log and "No such file" in log
             and "VOSC_SCENE_READY" not in log and "GPU :" not in log,
             "renderer did not identify the missing texture before graphics initialization")
+
+
+def read_stock(app):
+    resources = app / "Contents/Resources"
+    manifest = json.loads((resources / "vosc-stock.json").read_text())
+    root = resources / "data"
+    files, directories = {}, []
+    for path in root.rglob("*"):
+        relative = path.relative_to(root).as_posix()
+        require(not path.is_symlink(), f"linked stock entry {relative}")
+        if path.is_dir():
+            directories.append(relative)
+        else:
+            require(path.is_file() and path.stat().st_nlink == 1, f"invalid stock entry {relative}")
+            files[relative] = sha256(path)
+    require(manifest["schema"] == 1 and type(manifest["generation"]) is int
+            and manifest["generation"] > 0, "invalid stock manifest header")
+    require(manifest["files"] == files and sorted(manifest["directories"]) == sorted(directories),
+            "stock manifest and bundled tree disagree")
+    require(not any(name.startswith(("videos/", "shaders/shadertoy/")) for name in files),
+            "private media or Shadertoy downloads in stock manifest")
+    return manifest
+
+
+def assert_seed(root, stock):
+    for name, digest in stock["files"].items():
+        path = root / name
+        require(path.is_file() and not path.is_symlink() and path.stat().st_mode & 0o200
+                and sha256(path) == digest, f"missing, read-only or differing seed file {path}")
+    for name in stock["directories"]:
+        path = root / name
+        require(path.is_dir() and not path.is_symlink() and path.stat().st_mode & 0o200,
+                f"missing or read-only seed directory {path}")
+
+
+def prepare_edits(root, evidence):
+    # Clip every vertex to make the data-relative shader selection observable in the framebuffer.
+    vertex = root / "shaders/passthru.vert"
+    source = vertex.read_text()
+    anchor = "gl_Position = projectionMatrix * vertex.position;"
+    require(source.count(anchor) == 1, "unexpected stock vertex shader")
+    vertex.write_text(source.replace(anchor, "gl_Position = vec4(3.0, 3.0, 0.0, 1.0);"))
+    manifest = root / "examples/sieve/scene.vosc.json"
+    scene = json.loads(manifest.read_text())
+    scene["title"] = "Edited Sieve"
+    manifest.write_text(json.dumps(scene))
+    deleted = root / "examples/sieve/scene.scd"
+    require(deleted.is_file(), f"expected stock companion {deleted}")
+    deleted.unlink()
+    evidence.update(edited={str(p): sha256(p) for p in (vertex, manifest)}, deleted=str(deleted))
 
 
 def qualify(dmg, expected, output, report):
@@ -246,36 +327,92 @@ def qualify(dmg, expected, output, report):
     mount = scratch / "mounted"
     try:
         report["phase"] = "mount"
+        copied_app = scratch / "app-only/vosc.app"
+        copied_app.parent.mkdir()
+        home, root = disposable_home(scratch, "mounted-home")
         with mount_read_only(dmg, mount, report.setdefault("mount", {})):
             report["phase"] = "artifact signatures and slices"
+            # hdiutil or Finder may create the volume's own metadata directories.
+            metadata = {".fseventsd", ".Spotlight-V100", ".Trashes"}
+            listing = sorted(p.name for p in mount.iterdir())
+            report["volume_listing"] = listing
+            require(set(listing) - metadata == {"vosc.app"}, f"unexpected DMG payload: {listing}")
             app = mount / "vosc.app"
+            require(app.is_dir() and not app.is_symlink(), "expected an ordinary app bundle")
             binary = app / "Contents/MacOS/vosc"
+            info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
+            require(info.get("VOSCDirectDownload") is True, "no direct-download profile marker")
             command("/usr/bin/codesign", "--verify", "--deep", "--strict", app)
             report["binary_sha256"] = sha256(binary)
             report["slices"] = command("/usr/bin/lipo", "-archs", binary).decode().split()
-            require({"arm64", "x86_64"}.issubset(report["slices"]), "DMG does not contain a Universal binary")
-            copied_app = scratch / "app-only/vosc.app"
-            copied_app.parent.mkdir()
-            command("/usr/bin/ditto", app, copied_app)
-            command("/usr/bin/codesign", "--verify", "--deep", "--strict", copied_app)
-            copied_binary = copied_app / "Contents/MacOS/vosc"
-            require(sha256(copied_binary) == report["binary_sha256"], "app copy changed the executable")
-            require(not (copied_app.parent / "data").exists(), "app-only fixture has an adjacent data folder")
-            report["signature_checks"] = {"mounted": "pass", "app-only": "pass"}
+            require(set(report["slices"]) == {"arm64", "x86_64"}, "DMG is not Universal")
+            stock = read_stock(app)
+            report["stock_generation"] = stock["generation"]
+            report["stock_manifest_sha256"] = sha256(app / "Contents/Resources/vosc-stock.json")
 
-            for label, executable, root in (
-                ("adjacent", binary, mount / "data"),
-                ("app-only", copied_binary, copied_app / "Contents/Resources/data"),
-            ):
-                report["phase"] = label
-                evidence = report.setdefault(label, {})
-                check_layout(executable, root, scratch, output, label, evidence, report["host_architecture"])
-                evidence["status"] = "pass"
-            report["phase"] = "missing_asset"
-            evidence = report.setdefault("missing_asset", {})
-            check_missing_asset(binary, mount / "data/examples/sieve", scratch, output, evidence)
-            evidence["status"] = "pass"
+            report["phase"] = "mounted first launch"
+            require(not root.exists(), "expected a clean mounted-home fixture")
+            check_layout(binary, home, root, scratch, output, "mounted-first-launch",
+                         report.setdefault("mounted_first_launch", {}), report["host_architecture"])
+            assert_seed(root, stock)
+            require(read_stock(app) == stock, "mounted launch changed the signed stock")
+            command("/usr/bin/ditto", app, copied_app)
             report["phase"] = "detach"
+
+        report["phase"] = "copied after eject"
+        require(report["mount"]["detached"], "copied app launch requires actual DMG detach")
+        command("/usr/bin/codesign", "--verify", "--deep", "--strict", copied_app)
+        copied_binary = copied_app / "Contents/MacOS/vosc"
+        require(sha256(copied_binary) == report["binary_sha256"], "app copy changed the executable")
+        require(read_stock(copied_app) == stock, "app copy changed the stock")
+        report["signature_checks"] = {"mounted": "pass", "copied": "pass"}
+        check_layout(copied_binary, home, root, scratch, output, "copied-existing",
+                     report.setdefault("copied_existing", {}), report["host_architecture"])
+
+        report["phase"] = "copied first launch"
+        fresh_home, fresh_root = disposable_home(scratch, "copied-home")
+        require(not fresh_root.exists(), "expected a clean copied-home fixture")
+        check_layout(copied_binary, fresh_home, fresh_root, scratch, output, "copied-first-launch",
+                     report.setdefault("copied_first_launch", {}), report["host_architecture"])
+        assert_seed(fresh_root, stock)
+
+        report["phase"] = "asset edit after replacing the app"
+        initial = report["copied_existing"]["attempts"][-1]["baseline_pixels_sha256"]
+        image = root / "examples/sieve/assets/black_hole.jpg"
+        old_hash = sha256(image)
+        shutil.copyfile(root / "examples/camera/assets/penguin/penguin.jpg", image)
+        changed_hash = sha256(image)
+        require(old_hash != changed_hash, "asset edit fixture did not change the image")
+        # Replace only the installed app. Keep the initialized Application Support folder.
+        parked = scratch / "previous-vosc.app"
+        copied_app.rename(parked)
+        command("/usr/bin/ditto", parked, copied_app)
+        command("/usr/bin/codesign", "--verify", "--deep", "--strict", copied_app)
+        asset_edit = report.setdefault("asset_edit_after_app_replacement", {})
+        asset_edit.update(path=str(image), original_sha256=old_hash, edited_sha256=changed_hash)
+        check_layout(copied_binary, home, root, scratch, output, "asset-edit-relaunch",
+                     asset_edit, report["host_architecture"])
+        require(sha256(image) == changed_hash, "app replacement overwrote the edited image")
+        require(asset_edit["attempts"][-1]["baseline_pixels_sha256"] != initial,
+                "renderer did not consume the edited image")
+
+        report["phase"] = "edited relaunch with poisoned sibling"
+        edited = report.setdefault("edited_relaunch", {})
+        prepare_edits(root, edited)
+        adjacent = copied_app.parent / "data/shaders"
+        adjacent.mkdir(parents=True)
+        (adjacent / "passthru.vert").write_text("invalid sibling shader")
+        check_layout(copied_binary, home, root, scratch, output, "edited-relaunch", edited,
+                     report["host_architecture"], title="Edited Sieve", clipped=True)
+        for path, digest in edited["edited"].items():
+            require(sha256(Path(path)) == digest, f"relaunch overwrote {path}")
+        require(not Path(edited["deleted"]).exists(), "relaunch restored the deleted companion")
+        require(read_stock(copied_app) == stock, "editing changed the signed stock")
+
+        report["phase"] = "missing_asset"
+        check_missing_asset(copied_binary, fresh_home, fresh_root / "examples/sieve", scratch, output,
+                            report.setdefault("missing_asset", {}))
+        report["missing_asset"]["status"] = "pass"
     finally:
         if not os.path.ismount(mount):
             shutil.rmtree(scratch)

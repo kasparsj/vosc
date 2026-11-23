@@ -194,10 +194,12 @@ command or copy the needed clips into the staged `data/videos/` directory.
 The authoring build includes clips from `media/videos/` by default.
 Downloaded Shadertoy files stay in writable runtime `data/shaders/shadertoy/`.
 Use a fresh output without private clips or downloads when assembling a release.
-Stage the public assets in both `vosc.app/Contents/Resources/data` and the
-adjacent `data/` folder before signing the app. The bundled assets let the
-app launch if Gatekeeper moves it to an isolated location. Copy the app and
-the adjacent folder together to edit or add runtime assets.
+For direct downloads on macOS, the DMG contains only `vosc.app`. Open it or
+copy it to Applications. On first launch VOSC prepares editable shaders,
+assets and examples in `~/Library/Application Support/VOSC/data/`. Press
+**O**, open **Browse**, and choose **Open Data Folder** to edit them in Finder.
+See the [macOS data and migration guide](docs/Macos-dmg-smoke.md#editable-data)
+and the [release qualification guide](docs/Macos-dmg-smoke.md#assemble-the-release).
 
 ## Run a native scene
 

@@ -100,6 +100,7 @@
 		9372598B7CC8667697717419 /* ShaderTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDAE40F4409B52242243517B /* ShaderTex.cpp */; };
 		9AC85341DEAB6A0366A10521 /* WebcamTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */; };
 		B4C0C59C6CF4427D85D3F2D1 /* WebcamTexMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = B4C0C59C6CF4427D85D3F2D2 /* WebcamTexMac.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		B4C0C59C6CF4427D85D3F2E1 /* ManagedData.mm in Sources */ = {isa = PBXBuildFile; fileRef = B4C0C59C6CF4427D85D3F2E2 /* ManagedData.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		A1D2F32CDE34F3703ECD8A01 /* Geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FE6C4A803E115F324568E6A /* Geom.cpp */; };
 		A21F931B4F89844B53FE5065 /* ofxUltralight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75CE68B0155679264FE10473 /* ofxUltralight.cpp */; };
 		A40A1934868B9C3BEF746DFA /* Rotate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 15644D27B8AD78E007263288 /* Rotate.cpp */; };
@@ -686,6 +687,7 @@
 		D8272F96628FECC086D67453 /* FontLoader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FontLoader.h; path = "ofxUltralight/libs/include/Ultralight/platform/FontLoader.h"; sourceTree = VOSC_ADDONS; };
 		D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = WebcamTex.cpp; path = src/tex/WebcamTex.cpp; sourceTree = SOURCE_ROOT; };
 		B4C0C59C6CF4427D85D3F2D2 /* WebcamTexMac.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = src/macos/WebcamTexMac.mm; sourceTree = SOURCE_ROOT; };
+		B4C0C59C6CF4427D85D3F2E2 /* ManagedData.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = src/macos/ManagedData.mm; sourceTree = SOURCE_ROOT; };
 		D9696434C087642B807AB3BE /* Geom.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Geom.h; path = src/Geom.h; sourceTree = SOURCE_ROOT; };
 		D9BFFBBF4CC43DEE890B3C3E /* OscTypes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscTypes.cpp; path = "ofxOsc/libs/oscpack/src/osc/OscTypes.cpp"; sourceTree = VOSC_ADDONS; };
 		DACACDF2F37260A0BFF826E2 /* PostProcessing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PostProcessing.h; path = "ofxPostProcessing/src/PostProcessing.h"; sourceTree = VOSC_ADDONS; };
@@ -1919,6 +1921,7 @@
 				0007F94E72255780D908645A /* VideoTex.h */,
 				D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */,
 				B4C0C59C6CF4427D85D3F2D2 /* WebcamTexMac.mm */,
+				B4C0C59C6CF4427D85D3F2E2 /* ManagedData.mm */,
 				61F771AD70983C40DF6B7287 /* WebcamTex.h */,
 			);
 			name = tex;
@@ -2674,6 +2677,7 @@
 				3565AE7CE5956216CB234B8C /* SketchTex.cpp in Sources */,
 				9AC85341DEAB6A0366A10521 /* WebcamTex.cpp in Sources */,
 				B4C0C59C6CF4427D85D3F2D1 /* WebcamTexMac.mm in Sources */,
+				B4C0C59C6CF4427D85D3F2E1 /* ManagedData.mm in Sources */,
 				A94A4AAB6D95011FA3020914 /* HPVideoTex.cpp in Sources */,
 				8BFCFECF4A310811C6DB428F /* ImageTex.cpp in Sources */,
 				9372598B7CC8667697717419 /* ShaderTex.cpp in Sources */,

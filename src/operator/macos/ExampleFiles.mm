@@ -37,5 +37,12 @@ bool revealExampleFile(const std::filesystem::path& path) {
     return true;
 }
 
+bool openDataFolder(const std::filesystem::path& path) {
+    std::error_code error;
+    if (!std::filesystem::is_directory(std::filesystem::symlink_status(path, error))) return false;
+    NSURL* url = [NSURL fileURLWithFileSystemRepresentation:path.c_str() isDirectory:YES relativeToURL:nil];
+    return url && [[NSWorkspace sharedWorkspace] openURL:url];
+}
+
 } // namespace vosc::operator_ui
 #endif
