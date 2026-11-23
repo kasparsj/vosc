@@ -21,13 +21,14 @@ For a setup or update error, follow the path shown in the message and choose **R
 Build from the integrated release revision using the intended bundle version, pinned openFrameworks dependencies and the operator UI. Use fresh output folders and a stock generation greater than the last distributed managed release. One generation always identifies one stock manifest.
 
 ```sh
+source_revision=$(git rev-parse HEAD)
 python3 scripts/build_macos_profile.py --of-root "$of_root" --addon-sdk "$addon_sdk" \
   --output "$build_dir" --configuration Release -- VOSC_OPERATOR_UI=1 CODE_SIGNING_ALLOWED=NO
 python3 scripts/stage_macos_release.py "$build_dir/of-0.12.1/Release/products/vosc.app" \
   "$stage_dir" --addon-sdk "$addon_sdk" --generation "$stock_generation"
 ```
 
-The staging command compares the sealed stock inputs against the committed assets and examples and the pinned deferred shaders. It leaves a new staging directory containing just the app. Sign nested code and then the app using the Developer ID Application identity and hardened runtime. Verify the app, create the compressed read-only image from the staging directory, sign the image, and verify it. The existing app build embeds its nested libraries under `Contents/Frameworks`.
+The staging command compares the sealed stock inputs against the committed assets and examples and the pinned deferred shaders. It leaves a new staging directory containing just the app. Sign nested code and then the app using the Developer ID Application identity and hardened runtime. The existing app build embeds its nested libraries under `Contents/Frameworks`.
 
 ```sh
 app="$stage_dir/vosc.app"
@@ -37,6 +38,44 @@ if test -d "$app/Contents/Frameworks"; then
 fi
 codesign --force --sign "$developer_id" --options runtime --timestamp "$app"
 codesign --verify --deep --strict --verbose=2 "$app"
+```
+
+### Required native regressions before DMG creation
+
+From the release checkout on a logged-in, unlocked Mac, test the signed executable inside the staged app. Use the staging root containing `vosc.app` as the runtime working directory. Set `verification_dir` to an existing absolute path outside the staging tree and `new_evidence_dir` to an unused path directly under it. Use a disposable home so the staged app initializes its managed data without touching your existing VOSC data.
+
+```sh
+renderer_binary="$stage_dir/vosc.app/Contents/MacOS/vosc"
+staged_runtime_dir="$stage_dir"
+(
+  set -e
+  unset PYTHONOPTIMIZE
+  test_home=$(mktemp -d "$verification_dir/native-home.XXXXXX")
+  test_home=$(cd "$test_home" && pwd -P)
+  export HOME="$test_home" CFFIXED_USER_HOME="$test_home"
+  support_dir=$(/usr/bin/osascript -l JavaScript -e \
+    'ObjC.import("Foundation"); ObjC.unwrap($.NSFileManager.defaultManager.URLsForDirectoryInDomains($.NSApplicationSupportDirectory, $.NSUserDomainMask).objectAtIndex(0).path)')
+  support_dir=$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve())' "$support_dir")
+  if test "$support_dir" != "$test_home/Library/Application Support"; then
+    echo "Foundation selected an unexpected Application Support directory: $support_dir" >&2
+    exit 1
+  fi
+  printf 'Source revision: %s\nNative regression evidence: %s\n' "$source_revision" "$new_evidence_dir"
+  shasum -a 256 "$renderer_binary"
+  python3 scripts/test_native_regressions.py \
+    --binary "$renderer_binary" \
+    --cwd "$staged_runtime_dir" \
+    --output "$new_evidence_dir"
+)
+```
+
+Proceed only when the block exits zero and all four cases report `PASS`: `explicit` (explicit shader reload), `watcher` (watched layer shader), `texture` (watched shader texture), and `local-image` (local/shared image replacement). If a case fails, stop before creating the DMG and inspect its `harness.log`. Record the source revision, tested executable SHA-256, and evidence directory in the candidate's verification record. Repeat the gate if the staged app changes before packaging.
+
+### Create and verify the DMG
+
+Create the compressed read-only image from the tested staging directory, then sign and verify it. Run the separate packaged-DMG smoke below.
+
+```sh
 hdiutil create -fs HFS+ -volname "$volume_title" -srcfolder "$stage_dir" -format UDZO "$dmg"
 codesign --force --sign "$developer_id" --timestamp "$dmg"
 codesign --verify --strict --verbose=2 "$dmg"
