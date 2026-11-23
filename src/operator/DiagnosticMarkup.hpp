@@ -26,7 +26,7 @@ body.welcome #dock, body.welcome #panel, #welcome { display: none; }
 body.welcome #welcome {
     position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto;
     display: flex; flex-direction: column; overflow: hidden;
-    width: 420dp; max-width: 95%; height: 440dp; max-height: 94%;
+    width: 420dp; max-width: 95%; height: 416dp; max-height: 94%;
     box-sizing: border-box; background-color: #121721f2;
     border: 1dp #d5e6ff4d; border-radius: 16dp;
 }
@@ -234,7 +234,6 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
         <div class="shortcut"><span class="shortcut-label">Reload layer textures</span><span class="shortcut-key">R</span></div>
         <div class="shortcut"><span class="shortcut-label">Reset layers</span><span class="shortcut-key">U</span></div>
         <div class="shortcut"><span class="shortcut-label">Toggle geometry wireframe</span><span class="shortcut-key">W</span></div>
-        <div class="shortcut"><span class="shortcut-label">Set layer blend mode</span><span class="shortcut-key">0–9</span></div>
     </div>
     <p id="welcome-error" class="error">Couldn’t save the preference. Try again or dismiss for this launch.</p>
     <footer>

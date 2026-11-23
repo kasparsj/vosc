@@ -20,7 +20,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
-#include <fstream>
 #include <optional>
 #include <stdexcept>
 #include <string_view>
@@ -45,14 +44,24 @@ std::filesystem::path welcomePreference() {
     return {};
 }
 
+bool hasWelcomePreference(const std::filesystem::path& path) {
+    std::error_code error;
+    return std::filesystem::is_regular_file(std::filesystem::symlink_status(path, error));
+}
+
 bool saveWelcomePreference(const std::filesystem::path& path) {
     if (path.empty()) return false;
     std::error_code error;
     std::filesystem::create_directories(path.parent_path(), error);
     if (error) return false;
-    std::ofstream preference(path, std::ios::app);
-    preference.close();
-    return static_cast<bool>(preference);
+    // Exclusive creation never opens an existing marker, including a FIFO or symlink.
+#ifdef TARGET_WIN32
+    auto* preference = _wfopen(path.c_str(), L"wx");
+#else
+    auto* preference = std::fopen(path.c_str(), "wx");
+#endif
+    if (preference) return std::fclose(preference) == 0;
+    return hasWelcomePreference(path);
 }
 
 const char* severity(ofLogLevel level) {
@@ -475,8 +484,7 @@ void DiagnosticOverlay::setup() {
     listeners.push(events.mouseEntered.newListener(pointer, priority));
     listeners.push(events.mouseExited.newListener(pointer, priority));
 
-    std::error_code error;
-    if (!std::filesystem::is_regular_file(welcomePreference(), error)) {
+    if (!hasWelcomePreference(welcomePreference())) {
         welcome = true;
         surface->document->SetClass("welcome", true);
         show(View::Overview, "welcome-dismiss");
