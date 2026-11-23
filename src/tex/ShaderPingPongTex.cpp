@@ -291,7 +291,7 @@ bool ShaderPingPongTex::validateConfiguration(TexData& data, std::string& reason
     }
     // A promoted direct-source program was built with the fixed vertex stage.
     // Its execution and export no longer depend on the original watched file.
-    if (watchedShader()) {
+    if (hasWatchedShader()) {
         const auto paths = Shader::getShaderPaths(path);
         if (paths.vertPath != "shaders/passthru.vert" || !paths.geomPath.empty()) {
             reason = "feedback custom vertex/geometry source is unsupported"; return false;
@@ -454,8 +454,7 @@ std::shared_ptr<ShaderPingPongTex> ShaderPingPongTex::prepareTrial(
 }
 
 bool ShaderPingPongTex::pauseTrialWatch() {
-    auto* watcher = watchedShader();
-    if (!watcher) return true;
+    if (!hasWatchedShader()) return true;
     const auto paths = Shader::getShaderPaths(path);
     for (const auto& item : {paths.vertPath, paths.fragPath}) {
         auto file = ofToDataPath(item, true);
@@ -471,17 +470,14 @@ bool ShaderPingPongTex::pauseTrialWatch() {
         trialWatch.clear();
         return false;
     }
-    watcher->disableWatchFiles();
+    setShaderWatchEnabled(false);
     return true;
 }
 
 void ShaderPingPongTex::resumeTrialWatch() {
     if (trialWatch.empty()) return;
     trialWatch.clear();
-    if (isShaderLoaded()) {
-        if (auto* watcher = watchedShader())
-            watcher->enableWatchFiles();
-    }
+    setShaderWatchEnabled(true);
 }
 
 bool ShaderPingPongTex::trialWatchChanged() const {

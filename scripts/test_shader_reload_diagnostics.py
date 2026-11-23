@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""Verify an explicit failed OSC reload on a disposable Organic Trails renderer."""
+"""Verify failed explicit OSC and watched-file reloads on private renderers."""
 
 import argparse
 import base64
 from contextlib import closing
 import json
+import os
 from pathlib import Path
 import shutil
 import signal
 import time
 
 from test_engine_api import png_pixels
-from test_scene_recipe import ROOT, OwnedRenderer, collect_cleanup, free_udp_port, osc
+from test_scene_recipe import ROOT, OwnedRenderer, applied, collect_cleanup, free_udp_port, osc
 
 
 def read(client, method, params=None):
@@ -78,21 +79,116 @@ def verify_failed_reload(renderer, client, output):
             "captures": [before_capture, first_capture, second_capture]}
 
 
+def wait_for(fetch, matches):
+    deadline = time.monotonic() + 8
+    while True:
+        value = fetch()
+        if matches(value):
+            return value
+        assert time.monotonic() < deadline, value
+        time.sleep(0.05)
+
+
+def verify_watched_reload(renderer, client, output, texture=False):
+    path = output / "watched.frag"
+
+    def save(source):
+        previous = int(path.stat().st_mtime) if path.exists() else 0
+        path.write_text(source)
+        if int(path.stat().st_mtime) <= previous:
+            os.utime(path, (previous + 1, previous + 1))
+
+    def layer_shader():
+        (layer,) = read(client, "get_scene")["layers"]
+        return layer["shader"]
+
+    def animated_frames(label, channel):
+        frames, receipts = [], []
+        for index in range(1, 4):
+            if receipts:
+                time.sleep(0.27)
+            pixels, receipt = capture_frame(client, output / f"{label}-{index}.png")
+            assert not receipts or receipt["frame"] > receipts[-1]["frame"]
+            assert any(pixel[channel] > 25 for pixel in pixels), f"{label}: expected visible color"
+            assert not any(pixel[1 - channel] for pixel in pixels), f"{label}: unexpected color"
+            frames.append(pixels)
+            receipts.append(receipt)
+        assert any(frame != frames[0] for frame in frames[1:]), f"{label}: output stopped animating"
+        return receipts
+
+    save("""#version 330
+uniform float time;
+uniform float baselineGain;
+out vec4 color;
+void main() { color = vec4(0.55 + 0.25 * sin(time * 4.0) + baselineGain, 0, 0, 1); }
+""")
+    applied(client, "configure_layers", {"count": 1, "layout": "stack"})
+    osc(renderer.port, "/onset", 0)
+    osc(renderer.port, "/tex" if texture else "/shader", 0, str(path))
+    baseline = None
+    if texture:
+        # Wait until the lazy texture shader has rendered before editing its file.
+        wait_for(lambda: capture_frame(client, output / "texture-ready.png")[0],
+                 lambda pixels: any(p[0] > 25 and p[1] == 0 for p in pixels))
+    else:
+        baseline = wait_for(
+            layer_shader, lambda shader: shader["uniforms"].get("baselineGain", {}).get("writable"))
+        assert baseline["loaded"] and baseline["program"], baseline
+    frames = animated_frames("baseline", 0)
+
+    cursor = read(client, "get_diagnostics")["latest_cursor"]
+    save("#version 330\nout vec4 color;\nvoid main() { color = vec4(vosc_invalid_watched_identifier); }\n")
+
+    def diagnostics():
+        return read(client, "get_diagnostics", {"after": cursor})["entries"]
+
+    entries = wait_for(diagnostics, lambda rows: any(
+        "vosc_invalid_watched_identifier" in row["message"] for row in rows))
+    if baseline is not None:
+        after_failure = layer_shader()
+        assert after_failure["loaded"] and after_failure["program"] == baseline["program"], after_failure
+        assert after_failure["uniforms"].keys() == baseline["uniforms"].keys(), after_failure
+    assert any(str(path) in row["message"] and "Previous shader is still rendering." in row["message"]
+               for row in entries), entries
+    frames += animated_frames("invalid", 0)
+
+    save("""#version 330
+uniform float time;
+uniform vec3 correctedBias;
+out vec4 color;
+void main() { color = vec4(vec3(0, 0.55 + 0.25 * sin(time * 4.0), 0) + correctedBias, 1); }
+""")
+    if baseline is not None:
+        corrected = wait_for(layer_shader, lambda shader: shader["uniforms"].get("correctedBias", {}).get("writable"))
+        assert corrected["loaded"] and corrected["program"] != baseline["program"], corrected
+        assert "baselineGain" not in corrected["uniforms"], corrected
+    else:
+        corrected = None
+        wait_for(lambda: capture_frame(client, output / "texture-corrected.png")[0],
+                 lambda pixels: any(p[1] > 25 and p[0] == 0 for p in pixels))
+    frames += animated_frames("corrected", 1)
+    return {"baseline": baseline, "corrected": corrected, "entries": entries, "captures": frames}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
     parser.add_argument("--cwd", type=Path, required=True, help="Staged runtime working directory")
     parser.add_argument("--output", type=Path, required=True, help="New directory for test artifacts")
+    parser.add_argument("--case", choices=("explicit", "watcher", "texture"), default="explicit")
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(mode=0o700)
-    manifest = organic_scene(output)
+    arguments = ("--scene", organic_scene(output)) if args.case == "explicit" else ()
     renderer = OwnedRenderer(args.binary.resolve(), output, "reload", free_udp_port(), [],
-                             arguments=("--scene", manifest), cwd=args.cwd.resolve())
+                             arguments=arguments, cwd=args.cwd.resolve())
     evidence = {"owner": renderer.owner}
     try:
         with closing(renderer.client()) as client:
-            evidence.update(verify_failed_reload(renderer, client, output))
+            if args.case == "explicit":
+                evidence.update(verify_failed_reload(renderer, client, output))
+            else:
+                evidence.update(verify_watched_reload(renderer, client, output, texture=args.case == "texture"))
     finally:
         evidence["cleanup"], cleanup_error = collect_cleanup(renderer)
         (output / "evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
@@ -101,7 +197,7 @@ def main():
     if cleanup_error:
         assert cleanup["return_code"] == signal.SIGTERM and cleanup["socket_removed"] and not cleanup["forced_kill"], cleanup_error
         assert cleanup["cleanup_errors"] == [f"owned renderer exited nonzero: {signal.SIGTERM}"], cleanup_error
-    print(f"PASS previous Layer 0 program and animation survived failed reload. Evidence in {output}")
+    print(f"PASS {args.case} shader reload diagnostics and animation. Evidence in {output}")
 
 
 if __name__ == "__main__":

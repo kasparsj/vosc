@@ -9,7 +9,6 @@
 #include "../TexturePool.h"
 #include "ofxShadertoy.h"
 #include <cstdint>
-#include <optional>
 #include <variant>
 
 #define DEFAULT_TEX "tex"
@@ -60,11 +59,8 @@ public:
     shared_ptr<Texture> loadSceneTexture(const string& name, const string& path, bool feedback,
                                          const glm::vec2& defaultSize);
     
-    Shader() : VarsHolder(), texLoc(0) {
-    }
-    ~Shader() {
-        reset();
-    }
+    Shader();
+    ~Shader();
     bool isLoaded() const {
         return isShaderLoaded() || shadertoy != NULL;
     }
@@ -85,13 +81,9 @@ public:
         if (shadertoy) return shadertoy;
         return shader;
     }
-    std::string operatorSourcePath() const {
-        return watchedSourcePath.empty() ? shaderPath : watchedSourcePath;
-    }
+    std::string operatorSourcePath() const;
     GLuint operatorLinkedProgram() const {
         if (!isShaderLoaded()) return 0;
-        // Keep a watched program name alive across a subsequent relink.
-        if (watchedShader()) getUniforms();
         return shader->getProgram();
     }
 #endif
@@ -160,10 +152,8 @@ public:
     map<string, string> getUniformValues() const;
     
 protected:
-    ofxAutoReloadedShader* watchedShader() const {
-        return isShaderLoaded() && !watchedSourcePath.empty()
-            ? static_cast<ofxAutoReloadedShader*>(shader.get()) : nullptr;
-    }
+    bool hasWatchedShader() const { return static_cast<bool>(fileWatch); }
+    void setShaderWatchEnabled(bool enabled);
 
 private:
     void clearUniforms();
@@ -199,9 +189,9 @@ private:
     shared_ptr<ofxShadertoy> shadertoy;
     string shaderPath;
     string directSource;
-    string watchedSourcePath;
+    struct FileWatch;
+    std::unique_ptr<FileWatch> fileWatch;
     mutable Uniforms uniforms;
     mutable GLuint uniformProgram = 0;
-    mutable std::optional<ofShader> reflectedWatchedProgram;
     int texLoc;
 };

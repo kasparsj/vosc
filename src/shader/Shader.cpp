@@ -3,10 +3,13 @@
 #include "../var/VariablePool.h"
 #include "../light/Lights.h"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
+#include <filesystem>
 #include <iomanip>
 #include <locale>
+#include <optional>
 #include <sstream>
 #include <regex>
 #include <exception>
@@ -110,6 +113,91 @@ public:
 
 } // namespace
 
+struct Shader::FileWatch {
+    using Stamp = std::optional<std::filesystem::file_time_type>;
+
+    explicit FileWatch(ShaderPaths stages)
+        : paths(std::move(stages)), files{ofToDataPath(paths.vertPath, true),
+                                        ofToDataPath(paths.fragPath, true),
+                                        paths.geomPath.empty() ? "" : ofToDataPath(paths.geomPath, true)},
+          stamps(readStamps()), lastCheck(ofGetElapsedTimeMillis()) {}
+
+    std::array<Stamp, 3> readStamps() const {
+        std::array<Stamp, 3> result;
+        for (size_t i = 0; i < files.size(); ++i) {
+            if (files[i].empty()) continue;
+            std::error_code error;
+            const auto stamp = std::filesystem::last_write_time(files[i], error);
+            if (!error) result[i] = stamp;
+        }
+        return result;
+    }
+
+    shared_ptr<ofShader> compile() const {
+        auto candidate = make_shared<ofShader>();
+        const bool hasGeometry = !paths.geomPath.empty();
+        if (hasGeometry) {
+            if (geometryInput) candidate->setGeometryInputType(*geometryInput);
+            if (geometryOutput) candidate->setGeometryOutputType(*geometryOutput);
+            if (geometryCount) candidate->setGeometryOutputCount(*geometryCount);
+        }
+        if (candidate->load(paths.vertPath, paths.fragPath, paths.geomPath) &&
+            isValidShaderProgram(*candidate, hasGeometry)) return candidate;
+        return nullptr;
+    }
+
+    const ShaderPaths paths;
+    const std::array<std::filesystem::path, 3> files;
+    std::array<Stamp, 3> stamps;
+    uint64_t lastCheck;
+    std::optional<GLenum> geometryInput;
+    std::optional<GLenum> geometryOutput;
+    std::optional<int> geometryCount;
+    ofEventListener listener;
+};
+
+Shader::Shader() : VarsHolder(), texLoc(0) {}
+
+Shader::~Shader() {
+    reset();
+}
+
+#if VOSC_OPERATOR_UI
+std::string Shader::operatorSourcePath() const {
+    return fileWatch ? fileWatch->paths.fragPath : shaderPath;
+}
+#endif
+
+void Shader::setShaderWatchEnabled(bool enabled) {
+    if (!fileWatch) return;
+    if (!enabled) {
+        fileWatch->listener.unsubscribe();
+        return;
+    }
+    fileWatch->listener = ofEvents().update.newListener([this](ofEventArgs&) {
+        auto& watch = *fileWatch;
+        const auto now = ofGetElapsedTimeMillis();
+        if (now - watch.lastCheck < 2000) return;
+        watch.lastCheck = now;
+        const auto stamps = watch.readStamps();
+        if (stamps == watch.stamps) return;
+        watch.stamps = stamps;
+
+        // Keep the installed program alive until all candidate stages and its link are valid.
+        auto candidate = watch.compile();
+        if (!candidate) {
+            auto diagnostic = ofLogError("Shader");
+            diagnostic << "Watched shader reload failed for " << watch.files[1].string()
+                       << " (vertex " << watch.files[0].string();
+            if (!watch.files[2].empty()) diagnostic << ", geometry " << watch.files[2].string();
+            diagnostic << "). Previous shader is still rendering.";
+            return;
+        }
+        shader = std::move(candidate);
+        clearUniforms();
+    });
+}
+
 map<string, ofxAutoReloadedShader>& Shader::shaderCache() {
     static auto cache = loadShaderCache();
     return cache;
@@ -181,10 +269,9 @@ bool Shader::loadFromSource(const string& source) {
     shadertoy.reset();
     shaderPath = "source";
     directSource = prepared.source;
-    watchedSourcePath.clear();
+    fileWatch.reset();
     // Preserve existing VarsHolder/VariablePool bindings. Ordinary source
     // replacement has always kept them; detached bindings are trial-only.
-    reflectedWatchedProgram.reset();
     uniforms = std::move(prepared.uniforms);
     uniformProgram = shader->getProgram();
     return true;
@@ -205,7 +292,7 @@ bool Shader::prepareDirectSource(const string& source, PreparedDirectSource& pre
 }
 
 bool Shader::snapshotDirectSource(DirectSourceState& state, string& reason) const {
-    if (!isShaderLoaded() || shadertoy || !watchedSourcePath.empty()) {
+    if (!isShaderLoaded() || shadertoy || fileWatch) {
         reason = "baseline shader must be a loaded direct-source program";
         return false;
     }
@@ -257,8 +344,7 @@ void Shader::installDirectSource(PreparedDirectSource&& prepared,
     shadertoy.reset();
     shaderPath = "source";
     directSource = prepared.source;
-    watchedSourcePath.clear();
-    reflectedWatchedProgram.reset();
+    fileWatch.reset();
     uniforms = std::move(prepared.uniforms);
     uniformProgram = shader->getProgram();
     vars.clear();
@@ -278,7 +364,7 @@ bool Shader::restoreDirectSource(const DirectSourceState& state) {
     shadertoy.reset();
     shaderPath = state.path;
     directSource = state.source;
-    watchedSourcePath.clear();
+    fileWatch.reset();
     clearUniforms();
     vars.clear();
     pool.clear();
@@ -340,7 +426,7 @@ bool Shader::loadShadertoy(const string& shadertoyId) {
         shader.reset();
         shaderPath = "shadertoy/" + shadertoyId + ".frag";
         directSource.clear();
-        watchedSourcePath.clear();
+        fileWatch.reset();
         clearUniforms();
         return true;
     }
@@ -403,29 +489,28 @@ bool Shader::loadNativeStages(const ShaderPaths& paths) {
     shadertoy.reset();
     shaderPath = ofFilePath::getFileName(paths.fragPath);
     directSource.clear();
-    watchedSourcePath.clear();
+    fileWatch.reset();
     clearUniforms();
     return true;
 }
 
 bool Shader::loadFromFileAndWatch(const string& path) {
     ShaderPaths paths = getShaderPaths(path);
-    if (paths.isValid()) {
-        std::shared_ptr<ofxAutoReloadedShader> autoShader = std::make_shared<ofxAutoReloadedShader>();
-        if (autoShader->load(paths.vertPath, paths.fragPath, paths.geomPath) &&
-            isValidShaderProgram(*autoShader, !paths.geomPath.empty())) {
-            const bool exportableStages = paths.geomPath.empty() && paths.vertPath == "shaders/passthru.vert";
-            ofBuffer retained = exportableStages ? ofBufferFromFile(paths.fragPath, true) : ofBuffer();
-            shader = autoShader;
-            shadertoy.reset();
-            shaderPath = ofFilePath::getFileName(paths.fragPath);
-            directSource = retained.size() > 0 && retained.size() <= 128 * 1024 ? retained.getText() : "";
-            watchedSourcePath = paths.fragPath;
-            clearUniforms();
-            return true;
-        }
-    }
-    return false;
+    if (!paths.isValid()) return false;
+    auto watch = std::make_unique<FileWatch>(paths);
+    auto candidate = watch->compile();
+    if (!candidate) return false;
+
+    const bool exportableStages = paths.geomPath.empty() && paths.vertPath == "shaders/passthru.vert";
+    ofBuffer retained = exportableStages ? ofBufferFromFile(paths.fragPath, true) : ofBuffer();
+    shader = std::move(candidate);
+    shadertoy.reset();
+    shaderPath = ofFilePath::getFileName(paths.fragPath);
+    directSource = retained.size() > 0 && retained.size() <= 128 * 1024 ? retained.getText() : "";
+    fileWatch = std::move(watch);
+    setShaderWatchEnabled(true);
+    clearUniforms();
+    return true;
 }
 
 void Shader::update(const vector<TidalNote> &notes) {
@@ -1289,7 +1374,7 @@ void Shader::reset() {
 void Shader::unload() {
     shaderPath = "";
     directSource.clear();
-    watchedSourcePath.clear();
+    fileWatch.reset();
     if (shader != NULL) {
         if (shader->isLoaded()) {
             shader->unload();
@@ -1409,19 +1494,24 @@ void Shader::set(const ofxOscMessage& m) {
     if (isShaderLoaded()) {
         string prop = m.getArgAsString(1);
         if (prop == "geomInputType") {
-            shader->setGeometryInputType(static_cast<GLenum>(m.getArgAsInt(2)));
+            const auto value = static_cast<GLenum>(m.getArgAsInt(2));
+            if (fileWatch) fileWatch->geometryInput = value;
+            shader->setGeometryInputType(value);
         }
         else if (prop == "geomOutputType") {
-            shader->setGeometryOutputType(static_cast<GLenum>(m.getArgAsInt(2)));
+            const auto value = static_cast<GLenum>(m.getArgAsInt(2));
+            if (fileWatch) fileWatch->geometryOutput = value;
+            shader->setGeometryOutputType(value);
         }
         else if (prop == "geomOutputCount") {
-            shader->setGeometryOutputCount(m.getArgAsInt(2));
+            const auto value = m.getArgAsInt(2);
+            if (fileWatch) fileWatch->geometryCount = value;
+            shader->setGeometryOutputCount(value);
         }
     }
 }
 
 void Shader::clearUniforms() {
-    reflectedWatchedProgram.reset();
     uniforms.clear();
     uniformProgram = 0;
 }
@@ -1431,10 +1521,6 @@ const Shader::Uniforms& Shader::getUniforms() const {
     if (uniformProgram != program) {
         uniforms = reflectUniforms(program);
         uniformProgram = program;
-        // Keep the last reflected watched program alive until the next lookup.
-        // The watcher can delete and relink a program with a recycled GL name.
-        if (watchedShader()) reflectedWatchedProgram.emplace(*shader);
-        else reflectedWatchedProgram.reset();
     }
     return uniforms;
 }

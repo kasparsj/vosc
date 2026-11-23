@@ -31,9 +31,12 @@ Arguments:
 
 Explicit replacement compiles and validates a candidate before replacing the
 active program. Failed source/file compilation or linking keeps the working
-program and its configured variables/textures. Automatic addon file-watcher
-reloads are outside this guarantee. The [local engine API](Engine-api.md) returns
-request-correlated diagnostics for agent-authored fragment source.
+program and its configured variables/textures. The file watcher also validates
+the candidate before replacing the active program. Failed watched saves log the
+file path and compiler or linker diagnostics while the previous program keeps
+rendering. A corrected save takes effect automatically. The
+[local engine API](Engine-api.md) returns request-correlated diagnostics for
+agent-authored fragment source.
 
 Examples:
 ```supercollider
