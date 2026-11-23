@@ -14,7 +14,8 @@ class DiagnosticOverlay {
 public:
     DiagnosticOverlay();
     ~DiagnosticOverlay();
-    void setup();
+    void setup(unsigned int oscPort);
+    void update();
     void rememberScene(const scene::File& scene, const VOSC& renderer);
     void draw(VOSC& renderer, const Logger& logger);
     bool isOpen() const { return open; }
@@ -44,6 +45,7 @@ private:
     void refreshMatches();
     void syncConsoleControls();
     const LoggerLine* diagnostic(uint64_t sequence) const;
+    bool sceneIsCurrent(const VOSC& renderer) const;
     std::string overviewMarkup(const VOSC& renderer, const GLint* viewport);
     std::string shaderDiagnostic(const VOSC& renderer) const;
     std::string knownShaderName(const Layer& layer) const;
@@ -57,6 +59,7 @@ private:
     bool open = false;
     bool welcome = false;
     View view = View::Overview;
+    unsigned int oscPort = 0;
     std::string sceneTitle;
     std::vector<SceneLayer> sceneLayers;
     std::vector<LoggerLine> entries;

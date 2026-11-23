@@ -3,6 +3,10 @@
 #include "../light/Lights.h"
 #include "../TexturePool.h"
 #include "../tex/ImageTex.h"
+#include "../tex/VideoTex.h"
+#ifdef TARGET_OSX
+#include "../tex/WebcamTex.h"
+#endif
 #include "../tex/ShaderTex.h"
 #include "../tex/ShaderPingPongTex.h"
 #include "../shader/ShaderPool.h"
@@ -823,13 +827,17 @@ CommandSystem::ScenePrograms CommandSystem::prepareStartupScene(const scene::Fil
     return programs;
 }
 
-void CommandSystem::applyStartupScene(const scene::File& file, ScenePrograms& programs, SceneResult result) {
+void CommandSystem::applyStartupScene(const scene::File& file, ScenePrograms& programs, SceneResult result,
+                                      std::optional<std::pair<int, int>> compositionBacking) {
+    startupCompositionBacking = compositionBacking;
+    const int width = compositionBacking ? ofGetWidth() : file.width;
+    const int height = compositionBacking ? ofGetHeight() : file.height;
     if (file.version == 2) {
         startupSceneResult = std::move(result);
         nativeStartup.emplace(NativeStartup{file});
         auto& startup = *nativeStartup;
         startup.diagnosticStart = replayLogger() ? replayLogger()->latestSequence() : 0;
-        resetScene(file.width, file.height);
+        resetScene(width, height);
         while (startup.nextCommand < file.nativeCommands.size()) {
             const auto& command = file.nativeCommands[startup.nextCommand];
             if (command.message.getAddress() == "/tex/set" && command.message.getArgAsString(1) == "numFrames") break;
@@ -847,12 +855,12 @@ void CommandSystem::applyStartupScene(const scene::File& file, ScenePrograms& pr
     startupSceneResult = std::move(result);
     sceneReplay.emplace();
     auto& state = *sceneReplay;
-    state.width = file.width;
-    state.height = file.height;
+    state.width = width;
+    state.height = height;
     state.finalGate = file.onsetGate;
     state.deadline = replayNow() + 12.0;
     state.diagnosticStart = replayLogger() ? replayLogger()->latestSequence() : 0;
-    resetScene(file.width, file.height);
+    resetScene(width, height);
     for (size_t i = 0; i < file.commands.size(); ++i) {
         const auto& message = file.commands[i].message;
         auto program = programs.find(i);
@@ -904,6 +912,13 @@ void CommandSystem::applyStartupScene(const scene::File& file, ScenePrograms& pr
     }
     state.ended = true;
     state.configurationSerial = currentConfigurationSerial ? currentConfigurationSerial() : 0;
+}
+
+void CommandSystem::discardSceneSetup() {
+    nativeStartup.reset();
+    sceneReplay.reset();
+    startupSceneResult = nullptr;
+    startupCompositionBacking.reset();
 }
 
 void CommandSystem::verifyStartupImage(const ofxOscMessage& message, const std::string& path) {
@@ -1235,7 +1250,7 @@ void CommandSystem::resetScene(int width, int height) {
     runtime.camera.resetScene();
     waitOnset = 0;
     forceOnset = false;
-    ofSetWindowShape(width, height);
+    if (!startupCompositionBacking) ofSetWindowShape(width, height);
 }
 
 void CommandSystem::sendSceneReply(const std::string& host, int port, const std::string& token,
@@ -1274,6 +1289,7 @@ void CommandSystem::completeSceneReplay(const std::string& status, int frame, co
     if (startupSceneResult) {
         auto result = std::move(startupSceneResult);
         startupSceneResult = nullptr;
+        startupCompositionBacking.reset();
         result(frame, detail);
     } else {
         sendSceneReply(replay.host, replay.replyPort, replay.token, status, frame, detail);
@@ -1366,8 +1382,16 @@ void CommandSystem::applyNativeCommand(const scene::NativeCommand& command) {
         const bool isMedia = command.sourceKind == "video" || command.sourceKind == "camera" || command.sourceKind == "html";
         if (isMedia) {
             startup.media = texture;
+#ifdef TARGET_OSX
+            if (auto* camera = dynamic_cast<WebcamTex*>(texture->tex.get())) camera->setStartupCapture(true);
+#endif
+            if (startupCompositionBacking && command.sourceKind == "video") {
+                auto* video = dynamic_cast<VideoTex*>(texture->tex.get());
+                if (!video) fail("could not create media loader");
+                video->useInWindowLoad();
+            }
 #ifdef VOSC_RECOVERY_TESTING
-            if (std::getenv("VOSC_TEST_NATIVE_STALL_OPEN")) {
+            if (!startupCompositionBacking && std::getenv("VOSC_TEST_NATIVE_STALL_OPEN")) {
                 std::cerr << "VOSC_TEST_NATIVE stall-open" << std::endl;
                 std::this_thread::sleep_for(std::chrono::seconds(30));
             }
@@ -1401,10 +1425,19 @@ void CommandSystem::applyNativeCommand(const scene::NativeCommand& command) {
 }
 
 void CommandSystem::finishNativeStartup(int frame, const std::string& detail) {
-    if (frame >= 0) waitOnset = nativeStartup->file.onsetGate;
+    if (frame >= 0) {
+        waitOnset = nativeStartup->file.onsetGate;
+#ifdef TARGET_OSX
+        if (nativeStartup->media) {
+            if (auto* camera = dynamic_cast<WebcamTex*>(nativeStartup->media->tex.get()))
+                camera->setStartupCapture(false);
+        }
+#endif
+    }
     nativeStartup.reset();
     auto callback = std::move(startupSceneResult);
     startupSceneResult = nullptr;
+    startupCompositionBacking.reset();
     callback(frame, detail);
 }
 
@@ -1416,6 +1449,8 @@ void CommandSystem::afterNativeDraw() {
             if (const auto error = media.startupFailure(); !error.empty())
                 throw std::runtime_error("scene input " + startup.file.mediaInput + ": " + error);
             if (!media.startupFrameReady()) return;
+            if (startupCompositionBacking)
+                if (const auto* video = dynamic_cast<const VideoTex*>(&media)) video->verifyInWindowInput();
 #ifdef VOSC_RECOVERY_TESTING
             if (std::getenv("VOSC_TEST_NATIVE_NO_FRAME")) {
                 if (!startup.suppressedMediaFrame) {
@@ -1433,7 +1468,7 @@ void CommandSystem::afterNativeDraw() {
             }
             return; // History and new bindings still need an update and draw.
         }
-        if (const auto log = replayLogger()) {
+        if (const auto log = replayLogger(); log && !startupCompositionBacking) {
             bool gap = false;
             uint64_t latest = 0;
             const auto entries = log->entriesSince(startup.diagnosticStart, 512, gap, &latest);
@@ -1467,8 +1502,8 @@ void CommandSystem::afterNativeDraw() {
             if (actual != message.getArgAsInt32(2)) throw std::runtime_error("linked geometry topology differs from manifest");
         }
         const auto& file = startup.file;
-        if (ofGetWidth() != file.width || ofGetHeight() != file.height ||
-            replayFramebufferSize() != std::pair(file.width, file.height))
+        if (startupCompositionBacking ? replayFramebufferSize() != *startupCompositionBacking :
+            !matchesCompositionSize(file.width, file.height))
             throw std::runtime_error("window dimensions did not settle before draw");
         scene::verifyNativeAssets(file);
     } catch (const std::exception& error) {
@@ -1478,6 +1513,11 @@ void CommandSystem::afterNativeDraw() {
     finishNativeStartup(static_cast<int>(ofGetFrameNum()), "native v2 scene composed");
 }
 
+bool CommandSystem::matchesCompositionSize(int width, int height) const {
+    return ofGetWidth() == width && ofGetHeight() == height &&
+        replayFramebufferSize() == startupCompositionBacking.value_or(std::pair(width, height));
+}
+
 void CommandSystem::afterComposedDraw() {
     if (nativeStartup) {
         afterNativeDraw();
@@ -1485,9 +1525,7 @@ void CommandSystem::afterComposedDraw() {
     }
     if (!sceneReplay || !sceneReplay->ended) return;
     const auto replay = *sceneReplay;
-    const auto framebuffer = replayFramebufferSize();
-    if (ofGetWidth() != replay.width || ofGetHeight() != replay.height ||
-        framebuffer.first != replay.width || framebuffer.second != replay.height) {
+    if (!matchesCompositionSize(replay.width, replay.height)) {
         failSceneReplay("window dimensions did not settle before draw");
         return;
     }
@@ -1495,16 +1533,29 @@ void CommandSystem::afterComposedDraw() {
         failSceneReplay("configuration was superseded before the qualifying draw");
         return;
     }
-    for (const auto& item : runtime.inputs.all()) if (!item.second || !item.second->configuredResourceReady()) {
-        failSceneReplay("input resource did not settle before draw");
-        return;
+    for (const auto& item : runtime.inputs.all()) {
+        if (!item.second) {
+            failSceneReplay("input resource is missing before draw");
+            return;
+        }
+        if (const auto error = item.second->configuredResourceError(); !error.empty()) {
+            failSceneReplay(error);
+            return;
+        }
+        if (item.second->configuredResourcePending()) return;
+        if (!item.second->configuredResourceReady()) {
+            failSceneReplay("input resource did not settle before draw");
+            return;
+        }
     }
     const int maxImageSide = startupSceneResult ? scene::MaxImageSide : 2048;
+    const int maxLayerWidth = startupCompositionBacking ? std::max(2048, replay.width) : 2048;
+    const int maxLayerHeight = startupCompositionBacking ? std::max(2048, replay.height) : 2048;
     for (const auto& layer : renderSystem.getLayers()) {
         if (!layer) { failSceneReplay("layer resource is missing before draw"); return; }
         const glm::vec3 size = layer->getVarVec3("size");
         if (!std::isfinite(size.x) || !std::isfinite(size.y) || !std::isfinite(size.z) ||
-            size.x <= 0 || size.x > 2048 || size.y <= 0 || size.y > 2048 || size.z != 0) {
+            size.x <= 0 || size.x > maxLayerWidth || size.y <= 0 || size.y > maxLayerHeight || size.z != 0) {
             failSceneReplay("layer size expression did not settle to a valid 2D size"); return;
         }
         for (const auto& binding : layer->shader.getTextures()) {
@@ -1525,7 +1576,7 @@ void CommandSystem::afterComposedDraw() {
             }
         }
     }
-    if (auto channel = replayLogger()) {
+    if (auto channel = replayLogger(); channel && !startupCompositionBacking) {
         bool gap = false;
         uint64_t latest = 0;
         const auto entries = channel->entriesSince(replay.diagnosticStart, 512, gap, &latest);

@@ -1,6 +1,7 @@
 #include "RenderSystem.hpp"
 #include "../light/Lights.h"
 #include <algorithm>
+#include <stdexcept>
 
 namespace {
 bool hasDirectFramebuffer() {
@@ -47,6 +48,29 @@ bool isDeferredPass(PostPass pass) {
     }
 }
 }
+
+struct RenderSystem::DrawValidation {
+    bool enabled;
+    GLenum error = GL_NO_ERROR;
+    const char* operation = nullptr;
+
+    void check(const char* phase) {
+        if (!enabled) return;
+        for (int i = 0; i < 16; ++i) {
+            const auto flag = glGetError();
+            if (flag == GL_NO_ERROR) return;
+            if (error == GL_NO_ERROR) {
+                error = flag;
+                operation = phase;
+            }
+        }
+    }
+
+    void requireSuccess() const {
+        if (error != GL_NO_ERROR)
+            throw std::runtime_error("OpenGL error " + std::to_string(error) + " while " + operation + ".");
+    }
+};
 
 void RenderSystem::setup(int initialLayers) {
     setupLayers(initialLayers);
@@ -100,7 +124,11 @@ void RenderSystem::releaseTargets() {
 #endif
 }
 
-void RenderSystem::prepareTargets(bool cameraEnabled) {
+bool RenderSystem::canDrawDirectToWindow() {
+    return hasDirectFramebuffer();
+}
+
+void RenderSystem::prepareTargets(bool cameraEnabled, std::optional<bool> directDestination) {
     const int width = ofGetWidth();
     const int height = ofGetHeight();
 #if USE_OFX_DEFERRED_SHADING
@@ -119,10 +147,13 @@ void RenderSystem::prepareTargets(bool cameraEnabled) {
     pointLightPass.reset();
     deferred.reset();
 #endif
-    if (!directFramebufferSupported) directFramebufferSupported = hasDirectFramebuffer();
+    if (!directDestination) {
+        if (!directFramebufferSupported) directFramebufferSupported = canDrawDirectToWindow();
+        directDestination = directFramebufferSupported;
+    }
     // Keep the forward camera's projection and depth target. The direct resolve
     // assumes the window has the same precision and blend as the offscreen pass.
-    if (cameraEnabled || !*directFramebufferSupported || ofGetStyle().blendingMode != OF_BLENDMODE_ALPHA ||
+    if (cameraEnabled || !*directDestination || ofGetStyle().blendingMode != OF_BLENDMODE_ALPHA ||
         std::any_of(shadingPasses.begin(), shadingPasses.end(), isPostPass)) {
         if (!post) {
             post = std::make_unique<ofxPostProcessing>();
@@ -134,7 +165,7 @@ void RenderSystem::prepareTargets(bool cameraEnabled) {
     }
 }
 
-void RenderSystem::beginDraw(Camera& camera) {
+void RenderSystem::beginDraw(Camera& camera, DrawValidation& validation) {
     ofPushMatrix();
 #if USE_OFX_DEFERRED_SHADING
     if (deferred) {
@@ -144,7 +175,9 @@ void RenderSystem::beginDraw(Camera& camera) {
             if (pointLightPass) pointLightPass->drawLights();
             shadowLightPass->endShadowMap();
         }
+        validation.check("drawing the shadow map");
         deferred->begin(camera.getCamera());
+        validation.check("beginning deferred shading");
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
     } else
@@ -153,9 +186,13 @@ void RenderSystem::beginDraw(Camera& camera) {
         Lights::get().update();
         ofEnableDepthTest();
         ofEnableLighting();
+        validation.check("preparing the camera draw");
         post->begin(camera.getCamera());
+        validation.check("beginning post-processing");
     } else if (post) {
+        validation.check("preparing the layer draw");
         post->begin();
+        validation.check("beginning post-processing");
     } else {
         ofPushStyle();
     }
@@ -177,16 +214,19 @@ void RenderSystem::doDraw(Camera& camera) {
     }
 }
 
-void RenderSystem::endDraw() {
+void RenderSystem::endDraw(DrawValidation& validation) {
 #if USE_OFX_DEFERRED_SHADING
     if (deferred) {
         if (pointLightPass) pointLightPass->drawLights();
         glDisable(GL_CULL_FACE);
+        validation.check("drawing deferred lighting");
         deferred->end();
+        validation.check("ending deferred shading");
     } else
 #endif
     if (post) {
         post->end();
+        validation.check("ending post-processing");
     } else {
         ofPopStyle();
         ofDisableDepthTest();
@@ -207,13 +247,18 @@ void RenderSystem::endDraw() {
     ofPopMatrix();
 }
 
-void RenderSystem::draw(Camera& camera, const std::function<void()>& afterCompose) {
-    prepareTargets(camera.isEnabled());
-    beginDraw(camera);
+void RenderSystem::draw(Camera& camera, const std::function<void()>& afterCompose,
+                        std::optional<bool> directDestination) {
+    DrawValidation validation{directDestination.has_value()};
+    prepareTargets(camera.isEnabled(), directDestination);
+    validation.check("preparing render targets");
+    beginDraw(camera, validation);
     doDraw(camera);
-    endDraw();
+    validation.check("drawing example layers");
+    endDraw(validation);
+    validation.check("ending the renderer draw");
+    validation.requireSuccess();
     if (afterCompose) afterCompose();
-
 }
 
 void RenderSystem::resizeBacking(int w, int h) {

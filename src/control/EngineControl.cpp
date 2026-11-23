@@ -610,7 +610,7 @@ Json exportRecipe(RenderSystem& render, const RuntimeContext& runtime, const Com
 } // namespace
 
 EngineControl::EngineControl(RenderSystem& render, CommandSystem& commands, RuntimeContext& runtime)
-    : render(render), commands(commands), runtime(runtime), telemetry(makeOpenGlQueryBackend()),
+    : sceneRender(&render), sceneCommands(&commands), sceneRuntime(&runtime), telemetry(makeOpenGlQueryBackend()),
       updateTelemetry(makeOpenGlQueryBackend()) {
     updateTelemetry.onGpuSample([this](uint64_t id, uint64_t origin, double ms) {
         if (measurementId == id) feedbackMeasurement.complete(origin, false, ms);
@@ -620,19 +620,29 @@ EngineControl::EngineControl(RenderSystem& render, CommandSystem& commands, Runt
     });
 }
 
+void EngineControl::bindScene(RenderSystem& render, CommandSystem& commands, RuntimeContext& runtime) {
+    sceneRender = &render;
+    sceneCommands = &commands;
+    sceneRuntime = &runtime;
+    noteExternalChange();
+}
+
 void EngineControl::setup() {
     const char* path = std::getenv("VOSC_CONTROL_SOCKET");
-    if (path && *path) {
-        if (!server.start(path)) ofLogError("control") << server.getLastError();
-        else { telemetry.setup(); updateTelemetry.setup(); }
+    if (!path || !*path) return;
+    if (!server.start(path)) {
+        ofLogError("control") << server.getLastError();
+        return;
     }
+    telemetry.setup();
+    updateTelemetry.setup();
 }
 
 void EngineControl::shutdown() {
     if (trial && trial->feedbackBaseline) interruptTrial();
     if (trial) {
-        if (trial->layer < render.getLayers().size() && render.getLayers()[trial->layer]) {
-            auto& shader = render.getLayers()[trial->layer]->shader;
+        if (trial->layer < render().getLayers().size() && render().getLayers()[trial->layer]) {
+            auto& shader = render().getLayers()[trial->layer]->shader;
             if (shader.ownsProgram(static_cast<GLuint>(trial->candidateProgram)))
                 shader.restoreDirectSource(trial->baseline);
         }
@@ -751,8 +761,8 @@ Json EngineControl::dispatch(const Json& request) {
         keys(params, {});
         if (trial && trial->feedbackBaseline)
             throw Invalid("trial_busy", "feedback trial must settle before export");
-        result["result"] = {{"recipe", exportRecipe(render, runtime, commands,
-            ofGetWidth(), ofGetHeight(), commands.onsetGateValue())}};
+        result["result"] = {{"recipe", exportRecipe(render(), runtime(), commands(),
+            ofGetWidth(), ofGetHeight(), commands().onsetGateValue())}};
     } else {
         validate(method, params);
         bool waits = method == "capture_preview" || params.value("timing", std::string("immediate")) == "onset";
@@ -816,9 +826,9 @@ void EngineControl::validate(const std::string& method, const Json& params) cons
         else if (method == "set_uniform") keys(params, {"layer", "name", "value"}, {"timing"});
         else keys(params, {"layer", "property", "value"}, {"timing"});
         int index = integer(params["layer"], 0, 31, "layer");
-        if (static_cast<size_t>(index) >= render.getLayers().size())
+        if (static_cast<size_t>(index) >= render().getLayers().size())
             throw Invalid("invalid_target", "layer does not exist");
-        const auto& layer = *render.getLayers()[index];
+        const auto& layer = *render().getLayers()[index];
         const auto& shader = layer.shader;
         if (method == "publish_shader") {
             text(params["source"], 128 * 1024, "source");
@@ -897,9 +907,9 @@ void EngineControl::execute(const std::string& id) {
             payload.hasLayerCount = payload.hasLayout = true;
             payload.layerCount = params["count"].get<int>();
             payload.layout = LayoutMap.at(params["layout"].get<std::string>());
-            render.applyLayersPayload(payload);
+            render().applyLayersPayload(payload);
         } else {
-            auto& layer = *render.getLayers()[params["layer"].get<int>()];
+            auto& layer = *render().getLayers()[params["layer"].get<int>()];
             if (method == "publish_shader") {
                 if (!layer.shader.loadFromSource(params["source"].get<std::string>())) {
                     auto logs = diagnostics(logStart, 128);
@@ -940,7 +950,7 @@ void EngineControl::execute(const std::string& id) {
 
 void EngineControl::startTrial(const std::string& id) {
     if (trial) throw Invalid("trial_busy", "a protected shader trial is already active");
-    if (!queued.empty() || !captures.empty() || commands.pendingCount() != 0)
+    if (!queued.empty() || !captures.empty() || commands().pendingCount() != 0)
         throw Invalid("trial_busy", "queued controls or captures must drain before a trial");
     auto& entry = receipts.at(id);
     const auto params = entry.request.value("params", Json::object());
@@ -960,11 +970,11 @@ void EngineControl::startTrial(const std::string& id) {
         updateTrialReceipt();
         return;
     }
-    if (runtime.camera.isEnabled() || !render.supportsDirectShaderTrial())
+    if (runtime().camera.isEnabled() || !render().supportsDirectShaderTrial())
         throw Invalid("trial_unsupported", "trial requires one layer, camera off, and no post/deferred passes");
     if (layerIndex != 0)
         throw Invalid("invalid_target", "first trial scope supports exactly layer 0");
-    auto& shader = render.getLayers()[layerIndex]->shader;
+    auto& shader = render().getLayers()[layerIndex]->shader;
     Shader::DirectSourceState baseline;
     std::string reason;
     if (!shader.snapshotDirectSource(baseline, reason))
@@ -986,7 +996,7 @@ void EngineControl::startTrial(const std::string& id) {
     auto bindings = baseline.bindings;
     const auto overrides = params.value("uniforms", Json::object());
     for (auto it = overrides.begin(); it != overrides.end(); ++it) {
-        if (it.key().find('[') != std::string::npos || managedUniform(*render.getLayers()[layerIndex], it.key()))
+        if (it.key().find('[') != std::string::npos || managedUniform(*render().getLayers()[layerIndex], it.key()))
             throw Invalid("invalid_uniform", "uniform is engine-managed or an array");
         auto found = prepared.uniforms.find(it.key());
         const int components = found == prepared.uniforms.end() || found->second.isArray()
@@ -1018,14 +1028,14 @@ void EngineControl::startTrial(const std::string& id) {
 }
 
 void EngineControl::startFeedbackTrial(Trial& active, const Json& params) {
-    if (commands.replayActive() || pendingCount() != 1)
+    if (commands().replayActive() || pendingCount() != 1)
         throw Invalid("trial_busy", "pending controls and correlated replay must settle before a feedback trial");
     if (!params.value("uniforms", Json::object()).empty() || params.value("ttl_ms", 10000) != 10000)
         throw Invalid("trial_unsupported", "feedback trials require unchanged bindings and a ten-second lease");
-    const auto& layers = render.getLayers();
-    if (layers.size() != 2 || !layers[0] || !layers[1] || render.getLayout() != Layout::STACK ||
-        ofGetWidth() != 800 || ofGetHeight() != 600 || runtime.camera.isEnabled() ||
-        !render.supportsScenePersistence())
+    const auto& layers = render().getLayers();
+    if (layers.size() != 2 || !layers[0] || !layers[1] || render().getLayout() != Layout::STACK ||
+        ofGetWidth() != 800 || ofGetHeight() != 600 || runtime().camera.isEnabled() ||
+        !render().supportsScenePersistence())
         throw Invalid("trial_unsupported", "feedback trial requires the bounded 800x600 two-layer stack");
     auto& layer = *layers[0];
     auto& overlay = *layers[1];
@@ -1050,7 +1060,7 @@ void EngineControl::startFeedbackTrial(Trial& active, const Json& params) {
 
     // Apply the same resource, expression and layer eligibility as editable
     // replay, including rejecting shared or aliased holders.
-    exportRecipe(render, runtime, commands, ofGetWidth(), ofGetHeight(), commands.onsetGateValue());
+    exportRecipe(render(), runtime(), commands(), ofGetWidth(), ofGetHeight(), commands().onsetGateValue());
     if (!feedbackTimersSupported())
         throw Invalid("trial_gpu_unavailable", "paired GPU timing is unavailable");
 
@@ -1074,7 +1084,7 @@ ShaderPingPongTex& EngineControl::expectedFeedback() const {
 
 std::shared_ptr<Texture> EngineControl::ownedFeedbackHolder() const {
     const auto holder = trial->feedbackHolder.lock();
-    const auto& layers = render.getLayers();
+    const auto& layers = render().getLayers();
     if (!holder || trial->layer >= layers.size() || !layers[trial->layer]) return {};
     const auto& textures = layers[trial->layer]->shader.getTextures();
     const auto target = textures.find(DEFAULT_TEX);
@@ -1200,11 +1210,11 @@ void EngineControl::rollbackTrial(const std::string& code) {
         updateTrialReceipt();
         return;
     }
-    if (trial->layer >= render.getLayers().size() || !render.getLayers()[trial->layer]) {
+    if (trial->layer >= render().getLayers().size() || !render().getLayers()[trial->layer]) {
         interruptTrial();
         return;
     }
-    auto& shader = render.getLayers()[trial->layer]->shader;
+    auto& shader = render().getLayers()[trial->layer]->shader;
     if (!shader.ownsProgram(static_cast<GLuint>(trial->candidateProgram))) {
         interruptTrial();
         return;
@@ -1254,11 +1264,11 @@ void EngineControl::evaluateTrial() {
     }
     if (trial->phase == "committing") return;
     if (trial->phase == "rolling_back") return;
-    if (trial->layer >= render.getLayers().size() || !render.getLayers()[trial->layer]) {
+    if (trial->layer >= render().getLayers().size() || !render().getLayers()[trial->layer]) {
         interruptTrial();
         return;
     }
-    auto& shader = render.getLayers()[trial->layer]->shader;
+    auto& shader = render().getLayers()[trial->layer]->shader;
     if (!shader.ownsProgram(static_cast<GLuint>(trial->candidateProgram))) {
         interruptTrial();
         return;
@@ -1304,8 +1314,8 @@ void EngineControl::interruptTrial() {
             }
         }
         trial->feedbackBaseline->resumeTrialWatch();
-    } else if (trial->layer < render.getLayers().size() && render.getLayers()[trial->layer]) {
-        auto& shader = render.getLayers()[trial->layer]->shader;
+    } else if (trial->layer < render().getLayers().size() && render().getLayers()[trial->layer]) {
+        auto& shader = render().getLayers()[trial->layer]->shader;
         if (shader.ownsProgram(static_cast<GLuint>(trial->candidateProgram))) {
             restored = shader.restoreDirectSource(trial->baseline);
             if (restored) ++revision;
@@ -1340,7 +1350,7 @@ Json EngineControl::recoveryTestSnapshot() const {
     size_t layerBindings = 0, shaderBindings = 0, shaderTextures = 0, shaderBuffers = 0;
     size_t loadedGeometry = 0;
     Json programs = Json::array();
-    for (const auto& layer : render.getLayers()) {
+    for (const auto& layer : render().getLayers()) {
         if (!layer) continue;
         layerBindings += layer->vars.size();
         shaderBindings += layer->shader.vars.size();
@@ -1352,7 +1362,7 @@ Json EngineControl::recoveryTestSnapshot() const {
     }
     const auto framebuffer = nativeFramebufferSize();
     Json managedCamera = Json::object();
-    const auto cameraVariables = runtime.camera.recoveryTestManagedVariables();
+    const auto cameraVariables = runtime().camera.recoveryTestManagedVariables();
     Json cameraValues = Json::object();
     const char* cameraNames[] = {"camPos", "camLook", "camOrbit"};
     for (size_t index = 0; index < cameraVariables.size(); ++index) {
@@ -1374,22 +1384,22 @@ Json EngineControl::recoveryTestSnapshot() const {
         }
     }
     Json inputSamples = Json::object();
-    for (const auto& [name, input] : runtime.inputs.all()) {
+    for (const auto& [name, input] : runtime().inputs.all()) {
         if (!input) continue;
         inputSamples[name] = {{"amplitude", input->amplitude}, {"scaled", input->ampScaled},
             {"loudness", input->loudness}, {"onset", input->onset}, {"mfcc", input->mfcc}};
     }
     return {{"phase", trial ? trial->phase : "none"}, {"trial_id", trial ? trial->id : ""},
-            {"managed_camera", managedCamera}, {"inputs", runtime.inputs.all().size()},
+            {"managed_camera", managedCamera}, {"inputs", runtime().inputs.all().size()},
             {"input_samples", inputSamples},
-            {"camera_values", cameraValues}, {"render_pipeline", render.recoveryTestPipeline()},
-            {"render_targets", render.recoveryTestTargets()},
-            {"lights", Lights::get().all().size()}, {"tidal_notes", runtime.tidal->notes.size()},
-            {"legacy_pending", commands.pendingCount()},
+            {"camera_values", cameraValues}, {"render_pipeline", render().recoveryTestPipeline()},
+            {"render_targets", render().recoveryTestTargets()},
+            {"lights", Lights::get().all().size()}, {"tidal_notes", runtime().tidal->notes.size()},
+            {"legacy_pending", commands().pendingCount()},
             {"frame", frame}, {"width", ofGetWidth()}, {"height", ofGetHeight()},
             {"framebuffer_width", framebuffer.first}, {"framebuffer_height", framebuffer.second},
             {"revision", revision}, {"external_epoch", externalEpoch},
-            {"resources", {{"layers", render.getLayers().size()},
+            {"resources", {{"layers", render().getLayers().size()},
                 {"variable_holder_pools", registry ? registry->variableHolderPool.size() : 0},
                 {"variable_holder_variables", holderVariables}, {"holder_sizes", holderSizes},
                 {"variable_shared", registry ? registry->variableSharedPool.size() : 0},
@@ -1424,7 +1434,7 @@ void EngineControl::update() {
         if (ofGetElapsedTimef() - receipts.at(id).acceptedAt > 30) {
             receipts.at(id).response = failure(id, "queue_timeout", "onset wait exceeded 30 seconds");
             it = queued.erase(it);
-        } else if (commands.didOpenGateThisUpdate()) {
+        } else if (commands().didOpenGateThisUpdate()) {
             execute(id);
             it = queued.erase(it);
         } else ++it;
@@ -1492,7 +1502,7 @@ PerformanceContext EngineControl::performanceContext() const {
 }
 
 EngineControl::FeedbackContext EngineControl::feedbackContext(const PerformanceContext& current) const {
-    const auto& layers = render.getLayers();
+    const auto& layers = render().getLayers();
     if (layers.empty() || !layers[0]) return {};
     const auto& textures = layers[0]->shader.getTextures();
     const auto target = textures.find(DEFAULT_TEX);
@@ -1581,10 +1591,10 @@ Json EngineControl::performance() const {
 
 Json EngineControl::scene() const {
     size_t feedbackCount = 0;
-    for (const auto& layer : render.getLayers()) for (const auto& binding : layer->shader.getTextures())
+    for (const auto& layer : render().getLayers()) for (const auto& binding : layer->shader.getTextures())
         if (binding.second && dynamic_cast<ShaderPingPongTex*>(binding.second->tex.get())) ++feedbackCount;
     Json layers = Json::array();
-    for (const auto& layer : render.getLayers()) {
+    for (const auto& layer : render().getLayers()) {
         const auto& shader = layer->shader;
         Json uniforms = Json::object(), textures = Json::object();
         auto gpuValues = shader.getUniformValues();
@@ -1644,7 +1654,7 @@ Json EngineControl::scene() const {
                             {"uniforms", uniforms}, {"textures", textures}}}});
     }
     std::string layout;
-    for (const auto& pair : LayoutMap) if (pair.second == render.getLayout()) layout = pair.first;
+    for (const auto& pair : LayoutMap) if (pair.second == render().getLayout()) layout = pair.first;
     Json pending = Json::array();
     for (const auto& id : receiptOrder) {
         const auto& response = receipts.at(id).response;
@@ -1652,11 +1662,11 @@ Json EngineControl::scene() const {
         if (status == "queued" || status == "applied" || status == "evaluating" ||
             status == "ready" || status == "committing" || status == "rolling_back") pending.push_back(response);
     }
-    return {{"layers", layers}, {"layout", layout}, {"camera_enabled", runtime.camera.isEnabled()},
+    return {{"layers", layers}, {"layout", layout}, {"camera_enabled", runtime().camera.isEnabled()},
             {"revision", revision}, {"rendered_revision", renderedRevision}, {"frame", frame},
             {"external_epoch", externalEpoch}, {"pending", pending},
             {"trial", trial ? trialSummary() : Json()},
-            {"onset_gate", commands.isGateEnabled()}, {"legacy_pending", commands.pendingCount()},
+            {"onset_gate", commands().isGateEnabled()}, {"legacy_pending", commands().pendingCount()},
             {"width", ofGetWidth()}, {"height", ofGetHeight()}, {"fps", ofGetFrameRate()}};
 }
 
@@ -1723,7 +1733,7 @@ void EngineControl::recoveryTestCaptureFeedback(std::string phase, ShaderPingPon
         {"external_epoch", externalEpoch}, {"updates", texture.updateCount()},
         {"program", texture.getShader().getProgram()}, {"source_fbo", texture.fbo.source().getId()},
         {"destination_fbo", texture.fbo.dest().getId()},
-        {"alpha", render.getLayers()[1]->getVar("alpha")}, {"monotonic_seconds", monotonicSeconds()},
+        {"alpha", render().getLayers()[1]->getVar("alpha")}, {"monotonic_seconds", monotonicSeconds()},
         {"transition_interval_ms", recoveryTestDrawInterval ? Json(*recoveryTestDrawInterval) : Json()}};
     if (trial && trial->feedbackBaseline) {
         result["trial_id"] = trial->id;
@@ -1745,7 +1755,7 @@ void EngineControl::recoveryTestCaptureFeedback(std::string phase, ShaderPingPon
 }
 
 uint64_t EngineControl::recoveryTestFeedbackUpdates() const {
-    const auto& layers = render.getLayers();
+    const auto& layers = render().getLayers();
     if (layers.size() != 2 || !layers[0]) return 0;
     const auto& textures = layers[0]->shader.getTextures();
     const auto target = textures.find(DEFAULT_TEX);
@@ -1810,10 +1820,10 @@ void EngineControl::afterDraw() {
         }
         if (trial) settleFeedbackDraw();
     } else if (trial && trial->phase == "committing") {
-        if (trial->layer >= render.getLayers().size() || !render.getLayers()[trial->layer]) {
+        if (trial->layer >= render().getLayers().size() || !render().getLayers()[trial->layer]) {
             interruptTrial();
         } else {
-        auto& shader = render.getLayers()[trial->layer]->shader;
+        auto& shader = render().getLayers()[trial->layer]->shader;
         if (!shader.ownsProgram(static_cast<GLuint>(trial->candidateProgram))) {
             interruptTrial();
         } else {
@@ -1829,10 +1839,10 @@ void EngineControl::afterDraw() {
         }
         }
     } else if (trial && trial->phase == "rolling_back") {
-        if (trial->layer >= render.getLayers().size() || !render.getLayers()[trial->layer]) {
+        if (trial->layer >= render().getLayers().size() || !render().getLayers()[trial->layer]) {
             interruptTrial();
         } else {
-        auto& shader = render.getLayers()[trial->layer]->shader;
+        auto& shader = render().getLayers()[trial->layer]->shader;
         const bool restored = shader.ownsProgram(trial->baseline.program->getProgram());
         auto terminal = failure(trial->id, restored ? trial->rollbackCode : "trial_conflict",
             restored ? "protected shader trial rolled back" : "baseline ownership changed before draw");
@@ -1864,7 +1874,7 @@ void EngineControl::afterDraw() {
     if (!trial && (recoveryTestFeedbackCapture == "baseline" || recoveryTestFeedbackCapture == "white_replay")) {
         const auto updates = recoveryTestFeedbackUpdates();
         if (updates && (recoveryTestFeedbackCapture == "baseline" || updates == 1)) {
-            auto& tex = *static_cast<ShaderPingPongTex*>(render.getLayers()[0]->shader.getDefaultTexture()->tex.get());
+            auto& tex = *static_cast<ShaderPingPongTex*>(render().getLayers()[0]->shader.getDefaultTexture()->tex.get());
             if (tex.drewCurrentUpdate()) recoveryTestCaptureFeedback(recoveryTestFeedbackCapture, tex);
         }
     }

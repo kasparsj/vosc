@@ -1,7 +1,12 @@
 # Sound Data
 
-Start VOSC with `vosc --scene examples/sound-data/scene.vosc.json`. The scene
-listens for OSC analysis on port 33333 and maps layer opacity to amplitude.
+Use **Browse → Examples → Sound Data → Load Example**, or start VOSC with
+`vosc --scene examples/sound-data/scene.vosc.json`. The scene maps layer opacity
+to OSC amplitude samples received by the current renderer.
+
+Set the host and port in the companion's `NetAddr` calls to match the same
+renderer for analysis and cleanup. Use `127.0.0.1` for SuperCollider on the
+render machine. The script uses port 33333 by default.
 
 Boot the SuperCollider audio server, open [scene.scd](scene.scd), and evaluate
 the first block to analyze the microphone. For a local audio file, set `file`

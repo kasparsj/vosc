@@ -4,9 +4,7 @@
 
 class Inputs {
 public:
-    static Inputs& get() {
-        return instance;
-    }
+    static Inputs& get();
     
     const map<string, shared_ptr<OSCInput>>& all() {
         return inputs;
@@ -23,7 +21,5 @@ public:
     void clear();
     
 private:
-    static Inputs instance;
-    
     map<string, shared_ptr<OSCInput>> inputs;
 };

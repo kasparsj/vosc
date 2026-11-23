@@ -16,7 +16,9 @@ public:
     void shutdown();
 
     void update(const vector<TidalNote>& notes);
-    void draw(Camera& camera, const std::function<void()>& afterCompose = {});
+    void draw(Camera& camera, const std::function<void()>& afterCompose = {},
+              std::optional<bool> directDestination = std::nullopt);
+    static bool canDrawDirectToWindow();
     void resizeBacking(int w, int h);
     void windowResized(int w, int h);
 
@@ -54,13 +56,14 @@ public:
     }
 
 private:
+    struct DrawValidation;
     void setupLayers(int numLayers);
-    void beginDraw(Camera& camera);
+    void beginDraw(Camera& camera, DrawValidation& validation);
     void doDraw(Camera& camera);
-    void endDraw();
+    void endDraw(DrawValidation& validation);
     void toggleWireframeAll();
     void releaseTargets();
-    void prepareTargets(bool cameraEnabled);
+    void prepareTargets(bool cameraEnabled, std::optional<bool> directDestination);
     void createShadingPass(ofxPostProcessing& processor, PostPass passId);
 #if USE_OFX_DEFERRED_SHADING
     void createShadingPass(ofxDeferredProcessing& processor, PostPass passId);

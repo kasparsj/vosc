@@ -4,11 +4,16 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <set>
+#include <cstdint>
 
 class Texture;
 class Geom;
 class Shader;
 class BaseVar;
+class Inputs;
+class Lights;
+class ShaderPingPongTex;
 
 class ResourceRegistry {
 public:
@@ -25,6 +30,23 @@ public:
     using VariableSharedMap = std::map<std::string, std::shared_ptr<BaseVar>>;
     using VariableHolderMap = std::map<int, std::map<std::string, std::shared_ptr<BaseVar>>>;
 
+    struct FeedbackState {
+        uint64_t generation = 1;
+        std::set<ShaderPingPongTex*> instances;
+    };
+
+    class Scope {
+    public:
+        explicit Scope(ResourceRegistry& active);
+        ~Scope();
+        Scope(const Scope&) = delete;
+        Scope& operator=(const Scope&) = delete;
+
+    private:
+        ResourceRegistry* previous;
+    };
+
+    ResourceRegistry();
     ~ResourceRegistry();
 
     void activate();
@@ -43,6 +65,9 @@ public:
     VariableSharedMap variableSharedPool;
     VariableHolderMap variableHolderPool;
     bool variablePoolShuttingDown = false;
+    std::unique_ptr<Inputs> inputs;
+    std::unique_ptr<Lights> lights;
+    std::shared_ptr<FeedbackState> feedback;
 
 private:
     static ResourceRegistry* currentRegistry;

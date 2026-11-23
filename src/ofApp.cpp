@@ -18,7 +18,7 @@ void ofApp::setup(){
     
     try {
 #if VOSC_OPERATOR_UI
-        overlay.setup();
+        overlay.setup(oscPort);
 #endif
         CommandSystem::ScenePrograms programs;
         if (startupScene) {
@@ -39,12 +39,13 @@ void ofApp::setup(){
                     return;
                 }
             }
+            const auto marker = "VOSC_SCENE_READY frame=" + std::to_string(frame) +
+                                " title=" + startupScene->title;
 #if VOSC_OPERATOR_UI
             overlay.rememberScene(*startupScene, vosc);
 #endif
             finishStartup();
-            std::cout << "VOSC_SCENE_READY frame=" << frame
-                      << " title=" << startupScene->title << std::endl;
+            std::cout << marker << std::endl;
             startupScene.reset();
         });
     } catch (const std::exception& error) {
@@ -63,7 +64,11 @@ void ofApp::failStartup(const std::string& detail) {
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    if (!startupFailed) vosc.update();
+    if (startupFailed) return;
+#if VOSC_OPERATOR_UI
+    overlay.update();
+#endif
+    vosc.update();
 }
 
 //--------------------------------------------------------------

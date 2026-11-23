@@ -5,6 +5,7 @@
 #include <charconv>
 #include <condition_variable>
 #include <cstdio>
+#include <cstdlib>
 #include <mutex>
 #include <thread>
 #include <iostream>
@@ -13,7 +14,6 @@
 #include <utility>
 #ifdef VOSC_RECOVERY_TESTING
 #include "ofAppGLFWWindow.h"
-#include <cstdlib>
 #endif
 
 #define USE_PROGRAMMABLE_RENDERER
@@ -125,6 +125,10 @@ int main(int argc, char** argv) {
     unsigned int oscPort;
     std::optional<scene::File> startupScene;
     try {
+#if defined(TARGET_OSX) && defined(APPSTORE) && APPSTORE
+        const auto contents = ofFilePath::getCurrentExePathFS().parent_path().parent_path();
+        ofSetDataPathRoot(contents / "Resources/data");
+#endif
         oscPort = control::oscPortFromEnvironment();
         if (!options.scenePath.empty()) {
             startupScene = scene::load(options.scenePath, options.inputs);

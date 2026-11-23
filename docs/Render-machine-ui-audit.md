@@ -2,6 +2,8 @@
 
 2026-11-22 · Revision `7a4d11a` and working-tree changes present at review. [Design contract](../DESIGN.md) · [View specification](Render-machine-ui.md)
 
+Historical planning snapshot. The separate preview workflow and its mockup states below predate in-window example loading. The current workflow is in the [operator reference](Render-machine-ui.md#examples).
+
 ## Verdict
 
 The four-destination dock is a workable structure. Keep it small and put navigation depth inside the active destination. The original clickable study validated the visual direction and one sample diagnostic path with simulated clipboard feedback. Use the inventory below as the brief for later milestones. [Current design in Figma](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-117) · [Historical density review](mockups/render-machine-overlay-density-review/verification.md)

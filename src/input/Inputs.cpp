@@ -1,6 +1,11 @@
 #include "Inputs.hpp"
+#include "../ResourceRegistry.hpp"
 
-Inputs Inputs::instance;
+Inputs& Inputs::get() {
+    auto* registry = ResourceRegistry::current();
+    if (!registry) throw ResourceRegistry::Inactive("Inputs requires an active scene");
+    return *registry->inputs;
+}
 
 namespace {
 bool tryGetInputName(const ofxOscMessage& m, string& name) {

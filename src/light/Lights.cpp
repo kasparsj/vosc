@@ -1,7 +1,12 @@
 #include "Lights.h"
+#include "../ResourceRegistry.hpp"
 #include "Args.h"
 
-Lights Lights::instance;
+Lights& Lights::get() {
+    auto* registry = ResourceRegistry::current();
+    if (!registry) throw ResourceRegistry::Inactive("Lights requires an active scene");
+    return *registry->lights;
+}
 
 namespace {
 bool tryGetLightName(const ofxOscMessage& m, string& name) {

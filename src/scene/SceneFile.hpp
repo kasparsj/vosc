@@ -40,10 +40,12 @@ struct File {
     std::vector<NativeCommand> nativeCommands;
     std::map<std::filesystem::path, std::string> nativeAssets;
     std::string mediaInput;
+    std::string manifestBytes;
 };
 
 using Inputs = std::map<std::string, std::string>;
 File load(const std::filesystem::path& path, const Inputs& inputs = {});
+void verifyManifest(const File& file, const std::filesystem::path& requestedPath);
 void verifyNativeAssets(const File& file);
 std::string commandContext(size_t index, const ofxOscMessage& message);
 bool appendOscValue(ofxOscMessage& message, const std::string& type, const ofJson& value);

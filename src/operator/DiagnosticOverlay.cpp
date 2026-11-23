@@ -3,6 +3,7 @@
 #if VOSC_OPERATOR_UI
 #include "DiagnosticMarkup.hpp"
 #include "BrowseView.hpp"
+#include "ExamplesView.hpp"
 #include "InspectorView.hpp"
 #include "LocalizedDockBlur.hpp"
 
@@ -20,9 +21,11 @@
 #include <array>
 #include <charconv>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <optional>
 #include <stdexcept>
 #include <string_view>
@@ -241,14 +244,52 @@ private:
     GLboolean srgb = GL_FALSE;
     std::array<GLboolean, 4> colorMask{};
 };
+
+bool loadExampleThumbnail(ofPixels& pixels, const std::filesystem::path& path) {
+    // Examples can supply thumbnails at runtime. Bound the input before decoding on the primary renderer.
+    constexpr std::streamsize maxBytes = 8 * 1024 * 1024;
+    constexpr std::uint32_t maxSide = 2048;
+    constexpr std::array<unsigned char, 16> pngHeader{
+        0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n', 0, 0, 0, 13, 'I', 'H', 'D', 'R',
+    };
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    const auto byteCount = static_cast<std::streamsize>(file.tellg());
+    if (byteCount < 24 || byteCount > maxBytes) return false;
+    ofBuffer encoded;
+    encoded.allocate(static_cast<size_t>(byteCount));
+    file.seekg(0);
+    if (!file.read(encoded.getData(), byteCount) || file.peek() != std::ifstream::traits_type::eof()) return false;
+
+    const auto* bytes = reinterpret_cast<const unsigned char*>(encoded.getData());
+    if (!std::equal(pngHeader.begin(), pngHeader.end(), bytes)) return false;
+    const auto dimension = [bytes](size_t offset) {
+        std::uint32_t value = 0;
+        for (size_t i = 0; i < 4; ++i) value = (value << 8) | bytes[offset + i];
+        return value;
+    };
+    const auto width = dimension(16);
+    const auto height = dimension(20);
+    if (!width || !height || width > maxSide || height > maxSide) return false;
+    return ofLoadImage(pixels, encoded);
+}
+
 class OperatorRenderInterface final : public RenderInterface_GL3 {
     Rml::TextureHandle LoadTexture(Rml::Vector2i& size, const Rml::String& source) override {
         constexpr std::string_view browsePrefix = "browse:";
-        if (source.compare(0, browsePrefix.size(), browsePrefix) != 0)
-            return RenderInterface_GL3::LoadTexture(size, source);
-        const auto path = vosc::operator_ui::stagedBrowseFile(source.substr(browsePrefix.size()));
+        constexpr std::string_view examplePrefix = "example:";
+        const bool example = source.compare(0, examplePrefix.size(), examplePrefix) == 0;
+        std::optional<std::filesystem::path> path;
+        if (source.compare(0, browsePrefix.size(), browsePrefix) == 0)
+            path = vosc::operator_ui::stagedBrowseFile(source.substr(browsePrefix.size()));
+        else if (example)
+            path = vosc::operator_ui::resolveExampleFile(vosc::operator_ui::exampleDirectories().examples,
+                                                        source.substr(examplePrefix.size()));
+        else return RenderInterface_GL3::LoadTexture(size, source);
+        if (!path) return {};
         ofPixels pixels;
-        if (!path || !ofLoadImage(pixels, *path)) return {};
+        if (example) {
+            if (!loadExampleThumbnail(pixels, *path)) return {};
+        } else if (!ofLoadImage(pixels, *path)) return {};
         const auto longest = std::max(pixels.getWidth(), pixels.getHeight());
         if (longest > 480) {
             pixels.resize(std::max<size_t>(1, pixels.getWidth() * 480 / longest),
@@ -331,6 +372,7 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
         if (!document) throw std::runtime_error("RmlUi could not load the operator controls");
         document->AddEventListener(Rml::EventId::Click, this);
         document->AddEventListener(Rml::EventId::Change, this);
+        document->AddEventListener(Rml::EventId::Focus, this, true);
         dock = document->GetElementById("dock");
         panel = document->GetElementById("panel");
         content = document->GetElementById("content");
@@ -341,25 +383,71 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
         search = static_cast<Rml::ElementFormControlInput*>(input);
         browseSearch = static_cast<Rml::ElementFormControlInput*>(document->GetElementById("browse-search"));
         browseCategory = static_cast<Rml::ElementFormControlSelect*>(document->GetElementById("browse-category"));
+        exampleSearch = static_cast<Rml::ElementFormControlInput*>(document->GetElementById("browse-example-search"));
+        exampleCategory = static_cast<Rml::ElementFormControlSelect*>(document->GetElementById("browse-example-category"));
     }
 
     void ProcessEvent(Rml::Event& event) override {
         const auto* target = event.GetTargetElement();
+        if (event.GetId() == Rml::EventId::Focus) {
+            rememberBrowseFocus(target->GetId());
+            return;
+        }
         if (event.GetId() == Rml::EventId::Change) {
-            if (syncingBrowse || (target->GetId() != "browse-use" && target->GetId() != "browse-target")) return;
+            if (syncingBrowse) return;
+            const auto& id = target->GetId();
             const auto value = event.GetParameter<Rml::String>("value", "");
+            if (id == "example-input" && examplesActive) {
+                examples.rememberInput(value);
+                return;
+            }
+            if (id != "browse-use" && id != "browse-target") return;
             uint64_t token = 0;
             const auto parsed = std::from_chars(value.data(), value.data() + value.size(), token);
             if (parsed.ec == std::errc{} && parsed.ptr == value.data() + value.size())
-                browseChanges.push_back({target->GetId(), token});
+                browseChanges.push_back({id, token});
             return;
         }
         if (target->GetTagName() != "button") target = target->Closest("button");
-        if (!target || target->IsClassSet("inactive")) return;
+        if (!target || target->IsClassSet("inactive") || target->GetAttribute<Rml::String>("aria-disabled", "") == "true") return;
         const auto value = target->GetAttribute<Rml::String>("data-target", "");
         uint64_t targetId = 0;
         std::from_chars(value.data(), value.data() + value.size(), targetId);
         action = Action{target->GetId(), targetId};
+    }
+
+    void rememberBrowseFocus(const std::string& id) {
+        if (syncingBrowse || !panel->IsClassSet("browse")) return;
+        if (examplesActive) {
+            if (id == "back" || id == "browse-example-search" || id == "browse-example-category"
+                || id.rfind("example-", 0) == 0) examplesFocus = id;
+        } else if (id == "back" || id == "browse-search" || id == "browse-category" || id == "browse-clear"
+                   || id == "browse-use" || id == "browse-target" || id == "browse-copy"
+                   || id.rfind("asset-row-", 0) == 0) {
+            assetsFocus = id;
+        }
+    }
+
+    void syncExampleInput() {
+        auto* input = static_cast<Rml::ElementFormControlInput*>(document->GetElementById("example-input"));
+        if (!input) return;
+        const auto value = examples.inputValue();
+        if (input->GetValue() == value) return;
+        const bool focused = context->GetFocusElement() == input;
+        int start = 0, end = 0;
+        if (focused) input->GetSelection(&start, &end, nullptr);
+        input->SetValue(value);
+        if (focused) {
+            const auto size = static_cast<int>(value.size());
+            input->SetSelectionRange(std::clamp(start, 0, size), std::clamp(end, 0, size));
+        }
+    }
+
+    bool isTextInput(View active, const Rml::Element* focused) const {
+        if (!focused) return false;
+        if (active == View::Console) return focused == search;
+        if (active != View::Browse) return false;
+        return examplesActive ? focused == exampleSearch || focused->GetId() == "example-input" : focused == browseSearch;
     }
 
     void syncViewport(const GLint* viewport) {
@@ -495,6 +583,8 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
     Rml::ElementFormControlInput* search = nullptr;
     Rml::ElementFormControlInput* browseSearch = nullptr;
     Rml::ElementFormControlSelect* browseCategory = nullptr;
+    Rml::ElementFormControlInput* exampleSearch = nullptr;
+    Rml::ElementFormControlSelect* exampleCategory = nullptr;
     bool loaderInitialized = false;
     bool initialized = false;
     bool reportedBlurError = false;
@@ -503,6 +593,10 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
     std::string focusRequest;
     uint64_t focusOrigin = 0;
     vosc::operator_ui::BrowseView browse;
+    vosc::operator_ui::ExamplesView examples;
+    std::string assetsFocus, examplesFocus;
+    float assetsScroll = 0, examplesScroll = 0;
+    bool examplesActive = false, keepCatalogScroll = false;
     std::vector<Action> browseChanges;
     std::string browseHeading, browseSummary, browseStatus;
     bool syncingBrowse = false;
@@ -525,7 +619,8 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
 DiagnosticOverlay::DiagnosticOverlay() = default;
 DiagnosticOverlay::~DiagnosticOverlay() = default;
 
-void DiagnosticOverlay::setup() {
+void DiagnosticOverlay::setup(unsigned int port) {
+    oscPort = port;
     auto ui = std::make_unique<Surface>();
     ui->setup();
     surface = std::move(ui);
@@ -544,8 +639,7 @@ void DiagnosticOverlay::setup() {
     listeners.push(events.charEvent.newListener([this, &events](uint32_t& codepoint) {
         if (!open) return false;
         const auto* focused = surface->context->GetFocusElement();
-        const bool textFocus = (view == View::Console && focused == surface->search)
-            || (view == View::Browse && focused == surface->browseSearch);
+        const bool textFocus = surface->isTextInput(view, focused);
         if (textFocus && surface->focusRequest.empty()
             && !(events.getModifiers() & (OF_KEY_CONTROL | OF_KEY_SUPER))
             && codepoint >= 0x20 && codepoint != 0x7f)
@@ -567,6 +661,12 @@ void DiagnosticOverlay::setup() {
         surface->document->SetClass("welcome", true);
         show(View::Overview, "welcome-dismiss");
     }
+}
+
+void DiagnosticOverlay::update() {
+    if (!surface) return;
+    if (auto focus = surface->examples.update(); focus && open && view == View::Browse && surface->examplesActive)
+        surface->focusRequest = std::move(*focus);
 }
 
 void DiagnosticOverlay::shutdown() {
@@ -605,6 +705,7 @@ void DiagnosticOverlay::show(View next, const std::string& focus) {
     view = next;
     surface->focusRequest = focus;
     surface->focusOrigin = 0;
+    surface->keepCatalogScroll = false;
     surface->restoreScroll = true;
 }
 
@@ -652,8 +753,7 @@ void DiagnosticOverlay::showDiagnostic(uint64_t sequence) {
 bool DiagnosticOverlay::keyPressed(ofKeyEventArgs& event) {
     auto& ui = *surface;
     auto* focused = ui.context->GetFocusElement();
-    const bool textFocus = open && ui.focusRequest.empty()
-        && ((view == View::Console && focused == ui.search) || (view == View::Browse && focused == ui.browseSearch));
+    const bool textFocus = open && ui.focusRequest.empty() && ui.isTextInput(view, focused);
     const bool browseSelect = open && view == View::Browse && focused && focused->GetTagName() == "select";
     const bool shortcut = !(event.modifiers & (OF_KEY_CONTROL | OF_KEY_ALT | OF_KEY_SUPER));
     const bool overview = shortcut && (event.key == 'o' || event.key == 'O');
@@ -858,7 +958,53 @@ void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std
     if (id == "return") close();
     else if (view == View::Browse) {
         auto& ui = *surface;
-        if (id == "back" && ui.browse.canGoBack()) {
+        if (id == "browse-examples" && !ui.examplesActive) {
+            ui.assetsScroll = ui.content->GetScrollTop();
+            ui.examplesActive = true;
+            show(View::Browse, ui.examplesFocus.empty() ? "browse-example-search" : ui.examplesFocus);
+            ui.scroll[static_cast<size_t>(View::Browse)] = ui.examplesScroll;
+            ui.keepCatalogScroll = true;
+        } else if (ui.examplesActive && (id == "browse-assets" || id == "browse-builtins")) {
+            ui.examplesScroll = ui.content->GetScrollTop();
+            ui.examplesActive = false;
+            if (ui.browse.switchCatalog(id == "browse-builtins")) {
+                ui.assetsScroll = 0;
+                ui.assetsFocus.clear();
+            }
+            const char* fallback = ui.browse.builtins() ? "browse-builtins" : "browse-search";
+            show(View::Browse, ui.assetsFocus.empty() ? fallback : ui.assetsFocus);
+            ui.scroll[static_cast<size_t>(View::Browse)] = ui.assetsScroll;
+            ui.keepCatalogScroll = true;
+        } else if (ui.examplesActive) {
+            if (id == "back" && ui.examples.detail()) {
+                show(View::Browse, ui.examples.backItem());
+                ui.scroll[static_cast<size_t>(View::Browse)] = ui.examples.originScroll();
+            } else if (id.rfind("example-row-", 0) == 0) {
+                if (ui.examples.openItem(id, ui.content->GetScrollTop())) {
+                    show(View::Browse, "back");
+                    ui.scroll[static_cast<size_t>(View::Browse)] = 0;
+                }
+            } else if (id == "example-clear") {
+                ui.exampleSearch->SetValue("");
+                ui.exampleCategory->SetSelection(0);
+                ui.focusRequest = "browse-example-search";
+            } else {
+                const auto request = [this, &renderer](std::filesystem::path manifest, scene::Inputs inputs) {
+                    return renderer.requestExampleLoad(std::move(manifest), std::move(inputs),
+                        [this, &renderer](const scene::File* loaded, int, const std::string& detail) {
+                            if (!surface) return;
+                            if (loaded) {
+                                ofSetWindowTitle(loaded->title);
+                                rememberScene(*loaded, renderer);
+                            } else {
+                                ofLogError("Operator UI") << "Load Example failed · " << detail;
+                            }
+                            surface->examples.finishLoad(loaded != nullptr, detail);
+                        });
+                };
+                if (auto focus = ui.examples.activate(id, request)) ui.focusRequest = std::move(*focus);
+            }
+        } else if (id == "back" && ui.browse.canGoBack()) {
             show(View::Browse, ui.browse.backItem());
             ui.scroll[static_cast<size_t>(View::Browse)] = ui.browse.originScroll();
         } else if (id.rfind("asset-row-", 0) == 0 && !ui.browse.detail()) {
@@ -868,6 +1014,7 @@ void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std
             }
         } else if (id == "browse-assets" || id == "browse-builtins") {
             if (ui.browse.switchCatalog(id == "browse-builtins")) {
+                ui.assetsFocus.clear();
                 show(View::Browse, id);
                 ui.scroll[static_cast<size_t>(View::Browse)] = 0;
             }
@@ -941,13 +1088,17 @@ void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std
     }
 }
 
-std::string DiagnosticOverlay::overviewMarkup(const VOSC& renderer, const GLint* viewport) {
+bool DiagnosticOverlay::sceneIsCurrent(const VOSC& renderer) const {
     const auto& layers = renderer.operatorLayers();
-    const bool knownScene = !sceneLayers.empty() && layers.size() == sceneLayers.size() &&
+    return !sceneLayers.empty() && layers.size() == sceneLayers.size() &&
         std::equal(layers.begin(), layers.end(), sceneLayers.begin(),
             [](const auto& live, const auto& original) { return live && live == original.layer.lock(); });
+}
+
+std::string DiagnosticOverlay::overviewMarkup(const VOSC& renderer, const GLint* viewport) {
+    const auto& layers = renderer.operatorLayers();
     surface->setReading("scene-title", surface->title,
-        knownScene && !sceneTitle.empty() ? sceneTitle : "Unnamed scene");
+        sceneIsCurrent(renderer) && !sceneTitle.empty() ? sceneTitle : "Unnamed scene");
     surface->setReading("render-size", surface->dimensions,
         std::to_string(viewport[2]) + " × " + std::to_string(viewport[3]) + " px");
     const auto camera = renderer.operatorCameraPosition();
@@ -1059,7 +1210,8 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     refreshEntries(logger);
     if (view == View::Console) refreshMatches();
     if (view == View::Browse) {
-        ui.browse.refresh();
+        if (ui.examplesActive) ui.examples.refresh();
+        else ui.browse.refresh();
         for (const auto& change : std::exchange(ui.browseChanges, {})) {
             if (change.id == "browse-use") ui.browse.selectUse(change.target);
             else ui.browse.selectTarget(renderer, change.target);
@@ -1076,25 +1228,33 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     const auto focusToken = currentFocus ? currentFocus->GetAttribute<uint64_t>("data-target", 0) : 0;
     const auto rowOrigin = focusToken && ui.inspector.matches(focusId, focusToken) ? focusToken : 0;
     const bool browse = view == View::Browse;
-    if (browse && !ui.browse.detail() && !ui.browse.builtins()
-        && ui.browse.setFilters(ui.browseSearch->GetValue(), ui.browseCategory->GetValue())) {
-        ui.scroll[static_cast<size_t>(View::Browse)] = 0;
-        ui.restoreScroll = true;
+    const bool examples = browse && ui.examplesActive;
+    const bool browseDetail = browse && (examples ? ui.examples.detail() : ui.browse.detail());
+    if (browse && !browseDetail) {
+        const bool changed = examples
+            ? ui.examples.setFilters(ui.exampleSearch->GetValue(), ui.exampleCategory->GetValue())
+            : !ui.browse.builtins() && ui.browse.setFilters(ui.browseSearch->GetValue(), ui.browseCategory->GetValue());
+        if (changed) {
+            ui.scroll[static_cast<size_t>(View::Browse)] = 0;
+            ui.restoreScroll = true;
+        }
     }
     const auto scrollTop = ui.restoreScroll
         ? ui.scroll[static_cast<size_t>(view)] : ui.content->GetScrollTop();
     const bool console = view == View::Console;
     const bool inspector = view == View::Inspector;
-    const bool detail = (inspector && ui.inspector.detail()) || (browse && ui.browse.detail());
+    const bool detail = (inspector && ui.inspector.detail()) || browseDetail;
+    const bool browseBack = browse && (examples ? ui.examples.detail() : ui.browse.canGoBack());
     const auto& docks = Surface::destinations;
     const auto destination = std::find_if(docks.begin(), docks.end(),
         [&](const auto& dest) { return dest.view == view; });
     ui.setReading("panel-title", ui.viewTitle, inspector ? ui.inspector.title() : destination->title);
     ui.panel->SetClass("overview", view == View::Overview);
     ui.panel->SetClass("browse", browse);
-    ui.panel->SetClass("browse-folder", browse && ui.browse.canGoBack());
-    ui.panel->SetClass("browse-root", browse && !ui.browse.canGoBack());
-    ui.panel->SetClass("browse-builtins", browse && ui.browse.builtins());
+    ui.panel->SetClass("browse-folder", browseBack);
+    ui.panel->SetClass("browse-root", browse && !browseBack);
+    ui.panel->SetClass("browse-examples", examples);
+    ui.panel->SetClass("browse-builtins", browse && !examples && ui.browse.builtins());
     ui.panel->SetClass("detail", detail);
     ui.panel->SetClass("inspecting", inspector);
     ui.panel->SetClass("enlarged", inspector && ui.inspector.expanded());
@@ -1117,16 +1277,21 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
             break;
         }
         case View::Console: break;
-        case View::Browse:
-            contentMarkup = &ui.browse.markup(renderer);
-            ui.panel->SetProperty("height", std::to_string(ui.browse.height(ui.document->IsClassSet("compact"))) + "dp");
-            ui.setReading("browse-heading", ui.browseHeading, ui.browse.heading());
-            ui.document->GetElementById("browse-assets")->SetClass("selected", !ui.browse.builtins());
-            ui.document->GetElementById("browse-builtins")->SetClass("selected", ui.browse.builtins());
-            ui.setReading("browse-summary", ui.browseSummary, ui.browse.summary());
-            ui.setReading("browse-status", ui.browseStatus, ui.browse.status());
+        case View::Browse: {
+            const bool compact = ui.document->IsClassSet("compact");
+            if (examples) markup = ui.examples.markup(oscPort, sceneIsCurrent(renderer));
+            else contentMarkup = &ui.browse.markup(renderer);
+            const int height = examples ? ui.examples.height(compact) : ui.browse.height(compact);
+            ui.panel->SetProperty("height", std::to_string(height) + "dp");
+            ui.setReading("browse-heading", ui.browseHeading, examples ? "Examples" : ui.browse.heading());
+            ui.document->GetElementById("browse-examples")->SetClass("selected", examples);
+            ui.document->GetElementById("browse-assets")->SetClass("selected", !examples && !ui.browse.builtins());
+            ui.document->GetElementById("browse-builtins")->SetClass("selected", !examples && ui.browse.builtins());
+            ui.setReading("browse-summary", ui.browseSummary, examples ? ui.examples.summary() : ui.browse.summary());
+            ui.setReading("browse-status", ui.browseStatus, examples ? std::string{} : ui.browse.status());
             ui.document->GetElementById("browse-status")->SetClass("present", !ui.browseStatus.empty());
             break;
+        }
         case View::Count: break;
     }
     ui.inspector.endMarkup();
@@ -1143,6 +1308,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
         ui.content->SetInnerRML(*contentMarkup);
         ui.renderedContent = *contentMarkup;
     }
+    if (examples) ui.syncExampleInput();
     if (inspector) ui.inspector.syncReadings(*ui.content, contentChanged);
 
     bool rowsChanged = false;
@@ -1156,7 +1322,9 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     ui.syncingBrowse = false;
     auto wantedFocus = std::exchange(ui.focusRequest, {});
     auto origin = std::exchange(ui.focusOrigin, 0);
-    const bool returningToAsset = browse && wantedFocus.rfind("asset-row-", 0) == 0;
+    const bool keepCatalogScroll = std::exchange(ui.keepCatalogScroll, false);
+    const bool revealBrowseFocus = browse && !keepCatalogScroll && (wantedFocus.rfind("asset-row-", 0) == 0
+        || (examples && wantedFocus.rfind("example-", 0) == 0));
     Rml::Element* returningRow = nullptr;
     if (wantedFocus.empty() && !focusId.empty() &&
         (!ui.context->GetFocusElement() || ui.context->GetFocusElement()->GetId() != focusId ||
@@ -1166,18 +1334,28 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     }
     if (!wantedFocus.empty()) {
         auto* element = ui.document->GetElementById(wantedFocus);
-        if (!element || element->IsClassSet("inactive") || (origin && !ui.inspector.matches(wantedFocus, origin))) {
+        if (!element || !element->IsVisible(true) || element->IsClassSet("inactive")
+            || (origin && !ui.inspector.matches(wantedFocus, origin))) {
             const char* fallback = destination->id;
             if (detail) fallback = "back";
             else if (console) fallback = "console-search";
+            else if (examples) fallback = "browse-example-search";
             else if (browse) fallback = ui.browse.builtins() ? "browse-builtins" : "browse-search";
             element = ui.document->GetElementById(fallback);
-        } else if (returningToAsset) returningRow = element;
+        } else if (revealBrowseFocus) returningRow = element;
         element->Focus(true);
     }
     if (console) ui.placeLogScroll(rowsChanged);
     else if (ui.restoreScroll || contentChanged) ui.content->SetScrollTop(scrollTop);
-    if (returningRow) returningRow->ScrollIntoView(Rml::ScrollAlignment::Adaptive);
+    if (returningRow) {
+        if (returningRow->IsClassSet("asset-row")) {
+            const auto visibleTop = ui.content->GetAbsoluteOffset(Rml::BoxArea::Border).y + ui.content->GetClientTop();
+            const auto rowTop = returningRow->GetAbsoluteOffset(Rml::BoxArea::Border).y;
+            const auto rowBottom = rowTop + returningRow->GetBox().GetSize(Rml::BoxArea::Border).y;
+            if (rowBottom <= visibleTop || rowTop >= visibleTop + ui.content->GetClientHeight())
+                returningRow->ScrollIntoView(Rml::ScrollAlignment::Nearest);
+        } else returningRow->ScrollIntoView(Rml::ScrollAlignment::Adaptive);
+    }
     ui.restoreScroll = false;
 
     ui.paint(viewport);

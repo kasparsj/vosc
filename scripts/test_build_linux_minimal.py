@@ -12,6 +12,21 @@ ROOT = Path(__file__).resolve().parents[1]
 EXCLUDED = {"ofxDeferredShading", "ofxHPVPlayer", "ofxUltralight"}
 
 
+def verify_example_stage(source, staged):
+    def contents(root):
+        return {
+            path.relative_to(root): path.read_bytes()
+            for path in root.rglob("*")
+            if path.is_file() and all(not part.startswith(".") for part in path.relative_to(root).parts)
+        }
+
+    expected = contents(source)
+    assert Path("README.md") in expected
+    assert Path("browse.json") in expected
+    assert Path("organic-trails/preview.png") in expected
+    assert contents(staged) == expected
+
+
 def verify_desktop_selection(project, sdk, rules, run):
     helper = project / "scripts/build_rmlui.py"
     helper.write_text(
@@ -24,12 +39,14 @@ def verify_desktop_selection(project, sdk, rules, run):
         "    target.touch()\n"
     )
     rules.write_text(
-        ".PHONY: Release ReleaseABI force\n"
+        ".PHONY: Release ReleaseABI CleanReleaseABI CleanDebugABI force\n"
         "Release:\n"
         "\t$(MAKE) ReleaseABI\n"
         "TARGET = bin/vosc\n"
         "OF_PROJECT_OBJS = obj/renderer.o\n"
         "ReleaseABI: $(TARGET)\n"
+        "CleanReleaseABI CleanDebugABI:\n"
+        "\t@printf '%s\\n' '$(OF_ADDONS_PATH)'\n"
         "$(TARGET): $(OF_PROJECT_OBJS) force\n"
         "\t@mkdir -p bin\n"
         "\t@printf '%s\\n' '$(PROJECT_LDFLAGS)' > bin/link-inputs\n"
@@ -37,8 +54,12 @@ def verify_desktop_selection(project, sdk, rules, run):
         "$(OF_PROJECT_OBJS): force\n"
         "\t@mkdir -p obj\n"
         "\t@printf '%s\\n' '$(PROJECT_CFLAGS)' '$(PROJECT_EXCLUSIONS)' > obj/compile-inputs\n"
+        "\t@printf '%s\\n' '$(OF_ADDONS_PATH)' > obj/addon-path\n"
         "\t@touch $@\n"
     )
+    deferred = sdk / "addons/ofxDeferredShading/data/shaders/deferred"
+    deferred.mkdir(parents=True)
+    (deferred / "gbuffer.frag").write_text("Deferred shader fixture.\n")
     desktop = [f"OF_ROOT={sdk}", "VOSC_PROFILE=default"]
     enabled = project / "rmlui-enabled"
     disabled = project / "rmlui-disabled"
@@ -49,6 +70,21 @@ def verify_desktop_selection(project, sdk, rules, run):
     assert "-DVOSC_OPERATOR_UI=1" in (project / "obj/compile-inputs").read_text()
     assert f"-I{enabled}/generated" in (project / "obj/compile-inputs").read_text()
     assert f"{enabled}/lib/libvosc_rmlui_gl3.a" in (project / "bin/link-inputs").read_text()
+    picker_inputs = (project / "obj/compile-inputs").read_text()
+    assert "./src/operator/macos ./src/operator/macos/%" in picker_inputs
+    assert "./src/macos ./src/macos/%" in picker_inputs
+    render_addons = Path((project / "obj/addon-path").read_text().strip())
+    assert render_addons.resolve().is_relative_to((project / "build/vosc-render-addons").resolve())
+    post = Path("ofxPostProcessing/src/PostProcessing.cpp")
+    assert "glPushAttrib" not in (render_addons / post).read_text()
+    assert "glPushAttrib" in (sdk / "addons" / post).read_text()
+    assert 'setUniform1i("isShadow", 0)' in (render_addons / "ofxDeferredShading/src/GBuffer.cpp").read_text()
+    assert 'applyAo.setUniformTexture("colorTex"' in (render_addons / "ofxDeferredShading/src/pass/SsaoPass.cpp").read_text()
+    staged_shader = project / "bin/data/shaders/deferred/gbuffer.frag"
+    assert staged_shader.read_bytes() == (deferred / "gbuffer.frag").read_bytes()
+    verify_example_stage(project / "examples", project / "bin/data/examples")
+    manifest = project / "bin/data/examples/video/scene.vosc.json"
+    first_mtime = manifest.stat().st_mtime_ns
 
     result = run(["make", "-j2", "Release", *desktop, "VOSC_OPERATOR_UI=0", f"VOSC_RMLUI_DIR={disabled}"])
     assert result.returncode == 0, result
@@ -56,8 +92,15 @@ def verify_desktop_selection(project, sdk, rules, run):
     inputs = (project / "obj/compile-inputs").read_text()
     assert "-DVOSC_OPERATOR_UI=0" in inputs
     assert "/src/operator" in inputs
+    assert "./src/macos ./src/macos/%" in inputs
     assert "/generated" not in inputs
     assert not (project / "bin/link-inputs").read_text().strip()
+    assert (project / "obj/addon-path").read_text().strip() == str(render_addons)
+    assert manifest.stat().st_mtime_ns == first_mtime
+    verify_example_stage(project / "examples", project / "bin/data/examples")
+    for target in ("CleanReleaseABI", "CleanDebugABI"):
+        result = run(["make", target, *desktop])
+        assert result.returncode == 0 and result.stdout.strip() == str(render_addons), result
 
 
 def main():
@@ -65,7 +108,8 @@ def main():
         work = Path(temporary)
         project = work / "project"
         for relative in ("Makefile", "config.make", "addons.make", "scripts/build_linux_minimal.py",
-                         "scripts/addon_compat.py", "scripts/stage_assets.py", "src/main.cpp"):
+                         "scripts/addon_compat.py", "scripts/stage_linux_render_addons.py",
+                         "scripts/stage_assets.py", "src/main.cpp"):
             target = project / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, target)
@@ -74,6 +118,10 @@ def main():
             target = project / "src" / ui_source
             target.parent.mkdir(exist_ok=True)
             target.touch()
+        mac_source = project / "src/macos/WebcamTexMac.mm"
+        mac_source.parent.mkdir()
+        mac_source.touch()
+        shutil.copytree(ROOT / "examples", project / "examples")
         data = project / "assets/shaders"
         (data / "deferred").mkdir(parents=True)
         (data / "direct.frag").touch()
@@ -90,6 +138,22 @@ def main():
         expr_header = sdk / "addons/ofxExpr/src/ofxExprParser.hpp"
         expr_header.parent.mkdir()
         expr_header.write_text('#include "ofEvents.h"\n')
+        render_sources = {
+            "ofxPostProcessing/src/PostProcessing.cpp": (
+                "glPushAttrib(GL_ENABLE_BIT);\n" * 3 + "glPopAttrib();\n" * 2 + "glDisable(GL_LIGHTING);\n"
+            ),
+            "ofxDeferredShading/src/DeferredProcessor.cpp": (
+                "glPushAttrib(GL_ENABLE_BIT);\nglPopAttrib();\nglDisable(GL_LIGHTING);\n"
+            ),
+            "ofxDeferredShading/src/GBuffer.cpp": 'shader.setUniform1f("isShadow", 0);\n',
+            "ofxDeferredShading/src/pass/SsaoPass.cpp": (
+                'calcAo.setUniformTexture("colorTex", gbuffer.getTexture(GBuffer::TYPE_ALBEDO), 2);\n'
+            ),
+        }
+        for name, text in render_sources.items():
+            render_source = sdk / "addons" / name
+            render_source.parent.mkdir(parents=True, exist_ok=True)
+            render_source.write_text(text)
         rules = sdk / "libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk"
         rules.parent.mkdir(parents=True)
         rules.write_text(
@@ -121,14 +185,17 @@ def main():
         result = run(build)
         assert result.returncode == 0, result
         stage, = (project / ".vosc-linux").iterdir()
-        assert set((stage / "addons.make").read_text().split()) == (retained - {"ofxExpr"}) | {"addons/ofxExpr"}
+        patched = {"ofxExpr", "ofxPostProcessing"}
+        assert set((stage / "addons.make").read_text().split()) == (retained - patched) | {f"addons/{name}" for name in patched}
         assert '#include "ofUtils.h"' in (stage / "addons/ofxExpr/src/ofxExprParser.hpp").read_text()
         assert '#include "ofUtils.h"' not in expr_header.read_text()
         assert not (stage / "src/operator").exists()
+        assert not (stage / "src/macos").exists()
         assert (stage / "bin/data/shaders/direct.frag").is_file()
         assert not (stage / "bin/data/shaders/deferred").exists()
         assert list((stage / "bin/data/videos").iterdir()) == []
         assert not list(stage.rglob("*RmlUi*"))
+        verify_example_stage(project / "examples", stage / "bin/data/examples")
         verify_desktop_selection(project, sdk, rules, run)
     print("PASS Linux minimal staging and desktop operator UI input selection with a fixture SDK")
 

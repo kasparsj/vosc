@@ -11,6 +11,9 @@
 		6D1A436780B345DF902813A1 /* InspectorView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902813A2 /* InspectorView.cpp */; };
 		6D1A436780B345DF902815A1 /* BrowseCatalog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902815A2 /* BrowseCatalog.cpp */; };
 		6D1A436780B345DF902816A1 /* BrowseView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902816A2 /* BrowseView.cpp */; };
+		6D1A436780B345DF902817A1 /* ExamplesView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902817A2 /* ExamplesView.cpp */; };
+		6D1A436780B345DF902819A1 /* ExampleCatalog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902819A2 /* ExampleCatalog.cpp */; };
+		6D1A436780B345DF902820A1 /* ExampleFiles.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902820A2 /* ExampleFiles.mm */; };
 		6D1A436780B345DF902814A1 /* InspectorPreview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902814A2 /* InspectorPreview.cpp */; };
 		01B036F302D9F069DEDCD4F7 /* GeomPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 553241ABDCDFB7E8685963FC /* GeomPool.cpp */; };
 		04C13EEA813A786CC1D8137A /* FxaaPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9425843AEC3118B8FDEF1B0B /* FxaaPass.cpp */; };
@@ -57,13 +60,14 @@
 		4ADB88E2FB52E76A471065DE /* ofxOscParameterSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0AED834CE4DEC5260AF302A2 /* ofxOscParameterSync.cpp */; };
 		4C24ABEB698FBF0B0AEE4EAA /* BlurPass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF666DA393251DE1093627D1 /* BlurPass.cpp */; };
 		510CAFE035E576A4E1502D52 /* UdpSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6DEF695B88BA5FAACEAA937 /* UdpSocket.cpp */; };
-		56939EF0076F3D51F0FE0EB9 /* VideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9174FE620B649DE0C36D5259 /* VideoTex.cpp */; };
+		56939EF0076F3D51F0FE0EB9 /* VideoTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9174FE620B649DE0C36D5259 /* VideoTex.cpp */; settings = {COMPILER_FLAGS = "-x objective-c++ -fobjc-arc"; }; };
 		5790F39566203E0212580DB0 /* ReflectX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7648D86674A13C326B506A34 /* ReflectX.cpp */; };
 		5864AD82E20F15536D054EA3 /* ofxOscMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DF49D76C45D5DB505A234880 /* ofxOscMessage.cpp */; };
 		5D833E7A02CBA76EFDA2776E /* VariablePool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FE6A0B50D6798FC3BC6A087A /* VariablePool.cpp */; };
 		622F2B6B3FFAA37224C22AD2 /* ofxAutoReloadedShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65E3959FF1F849DAE3BCC008 /* ofxAutoReloadedShader.cpp */; };
 		62545D179C94265CA1389D4A /* OscOutboundPacketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63A47AC60FFAFC3BF093EC0F /* OscOutboundPacketStream.cpp */; };
 		631702104AFC104323A9EB79 /* CoreMIDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81AC32CCCB56FAABA3E1BDE0 /* CoreMIDI.framework */; };
+		6D1A436780B345DF902821A1 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1A436780B345DF902821A2 /* UniformTypeIdentifiers.framework */; };
 		63D0FD8734D5760B8080C901 /* RtMidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ABDEF0ACF05BF28F5C74E008 /* RtMidi.cpp */; };
 		63F9FE1D90234FA6DE6F509E /* ofxMidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E238CCDE032640E0FEBFAD82 /* ofxMidi.cpp */; };
 		640279EE111671BD026CB013 /* ofxOscReceiver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C2FAC65C491D4231379F3298 /* ofxOscReceiver.cpp */; };
@@ -95,6 +99,7 @@
 		90BB2D10988A91408820D432 /* Light.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8F73D15DA801ABFFA3AEA6D1 /* Light.cpp */; };
 		9372598B7CC8667697717419 /* ShaderTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDAE40F4409B52242243517B /* ShaderTex.cpp */; };
 		9AC85341DEAB6A0366A10521 /* WebcamTex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */; };
+		B4C0C59C6CF4427D85D3F2D1 /* WebcamTexMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = B4C0C59C6CF4427D85D3F2D2 /* WebcamTexMac.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		A1D2F32CDE34F3703ECD8A01 /* Geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FE6C4A803E115F324568E6A /* Geom.cpp */; };
 		A21F931B4F89844B53FE5065 /* ofxUltralight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 75CE68B0155679264FE10473 /* ofxUltralight.cpp */; };
 		A40A1934868B9C3BEF746DFA /* Rotate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 15644D27B8AD78E007263288 /* Rotate.cpp */; };
@@ -183,6 +188,12 @@
 		6D1A436780B345DF902813A3 /* InspectorView.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/InspectorView.hpp; sourceTree = SOURCE_ROOT; };
 		6D1A436780B345DF902815A3 /* BrowseCatalog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/BrowseCatalog.hpp; sourceTree = SOURCE_ROOT; };
 		6D1A436780B345DF902816A3 /* BrowseView.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/BrowseView.hpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902817A2 /* ExamplesView.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/operator/ExamplesView.cpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902817A3 /* ExamplesView.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/ExamplesView.hpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902819A2 /* ExampleCatalog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/operator/ExampleCatalog.cpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902819A3 /* ExampleCatalog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/ExampleCatalog.hpp; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902820A2 /* ExampleFiles.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = src/operator/macos/ExampleFiles.mm; sourceTree = SOURCE_ROOT; };
+		6D1A436780B345DF902820A3 /* ExampleFiles.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/ExampleFiles.hpp; sourceTree = SOURCE_ROOT; };
 		6D1A436780B345DF902814A3 /* InspectorPreview.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = src/operator/InspectorPreview.hpp; sourceTree = SOURCE_ROOT; };
 		0007F94E72255780D908645A /* VideoTex.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VideoTex.h; path = src/tex/VideoTex.h; sourceTree = SOURCE_ROOT; };
 		00D6D32B84B099226431108C /* ofxOsc.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxOsc.h; path = "ofxOsc/src/ofxOsc.h"; sourceTree = VOSC_ADDONS; };
@@ -538,6 +549,7 @@
 		81436E53CC4A77E326F659C3 /* ofxMidiOut.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ofxMidiOut.h; path = "ofxMidi/src/ofxMidiOut.h"; sourceTree = VOSC_ADDONS; };
 		81967292BFC87A0144BD32C6 /* ofxOscSender.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ofxOscSender.cpp; path = "ofxOsc/src/ofxOscSender.cpp"; sourceTree = VOSC_ADDONS; };
 		81AC32CCCB56FAABA3E1BDE0 /* CoreMIDI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMIDI.framework; path = /System/Library/Frameworks/CoreMIDI.framework; sourceTree = "<group>"; };
+		6D1A436780B345DF902821A2 /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
 		830C7C3DF5B5E3A6340D0712 /* ThreadSafeQueue.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ThreadSafeQueue.h; path = "ofxHPVPlayer/src/ThreadSafeQueue.h"; sourceTree = VOSC_ADDONS; };
 		8384186247D2FBB3D6023FB0 /* FogPass.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FogPass.h; path = "ofxDeferredShading/src/pass/FogPass.h"; sourceTree = VOSC_ADDONS; };
 		856884322B435774CF38E3D8 /* FboPingPong.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FboPingPong.h; path = src/FboPingPong.h; sourceTree = SOURCE_ROOT; };
@@ -558,7 +570,7 @@
 		8F73D15DA801ABFFA3AEA6D1 /* Light.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Light.cpp; path = src/light/Light.cpp; sourceTree = SOURCE_ROOT; };
 		8FF82F2EF8EE6573368278E4 /* HPVManager.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = HPVManager.h; path = "ofxHPVPlayer/src/HPVManager.h"; sourceTree = VOSC_ADDONS; };
 		9144546E5481902E77870A52 /* lz4.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = lz4.c; path = "ofxHPVPlayer/src/lz4.c"; sourceTree = VOSC_ADDONS; };
-		9174FE620B649DE0C36D5259 /* VideoTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VideoTex.cpp; path = src/tex/VideoTex.cpp; sourceTree = SOURCE_ROOT; };
+		9174FE620B649DE0C36D5259 /* VideoTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = VideoTex.cpp; path = src/tex/VideoTex.cpp; sourceTree = SOURCE_ROOT; };
 		91F91C3BEAD0B3C2B92BB9A5 /* DofAltPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = DofAltPass.cpp; path = "ofxPostProcessing/src/DofAltPass.cpp"; sourceTree = VOSC_ADDONS; };
 		9222AE2464AE1CF72876A4ED /* LimbDarkeningPass.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = LimbDarkeningPass.cpp; path = "ofxPostProcessing/src/LimbDarkeningPass.cpp"; sourceTree = VOSC_ADDONS; };
 		9339B8AD0EF31B7708C53B9F /* ProgressHandler.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = ProgressHandler.hpp; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/ProgressHandler.hpp"; sourceTree = VOSC_ADDONS; };
@@ -673,6 +685,7 @@
 		D825FF1F1EA48B305BB428B7 /* scene.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = scene.h; path = "ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/Headers/assimp/scene.h"; sourceTree = VOSC_ADDONS; };
 		D8272F96628FECC086D67453 /* FontLoader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = FontLoader.h; path = "ofxUltralight/libs/include/Ultralight/platform/FontLoader.h"; sourceTree = VOSC_ADDONS; };
 		D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = WebcamTex.cpp; path = src/tex/WebcamTex.cpp; sourceTree = SOURCE_ROOT; };
+		B4C0C59C6CF4427D85D3F2D2 /* WebcamTexMac.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = src/macos/WebcamTexMac.mm; sourceTree = SOURCE_ROOT; };
 		D9696434C087642B807AB3BE /* Geom.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = Geom.h; path = src/Geom.h; sourceTree = SOURCE_ROOT; };
 		D9BFFBBF4CC43DEE890B3C3E /* OscTypes.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = OscTypes.cpp; path = "ofxOsc/libs/oscpack/src/osc/OscTypes.cpp"; sourceTree = VOSC_ADDONS; };
 		DACACDF2F37260A0BFF826E2 /* PostProcessing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = PostProcessing.h; path = "ofxPostProcessing/src/PostProcessing.h"; sourceTree = VOSC_ADDONS; };
@@ -945,6 +958,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				631702104AFC104323A9EB79 /* CoreMIDI.framework in Frameworks */,
+				6D1A436780B345DF902821A1 /* UniformTypeIdentifiers.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1904,6 +1918,7 @@
 				9174FE620B649DE0C36D5259 /* VideoTex.cpp */,
 				0007F94E72255780D908645A /* VideoTex.h */,
 				D8CDFA93E794A0A1F4FCEDDA /* WebcamTex.cpp */,
+				B4C0C59C6CF4427D85D3F2D2 /* WebcamTexMac.mm */,
 				61F771AD70983C40DF6B7287 /* WebcamTex.h */,
 			);
 			name = tex;
@@ -2387,6 +2402,12 @@
 				6D1A436780B345DF902813A3 /* InspectorView.hpp */,
 				6D1A436780B345DF902815A3 /* BrowseCatalog.hpp */,
 				6D1A436780B345DF902816A3 /* BrowseView.hpp */,
+				6D1A436780B345DF902817A2 /* ExamplesView.cpp */,
+				6D1A436780B345DF902817A3 /* ExamplesView.hpp */,
+				6D1A436780B345DF902819A2 /* ExampleCatalog.cpp */,
+				6D1A436780B345DF902819A3 /* ExampleCatalog.hpp */,
+				6D1A436780B345DF902820A2 /* ExampleFiles.mm */,
+				6D1A436780B345DF902820A3 /* ExampleFiles.hpp */,
 				6D1A436780B345DF902814A3 /* InspectorPreview.hpp */,
 				42EEF41412CD072D7A17504A /* Logger.h */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
@@ -2581,7 +2602,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "echo \"$GCC_PREPROCESSOR_DEFINITIONS\";\nAPPSTORE=`expr \"$GCC_PREPROCESSOR_DEFINITIONS\" : \".*APPSTORE=\\([0-9]*\\)\"`\nif [ -z \"$APPSTORE\" ] ; then\necho \"Note: Not copying assets to App Package or doing App Code signing. Use AppStore target for AppStore distribution\";\nelse\n# Copy assets into App/Resources\npython3 \"$SRCROOT/scripts/stage_assets.py\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/data\" || exit $?\n\n# ---- Code Sign App Package ----\n\n# WARNING: You may have to run Clean in Xcode after changing CODE_SIGN_IDENTITY!\n\n# Verify that $CODE_SIGN_IDENTITY is set\nif [ -z \"${CODE_SIGN_IDENTITY}\" ] ; then\necho \"CODE_SIGN_IDENTITY needs to be set for framework code-signing\"\nexit 0\nfi\n\nif [ -z \"${CODE_SIGN_ENTITLEMENTS}\" ] ; then\necho \"CODE_SIGN_ENTITLEMENTS needs to be set for framework code-signing!\"\n\nif [ \"${CONFIGURATION}\" = \"Release\" ] ; then\nexit 1\nelse\n# Code-signing is optional for non-release builds.\nexit 0\nfi\nfi\n\nITEMS=\"\"\n\nFRAMEWORKS_DIR=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\necho \"$FRAMEWORKS_DIR\"\nif [ -d \"$FRAMEWORKS_DIR\" ] ; then\nFRAMEWORKS=$(find \"${FRAMEWORKS_DIR}\" -depth -type d -name \"*.framework\" -or -name \"*.dylib\" -or -name \"*.bundle\" | sed -e \"s/\\(.*framework\\)/\\1\\/Versions\\/A\\//\")\nRESULT=$?\nif [[ $RESULT != 0 ]] ; then\nexit 1\nfi\n\nITEMS=\"${FRAMEWORKS}\"\nfi\n\nLOGINITEMS_DIR=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Library/LoginItems/\"\nif [ -d \"$LOGINITEMS_DIR\" ] ; then\nLOGINITEMS=$(find \"${LOGINITEMS_DIR}\" -depth -type d -name \"*.app\")\nRESULT=$?\nif [[ $RESULT != 0 ]] ; then\nexit 1\nfi\n\nITEMS=\"${ITEMS}\"$'\\n'\"${LOGINITEMS}\"\nfi\n\n# Prefer the expanded name, if available.\nCODE_SIGN_IDENTITY_FOR_ITEMS=\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\nif [ \"${CODE_SIGN_IDENTITY_FOR_ITEMS}\" = \"\" ] ; then\n# Fall back to old behavior.\nCODE_SIGN_IDENTITY_FOR_ITEMS=\"${CODE_SIGN_IDENTITY}\"\nfi\n\necho \"Identity:\"\necho \"${CODE_SIGN_IDENTITY_FOR_ITEMS}\"\n\necho \"Entitlements:\"\necho \"${CODE_SIGN_ENTITLEMENTS}\"\n\necho \"Found:\"\necho \"${ITEMS}\"\n\n# Change the Internal Field Separator (IFS) so that spaces in paths will not cause problems below.\nSAVED_IFS=$IFS\nIFS=$(echo -en \"\\n\\b\")\n\n# Loop through all items.\nfor ITEM in $ITEMS;\ndo\necho \"Stripping invalid archs '${ITEM}'\"\nlipo -extract x86_64 \"${ITEM}\" -o \"${ITEM}\"\necho \"Signing '${ITEM}'\"\ncodesign --force --verbose --sign \"${CODE_SIGN_IDENTITY_FOR_ITEMS}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" \"${ITEM}\"\nRESULT=$?\nif [[ $RESULT != 0 ]] ; then\necho \"Failed to sign '${ITEM}'.\"\nIFS=$SAVED_IFS\nexit 1\nfi\ndone\n\n# Restore $IFS.\nIFS=$SAVED_IFS\n\nfi\n";
+			shellScript = "echo \"$GCC_PREPROCESSOR_DEFINITIONS\";\nAPPSTORE=`expr \"$GCC_PREPROCESSOR_DEFINITIONS\" : \".*APPSTORE=\\([0-9]*\\)\"`\nif [ -z \"$APPSTORE\" ] ; then\necho \"Note: Not copying assets to App Package or doing App Code signing. Use AppStore target for AppStore distribution\";\nelse\n# Copy assets into App/Resources\npython3 \"$SRCROOT/scripts/stage_assets.py\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/data\" --addon-sdk \"$VOSC_ADDON_SDK\" || exit $?\n\n# ---- Code Sign App Package ----\n\n# WARNING: You may have to run Clean in Xcode after changing CODE_SIGN_IDENTITY!\n\n# Verify that $CODE_SIGN_IDENTITY is set\nif [ -z \"${CODE_SIGN_IDENTITY}\" ] ; then\necho \"CODE_SIGN_IDENTITY needs to be set for framework code-signing\"\nexit 0\nfi\n\nif [ -z \"${CODE_SIGN_ENTITLEMENTS}\" ] ; then\necho \"CODE_SIGN_ENTITLEMENTS needs to be set for framework code-signing!\"\n\nif [ \"${CONFIGURATION}\" = \"Release\" ] ; then\nexit 1\nelse\n# Code-signing is optional for non-release builds.\nexit 0\nfi\nfi\n\nITEMS=\"\"\n\nFRAMEWORKS_DIR=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\necho \"$FRAMEWORKS_DIR\"\nif [ -d \"$FRAMEWORKS_DIR\" ] ; then\nFRAMEWORKS=$(find \"${FRAMEWORKS_DIR}\" -depth -type d -name \"*.framework\" -or -name \"*.dylib\" -or -name \"*.bundle\" | sed -e \"s/\\(.*framework\\)/\\1\\/Versions\\/A\\//\")\nRESULT=$?\nif [[ $RESULT != 0 ]] ; then\nexit 1\nfi\n\nITEMS=\"${FRAMEWORKS}\"\nfi\n\nLOGINITEMS_DIR=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Library/LoginItems/\"\nif [ -d \"$LOGINITEMS_DIR\" ] ; then\nLOGINITEMS=$(find \"${LOGINITEMS_DIR}\" -depth -type d -name \"*.app\")\nRESULT=$?\nif [[ $RESULT != 0 ]] ; then\nexit 1\nfi\n\nITEMS=\"${ITEMS}\"$'\\n'\"${LOGINITEMS}\"\nfi\n\n# Prefer the expanded name, if available.\nCODE_SIGN_IDENTITY_FOR_ITEMS=\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\nif [ \"${CODE_SIGN_IDENTITY_FOR_ITEMS}\" = \"\" ] ; then\n# Fall back to old behavior.\nCODE_SIGN_IDENTITY_FOR_ITEMS=\"${CODE_SIGN_IDENTITY}\"\nfi\n\necho \"Identity:\"\necho \"${CODE_SIGN_IDENTITY_FOR_ITEMS}\"\n\necho \"Entitlements:\"\necho \"${CODE_SIGN_ENTITLEMENTS}\"\n\necho \"Found:\"\necho \"${ITEMS}\"\n\n# Change the Internal Field Separator (IFS) so that spaces in paths will not cause problems below.\nSAVED_IFS=$IFS\nIFS=$(echo -en \"\\n\\b\")\n\n# Loop through all items.\nfor ITEM in $ITEMS;\ndo\necho \"Stripping invalid archs '${ITEM}'\"\nlipo -extract x86_64 \"${ITEM}\" -o \"${ITEM}\"\necho \"Signing '${ITEM}'\"\ncodesign --force --verbose --sign \"${CODE_SIGN_IDENTITY_FOR_ITEMS}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" \"${ITEM}\"\nRESULT=$?\nif [[ $RESULT != 0 ]] ; then\necho \"Failed to sign '${ITEM}'.\"\nIFS=$SAVED_IFS\nexit 1\nfi\ndone\n\n# Restore $IFS.\nIFS=$SAVED_IFS\n\nfi\n";
 		};
 		E42962A92163ECCD00A6A9E2 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2652,6 +2673,7 @@
 				B8482B23AC6E1576A3211E8E /* FboPingPongTex.cpp in Sources */,
 				3565AE7CE5956216CB234B8C /* SketchTex.cpp in Sources */,
 				9AC85341DEAB6A0366A10521 /* WebcamTex.cpp in Sources */,
+				B4C0C59C6CF4427D85D3F2D1 /* WebcamTexMac.mm in Sources */,
 				A94A4AAB6D95011FA3020914 /* HPVideoTex.cpp in Sources */,
 				8BFCFECF4A310811C6DB428F /* ImageTex.cpp in Sources */,
 				9372598B7CC8667697717419 /* ShaderTex.cpp in Sources */,
@@ -2684,6 +2706,9 @@
 				6D1A436780B345DF902813A1 /* InspectorView.cpp in Sources */,
 				6D1A436780B345DF902815A1 /* BrowseCatalog.cpp in Sources */,
 				6D1A436780B345DF902816A1 /* BrowseView.cpp in Sources */,
+				6D1A436780B345DF902817A1 /* ExamplesView.cpp in Sources */,
+				6D1A436780B345DF902819A1 /* ExampleCatalog.cpp in Sources */,
+				6D1A436780B345DF902820A1 /* ExampleFiles.mm in Sources */,
 				6D1A436780B345DF902814A1 /* InspectorPreview.cpp in Sources */,
 				A1D2F32CDE34F3703ECD8A01 /* Geom.cpp in Sources */,
 				F7D4F1045C3F5CE0000DE92F /* Material.cpp in Sources */,

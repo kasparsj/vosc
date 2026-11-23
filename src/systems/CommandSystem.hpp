@@ -23,7 +23,9 @@ public:
     using SceneResult = std::function<void(int frame, const std::string& detail)>;
     static void validateStartupScene(const scene::File& scene, const ScenePrograms* programs = nullptr);
     static ScenePrograms prepareStartupScene(const scene::File& scene);
-    void applyStartupScene(const scene::File& scene, ScenePrograms& programs, SceneResult result);
+    void applyStartupScene(const scene::File& scene, ScenePrograms& programs, SceneResult result,
+                           std::optional<std::pair<int, int>> compositionBacking = std::nullopt);
+    void discardSceneSetup();
     bool startupScenePending() const { return static_cast<bool>(startupSceneResult); }
 
     void setup();
@@ -67,6 +69,7 @@ private:
     const Shader::Uniforms* liveSceneUniforms(const ofxOscMessage& wrapped) const;
     void completeSceneReplay(const std::string& status, int frame, const std::string& detail);
     void resetScene(int width, int height);
+    bool matchesCompositionSize(int width, int height) const;
     void applyNativeCommand(const scene::NativeCommand& command);
     void afterNativeDraw();
     void finishNativeStartup(int frame, const std::string& detail);
@@ -131,6 +134,7 @@ private:
     bool gateOpened = false;
     std::optional<SceneReplay> sceneReplay;
     SceneResult startupSceneResult;
+    std::optional<std::pair<int, int>> startupCompositionBacking;
 public:
     std::function<uint64_t()> currentConfigurationSerial;
 };

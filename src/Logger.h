@@ -14,6 +14,17 @@ struct LoggerLine {
 
 class Logger : public ofBaseLoggerChannel {
 public:
+    class ErrorScope {
+    public:
+        explicit ErrorScope(std::string& firstError);
+        ~ErrorScope();
+        ErrorScope(const ErrorScope&) = delete;
+        ErrorScope& operator=(const ErrorScope&) = delete;
+
+    private:
+        std::string* previous;
+    };
+
     Logger();
     Logger(const string& path, bool append);
 

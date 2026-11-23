@@ -1,7 +1,6 @@
 # VOSC examples
 
-Run a native scene with `vosc --scene examples/<name>/scene.vosc.json`.
-Keep the manifest and its assets together when moving an example.
+Use **Browse → Examples → Load Example** in a running desktop VOSC window, or launch with `vosc --scene examples/<name>/scene.vosc.json`. Keep the manifest and its assets together when moving an example. See the [operator reference](../docs/Render-machine-ui.md#examples) for input requirements and build limits.
 
 ## Scene recipe and authoring examples
 
@@ -51,17 +50,20 @@ floating-point render target.
 ## Running the scene companions
 
 Install VisualsQuark and recompile the SuperCollider class library. Open the
-saved `scene.scd` and evaluate cues one block or standalone statement at a time.
-Use a disposable renderer. For the V2 companions, evaluate **Setup** to
-configure a blank renderer, or **Attach** after native launch to prepare the
-OSC sender for live cues. Webcam Delay's separate history cue applies to blank
-renderer setup. Webcam scenes use device 0 by default. Set `~cameraDevice` to
-choose another camera for blank-renderer setup.
+saved `scene.scd` and evaluate cues manually, one block or standalone statement
+at a time. After loading a V2 scene, evaluate its **Attach** block to prepare
+the sender for live cues. Use the OSC port displayed in Browse. Set
+`~rendererHost` to `127.0.0.1` when SuperCollider runs on the render machine,
+or to the renderer's reachable address when it runs elsewhere. Set
+`~rendererPort` or `VOSC_OSC_PORT` to the current port. If evaluating from an
+unsaved buffer or on another machine, set `~rendererRoot` to the absolute
+example folder on the renderer before evaluating the connection block.
 
-Set `~rendererPort` or `VOSC_OSC_PORT` to match your renderer. For a remote
-renderer, set `~rendererHost` and `~rendererRoot` to its host and absolute path
-to the copied example folder before evaluating the connection block. Use
-`~pageUrl` to change the URL in Ultralight's SC setup.
+Evaluate **Setup** on a disposable blank renderer because it can reset its
+target. Webcam Delay's separate history cue applies to blank-renderer setup.
+Webcam scenes use device 0 by default. Set `~cameraDevice` for blank-renderer
+setup and `~pageUrl` for Ultralight's SC setup. Editable Scene and Sieve use
+standalone replay scripts. Sound Data has its own [audio analysis instructions](sound-data/README.md).
 
 After changing a manifest-backed setup, regenerate the associated commands with
 `python3 scripts/generate_example_scd.py` from the repository root.

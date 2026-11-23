@@ -10,7 +10,7 @@ import shutil
 import subprocess
 
 from build_rmlui import build as build_rmlui
-from addon_compat import patch_expression_returns, patch_shadertoy_timestamp
+from addon_compat import RENDER_ADDON_PATCHES, patch_expression_returns, patch_shadertoy_timestamp
 from macos_build import (
     ROOT, prepare_output, publish_xcode_overlay,
     receiver_inputs, replace_expected, sdk_paths, write_overlay,
@@ -81,6 +81,7 @@ def prepare_addon_overlay(addon_sdk, output):
             text, "if( flags <= OPTIMIZE_HIGH )", "if( assimpOptimizeFlags <= OPTIMIZE_HIGH )",
             "Assimp import flags signed comparison",
         ),
+        **RENDER_ADDON_PATCHES,
         "ofxExpr/src/ofxExpr.cpp": patch_expression_returns,
         "ofxShadertoy/src/ofxShadertoy.cpp": patch_shadertoy_timestamp,
     }

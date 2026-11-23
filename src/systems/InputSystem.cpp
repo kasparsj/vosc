@@ -2,8 +2,8 @@
 #include "ofxMidi.h"
 #include <exception>
 
-void InputSystem::setup(unsigned int port) {
-    receiver.setup(port);
+bool InputSystem::setup(unsigned int port) {
+    return receiver.setup(port);
 }
 
 void InputSystem::shutdown() {
