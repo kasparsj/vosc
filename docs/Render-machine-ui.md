@@ -2,7 +2,7 @@
 
 Milestone 4 operator reference. [Design contract](../DESIGN.md) · [Codebase audit and mockup inventory](Render-machine-ui-audit.md)
 
-The floating dock has four destinations: **Overview**, **Inspector**, **Console**, and **Browse**. Details open above the dock. **Back** returns to the originating item with its selection and scroll position. **Escape** returns directly to clean output. The scene continues rendering. Browse opens Assets by default and also offers Examples and Built-ins.
+The floating dock has four destinations: **Overview**, **Inspector**, **Console**, and **Browse**. Details open above the dock. **Back** returns to the originating item with its selection and scroll position. **Escape** returns directly to clean output. The scene continues rendering. Browse opens Assets by default and also offers Examples.
 
 ## Output and Overview
 
@@ -59,7 +59,7 @@ The macOS desktop build supports in-window local video, camera, and positive-cha
 
 ### Assets
 
-Assets mirrors the folder tree. The separate **Built-ins** view lists renderer primitives such as Box. Open a subfolder to see the files and folders inside it. Search by filename and filter by kind. Matching subfolders stay visible so results can be reached in their original location. Open a file to see its source, origin, requirements when documented, and a saved preview where available. Back restores the filter, originating row and reading position.
+Assets mirrors the folder tree. Open a subfolder to see the files and folders inside it. Search by filename and filter by kind. Matching subfolders stay visible so results can be reached in their original location. Open a file to see its source, origin, requirements when documented, and a saved preview where available. Back restores the filter, originating row and reading position.
 
 The Xcode checkout browses `assets/` directly. A standalone renderer browses its staged `data/` tree. Browse refreshes while the folder list is visible, so additions appear without restarting. Source uses for registered assets resolve against staged data. Shader entries check required stages and includes. Penguin checks its linked material and image. [Asset metadata](../assets/catalog/browse-assets.json) · [Shared assets and local media](../README.md#shared-assets-and-local-media) · [Staging](../scripts/stage_assets.py) · [Shader path resolution](../src/shader/Shader.cpp)
 

@@ -31,7 +31,6 @@ AssetUse parseUse(const std::string& name) {
     if (name == "shader-texture") return AssetUse::ShaderTexture;
     if (name == "layer-program") return AssetUse::LayerProgram;
     if (name == "model") return AssetUse::Model;
-    if (name == "box") return AssetUse::Box;
     throw std::runtime_error("Unknown Browse asset use");
 }
 
@@ -48,8 +47,6 @@ bool validUse(const Asset& asset, AssetUse use) {
                 && extension == ".frag";
         case AssetUse::Model:
             return asset.kind == "Model" && source.begin()->string() == "models" && extension == ".obj";
-        case AssetUse::Box:
-            return asset.kind == "Built-in" && asset.source == "box";
     }
     return false;
 }
@@ -231,9 +228,8 @@ std::vector<Asset> readMetadata(const fs::path& staged) {
     std::vector<Asset> result;
     for (const auto& item : manifest) {
         auto asset = readAsset(item);
-        const bool builtin = asset.kind == "Built-in";
         const auto source = asset.sourceLabel();
-        asset.id = builtin ? "builtin-" + ofToHex(asset.id) : "file-" + ofToHex(source);
+        asset.id = "file-" + ofToHex(source);
         if (std::any_of(result.begin(), result.end(), [&](const auto& previous) {
                 return previous.id == asset.id || previous.sourceLabel() == source;
             }))
@@ -268,7 +264,6 @@ bool Asset::operator==(const Asset& other) const {
 
 std::string Asset::sourceLabel() const {
     if (!path.empty()) return path;
-    if (kind == "Built-in") return source;
     if (kind == "Image") return "images/" + source;
     return source;
 }
@@ -279,13 +274,11 @@ const char* Asset::useLabel(AssetUse use) const {
         case AssetUse::ShaderTexture: return "Shader texture";
         case AssetUse::LayerProgram: return vertex.empty() ? "Layer program" : "Paired layer program";
         case AssetUse::Model: return "Model geometry";
-        case AssetUse::Box: return "Box geometry";
     }
     return "";
 }
 
 bool Asset::available(AssetUse use) const {
-    if (use == AssetUse::Box) return true;
     if (!stagedBrowseFile(sourceLabel())) return false;
     for (const auto& dependency : dependencies)
         if (!stagedBrowseFile(dependency)) return false;
@@ -311,16 +304,10 @@ BrowseCatalog BrowseCatalog::scan(const fs::path& dataPath, std::shared_ptr<cons
         if (error) {
             result.metadataFailed = true;
         } else {
-            for (auto& asset : readMetadata(staged)) {
-                auto& entries = asset.kind == "Built-in" ? result.builtins : result.registeredFiles;
-                entries.push_back(std::move(asset));
-            }
-            std::sort(result.builtins.begin(), result.builtins.end(),
-                      [](const auto& lhs, const auto& rhs) { return lhs.id < rhs.id; });
+            result.registeredFiles = readMetadata(staged);
         }
     } catch (const std::exception&) {
         result.metadataFailed = true;
-        result.builtins.clear();
         result.registeredFiles.clear();
     }
 
@@ -389,11 +376,10 @@ std::optional<std::vector<ShaderUniform>> BrowseCatalog::uniforms(const Asset& e
 }
 
 const Asset* BrowseCatalog::registration(const Asset& entry) const {
-    const auto& candidates = entry.kind == "Built-in" ? builtins : registeredFiles;
-    const auto found = std::find_if(candidates.begin(), candidates.end(), [&](const auto& candidate) {
+    const auto found = std::find_if(registeredFiles.begin(), registeredFiles.end(), [&](const auto& candidate) {
         return candidate.id == entry.id;
     });
-    return found == candidates.end() ? nullptr : &*found;
+    return found == registeredFiles.end() ? nullptr : &*found;
 }
 
 } // namespace vosc::operator_ui

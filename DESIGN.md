@@ -34,7 +34,7 @@ Quiet and precise, with the scene as the dominant visual. Use stable readings, c
 2. **Overview.** Show scene identity when available, render dimensions, observed frame rate, and recent error status. Disclose camera position when a camera is enabled. Link to the relevant diagnostic or resource when it can be identified.
 3. **Inspector.** Choose Globals or a layer. Open geometry previews, input histories, shaders, textures, and buffer textures from that scope. Reveal bindings, uniforms, variables, sampling metadata, and preview slices in resource detail. Keep texture-update controls within the owning resource.
 4. **Console.** Keep recent messages with severity, source, and message text where available. Preserve copy and clear actions and the operator's reading position when new messages arrive. Offer filters on demand.
-5. **Browse.** **Assets** is the default and lists reusable sources and shows declared uniforms for shaders. **Built-ins** lists renderer primitives. **Examples** discovers native scene manifests and offers **Load Example** in the current window.
+5. **Browse.** **Assets** is the default and lists reusable sources and shows declared uniforms for shaders. **Examples** discovers native scene manifests and offers **Load Example** in the current window.
 
 The [view specification](docs/Render-machine-ui.md) maps each current capability to a proposed view and records the first-version priorities. Use its [review criteria](docs/Render-machine-ui.md#first-version-review-criteria) for the next mockup and native verification.
 

@@ -232,7 +232,7 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
 #panel.browse-examples #browse-filters { display: none; }
 #browse-status { display: none; font-size: 12dp; margin: 5dp 0 0; }
 #browse-status.present { display: block; }
-#panel.detail .browse-filters, #panel.browse-builtins #browse-filters { display: none; }
+#panel.detail .browse-filters { display: none; }
 #panel.browse-examples.detail #browse-example-filters { display: none; }
 .browse-search, .example-input, #panel.browse select {
     box-sizing: border-box; height: 30dp; padding: 5dp 7dp; font-size: 13dp;
@@ -333,7 +333,7 @@ button.example-row .example-thumb {
     <div id="inspector-tools"></div>
     <div id="browse-tools">
         <div id="browse-header">
-            <div id="browse-catalogs"><button id="browse-examples">Examples</button><button id="browse-assets">Assets</button><button id="browse-builtins">Built-ins</button></div>
+            <div id="browse-catalogs"><button id="browse-examples">Examples</button><button id="browse-assets">Assets</button></div>
             <span id="browse-heading">Assets</span><span id="browse-summary"></span>
         </div>
         <div id="browse-filters" class="browse-filters">

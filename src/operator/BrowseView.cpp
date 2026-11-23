@@ -23,14 +23,6 @@ std::string fact(const char* title, const std::string& value) {
 
 }
 
-bool BrowseView::switchCatalog(bool builtins) {
-    if (canGoBack() || showingBuiltins == builtins) return false;
-    showingBuiltins = builtins;
-    selectedRow.clear();
-    rowsDirty = true;
-    return true;
-}
-
 bool BrowseView::setFilters(std::string name, std::string kind) {
     name = Rml::StringUtilities::ToLower(std::move(name));
     if (name == query && kind == category) return false;
@@ -48,12 +40,10 @@ bool BrowseView::matches(const Asset& entry) const {
 
 const BrowseCatalog::Entries& BrowseView::entries() const {
     static const BrowseCatalog::Entries empty;
-    if (showingBuiltins) return catalog.builtins;
     return catalog.files ? *catalog.files : empty;
 }
 
 std::string BrowseView::heading() const {
-    if (showingBuiltins) return "Built-ins";
     return folder.empty() ? "Assets" : "Assets / " + folder;
 }
 
@@ -64,7 +54,7 @@ const std::string& BrowseView::summary() const {
 
 std::string BrowseView::status() const {
     std::string message;
-    if (catalog.scanFailed && !showingBuiltins) {
+    if (catalog.scanFailed) {
         message = catalog.files
             ? "Asset refresh failed. Showing the last listing."
             : "Asset refresh failed. The asset folder is unavailable.";
@@ -88,10 +78,10 @@ void BrowseView::updateRows() {
         rowsMarkup = "<p class='message'>Scanning assets…</p>";
         return;
     }
-    if (showingBuiltins ? catalog.metadataFailed : !catalog.files) return;
+    if (!catalog.files) return;
 
     const auto& assets = entries();
-    const bool filtering = !showingBuiltins && (!query.empty() || !category.empty());
+    const bool filtering = !query.empty() || !category.empty();
     const auto prefix = folder + '/';
     unsigned total = 0, filtered = 0;
     std::unordered_set<std::string> matchingFolders;
@@ -125,9 +115,7 @@ void BrowseView::updateRows() {
             + "</span><img class='browse-chevron' src='browse:catalog/chevron.png' /></button>";
     }
     if (!rowsMarkup.empty()) return;
-    if (showingBuiltins)
-        rowsMarkup += "<p class='message'>No built-in sources are available.</p>";
-    else if (!filtering)
+    if (!filtering)
         rowsMarkup += "<p class='message'>This folder is empty.</p>";
     else
         rowsMarkup += "<p class='message'>No assets match this search and category.</p>"
@@ -148,7 +136,7 @@ bool BrowseView::openItem(const std::string& id, uint64_t row, float scroll) {
         if (found == assets.end()) return false;
     }
     const auto& entry = *found;
-    if (entry.parent != folder || (!showingBuiltins && !entry.folder && !matches(entry))) return false;
+    if (entry.parent != folder || (!entry.folder && !matches(entry))) return false;
     rowsDirty = true;
     if (entry.folder) {
         parents.push_back({folder, id, scroll});
@@ -239,12 +227,9 @@ void BrowseView::refresh() {
         if (pendingScan.valid()) {
             if (pendingScan.wait_for(std::chrono::seconds(0)) != std::future_status::ready) return;
             auto snapshot = pendingScan.get();
-            if (!scanned || (showingBuiltins
-                    ? catalog.builtins != snapshot.builtins || catalog.metadataFailed != snapshot.metadataFailed
-                    : catalog.files != snapshot.files))
+            if (!scanned || catalog.files != snapshot.files)
                 rowsDirty = true;
-            if (detail() && (catalog.registeredFiles != snapshot.registeredFiles
-                             || catalog.builtins != snapshot.builtins))
+            if (detail() && catalog.registeredFiles != snapshot.registeredFiles)
                 nextAssetCheck = {};
             catalog = std::move(snapshot);
             scanned = true;
@@ -257,7 +242,6 @@ void BrowseView::refresh() {
     } catch (const std::system_error&) {
         catalog.scanFailed = true;
         catalog.metadataFailed = true;
-        catalog.builtins.clear();
         catalog.registeredFiles.clear();
         nextCatalogCheck = now + std::chrono::seconds(1);
         nextAssetCheck = {};
@@ -278,7 +262,7 @@ const std::string& BrowseView::markup() {
 }
 
 int BrowseView::height(bool compact) const {
-    if (!detail()) return showingBuiltins ? 156 : compact ? 264 : 468;
+    if (!detail()) return compact ? 264 : 468;
     const bool hasPreview = !preview.empty();
     const bool hasUniforms = uniforms && !uniforms->empty();
     if (compact) return hasPreview || hasUniforms ? 339 : 264;

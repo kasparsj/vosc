@@ -12,7 +12,7 @@
 
 namespace vosc::operator_ui {
 
-enum class AssetUse { Image, ShaderTexture, LayerProgram, Model, Box };
+enum class AssetUse { Image, ShaderTexture, LayerProgram, Model };
 
 struct Asset {
     std::string id, path, parent, name, kind, source, origin, requirements;
@@ -44,7 +44,7 @@ struct BrowseCatalog {
     std::filesystem::path root;
 
     std::shared_ptr<const Entries> files;
-    Entries builtins, registeredFiles;
+    Entries registeredFiles;
     bool scanFailed = false;
     bool metadataFailed = false;
 };

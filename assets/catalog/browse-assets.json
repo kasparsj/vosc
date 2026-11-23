@@ -12,17 +12,6 @@
     "preview": "images/black_hole.jpg"
   },
   {
-    "id": "box",
-    "name": "Box",
-    "kind": "Built-in",
-    "source": "box",
-    "uses": [
-      "box"
-    ],
-    "origin": "VOSC geometry",
-    "requirements": "200 × 200 × 200 sample dimensions."
-  },
-  {
     "id": "color",
     "name": "color.frag",
     "kind": "Fragment shader",
