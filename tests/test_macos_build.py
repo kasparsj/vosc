@@ -44,6 +44,10 @@ class MacOSBuildTests(unittest.TestCase):
             (checkout / "assets/.DS_Store").touch()
             shader = checkout / "assets/shaders/shader.frag"
             shader.write_text("shader")
+            example = checkout / "examples/fixture/scene.vosc.json"
+            example.parent.mkdir(parents=True)
+            example.write_text(json.dumps({"version": 1, "title": "Fixture", "size": [640, 480],
+                                           "onset_gate": 0, "commands": []}))
             (checkout / "media/videos").mkdir(parents=True)
             (checkout / "media/videos/private.mov").write_text("local clip")
             of_root = root / "of"
@@ -56,6 +60,7 @@ class MacOSBuildTests(unittest.TestCase):
                 self.assertFalse((data / ".DS_Store").exists())
                 self.assertFalse((data / "videos/private.mov").exists())
                 self.assertEqual((data / "shaders/deferred/pass.frag").read_text(), "deferred")
+                self.assertEqual((data / "examples/fixture/scene.vosc.json").read_bytes(), example.read_bytes())
                 self.assertFalse(any(path.is_symlink() for path in data.rglob("*")))
                 staged_shader = data / "shaders/shader.frag"
                 staged_shader.write_text("runtime")
