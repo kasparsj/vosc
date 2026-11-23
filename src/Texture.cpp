@@ -85,7 +85,7 @@ void Texture::load(const ofxOscMessage &m, int arg) {
     load(source, textureArguments(m, arg));
 }
 
-bool Texture::loadLayerSource(const ofxOscMessage& m) {
+bool Texture::loadOscSource(const ofxOscMessage& m) {
     const auto source = m.getArgAsString(1);
     const auto separator = source.find(':');
     const bool explicitImage = source.starts_with("image:") && separator + 1 < source.size();

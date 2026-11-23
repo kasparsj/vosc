@@ -1674,7 +1674,11 @@ void CommandSystem::routeTargetedResource(const osc::Command& command) {
                 if (tex == nullptr) {
                     break;
                 }
-                tex->oscCommand(commandPath, m);
+                if (commandPath == "/tex") {
+                    if (!tex->loadOscSource(m)) return;
+                } else {
+                    tex->oscCommand(commandPath, m);
+                }
                 const glm::vec2& size = tex->data.getSize();
                 if (size.x == 0 && size.y == 0) {
                     tex->data.setSize(ofGetScreenWidth(), ofGetScreenHeight());

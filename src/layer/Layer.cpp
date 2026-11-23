@@ -153,7 +153,7 @@ void Layer::oscCommand(const string& command, const ofxOscMessage &m) {
                 }
                 else {
                     tex = TexturePool::getOrCreate(DEFAULT_TEX, &shader);
-                    if (!tex->loadLayerSource(m)) return;
+                    if (!tex->loadOscSource(m)) return;
                 }
             }
             else {
