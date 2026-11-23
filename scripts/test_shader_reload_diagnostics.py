@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify failed explicit OSC and watched-file reloads on private renderers."""
+"""Verify OSC startup and failed explicit and watched-file reloads on private renderers."""
 
 import argparse
 import base64
@@ -9,10 +9,15 @@ import os
 from pathlib import Path
 import shutil
 import signal
+import socket
+import subprocess
+import tempfile
 import time
 
 from test_engine_api import png_pixels
 from test_scene_recipe import ROOT, OwnedRenderer, applied, collect_cleanup, free_udp_port, osc
+
+READY_MARKER = "VOSC_SCENE_READY "
 
 
 def read(client, method, params=None):
@@ -37,11 +42,45 @@ def capture_frame(client, path):
     return png_pixels(data, include_alpha=True)[2], receipt
 
 
+def verify_occupied_port(binary, cwd, output, scene, port):
+    log = output / "renderer-occupied-port.log"
+    with tempfile.TemporaryDirectory(prefix="vosc-osc-bind-", dir="/tmp") as runtime:
+        control = Path(runtime) / "control.sock"
+        env = {**os.environ, "VOSC_OSC_PORT": str(port), "VOSC_CONTROL_SOCKET": str(control)}
+        with log.open("wb") as stream:
+            try:
+                result = subprocess.run(
+                    [str(binary), "--scene", str(scene)], cwd=cwd, env=env, stdout=stream,
+                    stderr=subprocess.STDOUT, start_new_session=True, timeout=10, check=False,
+                )
+            except subprocess.TimeoutExpired as error:
+                raise AssertionError(f"Renderer did not exit on its own with UDP port {port} occupied. See {log}") from error
+        lines = log.read_text(errors="replace").splitlines()
+        diagnostic = f"Could not bind OSC receiver to UDP port {port}"
+        assert result.returncode > 0, (result.returncode, log)
+        assert not any(line.startswith(READY_MARKER) for line in lines), log
+        assert any(line.startswith("vosc: ") and line.endswith(diagnostic) for line in lines), log
+        assert not control.exists(), control
+    return {"port": port, "returncode": result.returncode, "log": str(log)}
+
+
+def verify_free_port(renderer, client, output):
+    wait_for(lambda: renderer.log.read_text(errors="replace"),
+             lambda log: any(line.startswith(READY_MARKER) for line in log.splitlines()))
+    before, baseline = capture_frame(client, output / "osc-visible.png")
+    assert any(max(pixel[:3]) for pixel in before), "scene started with a black frame"
+    captures = [baseline]
+    for visible, label in ((0, "hidden"), (1, "restored")):
+        osc(renderer.port, "/layer/visible", 0, visible)
+        _, capture = wait_for(
+            lambda: capture_frame(client, output / f"osc-{label}.png"),
+            lambda frame: any(max(pixel[:3]) for pixel in frame[0]) == bool(visible),
+        )
+        captures.append(capture)
+    return captures
+
+
 def verify_failed_reload(renderer, client, output):
-    deadline = time.monotonic() + 10
-    while "VOSC_SCENE_READY" not in renderer.log.read_text():
-        assert renderer.process.poll() is None and time.monotonic() < deadline, renderer.log
-        time.sleep(0.05)
     (layer,) = read(client, "get_scene")["layers"]
     baseline = layer["shader"]["program"]
     assert layer["index"] == 0 and layer["shader"]["loaded"] and baseline != 0, layer
@@ -179,13 +218,23 @@ def main():
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(mode=0o700)
-    arguments = ("--scene", organic_scene(output)) if args.case == "explicit" else ()
-    renderer = OwnedRenderer(args.binary.resolve(), output, "reload", free_udp_port(), [],
-                             arguments=arguments, cwd=args.cwd.resolve())
-    evidence = {"owner": renderer.owner}
+    binary, cwd = args.binary.resolve(), args.cwd.resolve()
+    evidence = {}
+    if args.case == "explicit":
+        scene = organic_scene(output)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as holder:
+            holder.bind(("0.0.0.0", 0))
+            port = holder.getsockname()[1]
+            evidence["occupied_port"] = verify_occupied_port(binary, cwd, output, scene, port)
+        arguments = ("--scene", scene)
+    else:
+        port, arguments = free_udp_port(), ()
+    renderer = OwnedRenderer(binary, output, "reload", port, [], arguments=arguments, cwd=cwd)
+    evidence["owner"] = renderer.owner
     try:
         with closing(renderer.client()) as client:
             if args.case == "explicit":
+                evidence["free_port_captures"] = verify_free_port(renderer, client, output)
                 evidence.update(verify_failed_reload(renderer, client, output))
             else:
                 evidence.update(verify_watched_reload(renderer, client, output, texture=args.case == "texture"))

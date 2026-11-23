@@ -1,6 +1,7 @@
 #include "VOSC.hpp"
 #include "Config.h"
 #include "light/Lights.h"
+#include <stdexcept>
 #if VOSC_OPERATOR_UI
 #include "Logger.h"
 #include "ofAppGLFWWindow.h"
@@ -327,7 +328,9 @@ void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::Sce
         throw std::runtime_error("forced no-argument setup failure");
     CommandSystem::traceStartupBoundary("receiver");
 #endif
-    inputSystem.setup(port);
+    if (!inputSystem.setup(port)) {
+        throw std::runtime_error("Could not bind OSC receiver to UDP port " + std::to_string(port));
+    }
     runtime().camera.setup();
     renderSystem().setup(INITIAL_LAYERS);
     commandSystem().setup();
