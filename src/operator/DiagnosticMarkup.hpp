@@ -238,7 +238,7 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
     </div>
     <p id="welcome-error" class="error">Couldn’t save the preference. Try again or dismiss for this launch.</p>
     <footer>
-        <button id="welcome-opt-out">Don’t show next time</button>
+        <button id="welcome-opt-out">Don’t show again</button>
         <button id="welcome-dismiss">Dismiss <span>Esc</span></button>
     </footer>
 </div>
