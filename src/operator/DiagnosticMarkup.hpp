@@ -22,6 +22,41 @@ body {
     box-sizing: border-box;
     background-color: #121721f2; border: 1dp #d5e6ff4d; border-radius: 16dp;
 }
+body.welcome #dock, body.welcome #panel, #welcome { display: none; }
+body.welcome #welcome {
+    position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto;
+    display: flex; flex-direction: column; overflow: hidden;
+    width: 420dp; max-width: 95%; height: 416dp; max-height: 94%;
+    box-sizing: border-box; background-color: #121721f2;
+    border: 1dp #d5e6ff4d; border-radius: 16dp;
+}
+#welcome header { display: block; flex: none; padding: 14dp 16dp 8dp; }
+#welcome h1 { display: block; font-size: 22dp; font-weight: bold; margin: 0 0 3dp; }
+#welcome h2 { display: block; font-size: 13dp; font-weight: normal; color: #c5d4e5; margin: 0; }
+#welcome-shortcuts {
+    display: block; flex: 1; min-height: 0; overflow-y: auto; padding: 0 16dp;
+}
+.shortcut {
+    display: flex; align-items: center; min-height: 23dp;
+    border-bottom: 1dp #d2e1fc29;
+}
+.shortcut:last-child { border-bottom-color: transparent; }
+.shortcut-label { flex: 1; min-width: 0; padding: 3dp 6dp 3dp 0; }
+.shortcut-key, #welcome-dismiss span {
+    flex: none; padding: 1dp 5dp; border: 1dp #b4c4dc52; border-radius: 4dp;
+    color: #e6eefb; font-size: 11dp; white-space: nowrap;
+}
+#welcome footer {
+    display: flex; flex: none; flex-wrap: wrap; justify-content: flex-end;
+    padding: 8dp 12dp; border-top: 1dp #d2e1fc29;
+}
+#welcome footer button { margin: 2dp 3dp; }
+#welcome-dismiss { background-color: #b6d4fa2e; }
+#welcome-dismiss:hover, #welcome-dismiss:focus-visible { background-color: #b6d4fa45; }
+#welcome-dismiss span { margin-left: 4dp; }
+#welcome-error { display: none; flex: none; margin: 0; padding: 4dp 16dp 6dp; }
+#welcome-error.present { display: block; }
+body.short #welcome header { padding-top: 7dp; padding-bottom: 5dp; }
 #panel.console { height: 468dp; }
 #panel.overview.quiet { height: 170dp; }
 #panel.overview.camera { height: 244dp; }
@@ -262,6 +297,31 @@ button.example-row .example-thumb {
 </style>
 </head>
 <body>
+<div id="welcome" aria-labelledby="welcome-title">
+    <header>
+        <h1 id="welcome-title">Welcome to VOSC</h1>
+        <h2>Keyboard shortcuts</h2>
+    </header>
+    <div id="welcome-shortcuts">
+        <div class="shortcut"><span class="shortcut-label">Open Overview</span><span class="shortcut-key">O</span></div>
+        <div class="shortcut"><span class="shortcut-label">Open Console</span><span class="shortcut-key">C</span></div>
+        <div class="shortcut"><span class="shortcut-label">Open Inspector from output</span><span class="shortcut-key">Tab</span></div>
+        <div class="shortcut"><span class="shortcut-label">Move between controls</span><span class="shortcut-key">Tab / Shift+Tab</span></div>
+        <div class="shortcut"><span class="shortcut-label">Switch views from the dock</span><span class="shortcut-key">Left / Right</span></div>
+        <div class="shortcut"><span class="shortcut-label">Navigate a focused list</span><span class="shortcut-key">Up / Down</span></div>
+        <div class="shortcut"><span class="shortcut-label">Activate focused control</span><span class="shortcut-key">Enter / Space</span></div>
+        <div class="shortcut"><span class="shortcut-label">Return to output</span><span class="shortcut-key">Esc</span></div>
+        <div class="shortcut"><span class="shortcut-label">Toggle fullscreen</span><span class="shortcut-key">F</span></div>
+        <div class="shortcut"><span class="shortcut-label">Reload layer textures</span><span class="shortcut-key">R</span></div>
+        <div class="shortcut"><span class="shortcut-label">Reset layers</span><span class="shortcut-key">U</span></div>
+        <div class="shortcut"><span class="shortcut-label">Toggle geometry wireframe</span><span class="shortcut-key">W</span></div>
+    </div>
+    <p id="welcome-error" class="error">Couldn’t save the preference. Try again or dismiss for this launch.</p>
+    <footer>
+        <button id="welcome-opt-out">Don’t show again</button>
+        <button id="welcome-dismiss">Dismiss <span>Esc</span></button>
+    </footer>
+</div>
 <div id="dock">
     <button id="overview">Overview</button><button id="inspector">Inspector</button>
     <button id="console">Console</button><button id="browse">Browse</button>

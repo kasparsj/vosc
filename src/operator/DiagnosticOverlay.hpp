@@ -56,6 +56,7 @@ private:
     unsigned physicalButtons = 0;
     std::optional<CleanClick> cleanClick;
     bool open = false;
+    bool welcome = false;
     View view = View::Overview;
     std::string sceneTitle;
     std::vector<SceneLayer> sceneLayers;
