@@ -18,12 +18,42 @@
 #include <charconv>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <optional>
 #include <stdexcept>
 #include <string_view>
 
 namespace {
 constexpr int cleanOutputPress = -1;
+
+std::filesystem::path welcomePreference() {
+    namespace fs = std::filesystem;
+#ifdef TARGET_OSX
+    if (const auto* home = std::getenv("HOME"); home && *home)
+        return fs::path(home) / "Library/Application Support/VOSC/hide-welcome";
+#elif defined(TARGET_WIN32)
+    if (const auto* data = std::getenv("LOCALAPPDATA"); data && *data)
+        return fs::path(data) / "VOSC/hide-welcome";
+#else
+    if (const auto* config = std::getenv("XDG_CONFIG_HOME"); config && fs::path(config).is_absolute())
+        return fs::path(config) / "vosc/hide-welcome";
+    if (const auto* home = std::getenv("HOME"); home && *home)
+        return fs::path(home) / ".config/vosc/hide-welcome";
+#endif
+    return {};
+}
+
+bool saveWelcomePreference(const std::filesystem::path& path) {
+    if (path.empty()) return false;
+    std::error_code error;
+    std::filesystem::create_directories(path.parent_path(), error);
+    if (error) return false;
+    std::ofstream preference(path, std::ios::app);
+    preference.close();
+    return static_cast<bool>(preference);
+}
 
 const char* severity(ofLogLevel level) {
     switch (level) {
@@ -359,11 +389,11 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
         if (!following) rememberReadingPosition();
     }
 
-    void paint(const GLint* viewport) {
+    void paint(const GLint* viewport, bool drawDock = true) {
         const auto offset = dock->GetAbsoluteOffset(Rml::BoxArea::Border);
         const auto size = dock->GetBox().GetSize(Rml::BoxArea::Border);
         const float scale = context->GetDensityIndependentPixelRatio();
-        if (!blur.draw(viewport, offset.x, offset.y, size.x, size.y, dockRadius, 19 * scale)
+        if (drawDock && !blur.draw(viewport, offset.x, offset.y, size.x, size.y, dockRadius, 19 * scale)
             && !reportedBlurError) {
             reportedBlurError = true;
             ofLogError("Operator UI") << "Could not draw the diagnostic dock backdrop";
@@ -444,6 +474,13 @@ void DiagnosticOverlay::setup() {
     listeners.push(events.mouseScrolled.newListener(pointer, priority));
     listeners.push(events.mouseEntered.newListener(pointer, priority));
     listeners.push(events.mouseExited.newListener(pointer, priority));
+
+    std::error_code error;
+    if (!std::filesystem::is_regular_file(welcomePreference(), error)) {
+        welcome = true;
+        surface->document->SetClass("welcome", true);
+        show(View::Overview, "welcome-dismiss");
+    }
 }
 
 void DiagnosticOverlay::shutdown() {
@@ -485,7 +522,7 @@ void DiagnosticOverlay::show(View next, const std::string& focus) {
 }
 
 void DiagnosticOverlay::close() {
-    if (!surface->restoreScroll) {
+    if (!welcome && !surface->restoreScroll) {
         if (view == View::Console) surface->observeLogScroll();
         else surface->scroll[static_cast<size_t>(view)] = surface->content->GetScrollTop();
     }
@@ -495,6 +532,10 @@ void DiagnosticOverlay::close() {
             surface->context->ProcessMouseButtonUp(button.second, 0);
     }
     surface->document->Hide();
+    if (welcome) {
+        surface->document->SetClass("welcome", false);
+        welcome = false;
+    }
     surface->action.reset();
     surface->focusRequest.clear();
     surface->revealSequence = 0;
@@ -542,7 +583,7 @@ bool DiagnosticOverlay::keyPressed(ofKeyEventArgs& event) {
         close();
         return true;
     }
-    if (first && console && view != View::Console) {
+    if (first && !welcome && console && view != View::Console) {
         ui.inspector.reset();
         show(View::Console, "console");
         return true;
@@ -561,6 +602,12 @@ bool DiagnosticOverlay::keyPressed(ofKeyEventArgs& event) {
         return true;
     }
     if (!ui.focusRequest.empty()) return true;
+    if (welcome && shortcut && (event.key == OF_KEY_UP || event.key == OF_KEY_DOWN)) {
+        auto* shortcuts = ui.document->GetElementById("welcome-shortcuts");
+        const float step = 32 * ui.context->GetDensityIndependentPixelRatio();
+        shortcuts->SetScrollTop(shortcuts->GetScrollTop() + (event.key == OF_KEY_UP ? -step : step));
+        return true;
+    }
     if (shortcut && focused && (event.key == OF_KEY_UP || event.key == OF_KEY_DOWN)) {
         const char* rowClass = focused->IsClassSet("log-row") ? "log-row"
             : focused->IsClassSet("inspect-row") ? "inspect-row" : nullptr;
@@ -872,6 +919,22 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     auto& ui = *surface;
     if (view == View::Console && !ui.restoreScroll) ui.observeLogScroll();
     ui.syncViewport(viewport);
+    if (welcome) {
+        if (const auto action = std::exchange(ui.action, std::nullopt)) {
+            if (action->id == "welcome-dismiss" ||
+                (action->id == "welcome-opt-out" && saveWelcomePreference(welcomePreference()))) {
+                close();
+                return;
+            }
+            if (action->id == "welcome-opt-out")
+                ui.document->GetElementById("welcome-error")->SetClass("present", true);
+        }
+        ui.context->Update();
+        if (const auto focus = std::exchange(ui.focusRequest, {}); !focus.empty())
+            ui.document->GetElementById(focus)->Focus(true);
+        ui.paint(viewport, false);
+        return;
+    }
     refreshEntries(logger);
     if (view == View::Console) refreshMatches();
     if (ui.action) {

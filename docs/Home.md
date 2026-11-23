@@ -11,6 +11,10 @@ This documentation tracks the current OSC and local authoring interfaces in `mai
 
 ## Keyboard shortcuts
 
+The render window opens with a welcome screen when the operator UI is enabled.
+Select **Dismiss** or press **Escape** to return to the scene for this launch.
+Select **Don’t show next time** to skip the welcome screen on future launches.
+
 - `f` toggle fullscreen
 - `O` open the diagnostic overlay in Overview
 - `C` open the overlay in Console
@@ -23,6 +27,7 @@ This documentation tracks the current OSC and local authoring interfaces in `mai
 - `r` reload textures on all layers
 - `u` apply the layer reset action to each layer
 - `w` toggle wireframe on all geometries
+- `0`–`9` set the blend mode on all layers
 
 An unmodified primary click on clean output opens Overview. Open a layer from Overview or the dock’s Inspector, choose
 its shader, and follow **View error in Console** when a retained reload diagnostic
