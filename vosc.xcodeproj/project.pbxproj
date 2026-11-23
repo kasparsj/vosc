@@ -2594,7 +2594,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "exec python3 \"$SRCROOT/scripts/build_macos_profile.py\" --prepare-xcode --expected-version \"$VOSC_OF_VERSION\" --of-root \"$OF_PATH\" --addon-sdk \"$VOSC_ADDON_SDK\" --output \"$VOSC_COMPAT_BUILD_DIR\" --configuration \"$CONFIGURATION\"\n";
+			shellScript = "export PATH=\"$PATH:/opt/homebrew/bin:/usr/local/bin\"\nexec python3 \"$SRCROOT/scripts/build_macos_profile.py\" --prepare-xcode --expected-version \"$VOSC_OF_VERSION\" --of-root \"$OF_PATH\" --addon-sdk \"$VOSC_ADDON_SDK\" --output \"$VOSC_COMPAT_BUILD_DIR\" --configuration \"$CONFIGURATION\"\n";
 		};
 		E4B6FFFD0C3F9AB9008CF71C /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
