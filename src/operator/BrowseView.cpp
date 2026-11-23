@@ -214,10 +214,11 @@ void BrowseView::checkAsset() {
         invalidateCopy();
     }
     std::vector<AssetUse> valid;
-    auto previewName = asset().preview;
-    if (previewName.empty() && item->kind == "Image") previewName = item->path;
-    preview = stagedBrowseFile(previewName);
+    preview.clear();
     if (registration) {
+        auto name = registration->preview;
+        if (name.empty() && registration->kind == "Image") name = registration->sourceLabel();
+        if (stagedBrowseFile(name)) preview = std::move(name);
         for (const auto candidate : registration->uses)
             if (registration->available(candidate)) valid.push_back(candidate);
     }
@@ -315,10 +316,9 @@ std::string BrowseView::detailMarkup() const {
         + "</div>";
     if (!entry.requirements.empty())
         result += "<p class='browse-requirements'>" + escaped(entry.requirements) + "</p>";
-    const auto previewName = entry.preview.empty() ? item->path : entry.preview;
-    const auto previewMarkup = preview
+    const auto previewMarkup = !preview.empty()
         ? "<div class='browse-preview'><img alt='Saved asset preview' src=\"browse:"
-            + escaped(previewName) + "\" /></div>"
+            + escaped(preview) + "\" /></div>"
         : std::string{};
     if (catalog.metadataFailed) return result + previewMarkup;
     if (!registration)
@@ -411,9 +411,10 @@ const std::string& BrowseView::markup(const VOSC& renderer) {
 int BrowseView::height(bool compact) const {
     if (!detail()) return showingBuiltins ? 156 : compact ? 264 : 468;
     const bool hasCommand = use && selectedTarget;
-    if (compact) return hasCommand || preview ? 339 : 264;
-    if (hasCommand) return preview ? 478 : 430;
-    return preview ? 372 : 300;
+    const bool hasPreview = !preview.empty();
+    if (compact) return hasCommand || hasPreview ? 339 : 264;
+    if (hasCommand) return hasPreview ? 478 : 430;
+    return hasPreview ? 372 : 300;
 }
 
 } // namespace vosc::operator_ui

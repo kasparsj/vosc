@@ -69,7 +69,7 @@ private:
 
     std::optional<AssetUse> use;
     std::vector<AssetUse> availableUses;
-    std::optional<std::filesystem::path> preview;
+    std::string preview;
     std::chrono::steady_clock::time_point nextAssetCheck{};
     std::vector<Target> visibleTargets;
     std::optional<Target> selectedTarget;
