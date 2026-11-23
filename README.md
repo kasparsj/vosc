@@ -29,7 +29,9 @@ Compact hardware workflow:
 ### Minimal Linux build and render settings
 
 Use the Linux openFrameworks 0.12.1 SDK with the retained addons from
-`addons.make`. Linux ARM64 compilation and runtime qualification are pending.
+`addons.make`. Follow the [Ubuntu 24.04 ARM64 build guide](docs/Linux-arm64-minimal.md)
+to prepare a disposable SDK, build the minimal profile, and run the software
+OpenGL smoke check.
 
 ```sh
 make Release VOSC_PROFILE=minimal OF_ROOT=/absolute/path/to/openFrameworks

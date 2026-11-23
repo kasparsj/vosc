@@ -32,6 +32,21 @@ def ignore_assets(directory, names):
     return excluded
 
 
+def patch_midi_config(text):
+    if re.search(r"^linuxaarch64:[ \t]*$", text, re.MULTILINE):
+        return text
+    armv7 = re.search(r"^linuxarmv7l:[ \t]*\n(.*?)(?=^[\w/-]+:[ \t]*$|\Z)",
+                      text, re.MULTILINE | re.DOTALL)
+    if armv7 is None:
+        return text
+    # The ARM64 SDK enables JACK when compiling RtMidi, which needs a direct link.
+    return (
+        text + ("" if text.endswith("\n") else "\n")
+        + "\nlinuxaarch64:\n" + armv7[1].rstrip()
+        + "\n\tADDON_PKG_CONFIG_LIBRARIES += jack\n"
+    )
+
+
 def stage_legacy_addons(sdk, stage, addons):
     def patch_expr_header(text):
         if '#include "ofUtils.h"' in text:
@@ -41,10 +56,11 @@ def stage_legacy_addons(sdk, stage, addons):
                                     "ofxExpr event include")
 
     patches = {
-        "ofxExpr": (("ofxExpr.cpp", EXPR_COMPILE_LOOP, patch_expression_returns),
-                    ("ofxExprParser.hpp", '#include "ofEvents.h"', patch_expr_header)),
-        "ofxPostProcessing": (("PostProcessing.cpp", POST_PROCESSING_ATTRIBUTE, patch_post_processing),),
-        "ofxShadertoy": (("ofxShadertoy.cpp", SHADERTOY_TIMESTAMP + ";", patch_shadertoy_timestamp),),
+        "ofxExpr": (("src/ofxExpr.cpp", EXPR_COMPILE_LOOP, patch_expression_returns),
+                    ("src/ofxExprParser.hpp", '#include "ofEvents.h"', patch_expr_header)),
+        "ofxMidi": (("addon_config.mk", "linuxarmv7l:", patch_midi_config),),
+        "ofxPostProcessing": (("src/PostProcessing.cpp", POST_PROCESSING_ATTRIBUTE, patch_post_processing),),
+        "ofxShadertoy": (("src/ofxShadertoy.cpp", SHADERTOY_TIMESTAMP + ";", patch_shadertoy_timestamp),),
     }
     for name, files in patches.items():
         if name not in addons:
@@ -52,7 +68,7 @@ def stage_legacy_addons(sdk, stage, addons):
         root = sdk / "addons" / name
         updated = {}
         for filename, anchor, patch in files:
-            source = root / "src" / filename
+            source = root / filename
             if not source.is_file():
                 continue
             text = source.read_text(encoding="latin-1")
@@ -63,7 +79,7 @@ def stage_legacy_addons(sdk, stage, addons):
         local = Path("addons") / name
         shutil.copytree(root, stage / local, ignore=shutil.ignore_patterns(".git", ".DS_Store"))
         for filename, text in updated.items():
-            (stage / local / "src" / filename).write_text(text, encoding="latin-1")
+            (stage / local / filename).write_text(text, encoding="latin-1")
         addons[addons.index(name)] = local.as_posix()
 
 

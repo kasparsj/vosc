@@ -135,6 +135,16 @@ def main():
         retained = set((project / "addons.make").read_text().split()) - EXCLUDED
         for name in retained:
             (sdk / "addons" / name).mkdir(parents=True)
+        midi_settings = (
+            "\tADDON_PKG_CONFIG_LIBRARIES = alsa\n"
+            "\tADDON_SOURCES_EXCLUDE = libs/pgmidi/%\n"
+            "\tADDON_SOURCES_EXCLUDE += src/ios/%\n"
+            "\tADDON_INCLUDES_EXCLUDE = libs/pgmidi/%\n"
+            "\tADDON_INCLUDES_EXCLUDE += src/ios/%\n"
+        )
+        midi_config = sdk / "addons/ofxMidi/addon_config.mk"
+        midi_original = f"linuxarmv7l:\n{midi_settings}\nosx:\n\tADDON_FRAMEWORKS = CoreMIDI\n"
+        midi_config.write_bytes(midi_original.encode("ascii"))
         expr_header = sdk / "addons/ofxExpr/src/ofxExprParser.hpp"
         expr_header.parent.mkdir()
         expr_header.write_text('#include "ofEvents.h"\n')
@@ -185,8 +195,14 @@ def main():
         result = run(build)
         assert result.returncode == 0, result
         stage, = (project / ".vosc-linux").iterdir()
-        patched = {"ofxExpr", "ofxPostProcessing"}
+        patched = {"ofxExpr", "ofxMidi", "ofxPostProcessing"}
         assert set((stage / "addons.make").read_text().split()) == (retained - patched) | {f"addons/{name}" for name in patched}
+        staged_midi = stage / "addons/ofxMidi/addon_config.mk"
+        assert staged_midi.read_text() == (
+            f"{midi_original}\nlinuxaarch64:\n{midi_settings}"
+            "\tADDON_PKG_CONFIG_LIBRARIES += jack\n"
+        )
+        assert midi_config.read_bytes() == midi_original.encode("ascii")
         assert '#include "ofUtils.h"' in (stage / "addons/ofxExpr/src/ofxExprParser.hpp").read_text()
         assert '#include "ofUtils.h"' not in expr_header.read_text()
         assert not (stage / "src/operator").exists()
