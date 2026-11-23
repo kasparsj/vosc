@@ -1,14 +1,28 @@
 # Changelog
 
-## Unreleased
+## v0.2.0
+
+### Renderer interface
+
+- Added a first-run Welcome and a native operator overlay. Press **O** to open it and inspect live layers, shader uniforms, and diagnostics. [Operator reference](docs/Render-machine-ui.md)
+- Browse shared shaders, images, and models under **Browse → Assets**. **Browse → Examples** discovers installed example folders and loads supported scenes into the current renderer window. [Example guide](examples/README.md)
+
+### Scenes and OSC
+
+- Open portable scene manifests with `vosc --scene`. Export now writes `scene.vosc.json` and its assets by default. Pass `--scd` to also generate editable SuperCollider source. [Scene launch](README.md#run-a-native-scene) · [Scene export](mcp/README.md#editable-scene-folders)
+- Consolidated the shipped examples into portable scene folders with SuperCollider companions where applicable. Some scenes require a local video clip, camera, or optional build capability. [Example guide](examples/README.md)
+- Resolve texture aliases when their queued OSC commands are dispatched. The direct draw path also checks the window sample count before skipping its intermediate render target.
+
+### Build and distribution
+
+- The macOS build now requires openFrameworks 0.12.1 and uses its bundled ofxOsc and ofxAssimpModelLoader. The build retains OSC receiver recovery and existing model framing. [macOS build instructions](README.md#building-with-xcode-on-macos)
+- The minimal Linux build stages the openFrameworks 0.12.1 SDK inputs and addons in an isolated project. Linux ARM64 compilation and runtime qualification are pending. [Linux build instructions](README.md#minimal-linux-build-and-render-settings)
+
+## v0.1.0
 
 ### Breaking changes
 
-- **macOS uses the addons bundled with openFrameworks 0.12.1.** Managed setup
-  stages ofxAssimpModelLoader and ofxOsc from the pinned SDK archive. Assimp
-  preserves existing model framing, and the macOS receiver overlay preserves
-  recovery from thread-launch and receive-loop failures.
-  [Build instructions](README.md#building-with-xcode-on-macos)
+- **macOS builds support openFrameworks 0.11.1 and 0.12.1.** Run `python3 scripts/setup_macos.py` to obtain the SDK and pinned addons. The command-line builders select the SDK version automatically. An ignored `Project.local.xcconfig` supports other layouts. [Build instructions](README.md#building-with-xcode-on-macos)
 - **Configure OSC input slots before sending samples or calibration.** Send `/input <target>` for an OSC-fed slot, then send `/input/data` or `/input/set`. Both ignore unknown slots. `/input/set` requires one finite OSC float for `maxAmp` or `maxLoud`. Wildcard `/input` setup requires explicit device, channel count, and buffer size. [Input commands](docs/Setup-commands.md#input)
 - **Layer and material selectors reject previously coerced values.** Use a nonnegative OSC int32, a string containing only decimal digits within int32 range, or one of the wildcards `*`, `x`, and `a`. Strings such as `1fx` no longer select layer 1 for `/layer*` or `/mat*`. [Layer commands](docs/Layer-commands.md) · [Material commands](docs/Material-commands.md)
 - **Layer layout commands reject extra arguments and invalid layout values.** Use `stack`, `grid`, `col`, `row`, or their numeric enum values 1–4. `/layers/layout` takes exactly one layout argument. `/layers` and `/layers/reset` take an optional count and layout. [Setup commands](docs/Setup-commands.md#layers)
@@ -22,8 +36,8 @@
 
 ### Editable scenes and OSC
 
-- Scene export writes portable `scene.vosc.json` and assets by default. Add `--scd` to include editable SuperCollider source. Open the JSON with `vosc --scene`. Supported recipes preserve layer settings, shader source, expressions, images, and input calibration. Replay clears obsolete scene-owned resources and queued commands before rebuilding the composition. [Editable scene contract](docs/Editable-scene-contract.md)
-- Added export and replay for a single supported default ping-pong shader texture. Replay starts both feedback buffers from white. SuperCollider replay of feedback requires VisualsQuark feedback replay API 1. [Feedback composition](docs/Feedback-composition-contract.md) · [Editable scene folders](mcp/README.md#editable-scene-folders)
+- Added export of portable scene folders containing editable SuperCollider source and assets. Supported recipes preserve layer settings, shader source, expressions, images, and input calibration. Replay clears obsolete scene-owned resources and queued commands before rebuilding the composition. [Editable scene contract](docs/Editable-scene-contract.md)
+- Added export and replay for a single supported default ping-pong shader texture. Replay starts both feedback buffers from white. Recipes with feedback require VisualsQuark feedback replay API 1. [Feedback composition](docs/Feedback-composition-contract.md) · [Editable scene folders](mcp/README.md#editable-scene-folders)
 - Added layout-name shorthand for `/layers` and `/layers/reset`, amplitude-only `/input/data`, three-component JSON arrays for `/layer/pos`, and reflected float and integer vector bindings for layer shaders. Added `/layer/blend`, `/layer/speed`, and shader texture size, speed, and settings commands. [OSC reference](docs/OSC-reference.md)
 
 ### Build, reliability, and examples
