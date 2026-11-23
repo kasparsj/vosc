@@ -42,5 +42,5 @@ void ShaderTex::choose() {
 }
 
 void ShaderTex::reload() {
-    cache.erase(path);
+    shaderCache().erase(path);
 }

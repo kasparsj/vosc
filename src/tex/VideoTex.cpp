@@ -198,9 +198,8 @@ vector<string> loadLocalVideos()
     return videos;
 }
 
-vector<string> VideoTex::cache = loadLocalVideos();
-
 string VideoTex::random() {
+    static const auto cache = loadLocalVideos();
     if (cache.size() > 0) {
         return cache[int(ofRandom(cache.size()))];
     }

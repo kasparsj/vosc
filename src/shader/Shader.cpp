@@ -39,8 +39,6 @@ map<string, ofxAutoReloadedShader> loadShaderCache() {
     return shaders;
 }
 
-map<string, ofxAutoReloadedShader> Shader::cache = loadShaderCache();
-
 namespace {
 
 bool hasCompiledStage(const ofShader& shader, GLenum type) {
@@ -112,7 +110,14 @@ public:
 
 } // namespace
 
+map<string, ofxAutoReloadedShader>& Shader::shaderCache() {
+    static auto cache = loadShaderCache();
+    return cache;
+}
+
 string Shader::random() {
+    const auto& cache = shaderCache();
+    if (cache.empty()) return {};
     auto it = cache.begin();
     advance(it, int(ofRandom(cache.size())));
     return it->first;

@@ -626,7 +626,7 @@ void ShaderPingPongTex::choose() {
 
 void ShaderPingPongTex::reload() {
     invalidateFeedbackGeneration();
-    cache.erase(path);
+    shaderCache().erase(path);
     Shader::unload();
 }
 

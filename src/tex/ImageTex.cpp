@@ -12,9 +12,9 @@ vector<string> loadLocalImages()
     return images;
 }
 
-vector<string> ImageTex::cache = loadLocalImages();
-
 string ImageTex::random() {
+    static const auto cache = loadLocalImages();
+    if (cache.empty()) return {};
     return cache[int(ofRandom(cache.size()))];
 }
 

@@ -4,7 +4,6 @@
 
 class VideoTex : public BaseTex {
 public:
-    static vector<string> cache;
     static string random();
     
     VideoTex(string name, const vector<float>& args);

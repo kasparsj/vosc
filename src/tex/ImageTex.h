@@ -4,7 +4,6 @@
 
 class ImageTex : public BaseTex {
 public:
-    static vector<string> cache;
     static string random();
     
     ImageTex(string path, const vector<float>& args) : BaseTex(path, args) {}

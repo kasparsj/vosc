@@ -51,7 +51,7 @@ public:
         Uniforms uniforms;
     };
 
-    static map<string, ofxAutoReloadedShader> cache;
+    static map<string, ofxAutoReloadedShader>& shaderCache();
     static string random();
     static bool isRendererUniform(const string& name);
     static const char* sceneUniformError(const Uniforms& uniforms, const string& name);
