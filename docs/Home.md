@@ -11,6 +11,10 @@ This documentation tracks the current OSC and local authoring interfaces in `mai
 
 ## Keyboard shortcuts
 
+The render window opens with a welcome screen when the operator UI is enabled.
+Select **Dismiss** or press **Escape** to return to the scene for this launch.
+Select **Don’t show again** to skip the welcome screen on future launches.
+
 - `f` toggle fullscreen
 - `O` open the diagnostic overlay in Overview
 - `C` open the overlay in Console
