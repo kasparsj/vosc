@@ -1,6 +1,11 @@
 #include "WebcamTex.h"
 #include "Layer.h"
 
+#ifndef TARGET_OSX
+
+WebcamTex::WebcamTex(string path, const vector<float>& args) : BaseTex(path, args) {}
+WebcamTex::~WebcamTex() { vidGrabber.close(); }
+
 bool WebcamTex::exists(int device) {
     ofVideoGrabber grabber;
     std::vector<ofVideoDevice> devices = grabber.listDevices();
@@ -68,3 +73,12 @@ void WebcamTex::draw(const glm::vec2 &pos, const glm::vec2 &size) {
 void WebcamTex::choose() {
     path = ofToString(random());
 }
+
+bool WebcamTex::isFrameNew() { return vidGrabber.isFrameNew(); }
+ofTexture& WebcamTex::getTexture() { return vidGrabber.getTexture(); }
+const ofTexture& WebcamTex::getTexture() const { return vidGrabber.getTexture(); }
+void WebcamTex::setUseTexture(bool enabled) { vidGrabber.setUseTexture(enabled); }
+bool WebcamTex::isUsingTexture() const { return vidGrabber.isUsingTexture(); }
+ofPixels& WebcamTex::getPixels() { return vidGrabber.getPixels(); }
+
+#endif

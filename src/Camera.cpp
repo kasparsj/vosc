@@ -21,6 +21,19 @@ void Camera::resetScene() {
     reset();
 }
 
+void Camera::setInteractive(bool enabled) {
+    if (enabled == interactive) return;
+    interactive = enabled;
+    if (auto* easyCam = dynamic_cast<ofEasyCam*>(cam.get())) {
+        if (enabled && mouseInput) easyCam->enableMouseInput();
+        else easyCam->disableMouseInput();
+    }
+    if (auto* firstPerson = dynamic_cast<ofxFirstPersonCamera*>(cam.get())) {
+        if (enabled) firstPerson->enableAutoUpdate();
+        else firstPerson->disableAutoUpdate();
+    }
+}
+
 void Camera::update() {
     if (cam != nullptr) {
         ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam.get());
@@ -104,12 +117,9 @@ void Camera::oscCommand(const string& command, const ofxOscMessage& m) {
                         easyCam->setAutoDistance(m.getArgAsBool(1));
                     }
                     else if (method == "mouseInput" && m.getNumArgs() > 1) {
-                        if (m.getArgAsBool(1)) {
-                            easyCam->enableMouseInput();
-                        }
-                        else {
-                            easyCam->disableMouseInput();
-                        }
+                        mouseInput = m.getArgAsBool(1);
+                        if (mouseInput && interactive) easyCam->enableMouseInput();
+                        else easyCam->disableMouseInput();
                     }
                 }
                 ofxFirstPersonCamera* fpCam = dynamic_cast<ofxFirstPersonCamera*>(cam.get());
@@ -129,10 +139,15 @@ void Camera::oscInit(const ofxOscMessage &m) {
         name = m.getArgAsString(0);
     }
     if (name == "easy") {
-        cam = std::unique_ptr<ofCamera>(new ofEasyCam());
+        auto easyCam = std::make_unique<ofEasyCam>();
+        mouseInput = true;
+        if (!interactive) easyCam->disableMouseInput();
+        cam = std::move(easyCam);
     }
     else if (name == "fp") {
-        cam = std::unique_ptr<ofCamera>(new ofxFirstPersonCamera());
+        auto firstPerson = std::make_unique<ofxFirstPersonCamera>();
+        if (!interactive) firstPerson->disableAutoUpdate();
+        cam = std::move(firstPerson);
     }
     else if (name != "") {
         cam = std::unique_ptr<ofCamera>(new ofCamera());

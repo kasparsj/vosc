@@ -4,9 +4,7 @@
 
 class Lights {
 public:
-    static Lights& get() {
-        return instance;
-    }
+    static Lights& get();
     
     const map<string, shared_ptr<Light>>& all() {
         return lights;
@@ -17,7 +15,5 @@ public:
     void update();
     
 private:
-    static Lights instance;
-    
     map<string, shared_ptr<Light>> lights;
 };

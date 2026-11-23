@@ -1,6 +1,21 @@
 #include "ResourceRegistry.hpp"
+#include "input/Inputs.hpp"
+#include "light/Lights.h"
 
 ResourceRegistry* ResourceRegistry::currentRegistry = nullptr;
+
+ResourceRegistry::ResourceRegistry()
+    : inputs(std::make_unique<Inputs>())
+    , lights(std::make_unique<Lights>())
+    , feedback(std::make_shared<FeedbackState>()) {}
+
+ResourceRegistry::Scope::Scope(ResourceRegistry& active) : previous(currentRegistry) {
+    active.activate();
+}
+
+ResourceRegistry::Scope::~Scope() {
+    currentRegistry = previous;
+}
 
 ResourceRegistry::~ResourceRegistry() {
     deactivate();

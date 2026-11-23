@@ -3,6 +3,18 @@
 #include <cstdio>
 #include <vector>
 
+namespace {
+thread_local std::string* scopedError = nullptr;
+}
+
+Logger::ErrorScope::ErrorScope(std::string& firstError) : previous(scopedError) {
+    scopedError = &firstError;
+}
+
+Logger::ErrorScope::~ErrorScope() {
+    scopedError = previous;
+}
+
 Logger::Logger() {}
 
 Logger::Logger(const string & path, bool append) :
@@ -15,6 +27,8 @@ uint64_t Logger::append(ofLogLevel level, const string& module, const string& me
         while (end > 0 && (static_cast<unsigned char>(bounded[end]) & 0xc0) == 0x80) --end;
         bounded.resize(end);
     }
+    if (scopedError && scopedError->empty() && (level == OF_LOG_ERROR || level == OF_LOG_FATAL_ERROR))
+        *scopedError = bounded;
     std::lock_guard<std::mutex> lock(linesMutex);
     lines.push_back({ofGetElapsedTimef(), bounded, ++sequence, level, module.substr(0, 128)});
     if (lines.size() > 512) lines.erase(lines.begin());

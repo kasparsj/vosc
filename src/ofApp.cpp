@@ -10,22 +10,20 @@ void ofApp::setup(){
     
     ofDisableArbTex();
 
-    bool preview = false;
     auto channel = std::make_shared<Logger>();
     ofSetLoggerChannel(channel);
 #if VOSC_OPERATOR_UI
-    preview = previewChild != nullptr;
     logger = std::move(channel);
 #endif
     
     try {
 #if VOSC_OPERATOR_UI
-        if (!preview) overlay.setup();
+        overlay.setup(oscPort);
 #endif
         CommandSystem::ScenePrograms programs;
         if (startupScene) {
             programs = CommandSystem::prepareStartupScene(*startupScene);
-            ofSetWindowTitle(preview ? "VOSC Preview — " + startupScene->title : startupScene->title);
+            ofSetWindowTitle(startupScene->title);
         }
         vosc.setup(oscPort, startupScene ? &*startupScene : nullptr, programs,
                    [this](int frame, const std::string& detail) {
@@ -44,19 +42,12 @@ void ofApp::setup(){
             const auto marker = "VOSC_SCENE_READY frame=" + std::to_string(frame) +
                                 " title=" + startupScene->title;
 #if VOSC_OPERATOR_UI
-            if (previewChild) {
-                if (!previewChild->announceReady(marker)) {
-                    failStartup("Could not report preview readiness to its owner.");
-                    return;
-                }
-            } else {
-                overlay.rememberScene(*startupScene, vosc);
-            }
+            overlay.rememberScene(*startupScene, vosc);
 #endif
             finishStartup();
             std::cout << marker << std::endl;
             startupScene.reset();
-        }, preview);
+        });
     } catch (const std::exception& error) {
         failStartup(error.what());
     }
@@ -75,14 +66,7 @@ void ofApp::failStartup(const std::string& detail) {
 void ofApp::update(){
     if (startupFailed) return;
 #if VOSC_OPERATOR_UI
-    if (previewChild) {
-        if (!previewChild->poll()) {
-            ofExit();
-            return;
-        }
-    } else {
-        overlay.update();
-    }
+    overlay.update();
 #endif
     vosc.update();
 }
@@ -98,15 +82,12 @@ void ofApp::draw(){
 
 void ofApp::exit() {
 #if VOSC_OPERATOR_UI
-    if (!previewChild) overlay.shutdown();
+    overlay.shutdown();
 #endif
     vosc.exit();
 }
 
 void ofApp::keyPressed(int key) {
-#if VOSC_OPERATOR_UI
-    if (previewChild && key == 'f') return;
-#endif
     vosc.keyPressed(key);
 }
 

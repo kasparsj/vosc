@@ -17,19 +17,19 @@
 class VOSC {
 public:
     VOSC();
+    ~VOSC();
 
     void setup(unsigned int port, const scene::File* scene, CommandSystem::ScenePrograms& programs,
-               CommandSystem::SceneResult result, bool preview);
+               CommandSystem::SceneResult result);
     void update();
     void draw();
     void exit();
     
 #if VOSC_OPERATOR_UI
-    const auto& operatorLayers() const { return renderSystem.getLayers(); }
-    std::optional<glm::vec3> operatorCameraPosition() const {
-        if (!runtime.camera.isEnabled()) return std::nullopt;
-        return runtime.camera.getCamera().getPosition();
-    }
+    using ExampleLoadResult = std::function<void(const scene::File* loaded, int frame, const std::string& detail)>;
+    bool requestExampleLoad(std::filesystem::path manifest, scene::Inputs inputs, ExampleLoadResult result);
+    const auto& operatorLayers() const { return renderSystem().getLayers(); }
+    std::optional<glm::vec3> operatorCameraPosition() const;
     void applyOperatorTextureFlag(const std::function<std::shared_ptr<Texture>()>& resolve,
                                   bool Texture::*flag, bool value);
 #endif
@@ -37,7 +37,7 @@ public:
     void windowResized(int w, int h);
 
 private:
-    void setupControl(bool required = false);
+    void setupControl();
 #ifdef VOSC_RECOVERY_TESTING
     void recoveryTestUpdate(bool beforeDraw = false);
     void recoveryTestRecord(const ofJson& event);
@@ -45,12 +45,31 @@ private:
     std::string recoveryTestCommandPath;
     std::string recoveryTestEventsPath;
 #endif
-    ResourceSystem resourceSystem;
-    RuntimeContext runtime;
+    struct SceneState;
+    ResourceSystem& resourceSystem();
+    RuntimeContext& runtime();
+    RenderSystem& renderSystem();
+    const RenderSystem& renderSystem() const;
+    CommandSystem& commandSystem();
+    void attachLiveCommands();
+
     InputSystem inputSystem;
-    RenderSystem renderSystem;
-    CommandSystem commandSystem;
+    std::unique_ptr<SceneState> activeScene;
     control::EngineControl engineControl;
+#if VOSC_OPERATOR_UI
+    struct ExampleLoad;
+    std::unique_ptr<ExampleLoad> exampleLoad;
+    ofStyle applicationCompositionStyle;
+    void prepareExample();
+    bool composeExample();
+    void finishExample(int frame, std::string detail);
+    bool exampleLoadBusy();
+#ifdef VOSC_RECOVERY_TESTING
+    bool failNextExampleComposition = false;
+    std::optional<double> lastExampleDrawStart;
+    std::optional<int> lastExampleOutcomeFrame;
+#endif
+#endif
     bool initialized = false;
     int settledWindowWidth = 0;
     int settledWindowHeight = 0;

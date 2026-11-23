@@ -58,7 +58,17 @@ endif
 OF_ROOT ?= ../../..
 
 PROJECT_ROOT ?= .
+ifneq ($(filter ReleaseABI DebugABI CleanReleaseABI CleanDebugABI,$(MAKECMDGOALS)),)
+OF_ADDONS_PATH ?= $(OF_ROOT)/addons
+# OF's addon source search excludes paths with hidden components.
+VOSC_RENDER_ADDONS := $(shell python3 scripts/stage_linux_render_addons.py "$(OF_ADDONS_PATH)" "$(abspath build/vosc-render-addons)")
+ifeq ($(VOSC_RENDER_ADDONS),)
+$(error Could not prepare VOSC render addon sources)
+endif
+override OF_ADDONS_PATH := $(VOSC_RENDER_ADDONS)
+endif
 override PROJECT_CFLAGS += -DVOSC_OPERATOR_UI=$(VOSC_OPERATOR_UI)
+override PROJECT_EXCLUSIONS += $(PROJECT_ROOT)/src/macos $(PROJECT_ROOT)/src/macos/%
 ifeq ($(VOSC_OPERATOR_UI),1)
 override PROJECT_EXCLUSIONS += $(PROJECT_ROOT)/src/operator/macos $(PROJECT_ROOT)/src/operator/macos/%
 VOSC_RMLUI_DIR ?= $(abspath .vosc-linux/operator-ui/$(or $(ABI),native))

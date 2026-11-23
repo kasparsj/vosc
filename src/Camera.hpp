@@ -13,6 +13,7 @@ public:
     void setup();
     void reset();
     void resetScene();
+    void setInteractive(bool enabled);
     void preUpdate() {
         ofEasyCam* easyCam = dynamic_cast<ofEasyCam*>(cam.get());
         if (easyCam != nullptr) {
@@ -47,6 +48,8 @@ public:
 private:
     std::unique_ptr<ofCamera> cam;
     float orbit = 0.f;
+    bool interactive = true;
+    bool mouseInput = true;
     
     shared_ptr<Variable<glm::vec3>> camPos;
     shared_ptr<Variable<glm::vec3>> camLook;

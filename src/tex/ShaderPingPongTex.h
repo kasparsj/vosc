@@ -2,6 +2,7 @@
 
 #include "../shader/Shader.h"
 #include "FboPingPongTex.h"
+#include "../ResourceRegistry.hpp"
 #include <filesystem>
 
 class ShaderPingPongTex : public Shader, public FboPingPongTex {
@@ -48,4 +49,5 @@ private:
     uint64_t completedUpdates = 0;
     uint64_t lastSuccessfulGeneration = 0;
     std::string observedSource;
+    std::weak_ptr<ResourceRegistry::FeedbackState> feedbackOwner;
 };

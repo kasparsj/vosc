@@ -7,8 +7,11 @@ public:
     static vector<string> cache;
     static string random();
     
-    VideoTex(string name, const vector<float>& args) : BaseTex(name, args) {}
-    ~VideoTex() {}
+    VideoTex(string name, const vector<float>& args);
+    ~VideoTex() override;
+    static bool supportsInWindowLoad();
+    void useInWindowLoad();
+    void verifyInWindowInput() const;
     void update(TexData& data) override;
     bool startupFrameReady() const override;
     void seek(float pct);
@@ -31,6 +34,12 @@ public:
     }
     
 private:
+    struct InWindowVideo;
+    void updateInWindow(TexData& data);
+    void initializePlayback(TexData& data);
+    void advancePlayback(TexData& data);
+
+    std::unique_ptr<InWindowVideo> inWindow;
     bool observedFrame = false;
     ofVideoPlayer videoPlayer;
 };

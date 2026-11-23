@@ -19,7 +19,8 @@ namespace control {
 class EngineControl {
 public:
     EngineControl(RenderSystem& render, CommandSystem& commands, RuntimeContext& runtime);
-    void setup(bool required);
+    void bindScene(RenderSystem& render, CommandSystem& commands, RuntimeContext& runtime);
+    void setup();
     void update();
     void beforeUpdate();
     void afterUpdate();
@@ -120,9 +121,12 @@ private:
     void updateTrialReceipt();
     ofJson trialSummary() const;
 
-    RenderSystem& render;
-    CommandSystem& commands;
-    RuntimeContext& runtime;
+    RenderSystem& render() const { return *sceneRender; }
+    CommandSystem& commands() const { return *sceneCommands; }
+    RuntimeContext& runtime() const { return *sceneRuntime; }
+    RenderSystem* sceneRender;
+    CommandSystem* sceneCommands;
+    RuntimeContext* sceneRuntime;
     LocalControlServer server;
     PerformanceTelemetry telemetry;
     PerformanceTelemetry updateTelemetry;

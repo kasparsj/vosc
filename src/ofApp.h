@@ -4,7 +4,6 @@
 #include "Config.h"
 #if VOSC_OPERATOR_UI
 #include "operator/DiagnosticOverlay.hpp"
-#include "operator/PreviewProcess.hpp"
 #endif
 #include "Logger.h"
 #include "VOSC.hpp"
@@ -13,17 +12,9 @@ class ofApp : public ofBaseApp {
 
 public:
     ofApp(unsigned int oscPort, std::optional<scene::File> startupScene, bool& startupFailed,
-          int frameRate, std::function<void()> finishStartup
-#if VOSC_OPERATOR_UI
-          , vosc::operator_ui::PreviewChild* previewChild
-#endif
-          )
+          int frameRate, std::function<void()> finishStartup)
         : oscPort(oscPort), startupScene(std::move(startupScene)), startupFailed(startupFailed),
-          frameRate(frameRate), finishStartup(std::move(finishStartup))
-#if VOSC_OPERATOR_UI
-          , previewChild(previewChild)
-#endif
-          {}
+          frameRate(frameRate), finishStartup(std::move(finishStartup)) {}
 
 	void setup();
 	void update();
@@ -48,6 +39,5 @@ private:
 #if VOSC_OPERATOR_UI
     std::shared_ptr<Logger> logger;
     DiagnosticOverlay overlay;
-    vosc::operator_ui::PreviewChild* previewChild;
 #endif
 };

@@ -4,7 +4,6 @@
 #include "DiagnosticMarkup.hpp"
 #include "BrowseView.hpp"
 #include "ExamplesView.hpp"
-#include "PreviewProcess.hpp"
 #include "InspectorView.hpp"
 #include "LocalizedDockBlur.hpp"
 
@@ -410,7 +409,7 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
             return;
         }
         if (target->GetTagName() != "button") target = target->Closest("button");
-        if (!target || target->IsClassSet("inactive")) return;
+        if (!target || target->IsClassSet("inactive") || target->GetAttribute<Rml::String>("aria-disabled", "") == "true") return;
         const auto value = target->GetAttribute<Rml::String>("data-target", "");
         uint64_t targetId = 0;
         std::from_chars(value.data(), value.data() + value.size(), targetId);
@@ -421,7 +420,7 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
         if (syncingBrowse || !panel->IsClassSet("browse")) return;
         if (examplesActive) {
             if (id == "back" || id == "browse-example-search" || id == "browse-example-category"
-                || id.rfind("example-", 0) == 0 || id.rfind("preview-", 0) == 0) examplesFocus = id;
+                || id.rfind("example-", 0) == 0) examplesFocus = id;
         } else if (id == "back" || id == "browse-search" || id == "browse-category" || id == "browse-clear"
                    || id == "browse-use" || id == "browse-target" || id == "browse-copy"
                    || id.rfind("asset-row-", 0) == 0) {
@@ -595,7 +594,6 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
     uint64_t focusOrigin = 0;
     vosc::operator_ui::BrowseView browse;
     vosc::operator_ui::ExamplesView examples;
-    vosc::operator_ui::PreviewProcess preview;
     std::string assetsFocus, examplesFocus;
     float assetsScroll = 0, examplesScroll = 0;
     bool examplesActive = false, keepCatalogScroll = false;
@@ -621,7 +619,8 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
 DiagnosticOverlay::DiagnosticOverlay() = default;
 DiagnosticOverlay::~DiagnosticOverlay() = default;
 
-void DiagnosticOverlay::setup() {
+void DiagnosticOverlay::setup(unsigned int port) {
+    oscPort = port;
     auto ui = std::make_unique<Surface>();
     ui->setup();
     surface = std::move(ui);
@@ -666,14 +665,12 @@ void DiagnosticOverlay::setup() {
 
 void DiagnosticOverlay::update() {
     if (!surface) return;
-    surface->preview.tick();
     if (auto focus = surface->examples.update(); focus && open && view == View::Browse && surface->examplesActive)
         surface->focusRequest = std::move(*focus);
 }
 
 void DiagnosticOverlay::shutdown() {
     listeners.unsubscribeAll();
-    if (surface) surface->preview.shutdown();
     surface.reset();
     open = false;
 }
@@ -991,8 +988,21 @@ void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std
                 ui.exampleSearch->SetValue("");
                 ui.exampleCategory->SetSelection(0);
                 ui.focusRequest = "browse-example-search";
-            } else if (auto focus = ui.examples.activate(id, ui.preview)) {
-                ui.focusRequest = std::move(*focus);
+            } else {
+                const auto request = [this, &renderer](std::filesystem::path manifest, scene::Inputs inputs) {
+                    return renderer.requestExampleLoad(std::move(manifest), std::move(inputs),
+                        [this, &renderer](const scene::File* loaded, int, const std::string& detail) {
+                            if (!surface) return;
+                            if (loaded) {
+                                ofSetWindowTitle(loaded->title);
+                                rememberScene(*loaded, renderer);
+                            } else {
+                                ofLogError("Operator UI") << "Load Example failed · " << detail;
+                            }
+                            surface->examples.finishLoad(loaded != nullptr, detail);
+                        });
+                };
+                if (auto focus = ui.examples.activate(id, request)) ui.focusRequest = std::move(*focus);
             }
         } else if (id == "back" && ui.browse.canGoBack()) {
             show(View::Browse, ui.browse.backItem());
@@ -1078,13 +1088,17 @@ void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std
     }
 }
 
-std::string DiagnosticOverlay::overviewMarkup(const VOSC& renderer, const GLint* viewport) {
+bool DiagnosticOverlay::sceneIsCurrent(const VOSC& renderer) const {
     const auto& layers = renderer.operatorLayers();
-    const bool knownScene = !sceneLayers.empty() && layers.size() == sceneLayers.size() &&
+    return !sceneLayers.empty() && layers.size() == sceneLayers.size() &&
         std::equal(layers.begin(), layers.end(), sceneLayers.begin(),
             [](const auto& live, const auto& original) { return live && live == original.layer.lock(); });
+}
+
+std::string DiagnosticOverlay::overviewMarkup(const VOSC& renderer, const GLint* viewport) {
+    const auto& layers = renderer.operatorLayers();
     surface->setReading("scene-title", surface->title,
-        knownScene && !sceneTitle.empty() ? sceneTitle : "Unnamed scene");
+        sceneIsCurrent(renderer) && !sceneTitle.empty() ? sceneTitle : "Unnamed scene");
     surface->setReading("render-size", surface->dimensions,
         std::to_string(viewport[2]) + " × " + std::to_string(viewport[3]) + " px");
     const auto camera = renderer.operatorCameraPosition();
@@ -1265,7 +1279,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
         case View::Console: break;
         case View::Browse: {
             const bool compact = ui.document->IsClassSet("compact");
-            if (examples) markup = ui.examples.markup(ui.preview);
+            if (examples) markup = ui.examples.markup(oscPort, sceneIsCurrent(renderer));
             else contentMarkup = &ui.browse.markup(renderer);
             const int height = examples ? ui.examples.height(compact) : ui.browse.height(compact);
             ui.panel->SetProperty("height", std::to_string(height) + "dp");
@@ -1310,7 +1324,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     auto origin = std::exchange(ui.focusOrigin, 0);
     const bool keepCatalogScroll = std::exchange(ui.keepCatalogScroll, false);
     const bool revealBrowseFocus = browse && !keepCatalogScroll && (wantedFocus.rfind("asset-row-", 0) == 0
-        || (examples && (wantedFocus.rfind("example-", 0) == 0 || wantedFocus.rfind("preview-", 0) == 0)));
+        || (examples && wantedFocus.rfind("example-", 0) == 0));
     Rml::Element* returningRow = nullptr;
     if (wantedFocus.empty() && !focusId.empty() &&
         (!ui.context->GetFocusElement() || ui.context->GetFocusElement()->GetId() != focusId ||
@@ -1323,8 +1337,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
         if (!element || !element->IsVisible(true) || element->IsClassSet("inactive")
             || (origin && !ui.inspector.matches(wantedFocus, origin))) {
             const char* fallback = destination->id;
-            if (examples && wantedFocus.rfind("preview-", 0) == 0) fallback = ui.examples.previewFocus(ui.preview);
-            else if (detail) fallback = "back";
+            if (detail) fallback = "back";
             else if (console) fallback = "console-search";
             else if (examples) fallback = "browse-example-search";
             else if (browse) fallback = ui.browse.builtins() ? "browse-builtins" : "browse-search";

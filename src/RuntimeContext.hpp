@@ -6,9 +6,9 @@
 #include <memory>
 
 struct RuntimeContext {
-    RuntimeContext()
+    explicit RuntimeContext(Inputs& sceneInputs)
         : camera()
-        , inputs(Inputs::get())
+        , inputs(sceneInputs)
         , tidal(std::unique_ptr<ofxTidalCycles>(new ofxTidalCycles(1))) {}
 
     Camera camera;

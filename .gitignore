@@ -13,3 +13,4 @@ __pycache__/
 /Project.local.xcconfig
 /.vosc-macos/
 /.vosc-linux/
+/build/vosc-render-addons/

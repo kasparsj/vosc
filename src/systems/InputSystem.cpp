@@ -2,13 +2,8 @@
 #include "ofxMidi.h"
 #include <exception>
 
-bool InputSystem::setup(unsigned int port, bool preview) {
-    if (!preview) return receiver.setup(port);
-    ofxOscReceiverSettings settings;
-    settings.port = port;
-    settings.host = "127.0.0.1";
-    settings.reuse = false;
-    return receiver.setup(settings);
+bool InputSystem::setup(unsigned int port) {
+    return receiver.setup(port);
 }
 
 void InputSystem::shutdown() {

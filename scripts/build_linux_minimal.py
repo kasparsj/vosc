@@ -9,8 +9,9 @@ import shutil
 import subprocess
 import tempfile
 
-from addon_compat import (EXPR_COMPILE_LOOP, SHADERTOY_TIMESTAMP, patch_expression_returns,
-                          patch_shadertoy_timestamp, replace_addon_anchor)
+from addon_compat import (EXPR_COMPILE_LOOP, POST_PROCESSING_ATTRIBUTE, SHADERTOY_TIMESTAMP,
+                          patch_expression_returns, patch_post_processing, patch_shadertoy_timestamp,
+                          replace_addon_anchor)
 from stage_assets import stage_examples
 
 
@@ -42,6 +43,7 @@ def stage_legacy_addons(sdk, stage, addons):
     patches = {
         "ofxExpr": (("ofxExpr.cpp", EXPR_COMPILE_LOOP, patch_expression_returns),
                     ("ofxExprParser.hpp", '#include "ofEvents.h"', patch_expr_header)),
+        "ofxPostProcessing": (("PostProcessing.cpp", POST_PROCESSING_ATTRIBUTE, patch_post_processing),),
         "ofxShadertoy": (("ofxShadertoy.cpp", SHADERTOY_TIMESTAMP + ";", patch_shadertoy_timestamp),),
     }
     for name, files in patches.items():
@@ -101,10 +103,10 @@ def main():
         "include $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk\n"
     )
     source = ROOT / "src"
-    def ignore_ui(directory, names):
-        return {"operator"} if Path(directory) == source else ()
+    def ignore_non_linux_sources(directory, names):
+        return {"operator", "macos"} if Path(directory) == source else ()
 
-    shutil.copytree(source, stage / "src", ignore=ignore_ui)
+    shutil.copytree(source, stage / "src", ignore=ignore_non_linux_sources)
     shutil.copytree(ROOT / "assets", stage / "bin/data", ignore=ignore_assets)
     (stage / "bin/data/videos").mkdir()
     stage_examples(stage / "bin/data/examples")

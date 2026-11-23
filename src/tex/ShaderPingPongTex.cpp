@@ -6,8 +6,10 @@
 #endif
 
 namespace {
-uint64_t feedbackContextGeneration = 1;
-std::set<ShaderPingPongTex*> feedbackInstances;
+ResourceRegistry::FeedbackState* activeFeedback() {
+    auto* registry = ResourceRegistry::current();
+    return registry ? registry->feedback.get() : nullptr;
+}
 bool validFeedbackSource(const std::string& value) {
     if (value.empty() || value.size() > 128 * 1024 || value.find('\0') != std::string::npos) return false;
     // Same strict UTF-8 decoder used by native recipe strings; bounded fragments
@@ -50,7 +52,8 @@ void feedbackEvent(const std::string& name, const ofJson& detail = ofJson::objec
     event["event"] = name;
     event["sequence"] = ++feedbackTraceSequence;
     event["frame"] = ofGetFrameNum();
-    event["generation"] = feedbackContextGeneration;
+    const auto* feedback = activeFeedback();
+    event["generation"] = feedback ? feedback->generation : 0;
     if (feedbackTrace.size() == 256) { feedbackTrace.pop_front(); ++feedbackTraceDropped; }
     feedbackTrace.push_back(event);
 }
@@ -118,7 +121,8 @@ ofJson ShaderPingPongTex::recoveryTestSnapshot() {
     // Observes actual watched programs even when the texture remains static.
     const auto generation = feedbackGeneration();
     ofJson instances = ofJson::array();
-    for (auto* instance : feedbackInstances) {
+    auto* feedback = activeFeedback();
+    if (feedback) for (auto* instance : feedback->instances) {
         ofJson uniforms = ofJson::object();
         if (instance->isShaderLoaded()) {
             const GLuint program = instance->getShader().getProgram();
@@ -156,14 +160,22 @@ ShaderPingPongTex::ShaderPingPongTex(string name, const vector<float>& args, boo
     if (tracked) trackFeedback();
 }
 void ShaderPingPongTex::trackFeedback() {
-    if (feedbackInstances.insert(this).second) invalidateFeedbackGeneration();
+    if (auto* registry = ResourceRegistry::current()) {
+        auto state = registry->feedback;
+        if (auto owner = feedbackOwner.lock(); owner && owner != state)
+            throw std::logic_error("feedback belongs to a different scene");
+        feedbackOwner = state;
+        if (state->instances.insert(this).second) ++state->generation;
+    }
 }
 ShaderPingPongTex::~ShaderPingPongTex() {
-    if (feedbackInstances.erase(this)) invalidateFeedbackGeneration();
+    if (auto owner = feedbackOwner.lock(); owner && owner->instances.erase(this)) ++owner->generation;
 }
 uint64_t ShaderPingPongTex::feedbackGeneration() {
+    auto* feedback = activeFeedback();
+    if (!feedback) return 0;
     // Watched shaders may reload while their holder is static, without update().
-    for (auto* instance : feedbackInstances) if (instance->isShaderLoaded()) {
+    for (auto* instance : feedback->instances) if (instance->isShaderLoaded()) {
         const auto source = instance->getShader().getShaderSource(GL_FRAGMENT_SHADER);
         if (source != instance->observedSource) {
             instance->observedSource = source;
@@ -173,9 +185,11 @@ uint64_t ShaderPingPongTex::feedbackGeneration() {
 #endif
         }
     }
-    return feedbackContextGeneration;
+    return feedback->generation;
 }
-void ShaderPingPongTex::invalidateFeedbackGeneration() { ++feedbackContextGeneration; }
+void ShaderPingPongTex::invalidateFeedbackGeneration() {
+    if (auto* feedback = activeFeedback()) ++feedback->generation;
+}
 
 bool ShaderPingPongTex::getExportSource(std::string& source, std::string& reason) const {
     if (!Shader::getExportSource(source, reason)) return false;

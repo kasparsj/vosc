@@ -625,7 +625,8 @@ File load(const fs::path& path, const Inputs& inputs) {
     File result;
     result.path = fs::canonical(path);
     if (!fs::is_regular_file(result.path)) throw std::runtime_error("scene must be a regular file");
-    const auto bytes = readBounded(result.path, MaxManifestBytes);
+    result.manifestBytes = readBounded(result.path, MaxManifestBytes);
+    const auto& bytes = result.manifestBytes;
     if (bytes.find('\0') != std::string::npos) throw std::runtime_error("scene file contains NUL");
     checkJsonNumbers(bytes);
     std::vector<std::set<std::string>> objectKeys;
@@ -728,6 +729,12 @@ File load(const fs::path& path, const Inputs& inputs) {
         }
     }
     return result;
+}
+
+void verifyManifest(const File& file, const fs::path& requestedPath) {
+    if (fs::canonical(requestedPath) != file.path || !fs::is_regular_file(file.path) ||
+        readBounded(file.path, file.manifestBytes.size()) != file.manifestBytes)
+        throw std::runtime_error("scene manifest changed while loading");
 }
 
 void verifyNativeAssets(const File& file) {

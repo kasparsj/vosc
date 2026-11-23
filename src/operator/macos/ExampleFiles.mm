@@ -8,7 +8,7 @@ namespace vosc::operator_ui {
 
 void chooseExampleClip(std::function<void(ClipPickResult, std::filesystem::path)> completion) {
     NSOpenPanel* panel = [NSOpenPanel openPanel];
-    panel.message = @"Choose a local MOV or MP4 for the preview";
+    panel.message = @"Choose a local MOV or MP4 to load Video";
     panel.prompt = @"Choose";
     panel.canChooseFiles = YES;
     panel.canChooseDirectories = NO;

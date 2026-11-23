@@ -287,8 +287,9 @@ button.example-row { min-height: 34dp; }
 button.example-row .example-thumb {
     flex: none; width: 36dp; height: 23dp; margin-right: 8dp; pointer-events: none;
 }
-.example-preview-actions, .example-input-actions, .example-files { display: block; margin-top: 8dp; }
-.example-preview-actions .message { color: #dbeaff; font-size: 12dp; }
+.example-load-actions, .example-input-actions, .example-files { display: block; margin-top: 8dp; }
+.example-load-actions .message { color: #dbeaff; font-size: 12dp; }
+.example-load-actions button[aria-disabled='true'] { color: #aab5c5; }
 .example-input-label { display: block; color: #dbeaff; font-size: 12dp; margin-bottom: 5dp; }
 .example-input { display: block; width: 100%; margin-bottom: 6dp; }
 .example-input.camera-index { display: inline-block; width: 44dp; margin: 0 0 0 8dp; }
