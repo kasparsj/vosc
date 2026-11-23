@@ -36,6 +36,7 @@ public:
 private:
     struct InputState {
         std::filesystem::path clip;
+        std::optional<std::string> cameraOverride;
         std::string draft, feedback;
         bool choosing = false;
     };
@@ -52,6 +53,7 @@ private:
     std::string detailMarkup(const ExampleEntry& example, const PreviewProcess& preview) const;
     std::string previewMarkup(const PreviewProcess& preview) const;
     void requestCatalog();
+    void publishCatalog(Catalog snapshot);
     void selectClip(const std::string& example, const std::filesystem::path& path);
     void launch(const ExampleEntry& example, PreviewProcess& preview);
 

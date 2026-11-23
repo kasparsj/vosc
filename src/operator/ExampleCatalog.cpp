@@ -225,19 +225,24 @@ std::optional<fs::path> resolveExampleFile(const fs::path& root, const fs::path&
 std::vector<ExampleEntry> readExamples(const ExampleDirectories& roots, std::string& error) {
     error.clear();
     std::error_code failure;
-    if (!fs::is_directory(fs::symlink_status(roots.examples, failure)) || failure) {
+    const auto rootStatus = fs::symlink_status(roots.examples, failure);
+    if (failure && failure != std::errc::no_such_file_or_directory && failure != std::errc::not_a_directory)
+        throw fs::filesystem_error("Could not access the Examples folder", roots.examples, failure);
+    if (!fs::is_directory(rootStatus)) {
         error = "The Examples folder is unavailable. Check the checkout or staged renderer data.";
         return {};
     }
     const auto order = indexOrder(roots.examples);
     const auto display = ofJson::parse(readOptional(roots.examples, "browse.json"), nullptr, false);
     std::vector<ExampleEntry> entries;
-    fs::recursive_directory_iterator item(roots.examples, fs::directory_options::skip_permission_denied, failure);
+    // An incomplete scan must not replace the last complete catalog.
+    fs::recursive_directory_iterator item(roots.examples, failure);
     const fs::recursive_directory_iterator end;
     for (; !failure && item != end; item.increment(failure)) {
         const auto relative = item->path().lexically_relative(roots.examples);
         const auto status = item->symlink_status(failure);
-        if (failure || fs::is_symlink(status) || !plainRelative(relative)) {
+        if (failure) break;
+        if (fs::is_symlink(status) || !plainRelative(relative)) {
             item.disable_recursion_pending();
             continue;
         }

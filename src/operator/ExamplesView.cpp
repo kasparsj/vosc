@@ -133,10 +133,6 @@ bool ExamplesView::openItem(const std::string& id, float scroll) {
     selected = item = example->id;
     catalogScroll = scroll;
     revealFeedback.clear();
-    if (example->inputKind == "camera") {
-        const auto [state, inserted] = inputs.try_emplace(item);
-        if (inserted) state->second.draft = example->inputDefault;
-    }
     return true;
 }
 
@@ -161,11 +157,30 @@ void ExamplesView::requestCatalog() {
     }
 }
 
+void ExamplesView::publishCatalog(Catalog snapshot) {
+    const auto sameInput = [&](const std::string& id) {
+        const auto* previous = find(id);
+        const auto current = std::find_if(snapshot.rows.begin(), snapshot.rows.end(), [&](const auto& entry) {
+            return entry.id == id;
+        });
+        return previous && current != snapshot.rows.end()
+            && previous->inputKind == current->inputKind && previous->inputName == current->inputName;
+    };
+    for (auto input = inputs.begin(); input != inputs.end();) {
+        if (sameInput(input->first)) ++input;
+        else input = inputs.erase(input);
+    }
+#if defined(__APPLE__)
+    if (clipRequest && !sameInput(clipRequest->item)) clipRequest.reset();
+#endif
+    catalog = std::move(snapshot);
+}
+
 void ExamplesView::refresh() {
     if (pendingCatalog.valid()) {
         if (pendingCatalog.wait_for(std::chrono::seconds(0)) != std::future_status::ready) return;
         try {
-            catalog = pendingCatalog.get();
+            publishCatalog(pendingCatalog.get());
         } catch (const std::exception&) {
             catalog.error = "Could not refresh examples. Showing the previous catalog.";
         }
@@ -210,12 +225,17 @@ std::optional<std::string> ExamplesView::update() {
 }
 
 void ExamplesView::rememberInput(std::string value) {
-    if (const auto* example = find(item)) inputs[example->id].draft = std::move(value);
+    const auto* example = find(item);
+    if (!example) return;
+    if (example->inputKind == "camera") inputs[example->id].cameraOverride = std::move(value);
+    else if (example->inputKind == "video" && media(*example).choosing) inputs[example->id].draft = std::move(value);
 }
 
 std::string ExamplesView::inputValue() const {
-    if (const auto* example = find(item)) return media(*example).draft;
-    return {};
+    const auto* example = find(item);
+    if (!example) return {};
+    const auto& input = media(*example);
+    return example->inputKind == "camera" ? input.cameraOverride.value_or(example->inputDefault) : input.draft;
 }
 
 std::string ExamplesView::summary() const {
@@ -366,21 +386,22 @@ void ExamplesView::launch(const ExampleEntry& example, PreviewProcess& preview) 
         return;
     }
     std::map<std::string, std::string> arguments;
-    auto& input = inputs[example.id];
     if (example.inputKind == "video") {
-        const auto clip = readableClip(input.clip);
+        const auto clip = readableClip(media(example).clip);
         if (!clip) {
             launchIssue = "The selected clip is unavailable. Choose a readable MOV or MP4.";
             return;
         }
         arguments.emplace(example.inputName, clip->string());
     } else if (example.inputKind == "camera") {
-        if (!cameraIndex(input.draft)) {
+        auto& input = inputs[example.id];
+        auto index = input.cameraOverride.value_or(example.inputDefault);
+        if (!cameraIndex(index)) {
             input.feedback = "Enter a camera device index from 0 to 63.";
             return;
         }
         input.feedback.clear();
-        arguments.emplace(example.inputName, input.draft);
+        arguments.emplace(example.inputName, std::move(index));
     }
     launchIssue.clear();
     launched = example.id;
