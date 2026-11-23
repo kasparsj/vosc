@@ -13,6 +13,14 @@ It is mainly used from SuperCollider / TidalCycles, but any OSC client can drive
 
 See [docs/Home.md](docs/Home.md) for full docs, [Examples](examples/README.md) for runnable sketches, and the [changelog](CHANGELOG.md) for recent changes.
 
+## macOS quick start
+
+1. Download the signed macOS disk image, `vosc-macos-universal.dmg`, from **Assets** on [GitHub Releases](https://github.com/kasparsj/vosc/releases/tag/v0.2.1).
+2. Open the disk image and launch `vosc.app`. You can also drag `vosc.app` into Applications and open it from there.
+3. Press **O**, then choose **Browse → Examples → Organic Trails → Load Example** to start rendering Organic Trails.
+
+To find editable assets and examples in Finder, press **O** and choose **Browse → Open Data Folder**. If you edited files in v0.2.0, follow the [migration guide](https://github.com/kasparsj/vosc/blob/v0.2.1/docs/Macos-dmg-smoke.md#bring-over-edits-from-v020).
+
 ## Good Fit Workflows
 
 vosc is a good fit when you need:
