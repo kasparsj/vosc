@@ -6,6 +6,7 @@
 #include <condition_variable>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <mutex>
 #include <thread>
 #include <iostream>
@@ -125,9 +126,19 @@ int main(int argc, char** argv) {
     unsigned int oscPort;
     std::optional<scene::File> startupScene;
     try {
-#if defined(TARGET_OSX) && defined(APPSTORE) && APPSTORE
+#if defined(TARGET_OSX)
         const auto contents = ofFilePath::getCurrentExePathFS().parent_path().parent_path();
-        ofSetDataPathRoot(contents / "Resources/data");
+        const auto bundledData = contents / "Resources/data";
+#if defined(APPSTORE) && APPSTORE
+        ofSetDataPathRoot(bundledData);
+#else
+        // Gatekeeper may launch the app from a location without its adjacent data.
+        std::error_code error;
+        if (std::filesystem::is_directory(bundledData, error) &&
+            !std::filesystem::is_directory(contents.parent_path().parent_path() / "data", error)) {
+            ofSetDataPathRoot(bundledData);
+        }
+#endif
 #endif
         oscPort = control::oscPortFromEnvironment();
         if (!options.scenePath.empty()) {
