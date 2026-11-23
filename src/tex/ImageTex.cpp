@@ -18,30 +18,34 @@ string ImageTex::random() {
     return cache[int(ofRandom(cache.size()))];
 }
 
+bool ImageTex::loadImage() {
+    string absPath = path;
+    const bool remote = path.rfind("http://", 0) == 0 || path.rfind("https://", 0) == 0;
+    if (!remote && !ofFilePath::isAbsolute(absPath)) {
+        absPath = ofToDataPath("images/" + path);
+        if (!ofFile(absPath).exists()) {
+            absPath = ofToDataPath(absPath);
+        }
+    }
+    if (remote ? image.load(absPath) : image.load(ofBufferFromFile(absPath, true))) {
+        prevPath = path;
+        return true;
+    }
+    ofLogError() << ("could not load image: " + path);
+    return false;
+}
+
 void ImageTex::update(TexData& data) {
     if (isStatic && !needsUpdate) return;
 
-    if (!image.isAllocated()) {
-        string absPath = path;
-        if (absPath.substr(0, 7) != "http://" && absPath.substr(0, 8) != "https://" && !ofFilePath::isAbsolute(absPath)) {
-            absPath = ofToDataPath("images/" + path);
-            if (!ofFile(absPath).exists()) {
-                absPath = ofToDataPath(absPath);
-            }
-        }
-        const bool remote = absPath.substr(0, 7) == "http://" || absPath.substr(0, 8) == "https://";
-        const bool loaded = remote ? image.load(absPath) : image.load(ofBufferFromFile(absPath, true));
-        if (loaded) {
-            prevPath = path;
-            if (!data.hasExplicitSize()) data.setSize(image.getWidth(), image.getHeight());
-            isStatic = true;
-            needsUpdate = false;
-        }
-        else {
-            ofLogError() << ("could not load image: " + path);
-            path = prevPath;
-            return;
-        }
+    if (!image.isAllocated() && !loadImage()) {
+        path = prevPath;
+        return;
+    }
+    if (needsUpdate) {
+        if (!data.hasExplicitSize()) data.setSize(image.getWidth(), image.getHeight());
+        isStatic = true;
+        needsUpdate = false;
     }
     aspectRatio = data.aspectRatio;
 }

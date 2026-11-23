@@ -8,6 +8,7 @@ public:
     
     ImageTex(string path, const vector<float>& args) : BaseTex(path, args) {}
     ~ImageTex() {}
+    bool loadImage();
     void update(TexData& data) override;
     void draw(const glm::vec2 &pos, const glm::vec2 &size) override;
     void choose() override;

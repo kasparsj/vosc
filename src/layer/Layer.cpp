@@ -145,16 +145,15 @@ void Layer::update(const vector<TidalNote> &notes) {
 void Layer::oscCommand(const string& command, const ofxOscMessage &m) {
     if (command.substr(0, 4) == "/tex") {
         auto tex = shader.getDefaultTexture();
-        bool isShared = false;
         if (command == "/tex" || command == "/tex/choose" || tex == nullptr) {
             if (command == "/tex") {
                 string name = m.getArgAsString(1);
                 if (TexturePool::hasShared(name)) {
                     tex = TexturePool::getShared(name);
-                    isShared = true;
                 }
                 else {
                     tex = TexturePool::getOrCreate(DEFAULT_TEX, &shader);
+                    if (!tex->loadLayerSource(m)) return;
                 }
             }
             else {
@@ -166,7 +165,7 @@ void Layer::oscCommand(const string& command, const ofxOscMessage &m) {
                 tex->data.setSize(data.getSize());
             }
         }
-        if (isShared) {
+        if (command == "/tex") {
             return;
         }
         tex->oscCommand(command, m);

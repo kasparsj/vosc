@@ -4,6 +4,7 @@
 #include "Layer.h"
 #include "VariablePool.h"
 #include "Args.h"
+#include "tex/ImageTex.h"
 #include "tex/Tex.h"
 #include "tex/ShaderTex.h"
 #include "tex/ShaderPingPongTex.h"
@@ -13,6 +14,7 @@
 #include <cctype>
 #include <cmath>
 #include <limits>
+#include <string_view>
 
 namespace {
 const char* textureFileType(const std::string& source, bool isURL) {
@@ -25,6 +27,14 @@ const char* textureFileType(const std::string& source, bool isURL) {
     if (extension == "hpv") return "hpv";
     if (extension == "html" || isURL) return "html";
     return nullptr;
+}
+
+vector<float> textureArguments(const ofxOscMessage& message, int sourceIndex) {
+    vector<float> args;
+    for (int i = sourceIndex + 1; i < message.getNumArgs(); ++i) {
+        args.push_back(message.getArgAsFloat(i));
+    }
+    return args;
 }
 }
 
@@ -71,12 +81,28 @@ void Texture::loadSceneAsset(const std::string& path, bool feedback) {
 }
 
 void Texture::load(const ofxOscMessage &m, int arg) {
-    string newPath = m.getArgAsString(arg);
-    vector<float> args;
-    for (int i=(arg+1); i<m.getNumArgs(); i++) {
-        args.push_back(m.getArgAsFloat(i));
+    const auto source = m.getArgAsString(arg);
+    load(source, textureArguments(m, arg));
+}
+
+bool Texture::loadLayerSource(const ofxOscMessage& m) {
+    const auto source = m.getArgAsString(1);
+    const auto separator = source.find(':');
+    const bool explicitImage = source.starts_with("image:") && separator + 1 < source.size();
+    const auto path = explicitImage ? source.substr(separator + 1) : source;
+    const auto* type = separator == string::npos ? textureFileType(source, false) : nullptr;
+    const bool localImage = (explicitImage || (type && std::string_view(type) == "image")) &&
+        !path.starts_with("http://") && !path.starts_with("https://");
+    if (!localImage) {
+        oscCommand("/tex", m);
+        return true;
     }
-    load(newPath, args);
+
+    auto candidate = make_shared<ImageTex>(path, textureArguments(m, 1));
+    if (!candidate->loadImage()) return false;
+    _unload();
+    tex = std::move(candidate);
+    return true;
 }
 
 void Texture::loadData(const ofxOscMessage &m, int arg) {
