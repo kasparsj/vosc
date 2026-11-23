@@ -13,12 +13,6 @@ std::string escaped(const std::string& text) {
     return Rml::StringUtilities::EncodeRml(text);
 }
 
-std::string folded(std::string text) {
-    for (auto& character : text)
-        if (character >= 'A' && character <= 'Z') character += 'a' - 'A';
-    return text;
-}
-
 std::string option(uint64_t value, const std::string& label, bool selected) {
     return "<option value='" + std::to_string(value) + "'" + (selected ? " selected" : "")
         + ">" + escaped(label) + "</option>";
@@ -38,7 +32,7 @@ std::shared_ptr<Layer> currentLayer(const VOSC& renderer, int32_t index) {
 }
 
 bool BrowseView::setFilters(std::string name, std::string kind) {
-    name = folded(std::move(name));
+    name = Rml::StringUtilities::ToLower(std::move(name));
     if (name == query && kind == category) return false;
     selectedRow.reset();
     catalogScroll = 0;
@@ -48,7 +42,7 @@ bool BrowseView::setFilters(std::string name, std::string kind) {
 }
 
 bool BrowseView::matches(const Asset& entry) const {
-    return (category.empty() || category == entry.kind) && folded(entry.name).find(query) != std::string::npos;
+    return (category.empty() || category == entry.kind) && Rml::StringUtilities::ToLower(entry.name).find(query) != std::string::npos;
 }
 
 std::string BrowseView::summary() const {
@@ -132,12 +126,18 @@ void BrowseView::revalidateTarget(const VOSC& renderer) {
 
 void BrowseView::syncTargets(const VOSC& renderer) {
     revalidateTarget(renderer);
+    const auto& layers = renderer.operatorLayers();
+    const auto isSame = [](const Target& target, const std::shared_ptr<Layer>& layer) {
+        return layer && target.index == layer->index && target.owner.lock() == layer;
+    };
+    if (std::equal(visibleTargets.begin(), visibleTargets.end(), layers.begin(), layers.end(), isSame)) return;
+
     std::vector<Target> current;
-    for (const auto& layer : renderer.operatorLayers()) {
+    current.reserve(layers.size());
+    for (const auto& layer : layers) {
         if (!layer) continue;
-        const auto previous = std::find_if(visibleTargets.begin(), visibleTargets.end(), [&](const auto& target) {
-            return target.index == layer->index && target.owner.lock() == layer;
-        });
+        const auto previous = std::find_if(visibleTargets.begin(), visibleTargets.end(),
+            [&](const auto& target) { return isSame(target, layer); });
         current.push_back(previous == visibleTargets.end()
             ? Target{layer->index, ++nextTargetToken, layer} : *previous);
     }
@@ -205,7 +205,7 @@ std::string BrowseView::detailMarkup() const {
             + escaped(entry.preview) + "\" /></div>"
         : std::string{};
     if (availableUses.empty())
-        result += "<p class='message error'>Asset unavailable. A staged source or dependency is missing.</p>";
+        result += "<p class='message error'>Asset unavailable. Check the staged source and dependencies.</p>";
     if (visibleTargets.empty())
         result += "<p class='message error'>No layers available. Add a layer before choosing a target.</p>";
     else if (stale)

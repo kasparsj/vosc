@@ -104,30 +104,6 @@ private:
 #endif
 };
 
-class OperatorRenderInterface final : public RenderInterface_GL3 {
-    Rml::TextureHandle LoadTexture(Rml::Vector2i& size, const Rml::String& source) override {
-        constexpr std::string_view browsePrefix = "browse:";
-        if (source.compare(0, browsePrefix.size(), browsePrefix) != 0)
-            return RenderInterface_GL3::LoadTexture(size, source);
-        const auto path = vosc::operator_ui::stagedBrowseFile(source.substr(browsePrefix.size()));
-        ofPixels pixels;
-        if (!path || !ofLoadImage(pixels, *path)) return {};
-        const auto longest = std::max(pixels.getWidth(), pixels.getHeight());
-        if (longest > 480) {
-            pixels.resize(std::max<size_t>(1, pixels.getWidth() * 480 / longest),
-                          std::max<size_t>(1, pixels.getHeight() * 480 / longest));
-        }
-        pixels.setImageType(OF_IMAGE_COLOR_ALPHA);
-        for (auto pixel : pixels.getPixelsIter()) {
-            const auto alpha = pixel[3];
-            for (size_t channel = 0; channel < 3; ++channel)
-                pixel[channel] = static_cast<uint8_t>((pixel[channel] * alpha + 127) / 255);
-        }
-        size = {static_cast<int>(pixels.getWidth()), static_cast<int>(pixels.getHeight())};
-        return GenerateTexture({pixels.getData(), pixels.size()}, size);
-    }
-};
-
 int modifiers(int ofModifiers) {
     return ((ofModifiers & OF_KEY_SHIFT) ? Rml::Input::KM_SHIFT : 0)
          | ((ofModifiers & OF_KEY_CONTROL) ? Rml::Input::KM_CTRL : 0)
@@ -226,6 +202,43 @@ private:
     GLboolean srgb = GL_FALSE;
     std::array<GLboolean, 4> colorMask{};
 };
+class OperatorRenderInterface final : public RenderInterface_GL3 {
+    Rml::TextureHandle LoadTexture(Rml::Vector2i& size, const Rml::String& source) override {
+        constexpr std::string_view browsePrefix = "browse:";
+        if (source.compare(0, browsePrefix.size(), browsePrefix) != 0)
+            return RenderInterface_GL3::LoadTexture(size, source);
+        const auto path = vosc::operator_ui::stagedBrowseFile(source.substr(browsePrefix.size()));
+        ofPixels pixels;
+        if (!path || !ofLoadImage(pixels, *path)) return {};
+        const auto longest = std::max(pixels.getWidth(), pixels.getHeight());
+        if (longest > 480) {
+            pixels.resize(std::max<size_t>(1, pixels.getWidth() * 480 / longest),
+                          std::max<size_t>(1, pixels.getHeight() * 480 / longest));
+        }
+        pixels.setImageType(OF_IMAGE_COLOR_ALPHA);
+        for (auto pixel : pixels.getPixelsIter()) {
+            const auto alpha = pixel[3];
+            for (size_t channel = 0; channel < 3; ++channel)
+                pixel[channel] = static_cast<uint8_t>((pixel[channel] * alpha + 127) / 255);
+        }
+        size = {static_cast<int>(pixels.getWidth()), static_cast<int>(pixels.getHeight())};
+        // RmlUi can upload an image while resolving its intrinsic size in Update.
+        const ForegroundState state;
+        constexpr std::array<GLenum, 4> unpackStorage{
+            GL_UNPACK_ALIGNMENT, GL_UNPACK_ROW_LENGTH, GL_UNPACK_SKIP_ROWS, GL_UNPACK_SKIP_PIXELS,
+        };
+        std::array<GLint, unpackStorage.size()> previous{};
+        for (size_t i = 0; i < unpackStorage.size(); ++i) {
+            glGetIntegerv(unpackStorage[i], &previous[i]);
+            glPixelStorei(unpackStorage[i], i == 0 ? 1 : 0);
+        }
+        const auto texture = GenerateTexture({pixels.getData(), pixels.size()}, size);
+        for (size_t i = 0; i < unpackStorage.size(); ++i)
+            glPixelStorei(unpackStorage[i], previous[i]);
+        return texture;
+    }
+};
+
 }
 
 struct DiagnosticOverlay::Surface final : Rml::EventListener {
@@ -630,7 +643,7 @@ bool DiagnosticOverlay::keyPressed(ofKeyEventArgs& event) {
         return true;
     }
     if (!ui.focusRequest.empty()) return true;
-    if (shortcut && focused && (event.key == OF_KEY_UP || event.key == OF_KEY_DOWN)) {
+    if (shortcut && focused && !textFocus && (event.key == OF_KEY_UP || event.key == OF_KEY_DOWN)) {
         if (browseSelect) {
             if (first) {
                 const auto key = event.key == OF_KEY_UP ? Rml::Input::KI_UP : Rml::Input::KI_DOWN;
@@ -788,13 +801,12 @@ void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std
         return;
     }
     if (id == "return") close();
-    else if (view == View::Browse && (id == "back" || id.compare(0, 7, "browse-") == 0
-                                      || id.compare(0, 10, "asset-row-") == 0)) {
+    else if (view == View::Browse) {
         auto& ui = *surface;
         if (id == "back" && ui.browse.detail()) {
             show(View::Browse, ui.browse.backItem());
             ui.scroll[static_cast<size_t>(View::Browse)] = ui.browse.originScroll();
-        } else if (id.compare(0, 10, "asset-row-") == 0 && !ui.browse.detail()) {
+        } else if (id.rfind("asset-row-", 0) == 0 && !ui.browse.detail()) {
             if (ui.browse.openItem(target, ui.content->GetScrollTop())) {
                 show(View::Browse, "back");
                 ui.scroll[static_cast<size_t>(View::Browse)] = 0;

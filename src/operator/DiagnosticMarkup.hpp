@@ -209,6 +209,7 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
 #panel.browse select:disabled { color: #bfc9d9; }
 #panel.browse #content { padding-top: 5dp; }
 button.asset-row { min-height: 43dp; padding: 5dp 7dp; }
+button.asset-row.selected { background-color: #304054; }
 .asset-row .browse-chevron { flex: none; width: 12dp; height: 12dp; margin-left: 7dp; pointer-events: none; }
 .browse-facts { align-items: flex-start; }
 .browse-fact { flex: 1; min-width: 0; margin-right: 5dp; word-break: break-word; font-size: 13dp; }

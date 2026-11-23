@@ -15,7 +15,8 @@ namespace fs = std::filesystem;
 
 bool localName(const std::string& name) {
     const fs::path path(name);
-    if (name.empty() || name.find_first_of(":\0", 0, 2) != std::string::npos || path.has_root_path())
+    if (name.empty() || path.has_root_path() || name.find(':') != std::string::npos
+        || name.find('\0') != std::string::npos)
         return false;
     return std::none_of(path.begin(), path.end(), [](const auto& part) {
         return part.empty() || part == "." || part == "..";
