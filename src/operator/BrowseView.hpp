@@ -14,12 +14,14 @@ namespace vosc::operator_ui {
 class BrowseView {
 public:
     bool detail() const { return item.has_value(); }
+    bool canGoBack() const { return detail() || !parents.empty(); }
+    std::string heading() const;
     bool setFilters(std::string query, std::string category);
     std::string summary() const;
     std::string markup(const VOSC& renderer);
     int height(bool compact) const;
 
-    bool openItem(uint64_t row, float scroll);
+    bool openItem(const std::string& id, uint64_t row, float scroll);
     std::string backItem();
     float originScroll() const { return catalogScroll; }
     void selectUse(uint64_t option);
@@ -36,6 +38,7 @@ private:
 
     const Asset& asset() const { return catalog.assets()[*item]; }
     bool matches(const Asset& entry) const;
+    bool visible(const Asset& entry) const;
     std::string detailMarkup() const;
     std::string catalogMarkup() const;
     std::string rowId(size_t row) const;
@@ -46,9 +49,14 @@ private:
     std::optional<AssetCommand> command() const;
 
     BrowseCatalog catalog;
-    bool loadedCatalog = false;
-    std::optional<size_t> item, selectedRow;
-    std::string query, category, feedback;
+    struct FolderOrigin {
+        std::string folder, row;
+        float scroll;
+    };
+    std::vector<FolderOrigin> parents;
+    std::chrono::steady_clock::time_point nextCatalogCheck{};
+    std::optional<size_t> item;
+    std::string folder, selectedRow, query, category, feedback;
     float catalogScroll = 0;
 
     std::optional<AssetUse> use;

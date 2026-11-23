@@ -4,7 +4,7 @@
 
 Draft · 2026-11-22 · Approved direction: on-demand floating controls in the VOSC render window. Diagnostics may briefly cover part of the visual. One shortcut returns to clean output in the current window mode. [Codebase audit and mockup inventory](docs/Render-machine-ui-audit.md)
 
-Milestone 1 adds the on-demand RmlUi dock, Overview, shader-error walkthrough and Console. Runtime errors are retained while the renderer continues to show clean output. Milestone 2 brings Layers and Globals into that same RmlUi surface and retires the bitmap debug Inspector. Milestone 3 adds Browse Assets with an installed catalog and layer-targeted SuperCollider snippets. [App and console routing](src/ofApp.cpp) · [Shortcuts](docs/Home.md#keyboard-shortcuts)
+Milestone 1 adds the on-demand RmlUi dock, Overview, shader-error walkthrough and Console. Runtime errors are retained while the renderer continues to show clean output. Milestone 2 brings Layers and Globals into that same RmlUi surface and retires the bitmap debug Inspector. Milestone 3 adds Browse Assets with a live folder browser and layer-targeted SuperCollider snippets. [App and console routing](src/ofApp.cpp) · [Shortcuts](docs/Home.md#keyboard-shortcuts)
 
 The Linux minimal profile omits the operator UI. The optional native control API uses a local Unix socket and captures the composed scene before operator overlays. [Build profiles](README.md#minimal-linux-build-and-render-settings) · [Engine API](docs/Engine-api.md)
 
@@ -116,7 +116,7 @@ Use a representative VOSC scene as the backdrop. Show clean fullscreen output, t
 
 For Browse, review opening a working example in a separate preview window, resolving a missing input or build requirement, and finding an asset and copying its command for a chosen layer. The same floating dock and Back behavior apply to both catalogs. Use the [mockup inventory](docs/Render-machine-ui-audit.md#mockup-inventory) to cover the required views and their edge states.
 
-The floating-controls study established the look and the basic shader-error walkthrough. The Current design page in Figma is the visual reference for the wide and bright compact dock, Console, Inspector, and Browse Assets. The historical density review records simulated Inspector and Browse interactions. Browse Assets uses the existing native shell and a smaller catalog. The live scene replaces the design backdrop, and runtime availability and clipboard results replace the mockup's fixture controls. [Wide Console](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-209) · [Bright compact Console](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-2494) · [Density review](docs/mockups/render-machine-overlay-density-review/verification.md)
+The floating-controls study established the look and the basic shader-error walkthrough. The Current design page in Figma is the visual reference for the wide and bright compact dock, Console, Inspector, and Browse Assets. The historical density review records simulated Inspector and Browse interactions. Browse Assets uses the existing native shell and mirrors the asset folder hierarchy. The live scene replaces the design backdrop, and runtime availability and clipboard results replace the mockup's fixture controls. [Wide Console](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-209) · [Bright compact Console](https://www.figma.com/design/1dWhdS4r5BQkPGDMGvX867?node-id=5-2494) · [Density review](docs/mockups/render-machine-overlay-density-review/verification.md)
 
 ## Open questions
 

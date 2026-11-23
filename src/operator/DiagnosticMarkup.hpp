@@ -50,7 +50,7 @@ button {
 }
 #panel-header button { flex: none; margin: 0; padding: 6dp 7dp; font-size: 12dp; }
 #panel-header #back { display: none; margin-right: 8dp; }
-#panel.detail #back { display: block; }
+#panel.detail #back, #panel.browse-folder #back { display: block; }
 #return { background-color: transparent; border-color: transparent; }
 #return span { padding: 1dp 4dp; margin-left: 4dp; border: 1dp #b4c4dc52; border-radius: 4dp; font-size: 11dp; }
 #dock button {
@@ -182,7 +182,8 @@ scrollbarvertical sliderarrowdec, scrollbarvertical sliderarrowinc { display: no
 #panel.browse #browse-tools { display: block; }
 #browse-header, #browse-filters, .browse-choice, .browse-facts { display: flex; align-items: center; }
 #browse-header { justify-content: space-between; height: 25dp; }
-#browse-heading { font-size: 13dp; font-weight: bold; }
+#browse-heading { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 13dp; font-weight: bold; }
+#browse-summary { flex: none; margin-left: 6dp; }
 #browse-summary, .browse-origin, .browse-requirements, .browse-feedback {
     color: #c5d4e5; font-size: 12dp;
 }
@@ -261,6 +262,8 @@ body.compact .browse-preview img { height: 60dp; }
                 <option value="Fragment shader">Fragment shader</option>
                 <option value="Image">Image</option>
                 <option value="Model">Model</option>
+                <option value="Shader source">Shader source</option>
+                <option value="File">File</option>
                 <option value="Built-in">Built-in</option>
             </select>
         </div>

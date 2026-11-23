@@ -4,9 +4,10 @@
 #include "../shader/Shader.h"
 #include "ofFileUtils.h"
 #include "ofJson.h"
+#include "ofUtils.h"
 #include <algorithm>
 #include <fstream>
-#include <set>
+#include <map>
 #include <stdexcept>
 
 namespace vosc::operator_ui {
@@ -103,6 +104,47 @@ Asset readAsset(const ofJson& item) {
     }
     return asset;
 }
+
+std::string fileKind(const fs::path& path) {
+    auto extension = path.extension().string();
+    for (auto& ch : extension)
+        if (ch >= 'A' && ch <= 'Z') ch += 'a' - 'A';
+    if (extension == ".jpg" || extension == ".jpeg" || extension == ".png") return "Image";
+    if (extension == ".frag") return "Fragment shader";
+    if (extension == ".vert" || extension == ".geom" || extension == ".glsl") return "Shader source";
+    if (extension == ".obj" || extension == ".ply" || extension == ".dae"
+        || extension == ".3ds" || extension == ".stl") return "Model";
+    return "File";
+}
+
+fs::path browseRoot(const fs::path& staged) {
+    const auto products = staged.parent_path();
+    const auto checkout = products.parent_path();
+    std::error_code error;
+    // Xcode's normal bin/data layout has a source library beside bin.
+    if (products.filename() == "bin" && fs::is_regular_file(checkout / "vosc.xcodeproj/project.pbxproj", error)
+        && fs::is_directory(fs::symlink_status(checkout / "assets", error)))
+        return checkout / "assets";
+    return staged;
+}
+
+std::vector<Asset> readMetadata() {
+    const auto path = stagedBrowseFile("catalog/browse-assets.json");
+    std::error_code error;
+    if (!path || fs::file_size(*path, error) > 64 * 1024 || error) return {};
+    std::ifstream stream(*path, std::ios::binary);
+    try {
+        const auto manifest = ofJson::parse(stream);
+        if (!manifest.is_array() || manifest.size() > 64) return {};
+        std::vector<Asset> result;
+        for (const auto& item : manifest) result.push_back(readAsset(item));
+        return result;
+    } catch (const std::exception&) {
+        // The file tree is useful even when optional command metadata is invalid.
+        return {};
+    }
+}
+
 }
 
 std::optional<fs::path> stagedBrowseFile(const std::string& name) {
@@ -121,6 +163,7 @@ std::optional<fs::path> stagedBrowseFile(const std::string& name) {
 }
 
 std::string Asset::sourceLabel() const {
+    if (!path.empty()) return path;
     if (kind == "Built-in") return source;
     if (kind == "Image") return "images/" + source;
     return source;
@@ -173,26 +216,55 @@ std::string AssetCommand::snippet() const {
 }
 
 void BrowseCatalog::load() {
-    constexpr uintmax_t maxBytes = 64 * 1024;
-    const auto path = stagedBrowseFile("catalog/browse-assets.json");
     std::error_code error;
-    if (!path || fs::file_size(*path, error) > maxBytes || error) return;
-    std::ifstream stream(*path, std::ios::binary);
-    try {
-        const auto manifest = ofJson::parse(stream);
-        if (!manifest.is_array() || manifest.empty() || manifest.size() > 64) return;
-        std::vector<Asset> parsed;
-        std::set<std::string> ids;
-        for (const auto& item : manifest) {
-            auto asset = readAsset(item);
-            if (!ids.insert(asset.id).second) return;
-            parsed.push_back(std::move(asset));
+    const auto staged = fs::canonical(ofToDataPath("", true), error);
+    if (error) return;
+    const auto root = browseRoot(staged);
+    std::vector<Asset> discovered;
+    std::map<std::string, Asset> metadata;
+    for (auto& asset : readMetadata()) {
+        if (asset.kind == "Built-in") {
+            asset.id = "builtin-" + ofToHex(asset.id);
+            discovered.push_back(std::move(asset));
+        } else {
+            const auto source = asset.sourceLabel();
+            metadata.emplace(source, std::move(asset));
         }
-        entries = std::move(parsed);
-        loaded = true;
-    } catch (const std::exception&) {
-        // Browse reports a catalog error. The renderer has no dependency on this file.
     }
+
+    fs::recursive_directory_iterator file(root, fs::directory_options::skip_permission_denied, error);
+    for (const fs::recursive_directory_iterator end; !error && file != end; file.increment(error)) {
+        const auto path = file->path().lexically_relative(root);
+        const auto name = path.filename().string();
+        const auto relative = path.generic_string();
+        if (!name.empty() && name.front() == '.') {
+            file.disable_recursion_pending();
+            continue;
+        }
+        const auto status = file->symlink_status(error);
+        if (error) break;
+        if (!fs::is_directory(status) && !fs::is_regular_file(status)) continue;
+
+        Asset asset;
+        if (const auto known = metadata.find(relative); known != metadata.end()) asset = known->second;
+        asset.folder = fs::is_directory(status);
+        asset.id = (asset.folder ? "folder-" : "file-") + ofToHex(relative);
+        asset.path = relative;
+        asset.parent = path.parent_path().generic_string();
+        asset.name = name;
+        if (asset.kind.empty()) asset.kind = asset.folder ? "Folder" : fileKind(path);
+        if (asset.origin.empty()) asset.origin = "VOSC shared library";
+        if (asset.kind == "Image" && asset.preview.empty()) asset.preview = relative;
+        discovered.push_back(std::move(asset));
+    }
+    if (error) return;
+
+    std::sort(discovered.begin(), discovered.end(), [](const auto& lhs, const auto& rhs) {
+        if (lhs.folder != rhs.folder) return lhs.folder;
+        return lhs.path == rhs.path ? lhs.id < rhs.id : lhs.path < rhs.path;
+    });
+    entries = std::move(discovered);
+    loaded = true;
 }
 
 } // namespace vosc::operator_ui

@@ -465,7 +465,7 @@ struct DiagnosticOverlay::Surface final : Rml::EventListener {
     uint64_t focusOrigin = 0;
     vosc::operator_ui::BrowseView browse;
     std::vector<Action> browseChanges;
-    std::string browseSummary;
+    std::string browseHeading, browseSummary;
     bool syncingBrowse = false;
     vosc::operator_ui::InspectorView inspector;
     vosc::operator_ui::InspectorPreview previews;
@@ -803,11 +803,11 @@ void DiagnosticOverlay::activate(VOSC& renderer, const Logger& logger, const std
     if (id == "return") close();
     else if (view == View::Browse) {
         auto& ui = *surface;
-        if (id == "back" && ui.browse.detail()) {
+        if (id == "back" && ui.browse.canGoBack()) {
             show(View::Browse, ui.browse.backItem());
             ui.scroll[static_cast<size_t>(View::Browse)] = ui.browse.originScroll();
         } else if (id.rfind("asset-row-", 0) == 0 && !ui.browse.detail()) {
-            if (ui.browse.openItem(target, ui.content->GetScrollTop())) {
+            if (ui.browse.openItem(id, target, ui.content->GetScrollTop())) {
                 show(View::Browse, "back");
                 ui.scroll[static_cast<size_t>(View::Browse)] = 0;
             }
@@ -1014,6 +1014,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     ui.setReading("panel-title", ui.viewTitle, inspector ? ui.inspector.title() : destination->title);
     ui.panel->SetClass("overview", view == View::Overview);
     ui.panel->SetClass("browse", browse);
+    ui.panel->SetClass("browse-folder", browse && ui.browse.canGoBack());
     ui.panel->SetClass("detail", detail);
     ui.panel->SetClass("inspecting", inspector);
     ui.panel->SetClass("enlarged", inspector && ui.inspector.expanded());
@@ -1038,6 +1039,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
         case View::Browse:
             markup = ui.browse.markup(renderer);
             ui.panel->SetProperty("height", std::to_string(ui.browse.height(ui.document->IsClassSet("compact"))) + "dp");
+            ui.setReading("browse-heading", ui.browseHeading, ui.browse.heading());
             ui.setReading("browse-summary", ui.browseSummary, ui.browse.summary());
             break;
         case View::Count: break;
@@ -1078,7 +1080,7 @@ void DiagnosticOverlay::draw(VOSC& renderer, const Logger& logger) {
     if (!wantedFocus.empty()) {
         auto* element = ui.document->GetElementById(wantedFocus);
         if (!element || element->IsClassSet("inactive") || (origin && !ui.inspector.matches(wantedFocus, origin)))
-            element = ui.document->GetElementById(console ? "console-search" : detail ? "back" : destination->id);
+            element = ui.document->GetElementById(console ? "console-search" : browse && !detail ? "browse-search" : detail ? "back" : destination->id);
         element->Focus(true);
     }
     if (console) ui.placeLogScroll(rowsChanged);

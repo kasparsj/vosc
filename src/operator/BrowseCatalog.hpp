@@ -15,7 +15,8 @@ namespace vosc::operator_ui {
 enum class AssetUse { Image, ShaderTexture, LayerProgram, Model, Box };
 
 struct Asset {
-    std::string id, name, kind, source, origin, requirements;
+    std::string id, path, parent, name, kind, source, origin, requirements;
+    bool folder = false;
     std::string preview, vertex, geometry;
     std::vector<std::string> dependencies;
     std::vector<AssetUse> uses;
