@@ -44,13 +44,18 @@ The review inspected all 52 frame dimensions and sampled navigation, inputs, and
 
 **Exit evidence.** On an installed app, map a real OSC source, run a valid edit, submit a broken edit, fix it, and verify the native frame and retained mapping at both range endpoints. Cover removed and retyped uniforms, rapid edits, missing or late receipts, renderer restart, and a host switch. Save the broken working buffer, export the accepted revision, and run the export separately. Check a concurrent show renderer during the whole journey.
 
-### 3. Qualify the LAN workflow and continue first-release work
+### 3. Qualify Mac Editor → Ubuntu Render Host
 
-**Outcome.** Two signed installations on separate Macs prove host selection and draft isolation before the separate-track timeline. This is new qualification for the first-release workflow.
+**Outcome.** The signed macOS VOSC Editor discovers, pairs with, and runs native GLSL on the Ubuntu Render Host on `kaspars-ubuntu`. The Render Host owns a private native preview on its own display. A separately running show keeps drawing throughout editing and recovery.
 
-- On two real Macs, exercise controller-only install, Bonjour and manual address, identity verification and denial, and recovery after disconnect or host restart. Include a manual connection when discovery is unavailable. Verify same-host restore separately from explicitly changing the preview destination. Observe the draw on the render Mac and verify the separate show output stays independent.
-- Reuse the source, diagnostic, approval, and preview loop for AI-assisted discovery, generation, and adaptation. Continue the agreed timeline for independent layer tracks and overlapping clips. Drafts reach playback through explicit scheduling. Render owns active playback, while Editor owns scheduling.
-- Before first release, prove overlapping clips, independent transitions, loss of Editor or LAN at a clip boundary, and deliberate resume after reconciliation on local and LAN targets. During an outage the active composition holds and future clips do not advance. This is separate from how Editor callback uniforms hold in a draft preview.
+- Stage an internal Ubuntu Render Host build for the confirmed x86_64 graphics session, with the matching native renderer, private runtime data and local control socket. Use the existing v1 discovery, pairing and authenticated operations. The Ubuntu operator explicitly approves or denies the matching Editor fingerprint.
+- Exercise discovery and manual address in the signed Editor, including denial, disconnect, host restart and explicit same-identity **Restore**. Keep controller-only Mac launch as its own check.
+- Match Ubuntu native draw receipts and framebuffer captures for A, B, failed X retaining B, and C. Send real OSC to the Mac Editor at both mapped endpoints and verify the stable slot and fixed gain. Record separate show frames before, during and after the journey.
+- Finish the deferred two-host check with the signed Mac companion as A and Ubuntu as B. During a pending A Run, selecting B cannot publish. Verify distinct identities, explicit **Use this host** and **Run**, and fresh slot defaults on B.
+
+**Exit evidence.** The installed Mac-to-Ubuntu journey, Ubuntu service lifecycle and parity checks, controller-only launch and deferred host-switch scenarios all pass documented M3 acceptance checks. The local planning artifact is `.omx/plans/test-spec-vosc-editor-m3-linux.md`. The disposable Linux build and replay preflight provides separate renderer evidence. M1 and M2 retain their signed Mac acceptance history, including the recorded VoiceOver skip and two-host deferral.
+
+**Later scope.** Broader Linux support and release packaging require separate decisions. AI-assisted authoring and the separate-track timeline with independent layers and overlapping clips remain later work. Qualify explicit scheduling, independent transitions, and hold/resume after Editor or LAN loss as part of the timeline slice.
 
 ### 4. Hydra single-pass authoring
 

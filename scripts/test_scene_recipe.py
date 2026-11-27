@@ -227,6 +227,7 @@ class OwnedRenderer:
     def __init__(self, binary: Path, output: Path, name: str, port: int, sanitizers: list[str],
                  *, arguments=(), cwd: Path | None = None):
         self.binary, self.port = binary, port
+        cwd = cwd or (binary.parent if sys.platform == "linux" else binary.parents[3])
         self.runtime = Path(tempfile.mkdtemp(prefix=f"vosc-recipe-{name}-", dir="/tmp"))
         self.runtime.chmod(0o700)
         self.socket = self.runtime / "control.sock"
@@ -238,11 +239,16 @@ class OwnedRenderer:
             environment["ASAN_OPTIONS"] = "abort_on_error=1:halt_on_error=1:detect_leaks=0"
         if "undefined" in sanitizers:
             environment["UBSAN_OPTIONS"] = "halt_on_error=1:print_stacktrace=1"
-        self.process = subprocess.Popen([str(binary), *map(str, arguments)], cwd=cwd or binary.parents[3],
+        self.process = subprocess.Popen([str(binary), *map(str, arguments)], cwd=cwd,
             env=environment,
             stdout=self.stream, stderr=subprocess.STDOUT, start_new_session=True)
+        self.linux_identity = None
         try:
             wait_socket(self.process, self.socket, self.log)
+            if sys.platform == "linux":
+                self.linux_identity = self.read_linux_identity()
+                if self.linux_identity["executable"] != str(binary.resolve()):
+                    raise RuntimeError(f"unexpected renderer executable {self.linux_identity!r}")
         except Exception:
             if self.process.poll() is None:
                 self.process.terminate()
@@ -258,11 +264,29 @@ class OwnedRenderer:
         self.owner = {"pid": self.process.pid, "binary": str(binary),
             "binary_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
             "control_socket": str(self.socket), "osc_port": port, "sanitizers_expected": sanitizers,
-                      "arguments": list(map(str, arguments)), "cwd": str(cwd or binary.parents[3])}
+                      "arguments": list(map(str, arguments)), "cwd": str(cwd)}
+        if self.linux_identity is not None:
+            self.owner["linux_identity"] = self.linux_identity
         self.owner["recovery_test_hooks"] = self.hooks_enabled
 
     def client(self) -> Client:
         return Client(self.socket)
+
+    def read_linux_identity(self) -> dict:
+        proc = Path("/proc") / str(self.process.pid)
+        process_stat = (proc / "stat").read_text()
+        # The comm field can contain spaces and parentheses. Start time is
+        # field 22, counted after the closing parenthesis of field 2.
+        return {"executable": os.readlink(proc / "exe"),
+                "start_ticks": int(process_stat.rsplit(")", 1)[1].split()[19])}
+
+    def assert_linux_identity(self) -> None:
+        if self.linux_identity is not None and self.read_linux_identity() != self.linux_identity:
+            raise RuntimeError(f"refusing to signal unexpected renderer PID {self.process.pid}")
+
+    def send_signal(self, sig: int) -> None:
+        self.assert_linux_identity()
+        self.process.send_signal(sig)
 
     def stop(self) -> dict:
         identity = ""
@@ -286,20 +310,25 @@ class OwnedRenderer:
                     time.sleep(0.05)
                 exited_during_grace = self.process.poll() is not None
                 if sanitizer_marker_seen and self.process.poll() is None:
-                    self.process.kill()
+                    self.send_signal(signal.SIGKILL)
                     self.process.wait(timeout=8)
                     forced_kill = True
                     sanitizer_forced_cleanup = True
             if self.process.poll() is None:
-                identity = subprocess.check_output(
-                    ["ps", "-p", str(self.process.pid), "-o", "comm="], text=True).strip()
-                if identity != str(self.binary):
-                    raise RuntimeError(f"refusing to stop unexpected process identity {identity!r}")
-                os.kill(self.process.pid, signal.SIGTERM)
+                if self.linux_identity is not None:
+                    self.assert_linux_identity()
+                    identity = self.linux_identity["executable"]
+                    self.send_signal(signal.SIGTERM)
+                else:
+                    identity = subprocess.check_output(
+                        ["ps", "-p", str(self.process.pid), "-o", "comm="], text=True).strip()
+                    if identity != str(self.binary):
+                        raise RuntimeError(f"refusing to stop unexpected process identity {identity!r}")
+                    os.kill(self.process.pid, signal.SIGTERM)
                 try:
                     self.process.wait(timeout=8)
                 except subprocess.TimeoutExpired:
-                    self.process.kill()
+                    self.send_signal(signal.SIGKILL)
                     self.process.wait(timeout=8)
                     forced_kill = True
         except BaseException as error:

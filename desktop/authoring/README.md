@@ -57,3 +57,68 @@ The relay accepts individual sample messages for configured slot IDs. The select
 **Save draft** writes the working source and any accepted snapshot, including its slot definitions and bindings. You can open and save drafts offline, including work with GLSL errors.
 
 **Export replay** uses the named accepted revision and creates a new folder containing `scene.vosc.json` and `draft.frag`. Keep those files together and open the scene in a separate VOSC renderer with `vosc --scene "/path/to/scene.vosc.json"`. Runtime OSC samples stay external to the saved files.
+
+## Stage an internal Ubuntu Render Host
+
+Use the x86-64 Ubuntu graphics session and a staged Linux minimal Release build
+with its `bin/data` directory. Use the existing authoring build dependencies to
+stage the service. On Ubuntu, use the existing Node 22, system OpenSSL,
+util-linux `flock`, and Python 3.12 at `/usr/bin/python3`. The authenticated TLS
+listener uses Python's standard-library `ssl.VERIFY_X509_PARTIAL_CHAIN`. It
+passes authenticated requests to the Node service over an owner-only Unix
+socket with a private capability token. Node manages bootstrap, pairing,
+approved peers, and command dispatch. DNS-SD uses the existing system Avahi
+daemon and client libraries. This internal setup requires no additional package
+installation or changes to the Editor importer runtime.
+
+From `desktop/authoring`, stage to a new directory. Supply the exact VOSC and
+openFrameworks SDK Git revisions used for the renderer. If the test build has a
+process-local runtime library directory, include it with `--runtime-libs`.
+
+```sh
+node scripts/stage_linux_host.mjs \
+  --output "$HOME/vosc-host-test" \
+  --renderer-bin "/absolute/path/to/staged/bin/vosc" \
+  --source-revision "$VOSC_REVISION" --sdk-revision "$OF_REVISION"
+```
+
+In the Ubuntu graphics session, use a disposable profile with a short absolute
+path, an explicit LAN IPv4 address and two available user ports. Select that
+address's LAN interface to advertise the service via Avahi. Set `DISPLAY` and
+`XAUTHORITY` to the current X11 display and the path to its session
+authorization file. Run the host under a transient user service so the same
+cgroup owns the host and its private children, including if the host process
+exits unexpectedly. Choose an unused unit name for the test.
+
+```sh
+export VOSC_TEST_PROFILE="$HOME/.vosc-m3-test"
+systemd-run --user --wait --pty --collect --service-type=exec \
+  --unit=vosc-m3-test --property=KillMode=control-group --property=TimeoutStopSec=20s \
+  --setenv="PATH=$PATH" --setenv="DISPLAY=$DISPLAY" --setenv="XAUTHORITY=$XAUTHORITY" \
+  "$HOME/vosc-host-test/vosc-render-host" serve \
+  --state-dir "$VOSC_TEST_PROFILE" --bind "$LAN_IPV4" \
+  --bootstrap-port 47491 --rpc-port 47492 --interface "$LAN_INTERFACE"
+```
+
+The readiness record contains the target ID, host fingerprint and both ports.
+The renderer starts on demand when an approved Editor requests a preview or
+shader validation.
+In the signed Editor, compare the full host fingerprint and request pairing.
+From another Ubuntu terminal, list the pending requests. Compare the complete
+Editor fingerprint before approving or denying its specific request.
+
+```sh
+VOSC_TEST_PROFILE="$HOME/.vosc-m3-test"
+host="$HOME/vosc-host-test/vosc-render-host"
+"$host" pair list --state-dir "$VOSC_TEST_PROFILE"
+"$host" pair approve "$REQUEST_ID" "$EDITOR_FINGERPRINT" --state-dir "$VOSC_TEST_PROFILE"
+"$host" pair deny "$REQUEST_ID" "$EDITOR_FINGERPRINT" --state-dir "$VOSC_TEST_PROFILE"
+"$host" peer revoke "$EDITOR_FINGERPRINT" --state-dir "$VOSC_TEST_PROFILE"
+```
+
+Use one decision per request. Stop the test service with
+`systemctl --user stop vosc-m3-test.service` from another terminal. Restart
+using the same profile to retain the host identity and approved peers. To
+exercise manual address, restart with `--no-discovery` in place of
+`--interface "$LAN_INTERFACE"` and enter the bind address and bootstrap port
+in Editor.

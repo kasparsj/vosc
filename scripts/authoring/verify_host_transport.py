@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-"""Exercise a Finder-launched signed host with two disposable local TLS peers."""
+"""Exercise an installed render host with two disposable TLS peers."""
 
 from __future__ import annotations
 
 import argparse
 import base64
-from contextlib import closing, contextmanager
+from contextlib import ExitStack, closing, contextmanager
 import hashlib
 import json
 import math
 import os
+import select
 from pathlib import Path
 import shlex
+import signal
 import socket
 import ssl
+import stat
 import subprocess
 import sys
 import tempfile
@@ -22,7 +25,7 @@ import time
 import uuid
 
 from verify_26_round_trip import await_ready, compare, write_json
-from verify_draft_controls import FIXTURE, cadence, observe, require, scene, value
+from verify_draft_controls import FIXTURE, cadence, observe, own, require, scene, value
 from test_macos_dmg import ReleaseRenderer, disposable_home
 from test_scene_recipe import wait_socket
 from control_client import Client
@@ -125,6 +128,90 @@ def owned_draft(host_pid, binary):
                 matches.append((int(pid), Path(arguments[1]), command))
     require(len(matches) == 1, "expected exactly one owned native preview under the specified host")
     return matches[0]
+
+
+def linux_process(pid):
+    proc = Path("/proc") / str(pid)
+    require(pid > 1 and proc.stat().st_uid == os.getuid(), "expected a process owned by the harness user")
+    fields = (proc / "stat").read_text().rsplit(")", 1)[1].split()
+    arguments = [os.fsdecode(part) for part in (proc / "cmdline").read_bytes().rstrip(b"\0").split(b"\0")]
+    return {"pid": pid, "parent": int(fields[1]), "start_ticks": int(fields[19]),
+            "executable": os.readlink(proc / "exe"), "arguments": arguments}
+
+
+def linux_preview(host, binary):
+    require(linux_process(host["pid"]) == host, "Linux host identity changed")
+    task = Path("/proc") / str(host["pid"]) / "task"
+    children = set()
+    for thread in task.iterdir():
+        try:
+            children.update(map(int, (thread / "children").read_text().split()))
+        except FileNotFoundError:
+            continue
+    matches = []
+    for pid in children:
+        try:
+            child = linux_process(pid)
+        except FileNotFoundError:
+            continue
+        if (child["parent"] == host["pid"] and child["executable"] == str(binary)
+                and child["arguments"][:2] == [str(binary), "--draft-data-root"]
+                and "--draft-preview" in child["arguments"][3:]):
+            matches.append(child)
+    require(len(matches) == 1, "expected one owned Linux native preview")
+    child = matches[0]
+    data = Path(child["arguments"][2])
+    root = data.parent
+    require(root.parent == Path("/tmp") and root.name.startswith("vosc-draft-") and data.name == "data",
+            "unexpected Linux native data location")
+    for directory in (root, data):
+        info = directory.lstat()
+        require(stat.S_ISDIR(info.st_mode) and stat.S_IMODE(info.st_mode) == 0o700
+                and info.st_uid == os.getuid(), "expected a private native directory")
+    return child, data
+
+
+@contextmanager
+def closing_pidfd(pid):
+    descriptor = os.pidfd_open(pid)
+    try:
+        yield descriptor
+    finally:
+        os.close(descriptor)
+
+
+def linux_control(child, control):
+    info = control.lstat()
+    require(stat.S_ISSOCK(info.st_mode) and stat.S_IMODE(info.st_mode) == 0o600
+            and info.st_uid == os.getuid(), "expected a private native socket")
+    proc = Path("/proc") / str(child["pid"])
+    owned = set()
+    for descriptor in (proc / "fd").iterdir():
+        try:
+            owned.add(os.readlink(descriptor))
+        except FileNotFoundError:
+            continue
+    rows = (proc / "net/unix").read_text().splitlines()[1:]
+    require(any(len(fields := row.split(maxsplit=7)) == 8 and fields[7] == str(control)
+                and f"socket:[{fields[6]}]" in owned for row in rows),
+            "control socket is not owned by the identified native renderer")
+
+
+@contextmanager
+def independent_show(args, binary, manifest, scratch, output, report):
+    report["show"] = {}
+    if args.linux_install:
+        with ExitStack() as stack:
+            _, client = own(stack, report, binary, output, "show", ["--scene", manifest])
+            yield client
+    else:
+        home, _ = disposable_home(scratch, "show-home")
+        separate = ReleaseRenderer(binary, manifest, scratch, output / "show.log", home)
+        with separate.run(report["show"]):
+            await_ready(separate, "26.frag — wire-independent-show")
+            wait_socket(separate.process, separate.socket, separate.log)
+            with closing(separate.client()) as client:
+                yield client
 
 
 def prepare(wire, rpc, context, state, source, *, lease, document, sequence, slots=(), bindings=None):
@@ -247,19 +334,41 @@ def drop_native_replies(control, request_id):
     require(not failures, failures)
 
 
-def wait_for_renderer_reset(wire, rpc, context, epoch, root):
+def wait_for_renderer_reset(wire, rpc, context, epoch, root, *, linux_exit=None):
     until = time.monotonic() + 5
+    allow_transport_until = time.monotonic() + 0.75
     while time.monotonic() < until:
-        state = accepted(wire.call(rpc, context, "health"))
+        reply = wire.call(rpc, context, "health")
+        if (linux_exit is not None and not reply["ok"]
+                and reply["error"]["code"] == "renderer_transport"
+                and time.monotonic() < allow_transport_until):
+            linux_exit["transient_health_errors"].append(reply["error"]["code"])
+            time.sleep(0.05)
+            continue
+        state = accepted(reply)
         if state["epoch"] != epoch and state["needsRestore"] and not root.exists():
             return state
         time.sleep(0.05)
     raise RuntimeError("owned renderer did not invalidate its epoch and clean up on process loss")
 
 def run(args, output, report):
-    host_binary = args.app.resolve(strict=True) / "Contents/MacOS/VOSC Render Host"
-    started = subprocess.check_output(["ps", "-p", str(args.host_pid), "-o", "comm="], text=True).strip()
-    require(started == str(host_binary), "host PID does not own the specified installed companion")
+    linux_host = None
+    if args.linux_install:
+        install = args.linux_install.resolve(strict=True)
+        host_entry = install / "host.cjs"
+        binary = (install / "renderer/vosc").resolve(strict=True)
+        linux_host = linux_process(args.host_pid)
+        require(Path(linux_host["executable"]).name == "node"
+                and linux_host["arguments"][1:3] == [str(host_entry), "serve"] and host_entry.is_file(),
+                "host PID does not run the specified installed Linux entry point")
+        require(hasattr(os, "pidfd_open") and hasattr(signal, "pidfd_send_signal"),
+                "Linux PID file descriptor support is required for the renderer signal checks")
+        report["linux_host"] = linux_host
+    else:
+        host_binary = args.app.resolve(strict=True) / "Contents/MacOS/VOSC Render Host"
+        started = subprocess.check_output(["ps", "-p", str(args.host_pid), "-o", "comm="], text=True).strip()
+        require(started == str(host_binary), "host PID does not own the specified installed companion")
+        binary = args.app.resolve(strict=True).parent / "vosc.app/Contents/MacOS/vosc"
     wire = Wire(args)
     hello = accepted(wire.call(wire.bootstrap, wire.pin, "hello"))
     require((hello["role"], hello["version"], hello["target"]) == ("draft", 1, args.target), hello)
@@ -303,146 +412,179 @@ def run(args, output, report):
                 and report["wrong_version"]["error"]["code"] == "incompatible_protocol",
                 "target or version mismatch was accepted")
 
-        binary = args.app.resolve(strict=True).parent / "vosc.app/Contents/MacOS/vosc"
-        home, _ = disposable_home(scratch, "show-home")
         source = args.shader.read_bytes()
         data = {"source": base64.b64encode(source).decode(), "sha256": fingerprint(source)}
         show_scene = scene(output, "wire-independent-show", FIXTURE)
-        separate = ReleaseRenderer(binary, show_scene, scratch, output / "show.log", home)
-        report["show"] = {}
-        with separate.run(report["show"]):
-            await_ready(separate, "26.frag — wire-independent-show")
-            wait_socket(separate.process, separate.socket, separate.log)
-            with closing(separate.client()) as show:
-                show_first = observe(show, "show-first", output, report)
-                report["show_baseline_cadence"] = cadence(show)
-                state = accepted(wire.call(rpc, a, "health"))
-                document = str(uuid.uuid4())
-                lease = str(uuid.uuid4())
-                staged = prepare(wire, rpc, a, state, data, lease=lease, document=document, sequence=1)
-                state = commit(wire, rpc, a, state, staged, lose_reply=True)
-                report["initial_prepare"] = staged
-                report["lost_commit_reply"] = state
-                report["show_concurrent_cadence"] = cadence(show)
+        with independent_show(args, binary, show_scene, scratch, output, report) as show:
+            show_first = observe(show, "show-first", output, report)
+            report["show_baseline_cadence"] = cadence(show)
+            state = accepted(wire.call(rpc, a, "health"))
+            document = str(uuid.uuid4())
+            lease = str(uuid.uuid4())
+            staged = prepare(wire, rpc, a, state, data, lease=lease, document=document, sequence=1)
+            state = commit(wire, rpc, a, state, staged, lose_reply=True)
+            report["initial_prepare"] = staged
+            report["lost_commit_reply"] = state
+            report["show_concurrent_cadence"] = cadence(show)
+            child = None
+            if linux_host:
+                child, root = linux_preview(linux_host, binary)
+                pid, command = child["pid"], shlex.join(child["arguments"])
+            else:
                 pid, root, command = owned_draft(args.host_pid, binary)
-                report["native_preview"] = {"pid": pid, "root": str(root), "command": command}
-                native = Client(root.parent / "control.sock")
-                with closing(native):
-                    begin = observe(native, "before-typed-edit", output, report)
-                    tone = next(item for item in state["uniforms"] if item["name"] == "tone")["values"]
-                    lost_params = {"name": "tone", "component": 1, "mode": "fixed", "value": 0.73}
-                    with wire.connect(rpc, a) as losing:
-                        lost_id = wire.send(losing, "uniform.set", lost_params, state=state)
-                        for _ in range(12):
-                            found = accepted(wire.call(rpc, a, "receipt.get", {"id": lost_id}))
-                            if found["state"] in {"pending", "completed"}: break
-                            time.sleep(0.05)
-                        require(found["state"] in {"pending", "completed"}, "lost request never reached the host")
-                    for _ in range(24):
+            report["native_preview"] = {"pid": pid, "root": str(root), "command": command}
+            control = root.parent / "control.sock"
+            if child:
+                report["native_preview"]["linux_identity"] = child
+                linux_control(child, control)
+
+            def assert_owned():
+                if child:
+                    require(linux_process(linux_host["pid"]) == linux_host and linux_process(pid) == child,
+                            "Linux preview or host identity changed during the test")
+                else:
+                    require(owned_draft(args.host_pid, binary)[0] == pid, "draft owner changed during the test")
+
+            def signal_preview(sig):
+                assert_owned()
+                if child:
+                    with closing_pidfd(pid) as descriptor:
+                        assert_owned()
+                        signal.pidfd_send_signal(descriptor, sig)
+                else:
+                    subprocess.run(["/bin/kill", "-" + sig.name.removeprefix("SIG"), str(pid)], check=True)
+
+            native = Client(control)
+            with closing(native):
+                begin = observe(native, "before-typed-edit", output, report)
+                tone = next(item for item in state["uniforms"] if item["name"] == "tone")["values"]
+                lost_params = {"name": "tone", "component": 1, "mode": "fixed", "value": 0.73}
+                with wire.connect(rpc, a) as losing:
+                    lost_id = wire.send(losing, "uniform.set", lost_params, state=state)
+                    for _ in range(12):
                         found = accepted(wire.call(rpc, a, "receipt.get", {"id": lost_id}))
-                        if found["state"] == "completed": break
+                        if found["state"] in {"pending", "completed"}: break
                         time.sleep(0.05)
-                    state = accepted(found["response"])
-                    observed = next(item for item in state["uniforms"] if item["name"] == "tone")["values"]
-                    require(tone[0] == observed[0] and tone[2] == observed[2]
-                            and math.isclose(observed[1], 0.73, abs_tol=1e-7), observed)
-                    duplicate = wire.call(rpc, a, "uniform.set", {**lost_params, "value": 0.12},
-                                          state=state, id=lost_id)
-                    require(duplicate["error"]["code"] == "id_conflict", duplicate)
-                    report.update(lost_reply=found, id_conflict=duplicate)
-                    current = observe(native, "after-typed-edit", output, report)
-                    require(compare(begin, current)["pixels_changed_by_at_least_16"] > 5_000, "fixed edit was invisible")
-                    state = accepted(wire.call(rpc, a, "slot.configure", {"id": "sTransport", "label": "Transport", "default": 0},
-                                               state=state))
-                    state = accepted(wire.call(rpc, a, "uniform.set", {"name": "gain", "component": 0, "mode": "range",
-                                                                      "slot": "sTransport", "low": 0.2, "high": 0.8},
-                                               state=state))
-                    report["samples"] = []
-                    frames = []
-                    for index, (sample, expected) in enumerate(((0, 0.2), (0.5, 0.5), (1, 0.8))):
-                        sampled = accepted(wire.call(rpc, a, "sample", {
-                            "lease": lease, "sequence": index + 1, "slot": "sTransport", "value": sample,
-                        }, state=state))
-                        gain = next(uniform["values"][0] for uniform in sampled["uniforms"] if uniform["name"] == "gain")
-                        require(sampled["revision"] == state["revision"] and sampled["samples"]["sTransport"] == sample,
-                                sampled)
-                        require(math.isclose(gain, expected, abs_tol=1e-6), f"Stale sample draw readback: {sampled}")
-                        label = f"transport-sample-{index}"
-                        frames.append(observe(native, label, output, report))
-                        require(math.isclose(value(report[label]["state"], "gain"), expected, abs_tol=1e-6), sampled)
-                        report["samples"].append(sampled)
-                    require(all(compare(low, high)["pixels_changed_by_at_least_16"] > 5_000
-                                for low, high in zip(frames[:-1], frames[1:], strict=True)), "mapped range was invisible")
-                show_checkpoint = observe(show, "show-before-stall", output, report)
-                before = time.monotonic()
-                require(owned_draft(args.host_pid, binary)[0] == pid, "draft owner changed before fault injection")
-                subprocess.run(["/bin/kill", "-STOP", str(pid)], check=True)
-                try:
-                    timeout = wire.call(rpc, a, "uniform.set", {
-                        "name": "gain", "component": 0, "mode": "fixed", "value": 0.6,
-                    }, state=state)
-                finally:
-                    if root.exists() and owned_draft(args.host_pid, binary)[0] == pid:
-                        subprocess.run(["/bin/kill", "-CONT", str(pid)], check=True)
-                report["timeout"] = {"elapsed": time.monotonic() - before, "response": timeout}
-                require(not timeout["ok"] and timeout["error"]["code"] == "renderer_timeout", timeout)
-                live = accepted(wire.call(rpc, a, "health"))
-                require(owned_draft(args.host_pid, binary)[0] == pid and root.exists()
-                        and live["epoch"] == state["epoch"] and live["commitID"] == state["commitID"]
-                        and live["revision"] == state["revision"], "lost response reset the healthy private renderer")
-                report["healthy_after_timeout"] = live
-                # A real native request is forwarded, but the host loses the reply
-                # and the first lookup. Recovery must use the original native ID.
-                slot_request = uuid.uuid4().hex
-                require(owned_draft(args.host_pid, binary)[0] == pid, "draft owner changed before queued control")
-                with drop_native_replies(root.parent / "control.sock", slot_request) as native_wire:
-                    before = time.monotonic()
-                    delayed = wire.call(rpc, a, "slot.configure",
-                                        {"id": "sDelayed", "label": "Delayed", "default": 0.25},
-                                        state=state, id=slot_request)
-                    delayed_elapsed = time.monotonic() - before
-                    require(not delayed["ok"] and delayed["error"]["code"] == "renderer_uncertain", delayed)
-                    require([step["method"] for step in native_wire] == ["draft_configure_slot", "get_request"]
-                            and native_wire[0]["native"]["ok"]
-                            and native_wire[1]["native"]["result"]["id"] == slot_request, native_wire)
-                    recovered = retained(wire, rpc, a, slot_request, {"completed"})["response"]
-                changed = accepted(recovered)
-                slot_draw = changed["receipt"]
-                drawn_scene = slot_draw["result"]["scene"]
-                require(changed["epoch"] == state["epoch"] and changed["revision"] == state["revision"] + 1
-                        and slot_draw["id"] == slot_request and slot_draw["status"] == "rendered"
-                        and drawn_scene["frame"] == slot_draw["frame"]
-                        and drawn_scene["rendered_revision"] == changed["revision"]
-                        and drawn_scene["draft_slots"]["sDelayed"] == 0.25
-                        and owned_draft(args.host_pid, binary)[0] == pid, recovered)
-                report["late_control"] = {"elapsed": delayed_elapsed, "unconfirmed": delayed, "confirmed": recovered,
-                                          "dropped_native_replies": native_wire}
-                state = changed
-                show_after = observe(show, "show-after-stall", output, report)
-                require(compare(show_first, show_checkpoint)["max_channel_error"] == 0
-                        and compare(show_checkpoint, show_after)["max_channel_error"] == 0
-                        and all(report["show-first"]["state"][key] == report["show-after-stall"]["state"][key]
-                                for key in ("layers", "revision", "external_epoch"))
-                        and report["show-after-stall"]["state"]["frame"] > report["show-before-stall"]["state"]["frame"],
-                        "separate show did not keep drawing unchanged through the draft stall")
-                require(owned_draft(args.host_pid, binary)[0] == pid, "draft owner changed before explicit loss")
-                subprocess.run(["/bin/kill", "-TERM", str(pid)], check=True)
-                fresh = wait_for_renderer_reset(wire, rpc, a, state["epoch"], root)
-                stale = wire.call(rpc, a, "sample", {
-                    "lease": lease, "sequence": 4, "slot": "sTransport", "value": 0.2,
+                    require(found["state"] in {"pending", "completed"}, "lost request never reached the host")
+                for _ in range(24):
+                    found = accepted(wire.call(rpc, a, "receipt.get", {"id": lost_id}))
+                    if found["state"] == "completed": break
+                    time.sleep(0.05)
+                state = accepted(found["response"])
+                observed = next(item for item in state["uniforms"] if item["name"] == "tone")["values"]
+                require(tone[0] == observed[0] and tone[2] == observed[2]
+                        and math.isclose(observed[1], 0.73, abs_tol=1e-7), observed)
+                duplicate = wire.call(rpc, a, "uniform.set", {**lost_params, "value": 0.12},
+                                      state=state, id=lost_id)
+                require(duplicate["error"]["code"] == "id_conflict", duplicate)
+                report.update(lost_reply=found, id_conflict=duplicate)
+                current = observe(native, "after-typed-edit", output, report)
+                require(compare(begin, current)["pixels_changed_by_at_least_16"] > 5_000, "fixed edit was invisible")
+                state = accepted(wire.call(rpc, a, "slot.configure", {"id": "sTransport", "label": "Transport", "default": 0},
+                                           state=state))
+                state = accepted(wire.call(rpc, a, "uniform.set", {"name": "gain", "component": 0, "mode": "range",
+                                                                  "slot": "sTransport", "low": 0.2, "high": 0.8},
+                                           state=state))
+                report["samples"] = []
+                frames = []
+                for index, (sample, expected) in enumerate(((0, 0.2), (0.5, 0.5), (1, 0.8))):
+                    sampled = accepted(wire.call(rpc, a, "sample", {
+                        "lease": lease, "sequence": index + 1, "slot": "sTransport", "value": sample,
+                    }, state=state))
+                    gain = next(uniform["values"][0] for uniform in sampled["uniforms"] if uniform["name"] == "gain")
+                    require(sampled["revision"] == state["revision"] and sampled["samples"]["sTransport"] == sample,
+                            sampled)
+                    require(math.isclose(gain, expected, abs_tol=1e-6), f"Stale sample draw readback: {sampled}")
+                    label = f"transport-sample-{index}"
+                    frames.append(observe(native, label, output, report))
+                    require(math.isclose(value(report[label]["state"], "gain"), expected, abs_tol=1e-6), sampled)
+                    report["samples"].append(sampled)
+                require(all(compare(low, high)["pixels_changed_by_at_least_16"] > 5_000
+                            for low, high in zip(frames[:-1], frames[1:], strict=True)), "mapped range was invisible")
+            show_checkpoint = observe(show, "show-before-stall", output, report)
+            before = time.monotonic()
+            signal_preview(signal.SIGSTOP)
+            try:
+                timeout = wire.call(rpc, a, "uniform.set", {
+                    "name": "gain", "component": 0, "mode": "fixed", "value": 0.6,
                 }, state=state)
-                require(stale["error"]["code"] in {"stale_epoch", "stale_lease"}, stale)
-                unknown = accepted(wire.call(rpc, a, "receipt.get", {"id": lost_id}))
-                require(unknown["state"] == "unknown", "stale receipt survived renderer loss")
-                staged = prepare(wire, rpc, a, fresh, data, lease=str(uuid.uuid4()), document=document, sequence=2,
-                                 slots=[{"id": "sTransport", "label": "Transport", "default": 0}],
-                                 bindings={"gain": {"type": "float", "components": [
-                                     {"slot": "sTransport", "low": 0.2, "high": 0.8},
-                                 ]}})
-                rehydrated = commit(wire, rpc, a, fresh, staged)
-                require(rehydrated["epoch"] == fresh["epoch"] and rehydrated["samples"]["sTransport"] == 0,
-                        rehydrated)
-                report.update(stale_epoch=stale, stale_receipt=unknown, reactivated=rehydrated)
+            finally:
+                if root.exists() and (child or owned_draft(args.host_pid, binary)[0] == pid):
+                    signal_preview(signal.SIGCONT)
+            report["timeout"] = {"elapsed": time.monotonic() - before, "response": timeout}
+            require(not timeout["ok"] and timeout["error"]["code"] == "renderer_timeout", timeout)
+            live = accepted(wire.call(rpc, a, "health"))
+            assert_owned()
+            require(root.exists() and live["epoch"] == state["epoch"] and live["commitID"] == state["commitID"]
+                    and live["revision"] == state["revision"], "lost response reset the healthy private renderer")
+            report["healthy_after_timeout"] = live
+            # A real native request is forwarded, but the host loses the reply
+            # and the first lookup. Recovery must use the original native ID.
+            slot_request = uuid.uuid4().hex
+            assert_owned()
+            if child:
+                linux_control(child, control)
+            with drop_native_replies(control, slot_request) as native_wire:
+                before = time.monotonic()
+                delayed = wire.call(rpc, a, "slot.configure",
+                                    {"id": "sDelayed", "label": "Delayed", "default": 0.25},
+                                    state=state, id=slot_request)
+                delayed_elapsed = time.monotonic() - before
+                require(not delayed["ok"] and delayed["error"]["code"] == "renderer_uncertain", delayed)
+                require([step["method"] for step in native_wire] == ["draft_configure_slot", "get_request"]
+                        and native_wire[0]["native"]["ok"]
+                        and native_wire[1]["native"]["result"]["id"] == slot_request, native_wire)
+                recovered = retained(wire, rpc, a, slot_request, {"completed"})["response"]
+            changed = accepted(recovered)
+            slot_draw = changed["receipt"]
+            drawn_scene = slot_draw["result"]["scene"]
+            assert_owned()
+            require(changed["epoch"] == state["epoch"] and changed["revision"] == state["revision"] + 1
+                    and slot_draw["id"] == slot_request and slot_draw["status"] == "rendered"
+                    and drawn_scene["frame"] == slot_draw["frame"]
+                    and drawn_scene["rendered_revision"] == changed["revision"]
+                    and drawn_scene["draft_slots"]["sDelayed"] == 0.25, recovered)
+            report["late_control"] = {"elapsed": delayed_elapsed, "unconfirmed": delayed, "confirmed": recovered,
+                                      "dropped_native_replies": native_wire}
+            state = changed
+            show_after = observe(show, "show-after-stall", output, report)
+            require(compare(show_first, show_checkpoint)["max_channel_error"] == 0
+                    and compare(show_checkpoint, show_after)["max_channel_error"] == 0
+                    and all(report["show-first"]["state"][key] == report["show-after-stall"]["state"][key]
+                            for key in ("layers", "revision", "external_epoch"))
+                    and report["show-after-stall"]["state"]["frame"] > report["show-before-stall"]["state"]["frame"],
+                    "separate show did not keep drawing unchanged through the draft stall")
+            linux_exit = None
+            if child:
+                with closing_pidfd(pid) as descriptor:
+                    assert_owned()
+                    exited = select.poll()
+                    exited.register(descriptor, select.POLLIN)
+                    signal.pidfd_send_signal(descriptor, signal.SIGTERM)
+                    require(any(events & select.POLLIN for _, events in exited.poll(5000)),
+                            "owned Linux preview did not exit after SIGTERM")
+                linux_exit = report["native_preview_exit"] = {
+                    "pid": pid, "start_ticks": child["start_ticks"], "confirmed_by": "pidfd",
+                    "transient_health_errors": [],
+                }
+            else:
+                signal_preview(signal.SIGTERM)
+            fresh = wait_for_renderer_reset(wire, rpc, a, state["epoch"], root, linux_exit=linux_exit)
+            stale = wire.call(rpc, a, "sample", {
+                "lease": lease, "sequence": 4, "slot": "sTransport", "value": 0.2,
+            }, state=state)
+            require(stale["error"]["code"] in {"stale_epoch", "stale_lease"}, stale)
+            unknown = accepted(wire.call(rpc, a, "receipt.get", {"id": lost_id}))
+            require(unknown["state"] == "unknown", "stale receipt survived renderer loss")
+            staged = prepare(wire, rpc, a, fresh, data, lease=str(uuid.uuid4()), document=document, sequence=2,
+                             slots=[{"id": "sTransport", "label": "Transport", "default": 0}],
+                             bindings={"gain": {"type": "float", "components": [
+                                 {"slot": "sTransport", "low": 0.2, "high": 0.8},
+                             ]}})
+            rehydrated = commit(wire, rpc, a, fresh, staged)
+            require(rehydrated["epoch"] == fresh["epoch"] and rehydrated["samples"]["sTransport"] == 0,
+                    rehydrated)
+            report.update(stale_epoch=stale, stale_receipt=unknown, reactivated=rehydrated)
 
         while time.time() * 1000 <= second["expiresAt"]:
             time.sleep(0.4)
@@ -472,9 +614,14 @@ if __name__ == "__main__":
     parser.add_argument("--fingerprint", required=True)
     parser.add_argument("--target", required=True)
     parser.add_argument("--host-pid", required=True, type=int)
-    for name in ("app", "shader", "output"):
+    install = parser.add_mutually_exclusive_group(required=True)
+    install.add_argument("--app", type=Path, help="signed macOS Render Host app")
+    install.add_argument("--linux-install", type=Path, help="staged Linux Render Host installation")
+    for name in ("shader", "output"):
         parser.add_argument("--" + name, required=True, type=Path)
     args = parser.parse_args()
+    if args.linux_install and sys.platform != "linux":
+        parser.error("--linux-install requires Linux process ownership checks")
     args.output.mkdir(parents=True)
     report = {"command": [sys.executable, *sys.argv], "status": "open"}
     try:

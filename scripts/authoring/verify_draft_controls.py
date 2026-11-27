@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import signal
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
@@ -77,14 +78,14 @@ def capture_mutation_frame(renderer, client, capture_clients, method, params, re
         for capture_client in capture_clients
     ]
     requests = [{"id": uuid.uuid4().hex, "method": name, "params": values} for _, name, values in calls]
-    renderer.process.send_signal(signal.SIGSTOP)
+    renderer.send_signal(signal.SIGSTOP)
     try:
         _, stopped = os.waitpid(renderer.process.pid, os.WUNTRACED)
         require(os.WIFSTOPPED(stopped), "Owned renderer exited before frame capture")
         for (target, _, _), request in zip(calls, requests, strict=True):
             target.socket.sendall(json.dumps(request).encode() + b"\n")
     finally:
-        renderer.process.send_signal(signal.SIGCONT)
+        renderer.send_signal(signal.SIGCONT)
     for (target, _, _), request in zip(calls, requests, strict=True):
         admitted = json.loads(target.stream.readline())
         require(admitted["ok"] and admitted["id"] == request["id"], admitted)
@@ -124,6 +125,27 @@ def cadence(client):
             "renderer_performance": performance}
 
 
+def linux_network_sockets(renderer):
+    renderer.assert_linux_identity()
+    proc = Path("/proc") / str(renderer.process.pid)
+    owned_inodes = set()
+    for descriptor in (proc / "fd").iterdir():
+        target = os.readlink(descriptor)
+        if target.startswith("socket:["):
+            owned_inodes.add(target[8:-1])
+    sockets = []
+    for protocol in ("tcp", "tcp6", "udp", "udp6"):
+        rows = (proc / "net" / protocol).read_text().splitlines()
+        for row in rows[1:]:
+            fields = row.split()
+            if fields[9] in owned_inodes:
+                sockets.append({"protocol": protocol, "local_address": fields[1],
+                                "local_port": int(fields[1].rsplit(":", 1)[1], 16),
+                                "state": fields[3], "inode": int(fields[9])})
+    renderer.assert_linux_identity()
+    return sockets
+
+
 def verify(args, records):
     output = args.output.resolve()
     binary = args.binary.resolve(strict=True)
@@ -138,10 +160,19 @@ def verify(args, records):
         draft, client = own(stack, records, binary, output, "draft",
                             ["--draft-data-root", stock, "--draft-preview", "--size", "320x240", "--fps", 30])
         capture_clients = [stack.enter_context(closing(draft.client())) for _ in range(2)]
-        listeners = subprocess.run(["/usr/sbin/lsof", "-nP", "-a", "-p", str(draft.process.pid), "-i"],
-                                   text=True, capture_output=True, check=False)
-        require(listeners.returncode == 1 and not listeners.stdout, f"Unexpected private draft listener: {listeners.stdout}")
-        records["draft"]["network"] = listeners.stdout
+        if sys.platform == "linux":
+            show_sockets = linux_network_sockets(show)
+            require(any(entry["protocol"] in ("udp", "udp6") and entry["local_port"] == show.port
+                        for entry in show_sockets), f"Independent show OSC socket was not attributed: {show_sockets}")
+            records["show"]["network"] = show_sockets
+            draft_sockets = linux_network_sockets(draft)
+            require(not draft_sockets, f"Unexpected private draft TCP/UDP socket: {draft_sockets}")
+            records["draft"]["network"] = draft_sockets
+        else:
+            listeners = subprocess.run(["/usr/sbin/lsof", "-nP", "-a", "-p", str(draft.process.pid), "-i"],
+                                       text=True, capture_output=True, check=False)
+            require(listeners.returncode == 1 and not listeners.stdout, f"Unexpected private draft listener: {listeners.stdout}")
+            records["draft"]["network"] = listeners.stdout
         slots = {"sTest": 0.1}
         bindings = {
             "gain": {"type": "float", "components": [{"slot": "sTest", "low": 0.2, "high": 0.8}]},
