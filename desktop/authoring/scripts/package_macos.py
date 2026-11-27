@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build private Developer ID signed arm64 VOSC authoring apps."""
+"""Build private Developer ID signed arm64 VOSC Editor and Render Host apps."""
 
 from __future__ import annotations
 
@@ -90,7 +90,8 @@ def stage_python(archive, destination):
 
 def stage_controller(output, electron_dist, python_archive, manifest, fixture=None):
     source = electron_dist / "Electron.app"
-    app_name = "VOSC Authoring Fixture" if fixture else "VOSC Authoring"
+    app_name = manifest["productName"] + (" Fixture" if fixture else "")
+    storage_name = "VOSC Authoring Fixture" if fixture else "VOSC Authoring"
     bundle_id = CONTROLLER_ID + ".fixture" if fixture else CONTROLLER_ID
     target = output / f"{app_name}.app"
     shutil.copytree(source, target, symlinks=True)
@@ -101,6 +102,9 @@ def stage_controller(output, electron_dist, python_archive, manifest, fixture=No
     info = plistlib.loads(info_path.read_bytes())
     info.update(app_metadata(bundle_id, app_name, launcher.name, manifest["version"],
                             "Find and connect to paired VOSC render hosts on your local network."))
+    # Electron loads its package name and selects the safeStorage Keychain
+    # namespace before application JS runs. Keep both startup names stable.
+    info["CFBundleName"] = storage_name
     info.pop("CFBundleURLTypes", None)
     info_path.write_bytes(plistlib.dumps(info))
     for helper in (target / "Contents/Frameworks").rglob("*.app"):
@@ -112,6 +116,12 @@ def stage_controller(output, electron_dist, python_archive, manifest, fixture=No
     resources = target / "Contents/Resources"
     (resources / "default_app.asar").unlink(missing_ok=True)
     shutil.copytree(DESKTOP / "build/app", resources / "app")
+    package_metadata = resources / "app/package.json"
+    package = json.loads(package_metadata.read_bytes())
+    package.update(productName=storage_name, voscProductName=app_name)
+    if fixture:
+        package["voscShadertoyFixture"] = True
+    package_metadata.write_text(json.dumps(package) + "\n")
     python = stage_python(python_archive, resources)
     importer = resources / "importer/scripts/authoring"
     importer.mkdir(parents=True)
@@ -124,10 +134,6 @@ def stage_controller(output, electron_dist, python_archive, manifest, fixture=No
         fixture_data = json.loads(fixture.read_bytes())
         (importer / "shadertoy-response.json").write_text(json.dumps(fixture_data, separators=(",", ":")) + "\n")
         shutil.copyfile(DESKTOP / "scripts/stage_shadertoy_fixture.py", importer / "stage_shadertoy_fixture.py")
-        package_metadata = resources / "app/package.json"
-        package = json.loads(package_metadata.read_bytes())
-        package_metadata.write_text(json.dumps({**package, "productName": app_name,
-                                                "voscShadertoyFixture": True}) + "\n")
     run(["xcrun", "swiftc", "-target", f"arm64-apple-macos{OS_MINIMUM}",
          DESKTOP / "discovery/main.swift", "-o", launcher.parent / "vosc-browse"])
 
@@ -137,6 +143,15 @@ def stage_controller(output, electron_dist, python_archive, manifest, fixture=No
         shutil.copyfile(electron_dist / name, notices / f"Electron-{name}")
     for package in ("react", "react-dom", "scheduler"):
         shutil.copyfile(DESKTOP / f"node_modules/{package}/LICENSE", notices / f"{package}-LICENSE")
+    editor_packages = (
+        "@codemirror/commands", "@codemirror/language", "@codemirror/legacy-modes",
+        "@codemirror/state", "@codemirror/streamparser", "@codemirror/view",
+        "@lezer/common", "@lezer/highlight", "@lezer/lr", "@marijn/find-cluster-break",
+        "crelt", "style-mod", "w3c-keyname",
+    )
+    for package in editor_packages:
+        shutil.copyfile(DESKTOP / "node_modules" / package / "LICENSE",
+                        notices / (package.replace("/", "-") + "-LICENSE"))
     return target, python
 
 

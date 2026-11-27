@@ -71,7 +71,6 @@ export function DraftPane({ workspace, onWorkspace }: {
   const [slotName, setSlotName] = useState("");
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");
-  const [notice, setNotice] = useState("");
   const draft = workspace?.project;
   const reflected = workspace?.reflected;
   const ready = Boolean(workspace?.previewReady);
@@ -81,41 +80,28 @@ export function DraftPane({ workspace, onWorkspace }: {
   async function act(action: () => Promise<void>) {
     setBusy(true);
     setProblem("");
-    setNotice("");
     try { await action(); } catch (error) { setProblem(message(error)); }
     finally { setBusy(false); }
   }
 
   return <section className="feature" aria-labelledby="draft-heading">
     <header className="section-heading">
-      <div><h2 id="draft-heading">{draft?.title ?? "Draft"}</h2>
-        <p className="muted" role="status">{ready ? "Native preview ready" : "Preview unavailable"}</p></div>
-      <div className="draft-actions">
-        <button disabled={busy} onClick={() => void act(async () => onWorkspace(await api.openDraft()))}>Open draft…</button>
-        <button disabled={busy || !ready} onClick={() => void act(async () => {
-          if (await api.saveDraft()) setNotice("Draft saved.");
-        })}>Save draft…</button>
-        <button disabled={busy || !draft} onClick={() => void act(async () => {
-          const path = await api.exportReplay();
-          if (path) setNotice(`Native replay saved to ${path}`);
-        })}>Export replay…</button>
-      </div>
+      <h2 id="draft-heading">Controls</h2>
     </header>
-    {notice && <p role="status" className="notice">{notice}</p>}
     {problem && <p role="alert" className="error">{problem}</p>}
-    {!draft && <p className="empty">Open a saved draft or activate a validated shader.</p>}
+    {!draft && <p className="empty">Controls appear when a validated source is previewed.</p>}
     {draft && !ready && <div className="form-strip">
       <p>{workspace?.notice ?? "Restore this draft to its paired host."}</p>
-      <button className="primary" disabled={busy || workspace?.peer?.target !== draft.destination.target}
+      <button className="primary" disabled={busy || workspace?.peer?.target !== draft.destination.target || workspace?.peer?.fingerprint !== draft.destination.fingerprint}
         onClick={() => void act(async () => onWorkspace(await api.restoreDraft()))}>Restore preview</button>
     </div>}
-    {ready && reflected && <dl className="receipt">
+    {ready && reflected && <details className="native-receipt"><summary>Draw details</summary><dl className="receipt">
       <div><dt>Target</dt><dd>{reflected.target}</dd></div>
       <div><dt>Epoch</dt><dd>{reflected.epoch}</dd></div>
       <div><dt>Revision</dt><dd>{reflected.revision}</dd></div>
       <div><dt>Frame</dt><dd>{reflected.frame ?? reflected.receipt?.frame ?? "Unavailable"}</dd></div>
       <div><dt>Drawn receipt</dt><dd>{workspace?.drawnReceipt?.id ?? "Unavailable"}</dd></div>
-    </dl>}
+    </dl></details>}
     {draft && <section className="feature-section" aria-labelledby="slots-heading">
       <h3 id="slots-heading">OSC slots</h3>
       <form className="form-fields" onSubmit={event => {

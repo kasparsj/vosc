@@ -1,9 +1,10 @@
 import { execFile, spawn, type ChildProcess } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { constants } from "node:fs";
-import { open } from "node:fs/promises";
+import { lstat, open } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
-import { SOURCE_LIMIT, type DraftSource, type ImportItem, type StageReport, type SourceView } from "./contracts";
+import { SOURCE_LIMIT, type DraftSource, type ImportItem, type LibraryItem, type StageReport, type SourceView } from "./contracts";
 import type { HostClient } from "./host-client";
 import { sourceName } from "./draft-project";
 import { hash, HostError } from "./local-state";
@@ -12,8 +13,17 @@ const MAX_REPORT_BYTES = 96 * 1024 * 1024;
 const IMPORT_DEADLINE_MS = 65_000;
 type ImportKind = "file" | "paste" | "github" | "repository" | "shadertoy";
 
+interface Origin {
+  provider?: string;
+  path?: string;
+  url?: string;
+  repository?: string;
+  ref?: string;
+  commit?: string;
+}
+
 interface ImportedSource {
-  origin: { path?: string; url?: string; repository?: string; ref?: string; commit?: string };
+  origin: Origin;
   status: ImportItem["status"];
   code: string;
   message: string;
@@ -30,8 +40,24 @@ interface ImporterReport {
   files: ImportedSource[];
 }
 
+interface StagedBatch {
+  id: string;
+  items: { id: string; file: ImportedSource }[];
+  complete: boolean;
+  issue: StageReport["error"];
+}
+
+interface LibraryRecord {
+  id: string;
+  source: Origin;
+  source_sha256: string;
+  generated_sha256: string;
+}
+
+const SHA256 = /^[a-f0-9]{64}$/;
+
 function fail(code: string, message: string): StageReport {
-  return { complete: false, error: { code, message }, items: [] };
+  return { batchId: null, complete: false, error: { code, message }, items: [] };
 }
 
 function boundedText(value: unknown, bytes: number): value is string {
@@ -54,9 +80,8 @@ class Importer {
   private active: ChildProcess | null = null;
   private cancelled = false;
   private pending = false;
-  private files: ImportedSource[] = [];
-  private complete = true;
-  private issue: StageReport["error"] = null;
+  private publishing = false;
+  private batch: StagedBatch | null = null;
 
   constructor(private readonly resources: string, private readonly library: string,
               private readonly fixture = false) {}
@@ -64,14 +89,27 @@ class Importer {
   get busy() { return this.pending; }
 
   cancel() {
-    this.cancelled = this.pending;
+    if (!this.pending || this.publishing) return;
+    this.cancelled = true;
     this.active?.kill();
   }
 
-  inspectSource(index: unknown): SourceView | null {
-    if (typeof index !== "number" || !Number.isSafeInteger(index)) return null;
-    const item = this.files[index];
-    if (!item?.original_base64) return null;
+  private stagedBatch(id: unknown): StagedBatch {
+    if (!this.batch || this.batch.id !== id) {
+      throw new HostError("stale_import", "The import selection is no longer current. Review the latest import.");
+    }
+    return this.batch;
+  }
+
+  private stagedFile(batchId: unknown, itemId: unknown): ImportedSource {
+    const item = this.stagedBatch(batchId).items.find(row => row.id === itemId);
+    if (!item) throw new HostError("invalid_selection", "The selected shader is missing from this import.");
+    return item.file;
+  }
+
+  inspectSource(batchId: unknown, itemId: unknown): SourceView | null {
+    const item = this.stagedFile(batchId, itemId);
+    if (!item.original_base64) return null;
     const decode = (base64: string) => Buffer.from(base64, "base64").toString("utf8");
     return {
       original: decode(item.original_base64),
@@ -91,6 +129,7 @@ class Importer {
 
     this.pending = true;
     this.cancelled = false;
+    this.batch = null;
     try {
       const key = kind === "shadertoy" && !this.fixture ? await shadertoyKey() : undefined;
       if (this.cancelled) return fail("cancelled", "Import cancelled.");
@@ -99,10 +138,11 @@ class Importer {
       if (report.format !== "vosc.shader-import.v1" || !Array.isArray(report.files)) {
         return fail("importer_report", "The importer returned an unreadable report.");
       }
-      this.files = report.files;
-      this.complete = report.complete;
-      this.issue = report.error;
-      return this.report();
+      this.batch = {
+        id: randomUUID(), items: report.files.map(file => ({ id: randomUUID(), file })),
+        complete: report.complete, issue: report.error,
+      };
+      return this.report(this.batch);
     } catch (error) {
       if (this.cancelled) return fail("cancelled", "Import cancelled.");
       return fail("importer_unavailable", error instanceof Error ? error.message : "Importer unavailable.");
@@ -112,49 +152,62 @@ class Importer {
     }
   }
 
-  private itemOrigin(item: ImportedSource) {
-    const { commit, path, repository, url } = item.origin;
+  private originLabel(origin: Origin) {
+    const { commit, path, repository, url } = origin;
     return commit ? `${repository} @ ${commit}${path ? ` · ${path}` : ""}` : url ?? "Pasted source";
   }
 
-  private report(issue = this.issue): StageReport {
+  private report(batch: StagedBatch, issue = batch.issue): StageReport {
     return {
-      complete: this.complete && issue === null,
+      batchId: batch.id,
+      complete: batch.complete && issue === null,
       error: issue,
-      items: this.files.map((item, index) => ({
-        index, path: item.origin.path ?? "Fragment shader", origin: this.itemOrigin(item),
-        status: item.status, code: item.code, message: item.message,
-        sourceDigest: item.source_sha256, generatedDigest: item.entry?.generated_sha256,
+      items: batch.items.map(({ id, file }) => ({
+        id, path: file.origin.path ?? "Fragment shader", origin: this.originLabel(file.origin),
+        status: file.status, code: file.code, message: file.message,
+        sourceDigest: file.source_sha256, generatedDigest: file.entry?.generated_sha256,
+        libraryId: ["published", "reused", "reused_edited"].includes(file.status) ? file.entry?.id : undefined,
       })),
     };
   }
 
-  async validate(host: HostClient): Promise<StageReport> {
+  async validate(host: HostClient, batchId: unknown, itemIds: unknown): Promise<StageReport> {
     if (this.pending) throw new HostError("busy", "An import is already running.");
+    const batch = this.stagedBatch(batchId);
+    if (!Array.isArray(itemIds) || !itemIds.length || itemIds.length > batch.items.length) {
+      throw new HostError("invalid_selection", "Select files to validate and add.");
+    }
+    const selected = new Set(itemIds);
+    const rows = batch.items.filter(({ id }) => selected.has(id));
+    if (rows.length !== itemIds.length || rows.some(({ file }) => !file.generated_base64)) {
+      throw new HostError("invalid_selection", "Only converted files from the current import can be selected.");
+    }
+    const candidates = rows.map(row => row.file).filter(file =>
+      file.status === "awaiting_validation" || file.status === "validation_failed");
+    if (!candidates.length) return this.report(batch);
     const session = host.session();
     this.pending = true;
     this.cancelled = false;
     try {
       const accepted: ImportedSource[] = [];
-      let issue = this.issue;
-      for (const item of this.files) {
-        if (this.cancelled) {
-          issue = { code: "cancelled", message: "Validation cancelled. Completed candidates can be published." };
-          break;
-        }
-        if (item.status !== "awaiting_validation" || !item.entry || !item.generated_base64) continue;
+      let issue = batch.issue;
+      for (const item of candidates) {
+        if (this.cancelled) break;
+        if (!item.entry || !item.generated_base64) continue;
         try {
           const result = await session.rpc("validate", {
             source: item.generated_base64, sha256: item.entry.generated_sha256,
           }) as { target: string; sourceDigest: string; receipt?: { status: string } };
+          if (this.cancelled) break;
           if (result?.target !== session.peer.target || result.sourceDigest !== item.entry.generated_sha256 ||
               result.receipt?.status !== "rendered") {
             throw new HostError("missing_native_receipt", "The host returned an unmatched shader receipt.");
           }
           accepted.push(item);
         } catch (error) {
+          if (this.cancelled) break;
           if (error instanceof HostError && error.code === "shader_failed") {
-            item.status = "skipped";
+            item.status = "validation_failed";
             item.code = error.code;
             item.message = error.message;
             continue;
@@ -164,15 +217,20 @@ class Importer {
           break;
         }
       }
+      if (this.cancelled) {
+        return this.report(batch, { code: "cancelled", message: "Validation cancelled before adding any files." });
+      }
+      if (issue?.code === "host_changed") return this.report(batch, issue);
       if (accepted.length > 0) {
         const input = accepted.map(item => ({
           origin: item.origin, original: item.original_base64,
           entry_id: item.entry!.id, digest: item.entry!.generated_sha256,
         }));
+        this.publishing = true;
         const response = await this.python<{ outcomes?: string[]; error?: StageReport["error"] }>(
           "publish_staged.py", [this.library], JSON.stringify(input));
         if (!response.outcomes || response.outcomes.length !== accepted.length) {
-          return this.report(response.error ?? { code: "library_failed", message: "Library publication did not complete." });
+          return this.report(batch, response.error ?? { code: "library_failed", message: "Library publication did not complete." });
         }
         for (const [index, item] of accepted.entries()) {
           const state = response.outcomes[index];
@@ -182,38 +240,123 @@ class Importer {
             item.message = state === "reused_edited" ?
               "Native validation passed. Your edited library copy was preserved." : "Native validation passed.";
           } else {
-            item.status = "skipped";
+            item.status = "validation_failed";
             item.code = "library_collision";
             item.message = "An existing library path is in the way and was preserved.";
           }
         }
       }
-      return this.report(issue);
+      return this.report(batch, issue);
     } finally {
       this.pending = false;
+      this.publishing = false;
       this.active = null;
     }
   }
 
-  async activateSource(index: unknown): Promise<DraftSource> {
-    const item = typeof index === "number" && Number.isSafeInteger(index) ? this.files[index] : undefined;
-    if (!item?.entry || !/^[a-f0-9]{64}$/.test(item.entry.id) ||
-        !["published", "reused", "reused_edited"].includes(item.status)) {
-      throw new HostError("source_not_validated", "Validate this shader before opening a native preview.");
+  openStaged(batchId: unknown, itemId: unknown): DraftSource {
+    const item = this.stagedFile(batchId, itemId);
+    if (!item.generated_base64 || !item.entry) {
+      throw new HostError("source_unavailable", "Select a fragment that was converted successfully.");
     }
-    const file = await open(join(this.library, "shaders", item.entry.id, "shader.frag"),
-                            constants.O_RDONLY | constants.O_NOFOLLOW);
+    const converted = Buffer.from(item.generated_base64, "base64");
+    if (converted.toString("base64") !== item.generated_base64 || hash(converted) !== item.entry.generated_sha256) {
+      throw new HostError("source_changed", "The staged conversion no longer matches its recorded digest.");
+    }
+    return this.draftSource(item.origin, item.source_sha256, converted, converted);
+  }
+
+  private draftSource(origin: Origin, originalDigest: string | undefined,
+                      working: Buffer, converted: Buffer): DraftSource {
+    const digest = hash(working);
+    const convertedDigest = hash(converted);
+    if (working.length > SOURCE_LIMIT || converted.length > SOURCE_LIMIT || working.includes(0) || converted.includes(0)) {
+      throw new HostError("invalid_source", "The source must be UTF-8 GLSL up to 128 KiB without NUL bytes.");
+    }
     try {
-      const info = await file.stat();
-      if (!info.isFile() || info.size < 1 || info.size > SOURCE_LIMIT) {
-        throw new HostError("source_limit", "The library shader must be a regular file up to 128 KiB.");
+      const decoder = new TextDecoder("utf-8", { fatal: true });
+      decoder.decode(working);
+      decoder.decode(converted);
+    } catch {
+      throw new HostError("invalid_source", "The source contains invalid UTF-8.");
+    }
+    return {
+      name: sourceName(origin.path), origin: this.originLabel(origin), digest, base64: working.toString("base64"),
+      provenance: {
+        provider: origin.provider ?? "import", path: origin.path, url: origin.url, repository: origin.repository,
+        requestedRef: origin.ref, commit: origin.commit, originalDigest, convertedDigest,
+        convertedBase64: converted.toString("base64"),
+      },
+    };
+  }
+
+  private async catalog(): Promise<Record<string, LibraryRecord>> {
+    const path = join(this.library, "catalog.json");
+    try {
+      const bytes = await this.readFile(path, MAX_REPORT_BYTES);
+      const catalog = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+      if (catalog?.format !== "vosc.shader-library.v1" || !catalog.entries ||
+          typeof catalog.entries !== "object" || Array.isArray(catalog.entries)) {
+        throw new Error("Invalid catalog");
       }
-      const buffer = Buffer.alloc(info.size + 1);
+      for (const [id, fields] of Object.entries(catalog.entries)) {
+        const entry = fields as Partial<LibraryRecord> | null;
+        if (!SHA256.test(id) || entry?.id !== id || !entry.source || typeof entry.source.provider !== "string" ||
+            [entry.source.path, entry.source.url, entry.source.repository, entry.source.ref, entry.source.commit]
+              .some(value => value !== undefined && typeof value !== "string") ||
+            typeof entry.source_sha256 !== "string" || !SHA256.test(entry.source_sha256) ||
+            typeof entry.generated_sha256 !== "string" || !SHA256.test(entry.generated_sha256)) {
+          throw new Error("Invalid library entry");
+        }
+      }
+      return catalog.entries;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return {};
+      throw new HostError("invalid_catalog", "The saved shader library could not be read.");
+    }
+  }
+
+  async listLibrary(): Promise<LibraryItem[]> {
+    const entries = Object.values(await this.catalog());
+    return entries.map(entry => ({
+      id: entry.id, path: entry.source.path ?? "Fragment shader", origin: this.originLabel(entry.source),
+    })).sort((first, second) => first.path.localeCompare(second.path) || first.id.localeCompare(second.id));
+  }
+
+  async openLibrary(id: unknown): Promise<DraftSource> {
+    if (typeof id !== "string" || !SHA256.test(id)) {
+      throw new HostError("invalid_selection", "Choose a saved library shader.");
+    }
+    const entry = (await this.catalog())[id];
+    if (!entry) throw new HostError("source_unavailable", "The shader is no longer in the library.");
+    const shaders = join(this.library, "shaders");
+    const folder = join(shaders, id);
+    if (!(await lstat(shaders)).isDirectory() || !(await lstat(folder)).isDirectory()) {
+      throw new HostError("invalid_source", "The library shader folder is not a regular directory.");
+    }
+    const converted = await this.readFile(join(folder, "generated.frag"), SOURCE_LIMIT);
+    if (hash(converted) !== entry.generated_sha256) {
+      throw new HostError("source_changed", "The generated library shader does not match its recorded digest.");
+    }
+    const working = await this.readFile(join(folder, "shader.frag"), SOURCE_LIMIT);
+    return this.draftSource(entry.source, entry.source_sha256, working, converted);
+  }
+
+  private async readFile(path: string, limit: number): Promise<Buffer> {
+    const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    try {
+      const before = await file.stat({ bigint: true });
+      if (!before.isFile() || before.size > limit) {
+        throw new HostError("source_limit", "The library file is not a regular file or exceeds its size limit.");
+      }
+      const buffer = Buffer.alloc(Number(before.size) + 1);
       const { bytesRead } = await file.read(buffer, 0, buffer.length, 0);
-      if (bytesRead !== info.size) throw new HostError("source_changed", "The library shader changed. Retry opening it.");
-      const source = buffer.subarray(0, info.size);
-      return { name: sourceName(item.origin.path), origin: this.itemOrigin(item),
-        digest: hash(source), base64: source.toString("base64") };
+      const after = await file.stat({ bigint: true });
+      if (bytesRead !== Number(before.size) || after.size !== before.size ||
+          after.mtimeNs !== before.mtimeNs || after.ctimeNs !== before.ctimeNs) {
+        throw new HostError("source_changed", "The library file changed. Retry opening it.");
+      }
+      return buffer.subarray(0, bytesRead);
     } finally {
       await file.close();
     }

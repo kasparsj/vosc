@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { open, rename, unlink } from "node:fs/promises";
+import { link, open, rename, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export class HostError extends Error {
@@ -8,21 +8,33 @@ export class HostError extends Error {
   }
 }
 
-export async function writeAtomically(path: string, bytes: string | Buffer, mode = 0o600) {
+export async function writeAtomically(path: string, bytes: string | Buffer, mode = 0o600, options?: {
+  check?: () => Promise<void>;
+  exclusive?: boolean;
+}) {
   const stage = join(dirname(path), `.vosc-${randomUUID()}.tmp`);
   const handle = await open(stage, "wx", mode);
   try {
-    try {
-      await handle.writeFile(bytes);
-      await handle.sync();
-    } finally {
-      await handle.close();
+    await handle.writeFile(bytes);
+    await handle.sync();
+    await options?.check?.();
+    if (options?.exclusive) {
+      await link(stage, path);
+      await unlink(stage);
+    } else {
+      await rename(stage, path);
     }
-    await rename(stage, path);
+    // Read the promoted file through its descriptor. Another writer may
+    // already have replaced the destination path.
+    return await handle.stat({ bigint: true });
   } finally {
-    await unlink(stage).catch(error => {
-      if (error.code !== "ENOENT") throw error;
-    });
+    try {
+      await handle.close();
+    } finally {
+      await unlink(stage).catch(error => {
+        if (error.code !== "ENOENT") throw error;
+      });
+    }
   }
 }
 

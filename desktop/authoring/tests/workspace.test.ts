@@ -155,7 +155,7 @@ class FixtureHost {
   disconnect() { this.peer = null; }
 }
 
-test("a lost fixed binding reply is read back before an atomic save", async () => {
+test("a lost fixed binding reply is read back and can be saved offline", async () => {
   const host = new FixtureHost();
   const workspace = new Workspace(host as unknown as HostClient);
   const root = await mkdtemp(join(tmpdir(), "vosc-controller-test-"));
@@ -176,7 +176,7 @@ test("a lost fixed binding reply is read back before an atomic save", async () =
     await workspace.save(failedDestination);
     assert.equal(await readFile(failedDestination, "utf8"), saved);
     host.state.revision += 1;
-    await assert.rejects(workspace.save(destination), /Preview changed before save/);
+    await workspace.save(destination);
     assert.equal(await readFile(destination, "utf8"), saved);
 
     const reopened = await workspace.open(destination);
@@ -241,10 +241,18 @@ test("a validation batch never transfers remaining sources to a different select
     });
     mutable.connected = first;
     const importer = new Importer(root, root);
-    const staged = importer as unknown as { files: unknown[] };
-    staged.files = ["first.frag", "second.frag"].map(path => ({ origin: { path }, status: "awaiting_validation",
-      entry: { id: SOURCE.digest, generated_sha256: SOURCE.digest }, generated_base64: SOURCE.base64 }));
-    const result = await importer.validate(host);
+    const staged = importer as unknown as {
+      batch: { id: string; items: { id: string; file: unknown }[]; complete: boolean; issue: null } | null;
+    };
+    const selectedIds = ["first.frag", "second.frag"];
+    staged.batch = {
+      id: "fixture-batch", complete: true, issue: null,
+      items: selectedIds.map(path => ({ id: path, file: {
+        origin: { path }, status: "awaiting_validation",
+        entry: { id: SOURCE.digest, generated_sha256: SOURCE.digest }, generated_base64: SOURCE.base64,
+      } })),
+    };
+    const result = await importer.validate(host, "fixture-batch", selectedIds);
     assert.equal(result.error?.code, "host_changed");
     assert.deepEqual(result.items.map(item => item.status), ["awaiting_validation", "awaiting_validation"]);
     assert.deepEqual(theseRequests.map(request => request.target), [first.target]);
@@ -361,4 +369,23 @@ test("activation checks provenance and native uniform bounds before changing the
   assert.equal(host.mutations, 1);
   assert.equal(workspace.view().previewReady, true);
   assert.equal(workspace.view().reflected?.revision, 1);
+});
+
+test("edits during delayed library validation survive the preview request", async () => {
+  const host = new FixtureHost();
+  const workspace = new Workspace(host as unknown as HostClient);
+  const document = (await workspace.create()).document!;
+  const started = Promise.withResolvers<void>();
+  const validated = Promise.withResolvers<void>();
+  host.onValidate = () => {
+    started.resolve();
+    return validated.promise;
+  };
+  const preview = workspace.activate(async () => SOURCE);
+  await started.promise;
+  workspace.edit({ id: document.id, generation: document.generation, editSequence: 1, text: "my late edits" });
+  validated.resolve();
+  await assert.rejects(preview, { code: "stale_document" });
+  assert.equal(host.mutations, 0);
+  assert.equal(workspace.view().document?.source.text, "my late edits");
 });

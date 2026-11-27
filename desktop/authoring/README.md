@@ -1,6 +1,8 @@
-# VOSC Authoring
+# VOSC Editor
 
 The controller imports and edits fragment shader drafts. The render host opens the draft in its own native VOSC window. The controller can stage and inspect sources without a host connection.
+
+See the [VOSC Editor roadmap](ROADMAP.md) for the mockup audit and the proposed GLSL, Hydra, and live-preview milestones.
 
 ## Build a signed internal test package
 
@@ -15,12 +17,12 @@ python3 scripts/package_macos.py \
   --vosc-app "/path/to/staged/vosc.app"
 ```
 
-The signed controller is under `controller/`. Install it in Applications on the controller Mac. On the render Mac, keep `VOSC Render Host.app` and `vosc.app` beside each other. Open both desktop tools from Finder.
+Install `controller/VOSC Editor.app` in Applications on the controller Mac. On the render Mac, keep `VOSC Render Host.app` and `vosc.app` beside each other. Open both desktop tools from Finder.
 
 ## Pair a render host
 
 1. On the render Mac, open VOSC Render Host and enable the draft service. Keep its host fingerprint and port visible.
-2. In VOSC Authoring, choose **Render Host**. Inspect a discovered host or enter its address and displayed port. Compare the entire displayed host fingerprint against the companion window and enter that fingerprint in the controller.
+2. In VOSC Editor, choose **Render Host**. Inspect a discovered host or enter its address and displayed port. Compare the entire displayed host fingerprint against the companion window and enter that fingerprint in the controller.
 3. Enter a controller name and request pairing. Compare the entire controller fingerprint displayed on both machines. Approve the matching request in VOSC Render Host.
 4. To reconnect an approved identity, inspect the current endpoint and choose **Connect paired host**. A changed host certificate needs explicit pairing again.
 

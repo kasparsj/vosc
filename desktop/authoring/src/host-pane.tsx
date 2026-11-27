@@ -57,8 +57,8 @@ export function HostPane({ discovery, refresh, workspace, onWorkspace }: {
     return () => clearInterval(timer);
   }, [pending]);
 
-  return <section className="feature" aria-labelledby="host-heading">
-    <header className="section-heading"><h2 id="host-heading">Render Host</h2>
+  return <section className="feature" aria-label="Render host connections">
+    <header className="section-heading"><h3>Connections</h3>
       <button onClick={refresh} type="button">Refresh discovery</button></header>
     {workspace?.peer && <div className="form-strip">
       <div><strong>Connected</strong><p>{workspace.peer.endpoint.host}:{workspace.peer.endpoint.port}</p></div>

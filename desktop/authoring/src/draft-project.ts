@@ -1,7 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { basename, join } from "node:path";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { BINDING_LIMIT, SLOT_LIMIT, SOURCE_LIMIT, type Binding, type DraftProject,
-  type DraftSource, type Slot } from "./contracts";
+  type ControlSignature, type DraftDocument, type DraftSource, type Peer, type Slot, type SourceProvenance } from "./contracts";
 import { hash, HostError } from "./local-state";
 
 const SLOT_ID = /^s[a-f0-9]{12}$/;
@@ -47,38 +48,77 @@ export function parseBinding(value: unknown, slots: Slot[]): Binding {
   throw new HostError("invalid_binding", "Use values between −1,000,000 and 1,000,000 and choose a configured slot for a range.");
 }
 
-function source(value: unknown): DraftSource {
+const digestPattern = /^[a-f0-9]{64}$/;
+const uuidPattern = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+
+function provenance(value: unknown): SourceProvenance | undefined {
+  if (value === undefined) return undefined;
+  if (!record(value) || !text(value.provider, 80)) {
+    throw new HostError("invalid_project", "The draft contains invalid source provenance.");
+  }
+  const provenance: SourceProvenance = { provider: value.provider };
+  for (const key of ["path", "url", "repository", "requestedRef", "commit"] as const) {
+    const property = value[key];
+    if (property !== undefined) {
+      if (!text(property, 8192)) throw new HostError("invalid_project", "The draft contains invalid source provenance.");
+      provenance[key] = property;
+    }
+  }
+  for (const key of ["originalDigest", "convertedDigest"] as const) {
+    const property = value[key];
+    if (property !== undefined) {
+      if (typeof property !== "string" || !digestPattern.test(property)) {
+        throw new HostError("invalid_project", "The draft contains an invalid source provenance digest.");
+      }
+      provenance[key] = property;
+    }
+  }
+  if (value.convertedBase64 !== undefined) {
+    provenance.convertedBase64 = source({
+      name: "Converted source", origin: "Import", digest: provenance.convertedDigest, base64: value.convertedBase64,
+    }).base64;
+  }
+  return provenance;
+}
+
+export function source(value: unknown, allowEmpty = false): DraftSource {
   if (!record(value) || !text(value.name, 256) || !text(value.origin, 8192) ||
       typeof value.digest !== "string" || !/^[a-f0-9]{64}$/.test(value.digest) ||
       typeof value.base64 !== "string" || value.base64.length > Math.ceil(SOURCE_LIMIT / 3) * 4) {
     throw new HostError("invalid_project", "The saved shader is missing or exceeds its size limit.");
   }
   const bytes = Buffer.from(value.base64, "base64");
-  if (!bytes.length || bytes.length > SOURCE_LIMIT || bytes.toString("base64") !== value.base64 || hash(bytes) !== value.digest) {
+  if ((!allowEmpty && !bytes.length) || bytes.length > SOURCE_LIMIT || bytes.toString("base64") !== value.base64 || hash(bytes) !== value.digest) {
     throw new HostError("invalid_project", "The saved shader does not match its digest.");
   }
   try {
+    if (bytes.includes(0)) throw new Error("NUL");
     new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   } catch {
-    throw new HostError("invalid_project", "The saved shader must be UTF-8.");
+    throw new HostError("invalid_project", "The saved shader must be UTF-8 without NUL characters.");
   }
-  return { name: value.name, origin: value.origin, digest: value.digest, base64: value.base64 };
+  const original = provenance(value.provenance);
+  return { name: value.name, origin: value.origin, digest: value.digest, base64: value.base64,
+    ...(original ? { provenance: original } : {}) };
 }
 
-export function parseProject(value: unknown): DraftProject {
-  if (!record(value) || value.format !== "vosc.authoring.draft" || value.version !== 1 ||
-      !record(value.destination) ||
-      typeof value.destination.target !== "string" || !/^[A-Fa-f0-9-]{36}$/.test(value.destination.target) ||
-      typeof value.destination.fingerprint !== "string" || !/^[a-f0-9]{64}$/.test(value.destination.fingerprint) ||
-      !record(value.destination.endpoint) || !text(value.destination.endpoint.host, 253) ||
-      typeof value.destination.endpoint.port !== "number" || !Number.isInteger(value.destination.endpoint.port) ||
-      value.destination.endpoint.port < 1 || value.destination.endpoint.port > 65535 ||
-      !Array.isArray(value.slots) || value.slots.length > SLOT_LIMIT || !value.slots.every(slot) ||
-      !Array.isArray(value.bindings)) {
-    throw new HostError("invalid_project", "This file does not contain a supported VOSC draft.");
+function parseDestination(value: unknown): Peer {
+  if (!record(value) ||
+      typeof value.target !== "string" || !/^[A-Fa-f0-9-]{36}$/.test(value.target) ||
+      typeof value.fingerprint !== "string" || !digestPattern.test(value.fingerprint) ||
+      !record(value.endpoint) || !text(value.endpoint.host, 253) ||
+      typeof value.endpoint.port !== "number" || !Number.isInteger(value.endpoint.port) ||
+      value.endpoint.port < 1 || value.endpoint.port > 65535) {
+    throw new HostError("invalid_project", "The draft contains an invalid render destination.");
   }
-  if (!validTitle(value.title)) {
-    throw new HostError("invalid_project", "The draft title must be a nonempty single-line string up to 2048 bytes.");
+  return { target: value.target, fingerprint: value.fingerprint,
+    endpoint: { host: value.endpoint.host, port: value.endpoint.port } };
+}
+
+function parseControls(value: unknown) {
+  if (!record(value) || !Array.isArray(value.slots) || value.slots.length > SLOT_LIMIT ||
+      !value.slots.every(slot) || !Array.isArray(value.bindings)) {
+    throw new HostError("invalid_project", "The draft contains invalid controls.");
   }
   const slots = value.slots.map(item => ({ id: item.id, label: item.label, default: item.default }));
   if (new Set(slots.map(item => item.id)).size !== slots.length) {
@@ -106,14 +146,80 @@ export function parseProject(value: unknown): DraftProject {
   for (const mask of components.values()) {
     if ((mask & (mask + 1)) !== 0) throw new HostError("invalid_project", "Uniform components are incomplete.");
   }
+  return { slots, bindings };
+}
+
+function parseSignatures(value: unknown): ControlSignature[] {
+  if (!Array.isArray(value) || value.length > MAX_UNIFORM_BINDINGS) {
+    throw new HostError("invalid_project", "The draft contains invalid reflected signatures.");
+  }
+  const names = new Set<string>();
+  return value.map((item: unknown) => {
+    if (!record(item) || typeof item.name !== "string" || !validUniformName(item.name) || names.has(item.name) ||
+        item.owner !== "layer" || typeof item.type !== "string" || typeof item.arity !== "number" ||
+        ["float", "vec2", "vec3", "vec4"][item.arity - 1] !== item.type) {
+      throw new HostError("invalid_project", "The draft contains invalid reflected signatures.");
+    }
+    names.add(item.name);
+    return { name: item.name, type: item.type, arity: item.arity, owner: item.owner };
+  });
+}
+
+export function parseProject(value: unknown): DraftProject {
+  if (!record(value) || value.format !== "vosc.authoring.draft" || value.version !== 1) {
+    throw new HostError("invalid_project", "This file does not contain a supported VOSC draft.");
+  }
+  if (!validTitle(value.title)) {
+    throw new HostError("invalid_project", "The draft title must be a nonempty single-line string up to 2048 bytes.");
+  }
+  return { format: value.format, version: value.version, title: value.title,
+    destination: parseDestination(value.destination), source: source(value.source), ...parseControls(value) };
+}
+
+export function parseDocument(value: unknown): DraftDocument {
+  if (record(value) && value.version === 1) {
+    const project = parseProject(value);
+    return {
+      format: project.format, version: 2, id: randomUUID(), title: project.title, language: "glsl",
+      source: project.source, destination: project.destination,
+      controls: { slots: project.slots, bindings: project.bindings, signatures: [] },
+      accepted: { id: randomUUID(), revision: null, project, signatures: [] },
+    };
+  }
+  if (!record(value) || value.format !== "vosc.authoring.draft" || value.version !== 2 || value.language !== "glsl" ||
+      typeof value.id !== "string" || !uuidPattern.test(value.id) || !validTitle(value.title) || !record(value.controls)) {
+    throw new HostError("invalid_project", "This file does not contain a supported VOSC draft.");
+  }
+  let accepted: DraftDocument["accepted"] = null;
+  if (value.accepted !== null) {
+    const artifact = value.accepted;
+    if (!record(artifact) || typeof artifact.id !== "string" || !uuidPattern.test(artifact.id) ||
+        (artifact.revision !== null && (typeof artifact.revision !== "number" ||
+          !Number.isSafeInteger(artifact.revision) || artifact.revision < 0))) {
+      throw new HostError("invalid_project", "The last accepted artifact is invalid.");
+    }
+    accepted = {
+      id: artifact.id, revision: artifact.revision,
+      project: parseProject(artifact.project), signatures: parseSignatures(artifact.signatures),
+    };
+  }
   return {
-    format: value.format, version: value.version, title: value.title,
-    destination: {
-      target: value.destination.target, fingerprint: value.destination.fingerprint,
-      endpoint: { host: value.destination.endpoint.host, port: value.destination.endpoint.port },
-    },
-    source: source(value.source), slots, bindings,
+    format: value.format, version: value.version, id: value.id, title: value.title, language: value.language,
+    source: source(value.source, true), destination: value.destination === null ? null : parseDestination(value.destination),
+    controls: { ...parseControls(value.controls), signatures: parseSignatures(value.controls.signatures) }, accepted,
   };
+}
+
+export function editorText(source: DraftSource) {
+  return new TextDecoder().decode(Buffer.from(source.base64, "base64")).replace(/\r\n?/g, "\n");
+}
+
+export function sourceWithText(previous: DraftSource, text: string) {
+  const bytes = Buffer.from(text, "utf8");
+  if (bytes.toString("utf8") !== text || bytes.includes(0) || bytes.length > SOURCE_LIMIT) {
+    throw new HostError("invalid_source", "Use UTF-8 text without NUL characters up to 128 KiB.");
+  }
+  return { ...previous, base64: bytes.toString("base64"), digest: hash(bytes) };
 }
 
 type Arg = { type: "i" | "f" | "s" | "asset"; value: string | number };

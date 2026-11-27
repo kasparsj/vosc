@@ -31,6 +31,7 @@ await build({
 for (const file of ["index.html", "styles.css"]) {
   await cp(new URL(`../src/${file}`, import.meta.url), new URL(file, output));
 }
+await cp(new URL("../src/icons/", import.meta.url), new URL("icons/", output), { recursive: true });
 await writeFile(new URL("package.json", output), JSON.stringify({
   name: metadata.name,
   productName: metadata.productName,

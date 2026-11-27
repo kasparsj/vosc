@@ -3,10 +3,11 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const cwd = fileURLToPath(new URL("../", import.meta.url));
-const out = "build/workspace.test.cjs";
+const entryPoints = ["workspace", "documents", "editor-imports"];
+const outputDirectory = "build/tests";
 await build({
   absWorkingDir: cwd,
-  entryPoints: ["tests/workspace.test.ts"],
+  entryPoints: entryPoints.map(name => `tests/${name}.test.ts`),
   bundle: true,
   platform: "node",
   plugins: [{
@@ -20,8 +21,9 @@ await build({
     },
   }],
   format: "cjs",
-  outfile: out,
+  outdir: outputDirectory,
+  outExtension: { ".js": ".cjs" },
   target: "node24",
 });
-const result = spawnSync(process.execPath, ["--test", out], { cwd, stdio: "inherit" });
+const result = spawnSync(process.execPath, ["--test", ...entryPoints.map(name => `${outputDirectory}/${name}.test.cjs`)], { cwd, stdio: "inherit" });
 process.exitCode = result.status ?? 1;

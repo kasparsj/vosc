@@ -1,9 +1,10 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import { open } from "node:fs/promises";
+import { constants, type BigIntStats } from "node:fs";
+import { lstat, open } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
-import { BINDING_LIMIT, SLOT_LIMIT, type DraftProject, type DraftSource, type DraftUniform, type DrawReceipt,
+import { BINDING_LIMIT, SLOT_LIMIT, type ControlSignature, type DocumentEdit, type DocumentView, type DraftDocument, type DraftProject, type DraftSource, type DraftUniform, type DrawReceipt,
   type ReflectedDraft, type Slot, type WorkspaceView } from "./contracts";
-import { MAX_PROJECT_BYTES, parseBinding, parseProject, titleFor, validUniformName, writeReplay } from "./draft-project";
+import { editorText, MAX_PROJECT_BYTES, parseBinding, parseDocument, parseProject, source as checkedSource, sourceWithText, titleFor, validUniformName, writeReplay } from "./draft-project";
 import type { HostClient } from "./host-client";
 import { HostError, writeAtomically } from "./local-state";
 import { SampleRelay } from "./osc-samples";
@@ -22,8 +23,79 @@ function defaultBindings(uniforms: DraftUniform[]) {
     ({ name: uniform.name, component, binding: { mode: "fixed" as const, value } })));
 }
 
+const GLSL_TEMPLATE = `#version 330
+out vec4 fragColor;
+
+void main() {
+    fragColor = vec4(0.2, 0.45, 0.6, 1.0);
+}
+`;
+
+function fileToken(stat: BigIntStats): string {
+  return [stat.dev, stat.ino, stat.size, stat.mtimeNs, stat.ctimeNs].join(":");
+}
+
+export async function draftFileToken(path: string) {
+  try {
+    const stat = await lstat(path, { bigint: true });
+    if (!stat.isFile()) throw new HostError("invalid_project", "Choose a regular VOSC draft file.");
+    return fileToken(stat);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+async function readDraftFile(path: string) {
+  const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+  try {
+    const stat = await file.stat({ bigint: true });
+    if (!stat.isFile() || stat.size > BigInt(MAX_PROJECT_BYTES)) {
+      throw new HostError("invalid_project", "Choose a regular VOSC draft file up to 1 MiB.");
+    }
+    const buffer = Buffer.alloc(Number(stat.size) + 1);
+    const { bytesRead } = await file.read(buffer, 0, buffer.length, 0);
+    const token = fileToken(stat);
+    if (bytesRead !== Number(stat.size) || token !== fileToken(await file.stat({ bigint: true }))) {
+      throw new HostError("file_changed", "The saved draft changed while reading.");
+    }
+    try {
+      const contents = new TextDecoder("utf-8", { fatal: true }).decode(buffer.subarray(0, bytesRead));
+      return { document: parseDocument(JSON.parse(contents)), token };
+    } catch (error) {
+      if (error instanceof HostError) throw error;
+      throw new HostError("invalid_project", "Choose a valid UTF-8 VOSC draft.");
+    }
+  } finally {
+    await file.close();
+  }
+}
+
+function workingIdentity(document: DraftDocument) {
+  return JSON.stringify([document.title, document.source.digest, document.destination, document.controls]);
+}
+
+function documentFromSource(source: DraftSource): DraftDocument {
+  return { format: "vosc.authoring.draft", version: 2, id: randomUUID(), title: titleFor(source),
+    language: "glsl", source: checkedSource(source), destination: null,
+    controls: { slots: [], bindings: [], signatures: [] }, accepted: null };
+}
+
+function controlSignatures(uniforms: DraftUniform[]): ControlSignature[] {
+  return uniforms.filter(isWritable).map(({ name, type, owner, values }) => ({ name, type, owner, arity: values.length }));
+}
+
 export class Workspace {
-  private project: DraftProject | null = null;
+  private document: DraftDocument | null = null;
+  private documentGeneration = 0;
+  private editSequence = 0;
+  private originalSource: DraftSource | null = null;
+  private savedSource: DraftSource | null = null;
+  private savedWorking: string | null = null;
+  private savedArtifact: string | null = null;
+  private savedPath: string | null = null;
+  private savedToken: string | null = null;
+  private saving = false;
   private state: ReflectedDraft | null = null;
   private acknowledged: { epoch: string; revision: number; receipt: DrawReceipt } | null = null;
   private busy = false;
@@ -35,13 +107,98 @@ export class Workspace {
 
   constructor(readonly host: HostClient) {}
 
+  private get project() { return this.document?.accepted?.project ?? null; }
+
+  documentContext() {
+    return { generation: this.documentGeneration, editSequence: this.editSequence };
+  }
+
+  private documentView(): DocumentView | null {
+    const document = this.document;
+    if (!document) return null;
+    const { source, accepted } = document;
+    return {
+      id: document.id, ...this.documentContext(), title: document.title, language: document.language,
+      source: { name: source.name, origin: source.origin, digest: source.digest, text: editorText(source) },
+      dirty: workingIdentity(document) !== this.savedWorking,
+      acceptedArtifact: accepted && {
+        id: accepted.id, sourceDigest: accepted.project.source.digest, revision: accepted.revision,
+        saved: this.savedArtifact === accepted.id,
+        stale: source.digest !== accepted.project.source.digest ||
+          JSON.stringify(document.controls.bindings) !== JSON.stringify(accepted.project.bindings) ||
+          JSON.stringify(document.controls.slots) !== JSON.stringify(accepted.project.slots),
+      },
+    };
+  }
+
+  needsSave() {
+    return this.document !== null && (workingIdentity(this.document) !== this.savedWorking ||
+      (this.document.accepted?.id ?? null) !== this.savedArtifact);
+  }
+
+  destinationForSave() {
+    return { path: this.savedPath, token: this.savedToken, title: this.document?.title };
+  }
+
+  private setDocument(document: DraftDocument | null, path: string | null = null, token: string | null = null) {
+    this.document = document;
+    this.documentGeneration += 1;
+    this.editSequence = 0;
+    this.originalSource = document?.source ?? null;
+    this.savedSource = path ? this.originalSource : null;
+    this.savedWorking = document && workingIdentity(document);
+    this.savedArtifact = path ? document?.accepted?.id ?? null : null;
+    this.savedPath = path;
+    this.savedToken = token;
+    this.acknowledged = null;
+    this.pendingReply = null;
+    this.samples.stop();
+    this.notice = document?.accepted ? "Draft opened. Restore it on its paired host for native preview." : null;
+  }
+
+  edit(value: unknown): DocumentView {
+    const edit = value as Partial<DocumentEdit> | null;
+    const current = this.document;
+    if (!current || !edit || edit.id !== current.id || edit.generation !== this.documentGeneration ||
+        typeof edit.editSequence !== "number" || !Number.isSafeInteger(edit.editSequence) ||
+        edit.editSequence <= this.editSequence || typeof edit.text !== "string") {
+      throw new HostError("stale_document", "This edit no longer matches the active draft.");
+    }
+    const text = edit.text.replace(/\r\n?/g, "\n");
+    const retained = [this.savedSource, this.originalSource, current.source]
+      .find(source => source && editorText(source) === text);
+    this.document = { ...current, source: retained ?? sourceWithText(current.source, text) };
+    this.editSequence = edit.editSequence;
+    return this.documentView()!;
+  }
+
+  create() {
+    return this.perform(async () => {
+      this.setDocument(documentFromSource(sourceWithText({
+        name: "Untitled.frag", origin: "New GLSL fragment", digest: "", base64: "",
+      }, GLSL_TEMPLATE)));
+      return this.view();
+    });
+  }
+
+  openSource(source: DraftSource) {
+    return this.perform(async () => {
+      this.setDocument(documentFromSource(source));
+      return this.view();
+    });
+  }
+
+  clear() {
+    this.setDocument(null);
+  }
+
   view(): WorkspaceView {
     const project = this.project && {
       ...this.project,
       source: { name: this.project.source.name, digest: this.project.source.digest, origin: this.project.source.origin },
     };
     return {
-      peer: this.host.peer, reflected: this.state, project, previewReady: this.previewMatches(),
+      document: this.documentView(), documentGeneration: this.documentGeneration, peer: this.host.peer, reflected: this.state, project, previewReady: this.previewMatches(),
       drawnReceipt: this.previewMatches() ? this.acknowledged?.receipt ?? null : null,
       samplePort: this.samples.port, notice: this.notice,
     };
@@ -167,7 +324,13 @@ export class Workspace {
   private adopt(state: ReflectedDraft, project: DraftProject) {
     if (!state.receipt) throw new HostError("missing_drawn_receipt", "The host did not acknowledge a drawn frame.");
     this.acknowledged = { epoch: state.epoch, revision: state.revision, receipt: state.receipt };
-    this.project = project;
+    if (!this.document) throw new HostError("no_draft", "Open or create a VOSC draft first.");
+    const signatures = controlSignatures(state.uniforms);
+    const { name, origin, digest, base64 } = project.source;
+    const acceptedProject = { ...project, source: { name, origin, digest, base64 } };
+    this.document = { ...this.document, destination: project.destination,
+      controls: { slots: project.slots, bindings: project.bindings, signatures },
+      accepted: { id: randomUUID(), revision: state.revision, project: acceptedProject, signatures } };
     this.notice = null;
     return this.view();
   }
@@ -242,17 +405,29 @@ export class Workspace {
     return this.perform(async () => {
       const peer = this.host.peer;
       if (!peer) throw new HostError("host_unavailable", "Connect to a paired render host.");
+      const initiatingDocument = this.documentContext();
       const source = await readSource();
       const project = parseProject({ format: "vosc.authoring.draft", version: 1, title: titleFor(source),
         destination: peer, source, slots: [], bindings: [] });
       const bindings = await this.validateSource(project.source);
       parseProject({ ...project, bindings });
       await this.refresh();
+      if (this.editSequence !== initiatingDocument.editSequence || this.documentGeneration !== initiatingDocument.generation) {
+        throw new HostError("stale_document", "The draft changed while the source was being prepared.");
+      }
       const state = await this.change("activate", { source: source.base64, sha256: source.digest });
+      if (this.editSequence !== initiatingDocument.editSequence || this.documentGeneration !== initiatingDocument.generation) {
+        this.acknowledged = null;
+        this.samples.stop();
+        throw new HostError("stale_document", "Edits were kept. Preview the library source again to open it.");
+      }
       if (state.sourceDigest !== source.digest) {
         throw new HostError("source_mismatch", "The native preview did not acknowledge the selected shader.");
       }
-      return this.adopt(state, parseProject({ ...project, slots: state.slots, bindings: defaultBindings(state.uniforms) }));
+      this.setDocument(documentFromSource(source));
+      const view = this.adopt(state, parseProject({ ...project, slots: state.slots, bindings: defaultBindings(state.uniforms) }));
+      this.savedWorking = workingIdentity(this.document!);
+      return { ...view, document: this.documentView() };
     });
   }
 
@@ -321,39 +496,60 @@ export class Workspace {
     }
   }
 
-  save(path: string) {
-    return this.perform(async () => {
-      const prior = this.checkedPreview();
-      const observed = this.receive(await this.host.rpc("reflect", {}));
-      if (!this.previewMatches() || prior.state.epoch !== observed.epoch || prior.state.revision !== observed.revision) {
-        throw new HostError("stale_revision", "Preview changed before save. Restore the draft and retry.");
-      }
-      const document = parseProject(prior.project);
-      await writeAtomically(path, JSON.stringify(document, null, 2) + "\n");
-      return path;
-    });
+  captureSave() {
+    return { snapshot: this.document, generation: this.documentGeneration };
   }
 
-  open(path: string) {
-    return this.perform(async () => {
-      const file = await open(path, "r");
-      try {
-        const stat = await file.stat();
-        if (!stat.isFile() || stat.size > MAX_PROJECT_BYTES) {
-          throw new HostError("invalid_project", "Choose a VOSC draft file up to 1 MiB.");
+  async save(path: string, expectedToken?: string | null, capture = this.captureSave()) {
+    const { snapshot, generation } = capture;
+    if (!snapshot) throw new HostError("no_draft", "Open or create a VOSC draft first.");
+    if (this.saving) throw new HostError("busy", "Wait for the current save.");
+    this.saving = true;
+    try {
+      const token = expectedToken === undefined
+        ? path === this.savedPath ? this.savedToken : await draftFileToken(path)
+        : expectedToken;
+      const bytes = Buffer.from(JSON.stringify(parseDocument(snapshot), null, 2) + "\n", "utf8");
+      if (bytes.length > MAX_PROJECT_BYTES) throw new HostError("invalid_project", "The draft exceeds 1 MiB.");
+      const check = async () => {
+        if (await draftFileToken(path) !== token) {
+          throw new HostError("file_changed", "The draft file changed before Save. Review it or choose Save As.");
         }
-        const buffer = Buffer.alloc(stat.size + 1);
-        const { bytesRead } = await file.read(buffer, 0, buffer.length, 0);
-        if (bytesRead !== stat.size) throw new HostError("invalid_project", "The saved draft changed while reading.");
-        const loaded = parseProject(JSON.parse(buffer.subarray(0, bytesRead).toString("utf8")));
-        this.project = loaded;
-        this.acknowledged = null;
-        this.samples.stop();
-        this.notice = "Draft opened. Restore it to its paired host for a native preview.";
-        return this.view();
-      } finally {
-        await file.close();
+        if (this.documentGeneration !== generation) {
+          throw new HostError("stale_document", "The active draft changed before Save.");
+        }
+      };
+      const promoted = await writeAtomically(path, bytes, 0o600, { check, exclusive: token === null });
+      const savedToken = fileToken(promoted);
+      if (this.documentGeneration === generation) {
+        this.savedPath = path;
+        this.savedToken = savedToken;
+        this.savedWorking = workingIdentity(snapshot);
+        this.savedSource = snapshot.source;
+        this.savedArtifact = snapshot.accepted?.id ?? null;
       }
+      return path;
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  open(path: string, beforeReplace: () => Promise<boolean> = async () => true) {
+    return this.perform(async () => {
+      const generation = this.documentGeneration;
+      let selected = await readDraftFile(path);
+      if (!await beforeReplace()) return this.view();
+      const editSequence = this.editSequence;
+      if (await draftFileToken(path) !== selected.token) {
+        // Save in the dirty-document prompt may have replaced the very file
+        // being reopened. Read its current contents instead of the old copy.
+        selected = await readDraftFile(path);
+      }
+      if (generation !== this.documentGeneration || editSequence !== this.editSequence) {
+        throw new HostError("stale_document", "The active draft changed before Open.");
+      }
+      this.setDocument(selected.document, path, selected.token);
+      return this.view();
     });
   }
 
@@ -383,14 +579,23 @@ export class Workspace {
       for (const { name, component, binding } of project.bindings) {
         state = await this.change("uniform.set", { name, component, ...binding });
       }
-      return this.adopt(state, { ...project, destination: peer });
+      const working = this.document!;
+      const view = this.adopt(state, { ...project, destination: peer });
+      this.document = { ...this.document!, destination: working.destination, controls: working.controls };
+      return { ...view, document: this.documentView() };
     });
   }
 
+  captureExport() {
+    const accepted = this.document?.accepted;
+    if (!accepted) throw new HostError("no_draft", "There is no accepted native artifact to export.");
+    return {
+      label: accepted.revision === null ? `Artifact ${accepted.id.slice(0, 8)}` : `Revision ${accepted.revision}`,
+      write: (directory: string) => writeReplay(directory, accepted.project),
+    };
+  }
+
   export(parent: string) {
-    return this.perform(async () => {
-      if (!this.project) throw new HostError("no_draft", "Open or activate a draft before exporting.");
-      return writeReplay(parent, this.project);
-    });
+    return this.captureExport().write(parent);
   }
 }
