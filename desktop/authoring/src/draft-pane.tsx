@@ -1,6 +1,15 @@
 import { useEffect, useState, type FormEvent } from "react";
-import type { Binding, Slot, WorkspaceView } from "./contracts";
+import { BINDING_LIMIT, type Binding, type DraftUniform, type PendingMapping, type Slot, type WorkspaceView } from "./contracts";
 import { message } from "./host-pane";
+
+const uniformArity: Readonly<Record<string, number>> = { float: 1, vec2: 2, vec3: 3, vec4: 4 };
+const rendererUniforms = new Set(["camPos", "camLook", "camOrbit"]);
+
+function writableUniform(uniform: DraftUniform) {
+  return uniform.writable && uniform.owner === "layer" && /^[A-Za-z_]\w{0,63}$/.test(uniform.name) &&
+    !rendererUniforms.has(uniform.name) && uniformArity[uniform.type] === uniform.values.length &&
+    uniform.values.every(value => Number.isFinite(value) && Math.abs(value) <= BINDING_LIMIT);
+}
 
 function ComponentControl({ name, component, value, binding, slots, disabled, apply }: {
   name: string;
@@ -63,9 +72,48 @@ function ComponentControl({ name, component, value, binding, slots, disabled, ap
   </form>;
 }
 
-export function DraftPane({ workspace, onWorkspace }: {
+function RetainedMapping({ mapping, workspace, onControl }: {
+  mapping: PendingMapping;
+  workspace: WorkspaceView;
+  onControl: (action: () => Promise<WorkspaceView>) => void;
+}) {
+  const [target, setTarget] = useState("");
+  const reason = {
+    inactive: "Unavailable in the current shader",
+    renderer_owned: "Renderer-owned uniform",
+    retyped: "Uniform type changed",
+  }[mapping.reason];
+  const candidates = workspace.previewReady ? workspace.reflected?.uniforms.filter(uniform =>
+    writableUniform(uniform) &&
+    uniform.values.length === mapping.bindings.length && (!mapping.signature || uniform.type === mapping.signature.type)) ?? [] : [];
+
+  return <div className="retained-mapping">
+    <h4>{mapping.name}</h4>
+    <p className="muted">{reason} · Retained for review</p>
+    <ul>{mapping.bindings.map(({ component, binding }) => <li key={component}>
+      {mapping.bindings.length > 1 ? `Component ${component + 1} · ` : ""}
+      {binding.mode === "fixed" ? `Fixed ${binding.value}` :
+        `OSC ${workspace.project?.slots.find(slot => slot.id === binding.slot)?.label ?? binding.slot} · ${binding.low} to ${binding.high}`}
+    </li>)}</ul>
+    {!!candidates.length && <label className="remap-target">
+      Remap {mapping.name} to
+      <select value={target} onChange={event => setTarget(event.target.value)}>
+        <option value="">Choose compatible uniform</option>
+        {candidates.map(item => <option value={item.name} key={item.name}>{item.name}</option>)}
+      </select>
+    </label>}
+    <div className="actions">
+      <button type="button" disabled={!candidates.some(item => item.name === target)}
+        onClick={() => onControl(() => window.voscAuthoring.remapMapping(mapping.name, target))}>Stage remap</button>
+      <button type="button" onClick={() => onControl(() => window.voscAuthoring.discardMapping(mapping.name))}>Discard retained mapping</button>
+    </div>
+  </div>;
+}
+
+export function DraftPane({ workspace, onWorkspace, onControl }: {
   workspace: WorkspaceView | null;
   onWorkspace: (value: WorkspaceView) => void;
+  onControl: (action: () => Promise<WorkspaceView>) => void;
 }) {
   const api = window.voscAuthoring;
   const [slotName, setSlotName] = useState("");
@@ -74,8 +122,18 @@ export function DraftPane({ workspace, onWorkspace }: {
   const draft = workspace?.project;
   const reflected = workspace?.reflected;
   const ready = Boolean(workspace?.previewReady);
-  const controls = new Set(draft?.bindings.map(binding => binding.name));
-  const managedUniforms = reflected?.uniforms.filter(uniform => !controls.has(uniform.name));
+  const pending = workspace?.document?.pendingMappings ?? [];
+  const uniforms = ready ? reflected?.uniforms ?? [] : [];
+  const managedUniforms = uniforms.filter(uniform => !writableUniform(uniform));
+  const savedBindings = draft?.bindings ?? [];
+  const liveBindings = new Map(savedBindings.map(binding => [`${binding.name}:${binding.component}`, binding.binding]));
+  const controls = ready ? uniforms.filter(writableUniform).flatMap(uniform =>
+    uniform.values.map((value, component) => {
+      const binding: Binding = liveBindings.get(`${uniform.name}:${component}`) ?? { mode: "fixed", value };
+      return { name: uniform.name, component, value, binding };
+    })) : savedBindings.map(item => ({
+      ...item, value: item.binding.mode === "fixed" ? item.binding.value : item.binding.low,
+    }));
 
   async function act(action: () => Promise<void>) {
     setBusy(true);
@@ -93,7 +151,7 @@ export function DraftPane({ workspace, onWorkspace }: {
     {draft && !ready && <div className="form-strip">
       <p>{workspace?.notice ?? "Restore this draft to its paired host."}</p>
       <button className="primary" disabled={busy || workspace?.peer?.target !== draft.destination.target || workspace?.peer?.fingerprint !== draft.destination.fingerprint}
-        onClick={() => void act(async () => onWorkspace(await api.restoreDraft()))}>Restore preview</button>
+        onClick={() => onControl(() => api.restoreDraft())}>Restore preview</button>
     </div>}
     {ready && reflected && <details className="native-receipt"><summary>Draw details</summary><dl className="receipt">
       <div><dt>Target</dt><dd>{reflected.target}</dd></div>
@@ -125,15 +183,16 @@ export function DraftPane({ workspace, onWorkspace }: {
     </section>}
     {draft && <section className="feature-section" aria-labelledby="uniforms-heading">
       <h3 id="uniforms-heading">Shader controls</h3>
-      {draft.bindings.length === 0 && <p className="muted">This shader has no writable controls.</p>}
-      {draft.bindings.map(item => {
-        const uniform = reflected?.uniforms.find(value => value.name === item.name);
-        const value = uniform?.values[item.component] ?? (item.binding.mode === "fixed" ? item.binding.value : item.binding.low);
-        return <ComponentControl key={`${item.name}-${item.component}`} name={item.name} component={item.component}
-          value={value} binding={item.binding} slots={draft.slots} disabled={busy || !ready}
-          apply={binding => void act(async () => onWorkspace(await api.bindComponent(item.name, item.component, binding)))} />;
-      })}
-      {ready && managedUniforms && managedUniforms.length > 0 && <p className="muted">Read-only: {managedUniforms.map(value => value.name).join(", ")}</p>}
+      {controls.length === 0 && <p className="muted">{ready ? "This shader has no writable controls." : "No saved shader controls."}</p>}
+      {controls.map(item => <ComponentControl key={`${workspace?.documentGeneration}-${item.name}-${item.component}`}
+        name={item.name} component={item.component} value={item.value} binding={item.binding}
+        slots={draft.slots} disabled={busy || !ready}
+        apply={binding => void act(async () => onWorkspace(await api.bindComponent(item.name, item.component, binding)))} />)}
+      {!!managedUniforms.length && <p className="muted">Read-only: {managedUniforms.map(value => value.name).join(", ")}</p>}
+    </section>}
+    {workspace && !!pending.length && <section className="feature-section" aria-labelledby="mapping-heading">
+      <h3 id="mapping-heading">Retained mappings</h3>
+      {pending.map(item => <RetainedMapping key={item.name} mapping={item} workspace={workspace} onControl={onControl} />)}
     </section>}
   </section>;
 }

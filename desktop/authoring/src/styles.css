@@ -231,8 +231,9 @@ pre { max-height: 15rem; overflow: auto; padding: .85rem; background: var(--surf
 .layout-standard .library-sidebar, .layout-compact .library-sidebar, .layout-compact .inspector-sidebar {
   position: absolute;
   width: min(320px, 75vw);
-  top: 54px;
-  bottom: 32px;
+  grid-area: code;
+  top: 0;
+  bottom: 0;
   z-index: 2;
   box-shadow: 0 10px 30px #090c129c;
 }
@@ -244,7 +245,6 @@ pre { max-height: 15rem; overflow: auto; padding: .85rem; background: var(--surf
     padding-top: 36px;
   }
   .layout-compact .library-tools, .layout-compact .inspector-tools { top: .12rem; }
-  .layout-compact .library-sidebar, .layout-compact .inspector-sidebar { top: 90px; }
 }
 .workspace-dialog {
   margin: auto;
@@ -276,3 +276,26 @@ pre { max-height: 15rem; overflow: auto; padding: .85rem; background: var(--surf
 .details { margin-top: .8rem; }
 .details p { margin-top: .35rem; }
 .import-footer { justify-content: flex-end; }
+
+.run-command { justify-content: center; min-width: 96px; }
+.run-command kbd { font: inherit; opacity: .78; }
+.auto-control { margin-left: auto; white-space: nowrap; font-size: .8rem; }
+.native-problems { margin: .4rem 0 0; padding: 0; list-style: none; }
+.native-problems li + li { border-top: 1px solid var(--line); margin-top: .3rem; padding-top: .3rem; }
+.native-log { white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-mappings, .attempted-source { padding: 1rem 1.25rem 1.25rem; }
+.review-mappings ul { display: grid; gap: .65rem; padding-inline-start: 1.3rem; }
+.review-mappings .actions { justify-content: end; }
+.attempted-source textarea { margin-top: .55rem; height: min(350px, 55vh); resize: none; line-height: 1.55; }
+.retained-mapping { border: 1px solid var(--line); border-radius: 6px; padding: .55rem .7rem; margin-top: .55rem; }
+.retained-mapping h4 { margin: 0; }
+.retained-mapping ul { padding-inline-start: 1.1rem; }
+.remap-target select { margin-top: .25rem; }
+.destination-choice { width: 100%; margin-top: .3rem; }
+.destination-choice p { margin-bottom: .4rem; }
+.workspace-status .status-message button { padding: 0 .35rem; color: var(--accent); font-size: inherit; }
+@media (max-width: 630px) {
+  .destination { max-width: 33%; }
+  .run-command { min-width: auto; }
+  .run-command kbd { display: none; }
+}

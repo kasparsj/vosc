@@ -12,6 +12,7 @@ import type { Discovery, Endpoint, PairingRequest, Peer, PeerCandidate } from ".
 const PROTOCOL_VERSION = 1;
 const RPC_DEADLINE = 12_000;
 const MAX_FRAME = 1024 * 1024;
+const DRAW_WRITES = new Set(["run.commit", "slot.configure", "uniform.set"]);
 const PEM = /-----BEGIN (?:EC )?PRIVATE KEY-----[\s\S]+?-----END (?:EC )?PRIVATE KEY-----/;
 const CERT = /-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/;
 
@@ -35,6 +36,8 @@ type DraftVersion = { epoch: string; revision: number };
 export interface HostSession {
   readonly peer: Peer;
   rpc(method: string, params: Record<string, unknown>, state?: DraftVersion, id?: string): Promise<unknown>;
+  recover(method: "run.fence" | "receipt.get" | "reflect", params: Record<string, unknown>,
+          state?: DraftVersion, id?: string): Promise<unknown>;
 }
 interface Candidate {
   endpoint: Endpoint;
@@ -55,10 +58,11 @@ type Reply =
   { id: string; ok: true; result: unknown } |
   { id: string; ok: false; error: { code: string; message: string; diagnostics?: unknown } };
 
-function reportedError(error: Extract<Reply, { ok: false }>["error"]) {
+export function reportedError(error: Extract<Reply, { ok: false }>["error"], uncertainId?: string) {
   const messages = Array.isArray(error.diagnostics) ? error.diagnostics.slice(0, 8).flatMap(item =>
     item && typeof item.message === "string" ? [item.message] : []) : [];
-  return new HostError(error.code, [error.message, ...messages].join("\n").slice(0, 4096));
+  return new HostError(error.code, [error.message, ...messages].join("\n").slice(0, 4096), uncertainId,
+    messages.map(message => message.slice(0, 4096)));
 }
 
 function normalizedFingerprint(value: unknown) {
@@ -292,10 +296,18 @@ export class HostClient {
     const assertSelected = () => {
       if (this.connected !== pinned) throw new HostError("host_changed", "The selected render host changed. Retry on the intended host.");
     };
-    return { peer, rpc: async (method, params, state, id) => {
+    return { peer, recover: async (method, params, state, id) => {
+      if (method !== "run.fence" && method !== "receipt.get" && method !== "reflect") {
+        throw new HostError("invalid_request", "Only lease fencing and readback can reach a previous host.");
+      }
+      return this.request(pinned, pinned.rpcPort, method, params, state, await this.identity(), id);
+    }, rpc: async (method, params, state, id) => {
       assertSelected();
       const identity = await this.identity();
       assertSelected();
+      if (DRAW_WRITES.has(method)) {
+        return this.request(pinned, pinned.rpcPort, method, params, state, identity, id, assertSelected);
+      }
       try {
         return await this.request(pinned, pinned.rpcPort, method, params, state, identity, id, assertSelected);
       } finally {
@@ -358,7 +370,9 @@ export class HostClient {
       id, method, params, version: PROTOCOL_VERSION, target: peer.target,
       epoch: state?.epoch, revision: state?.revision,
     }, identity, assertSelected);
-    if (!response.ok) throw reportedError(response.error);
+    if (!response.ok) {
+      throw reportedError(response.error, DRAW_WRITES.has(method) && response.error.code === "renderer_uncertain" ? id : undefined);
+    }
     return response.result;
   }
 

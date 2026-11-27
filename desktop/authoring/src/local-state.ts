@@ -3,7 +3,8 @@ import { link, open, rename, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export class HostError extends Error {
-  constructor(readonly code: string, message: string, readonly uncertainId?: string) {
+  constructor(readonly code: string, message: string, readonly uncertainId?: string,
+              readonly diagnostics: readonly string[] = []) {
     super(message);
   }
 }

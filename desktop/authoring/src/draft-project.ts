@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { basename, join } from "node:path";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { BINDING_LIMIT, SLOT_LIMIT, SOURCE_LIMIT, type Binding, type DraftProject,
-  type ControlSignature, type DraftDocument, type DraftSource, type Peer, type Slot, type SourceProvenance } from "./contracts";
+  type ControlSignature, type DraftDocument, type DraftSource, type PendingMapping, type Peer, type Slot, type SourceProvenance } from "./contracts";
 import { hash, HostError } from "./local-state";
 
 const SLOT_ID = /^s[a-f0-9]{12}$/;
@@ -165,6 +165,28 @@ function parseSignatures(value: unknown): ControlSignature[] {
   });
 }
 
+function parsePendingMappings(value: unknown, slots: Slot[]): PendingMapping[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > MAX_UNIFORM_BINDINGS) {
+    throw new HostError("invalid_project", "The draft contains invalid inactive mappings.");
+  }
+  const names = new Set<string>();
+  return value.map((item: unknown) => {
+    if (!record(item) || typeof item.name !== "string" || !validUniformName(item.name) ||
+        names.has(item.name) || (item.reason !== "inactive" && item.reason !== "renderer_owned" && item.reason !== "retyped")) {
+      throw new HostError("invalid_project", "The draft contains an invalid inactive mapping.");
+    }
+    const { bindings } = parseControls({ slots, bindings: item.bindings });
+    const signature = item.signature === undefined ? undefined : parseSignatures([item.signature])[0];
+    if (!bindings.length || bindings.some(binding => binding.name !== item.name) ||
+        (signature && (signature.name !== item.name || signature.arity !== bindings.length))) {
+      throw new HostError("invalid_project", "The inactive mapping has inconsistent uniform bindings.");
+    }
+    names.add(item.name);
+    return { name: item.name, reason: item.reason, bindings, ...(signature ? { signature } : {}) };
+  });
+}
+
 export function parseProject(value: unknown): DraftProject {
   if (!record(value) || value.format !== "vosc.authoring.draft" || value.version !== 1) {
     throw new HostError("invalid_project", "This file does not contain a supported VOSC draft.");
@@ -203,10 +225,13 @@ export function parseDocument(value: unknown): DraftDocument {
       project: parseProject(artifact.project), signatures: parseSignatures(artifact.signatures),
     };
   }
+  const controls = parseControls(value.controls);
   return {
     format: value.format, version: value.version, id: value.id, title: value.title, language: value.language,
     source: source(value.source, true), destination: value.destination === null ? null : parseDestination(value.destination),
-    controls: { ...parseControls(value.controls), signatures: parseSignatures(value.controls.signatures) }, accepted,
+    controls: { ...controls, signatures: parseSignatures(value.controls.signatures),
+      ...(value.controls.pendingMappings === undefined ? {} :
+        { pendingMappings: parsePendingMappings(value.controls.pendingMappings, controls.slots) }) }, accepted,
   };
 }
 

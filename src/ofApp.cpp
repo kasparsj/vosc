@@ -25,8 +25,8 @@ void ofApp::setup(){
             programs = CommandSystem::prepareStartupScene(*startupScene);
             ofSetWindowTitle(startupScene->title);
         }
-        if (!oscPort && !startupScene) ofSetWindowTitle(draftSamples ? "VOSC Draft Preview" : "VOSC Shader Validation");
-        vosc.setup(oscPort, draftSamples, startupScene ? &*startupScene : nullptr, programs,
+        if (!oscPort && !startupScene) ofSetWindowTitle(draftPreview ? "VOSC Draft Preview" : "VOSC Shader Validation");
+        vosc.setup(oscPort, draftPreview, startupScene ? &*startupScene : nullptr, programs,
                    [this](int frame, const std::string& detail) {
             if (frame < 0) {
                 failStartup(detail);

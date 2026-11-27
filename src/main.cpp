@@ -31,12 +31,12 @@
 #endif
 
 namespace {
-constexpr auto usage = "Usage: vosc [--scene <path/to/scene.vosc.json>] [--size WIDTHxHEIGHT] [--fps FPS] [--scene-input name=value] [--draft-data-root <private-directory> [--draft-sample-port 0]]";
+constexpr auto usage = "Usage: vosc [--scene <path/to/scene.vosc.json>] [--size WIDTHxHEIGHT] [--fps FPS] [--scene-input name=value] [--draft-data-root <private-directory> [--draft-preview]]";
 
 struct StartupOptions {
     std::string scenePath;
     std::optional<std::filesystem::path> draftDataRoot;
-    bool draftSamples = false;
+    bool draftPreview = false;
     scene::Inputs inputs;
     std::optional<std::pair<int, int>> size;
     std::optional<int> fps;
@@ -56,8 +56,13 @@ StartupOptions parseOptions(int argc, char** argv) {
     StartupOptions options;
     for (int i = 1; i < argc; ++i) {
         const std::string_view flag = argv[i];
+        if (flag == "--draft-preview") {
+            if (options.draftPreview) throw std::invalid_argument("duplicate option --draft-preview");
+            options.draftPreview = true;
+            continue;
+        }
         if (flag != "--scene" && flag != "--size" && flag != "--fps" && flag != "--scene-input"
-                && flag != "--draft-data-root" && flag != "--draft-sample-port")
+                && flag != "--draft-data-root")
             throw std::invalid_argument("unknown option " + std::string(flag));
         if (i + 1 == argc || std::string_view(argv[i + 1]).rfind("--", 0) == 0 || !argv[i + 1][0])
             throw std::invalid_argument("missing value for " + std::string(flag));
@@ -66,9 +71,6 @@ StartupOptions parseOptions(int argc, char** argv) {
             options.scenePath = value;
         } else if (flag == "--draft-data-root" && !options.draftDataRoot) {
             options.draftDataRoot.emplace(value);
-        } else if (flag == "--draft-sample-port" && !options.draftSamples) {
-            if (value != "0") throw std::invalid_argument("--draft-sample-port requires 0 for an ephemeral loopback port");
-            options.draftSamples = true;
         } else if (flag == "--scene-input") {
             const auto separator = value.find('=');
             if (separator == 0 || separator == std::string_view::npos || separator == value.size() - 1)
@@ -89,8 +91,8 @@ StartupOptions parseOptions(int argc, char** argv) {
     }
     if (!options.inputs.empty() && options.scenePath.empty())
         throw std::invalid_argument("--scene-input requires --scene");
-    if (options.draftSamples && !options.draftDataRoot)
-        throw std::invalid_argument("--draft-sample-port requires --draft-data-root");
+    if (options.draftPreview && !options.draftDataRoot)
+        throw std::invalid_argument("--draft-preview requires --draft-data-root");
     return options;
 }
 
@@ -229,7 +231,7 @@ int main(int argc, char** argv) {
 #endif
     
     bool startupFailed = false;
-    const int status = ofRunApp(new ofApp(oscPort, options.draftSamples, std::move(startupScene), startupFailed,
+    const int status = ofRunApp(new ofApp(oscPort, options.draftPreview, std::move(startupScene), startupFailed,
                                         options.fps.value_or(60), [&] {
         if (deadline) deadline->stop();
     }));

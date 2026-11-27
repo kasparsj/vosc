@@ -12,6 +12,8 @@
 #include "ofAppGLFWWindow.h"
 #include <GLFW/glfw3.h>
 #include <algorithm>
+#include <array>
+#include <utility>
 #include <chrono>
 #include <cctype>
 #include <cmath>
@@ -19,6 +21,7 @@
 #include <cstdlib>
 #include <set>
 #include <stdexcept>
+#include <string_view>
 
 namespace control {
 namespace {
@@ -147,7 +150,7 @@ std::string draftSlot(const Json& value) {
     return id;
 }
 
-void setDraftBinding(Shader& shader, const std::string& name, const Json& components) {
+std::shared_ptr<Variable<float>> draftBinding(const Json& components, const Inputs* staged = nullptr) {
     std::vector<float> values;
     std::vector<std::string> expressions;
     std::vector<bool> mapped;
@@ -166,18 +169,71 @@ void setDraftBinding(Shader& shader, const std::string& name, const Json& compon
             hasMapping = true;
         }
     }
-    if (!hasMapping) {
-        setNumericBinding(shader, name, values);
-        return;
-    }
     auto variable = std::make_shared<Variable<float>>();
-    variable->set(expressions, mapped);
-    VariablePool::getPool(&shader)[name] = variable;
-    shader.vars[name] = variable;
+    if (hasMapping) variable->set(expressions, mapped, staged);
+    else variable->set(std::move(values));
+    return variable;
 }
 
+void draftSample(Inputs& inputs, const std::string& slot, float value) {
+    ofxOscMessage sample;
+    sample.addStringArg(slot);
+    sample.addFloatArg(value);
+    sample.addFloatArg(0.f);
+    sample.addInt32Arg(0);
+    inputs.oscCommand("/input/data", sample);
+}
+
+void draftConfigureSlot(Inputs& inputs, const std::string& id, float initial) {
+    ofxOscMessage setup;
+    setup.addStringArg(id);
+    setup.addStringArg("");
+    setup.addInt32Arg(0);
+    setup.addInt32Arg(256);
+    inputs.oscCommand("/input", setup);
+    ofxOscMessage gain;
+    gain.addStringArg(id);
+    gain.addStringArg("maxAmp");
+    gain.addFloatArg(1.f);
+    inputs.oscCommand("/input/set", gain);
+    draftSample(inputs, id, initial);
+}
+
+const char* draftUniformType(int arity) {
+    static constexpr const char* types[] = {"unsupported", "float", "vec2", "vec3", "vec4"};
+    return types[arity];
+}
+
+std::string draftDigest(const Json& value) {
+    const auto digest = text(value, 64, "digest");
+    if (digest.size() != 64 || digest.find_first_not_of("0123456789abcdef") != std::string::npos)
+        throw Invalid("invalid_params", "expected lowercase SHA-256");
+    return digest;
+}
+
+void checkDraftComponents(const Json& components, const std::set<std::string>& slots, int arity) {
+    if (!components.is_array() || components.empty() || components.size() > 4 ||
+        (arity && components.size() != static_cast<size_t>(arity)))
+        throw Invalid("invalid_params", "uniform value component count mismatch");
+    for (const auto& part : components) {
+        if (part.contains("fixed")) {
+            keys(part, {"fixed"});
+            number(part["fixed"], -1000000, 1000000);
+        } else {
+            keys(part, {"slot", "low", "high"});
+            if (!slots.count(draftSlot(part["slot"])))
+                throw Invalid("missing_slot", "OSC slot is absent in this draft");
+            number(part["low"], -1000000, 1000000);
+            number(part["high"], -1000000, 1000000);
+        }
+    }
+}
+
+constexpr std::string_view base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+constexpr size_t maxDraftSourceBytes = 128 * 1024;
+constexpr size_t maxEncodedDraftSourceBytes = (maxDraftSourceBytes + 2) / 3 * 4;
+
 std::string base64(const ofBuffer& buffer) {
-    static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     const auto* bytes = reinterpret_cast<const unsigned char*>(buffer.getData());
     std::string result;
     result.reserve((buffer.size() + 2) / 3 * 4);
@@ -185,12 +241,38 @@ std::string base64(const ofBuffer& buffer) {
         unsigned value = unsigned(bytes[i]) << 16;
         if (i + 1 < buffer.size()) value |= unsigned(bytes[i + 1]) << 8;
         if (i + 2 < buffer.size()) value |= bytes[i + 2];
-        result += alphabet[(value >> 18) & 63];
-        result += alphabet[(value >> 12) & 63];
-        result += i + 1 < buffer.size() ? alphabet[(value >> 6) & 63] : '=';
-        result += i + 2 < buffer.size() ? alphabet[value & 63] : '=';
+        result += base64Alphabet[(value >> 18) & 63];
+        result += base64Alphabet[(value >> 12) & 63];
+        result += i + 1 < buffer.size() ? base64Alphabet[(value >> 6) & 63] : '=';
+        result += i + 2 < buffer.size() ? base64Alphabet[value & 63] : '=';
     }
     return result;
+}
+
+std::string decodeDraftSource(const Json& input) {
+    const auto encoded = text(input, maxEncodedDraftSourceBytes, "source_base64");
+    if (encoded.size() % 4)
+        throw Invalid("invalid_params", "Draft source must be padded base64");
+    std::string decoded;
+    decoded.reserve(encoded.size() / 4 * 3);
+    for (size_t i = 0; i < encoded.size(); i += 4) {
+        const bool last = i + 4 == encoded.size();
+        const bool padThird = last && encoded[i + 2] == '=';
+        const bool padFourth = last && encoded[i + 3] == '=';
+        const auto a = base64Alphabet.find(encoded[i]);
+        const auto b = base64Alphabet.find(encoded[i + 1]);
+        const auto c = padThird ? 0 : base64Alphabet.find(encoded[i + 2]);
+        const auto d = padFourth ? 0 : base64Alphabet.find(encoded[i + 3]);
+        if (a > 63 || b > 63 || c > 63 || d > 63 ||
+            (padThird && (!padFourth || (b & 15))) || (padFourth && (c & 3)))
+            throw Invalid("invalid_params", "Draft source is not canonical base64");
+        decoded += static_cast<char>((a << 2) | (b >> 4));
+        if (!padThird) decoded += static_cast<char>(((b & 15) << 4) | (c >> 2));
+        if (!padFourth) decoded += static_cast<char>(((c & 3) << 6) | d);
+    }
+    if (decoded.empty() || decoded.size() > maxDraftSourceBytes || decoded.find('\0') != std::string::npos)
+        throw Invalid("invalid_params", "Draft source must be nonempty, NUL-free and no larger than 128 KiB");
+    return decoded;
 }
 
 bool excessiveNesting(const std::string& line) {
@@ -750,7 +832,7 @@ size_t EngineControl::pendingCount() const {
 }
 
 bool EngineControl::isPinned(const std::string& id) const {
-    return trial && (trial->id == id || trial->actionId == id);
+    return (trial && (trial->id == id || trial->actionId == id)) || draftDraw.id == id;
 }
 
 bool EngineControl::makeReceiptSpace() {
@@ -768,14 +850,20 @@ bool EngineControl::makeReceiptSpace() {
     return true;
 }
 
+const EngineControl::Receipt* EngineControl::findReceipt(const std::string& id) const {
+    if (draftCommitReceipt && draftCommitReceipt->request["id"] == id) return &*draftCommitReceipt;
+    if (draftControlReceipt && draftControlReceipt->request["id"] == id) return &*draftControlReceipt;
+    const auto found = receipts.find(id);
+    return found == receipts.end() ? nullptr : &found->second;
+}
+
 Json EngineControl::dispatch(const Json& request) {
     const auto id = request["id"].get<std::string>();
     const auto method = request["method"].get<std::string>();
     const auto params = request.value("params", Json::object());
-    auto existing = receipts.find(id);
-    if (existing != receipts.end()) {
-        if (existing->second.request != request) throw Invalid("id_conflict", "retained ID has different content");
-        return existing->second.response;
+    if (const auto* existing = findReceipt(id)) {
+        if (existing->request != request) throw Invalid("id_conflict", "retained ID has different content");
+        return existing->response;
     }
     const bool isQuery = method == "get_capabilities" || method == "get_scene" ||
         method == "get_performance" || method == "get_diagnostics" || method == "get_request" ||
@@ -801,9 +889,9 @@ Json EngineControl::dispatch(const Json& request) {
     } else if (method == "get_request") {
         keys(params, {"request_id"});
         auto which = text(params["request_id"], 64, "request_id");
-        auto found = receipts.find(which);
-        if (found == receipts.end()) throw Invalid("request_not_found", "receipt unknown or evicted");
-        result["result"] = found->second.response;
+        const auto* found = findReceipt(which);
+        if (!found) throw Invalid("request_not_found", "receipt unknown or evicted");
+        result["result"] = found->response;
     } else if (method == "export_scene") {
         keys(params, {});
         if (trial && trial->feedbackBaseline)
@@ -812,6 +900,8 @@ Json EngineControl::dispatch(const Json& request) {
             ofGetWidth(), ofGetHeight(), commands().onsetGateValue())}};
     } else {
         validate(method, params);
+        if (draftPreview && !draftDraw.id.empty() && method != "draft_fence" && method != "capture_preview")
+            throw Invalid("draft_busy", "A draft mutation is awaiting its first composed frame");
         bool waits = method == "capture_preview" || params.value("timing", std::string("immediate")) == "onset";
         if (pendingCount() >= 16 || !makeReceiptSpace())
             throw Invalid("queue_full", "pending request or receipt capacity reached");
@@ -824,7 +914,11 @@ Json EngineControl::dispatch(const Json& request) {
         if (method == "capture_preview") captures.push_back(id);
         else {
             noteControlAdmission();
-            if (waits) queued.push_back(id);
+            if (method == "draft_commit") {
+                if (!queuedDraftCommit.empty()) {
+                    receipts.at(id).response = failure(id, "draft_busy", "A draft commit is already queued");
+                } else queuedDraftCommit = id;
+            } else if (waits) queued.push_back(id);
             else execute(id);
         }
         return receipts.at(id).response;
@@ -868,28 +962,31 @@ void EngineControl::validate(const std::string& method, const Json& params) cons
     } else if (method == "accept_trial" || method == "cancel_trial") {
         keys(params, {"trial_id"});
         text(params["trial_id"], 64, "trial_id");
-    } else if (method == "draft_configure_slot") {
-        if (!draftSamplePort) throw Invalid("unknown_method", "draft operations are disabled");
-        keys(params, {"slot", "initial"});
-        const auto id = draftSlot(params["slot"]);
-        number(params["initial"], 0, 1);
-        if (runtime().inputs.all().size() >= 16 && !runtime().inputs.all().count(id))
-            throw Invalid("slot_capacity", "draft has the maximum number of slots");
-    } else if (method == "publish_shader" || method == "set_uniform" || method == "set_layer" ||
-               method == "draft_activate" || method == "draft_bind_uniform") {
-        if (method == "draft_activate" || method == "draft_bind_uniform") {
-            if (!draftSamplePort) throw Invalid("unknown_method", "draft operations are disabled");
-            if (method == "draft_activate") keys(params, {"layer", "source"});
-            else keys(params, {"layer", "name", "components"});
-        } else if (method == "publish_shader") keys(params, {"layer", "source"}, {"timing"});
+    } else if (method == "draft_prepare" || method == "draft_commit" || method == "draft_cancel" ||
+               method == "draft_fence" || method == "draft_sample" ||
+               method == "draft_configure_slot" || method == "draft_bind_uniform") {
+        if (!draftPreview) throw Invalid("unknown_method", "draft operations are disabled");
+        if (method == "draft_prepare")
+            keys(params, {"source_base64", "source_digest", "lease", "token", "revision", "slots", "bindings"});
+        else if (method == "draft_commit")
+            keys(params, {"lease", "token", "revision", "control_digest"});
+        else if (method == "draft_cancel") keys(params, {"lease", "token"});
+        else if (method == "draft_fence") keys(params, {"lease"});
+        else if (method == "draft_configure_slot") keys(params, {"lease", "revision", "slot", "initial"});
+        else if (method == "draft_bind_uniform") keys(params, {"lease", "revision", "layer", "name", "components"});
+        else keys(params, {"lease", "revision", "sequence", "slot", "value"});
+    } else if (method == "publish_shader" || method == "set_uniform" || method == "set_layer") {
+        if (method == "publish_shader")
+            keys(params, {"layer", draftValidation ? "source_base64" : "source"}, {"timing"});
         else if (method == "set_uniform") keys(params, {"layer", "name", "value"}, {"timing"});
         else keys(params, {"layer", "property", "value"}, {"timing"});
         int index = integer(params["layer"], 0, 31, "layer");
         if (static_cast<size_t>(index) >= render().getLayers().size())
             throw Invalid("invalid_target", "layer does not exist");
         const auto& layer = *render().getLayers()[index];
-        if (method == "publish_shader" || method == "draft_activate") {
-            text(params["source"], 128 * 1024, "source");
+        if (method == "publish_shader") {
+            if (draftValidation) text(params["source_base64"], maxEncodedDraftSourceBytes, "source_base64");
+            else text(params["source"], maxDraftSourceBytes, "source");
         } else if (method == "set_uniform") {
             auto name = text(params["name"], 128, "name");
             const int count = editableUniformComponents(layer, name);
@@ -898,23 +995,6 @@ void EngineControl::validate(const std::string& method, const Json& params) cons
                 if (!params["value"].is_array() || params["value"].size() != static_cast<size_t>(count))
                     throw Invalid("invalid_params", "uniform value component count mismatch");
                 for (const auto& value : params["value"]) number(value, -1000000, 1000000);
-            }
-        } else if (method == "draft_bind_uniform") {
-            const auto name = text(params["name"], 128, "name");
-            const auto& components = params["components"];
-            if (!components.is_array() || components.size() != static_cast<size_t>(editableUniformComponents(layer, name)))
-                throw Invalid("invalid_params", "uniform value component count mismatch");
-            for (const auto& component : components) {
-                if (component.contains("fixed")) {
-                    keys(component, {"fixed"});
-                    number(component["fixed"], -1000000, 1000000);
-                } else {
-                    keys(component, {"slot", "low", "high"});
-                    if (!runtime().inputs.all().count(draftSlot(component["slot"])))
-                        throw Invalid("missing_slot", "OSC slot is absent in this draft");
-                    number(component["low"], -1000000, 1000000);
-                    number(component["high"], -1000000, 1000000);
-                }
             }
         } else {
             auto property = text(params["property"], 16, "property");
@@ -938,6 +1018,7 @@ void EngineControl::execute(const std::string& id) {
         if (!ResourceRegistry::hasCurrent())
             throw ResourceRegistry::Inactive("engine operation requires an active ResourceRegistry");
         validate(method, params); // Targets/types may have changed while this request waited.
+        if (executeDraft(id, method, params, logStart)) return;
         if (method == "trial_shader") {
             startTrial(id);
             return;
@@ -976,34 +1057,15 @@ void EngineControl::execute(const std::string& id) {
             payload.layerCount = params["count"].get<int>();
             payload.layout = LayoutMap.at(params["layout"].get<std::string>());
             render().applyLayersPayload(payload);
-        } else if (method == "draft_configure_slot") {
-            ofxOscMessage setup;
-            setup.addStringArg(params["slot"].get<std::string>());
-            setup.addStringArg("");
-            setup.addInt32Arg(0);
-            setup.addInt32Arg(256);
-            runtime().inputs.oscCommand("/input", setup);
-            ofxOscMessage initial;
-            initial.addStringArg(params["slot"].get<std::string>());
-            initial.addFloatArg(params["initial"].get<float>());
-            initial.addFloatArg(0.f);
-            initial.addInt32Arg(0);
-            runtime().inputs.oscCommand("/input/data", initial);
         } else {
             auto& layer = *render().getLayers()[params["layer"].get<int>()];
-            if (method == "publish_shader" || method == "draft_activate") {
-                const auto source = params["source"].get<std::string>();
-                Shader::PreparedDirectSource prepared;
-                const bool loaded = method == "draft_activate"
-                    ? Shader::prepareDirectSource(source, prepared) : layer.shader.loadFromSource(source);
-                if (!loaded) {
+            if (method == "publish_shader") {
+                const auto source = draftValidation ? decodeDraftSource(params["source_base64"]) :
+                    params["source"].get<std::string>();
+                if (!layer.shader.loadFromSource(source)) {
                     auto logs = diagnostics(logStart, 128);
                     entry.response = failure(id, "shader_failed", "shader compile/link failed", logs["entries"]);
                     return;
-                }
-                if (method == "draft_activate") {
-                    layer.shader.installDirectSource(std::move(prepared), {});
-                    runtime().inputs.clear();
                 }
             } else if (method == "set_uniform") {
                 std::vector<float> values;
@@ -1011,14 +1073,13 @@ void EngineControl::execute(const std::string& id) {
                 if (value.is_array()) for (const auto& component : value) values.push_back(component.get<float>());
                 else values.push_back(value.get<float>());
                 setNumericBinding(layer.shader, params["name"].get<std::string>(), values);
-            } else if (method == "draft_bind_uniform") {
-                setDraftBinding(layer.shader, params["name"].get<std::string>(), params["components"]);
             } else if (method == "set_layer") {
                 auto property = params["property"].get<std::string>();
                 float value = property == "visible" ? float(params["value"].get<bool>()) : params["value"].get<float>();
                 setNumericBinding(layer, property, {value});
             }
         }
+        draftCandidate.reset();
         ++revision;
         ++feedbackConfigurationEpoch;
         entry.response = reply(id, "applied");
@@ -1037,6 +1098,271 @@ void EngineControl::execute(const std::string& id) {
         entry.response = failure(id, "execution_failed", "engine operation failed");
         entry.response["method"] = method;
     }
+    if (method == "draft_commit") draftCommitReceipt = entry;
+}
+
+bool EngineControl::executeDraft(const std::string& id, const std::string& method,
+                                 const Json& params, uint64_t logStart) {
+    if (method != "draft_prepare" && method != "draft_commit" && method != "draft_cancel" &&
+        method != "draft_fence" && method != "draft_sample" &&
+        method != "draft_configure_slot" && method != "draft_bind_uniform") return false;
+    auto& response = receipts.at(id).response;
+    const auto lease = text(params["lease"], 64, "lease");
+    if (method == "draft_fence") {
+        if (fencedDraftLeases.size() >= 4096 && !fencedDraftLeases.count(lease))
+            throw Invalid("lease_capacity", "The private renderer has exhausted its lease capacity");
+        fencedDraftLeases.insert(lease);
+        if (draftCandidate && draftCandidate->lease == lease) draftCandidate.reset();
+        response = reply(id, "ok");
+        response["result"] = {{"lease", lease}};
+        return true;
+    }
+    if (fencedDraftLeases.count(lease)) throw Invalid("stale_lease", "The draft lease has been fenced");
+    if (method == "draft_cancel") {
+        const auto token = text(params["token"], 64, "token");
+        if (draftCandidate && draftCandidate->lease == lease && draftCandidate->token == token)
+            draftCandidate.reset();
+        response = reply(id, "ok");
+        response["result"] = {{"lease", lease}, {"token", token}};
+        return true;
+    }
+    if (cursor(params["revision"], UINT64_MAX, "revision") != revision)
+        throw Invalid("stale_revision", "The native draft configuration changed");
+    if (render().getLayers().size() != 1 || !render().getLayers()[0])
+        throw Invalid("invalid_target", "Draft transactions require one private preview layer");
+    auto& layer = *render().getLayers()[0];
+    const auto activeLease = draftActivation.is_object() ? draftActivation.value("lease", std::string()) : std::string();
+
+    if (method == "draft_configure_slot" || method == "draft_bind_uniform") {
+        if (activeLease != lease) throw Invalid("stale_lease", "The active draft has a different lease");
+        if (!layer.shader.isShaderLoaded()) throw Invalid("invalid_target", "No active draft shader");
+        DraftDraw pending;
+        pending.id = id;
+        pending.expectedProgram = layer.shader.getShader().getProgram();
+        if (method == "draft_configure_slot") {
+            const auto slot = draftSlot(params["slot"]);
+            const auto initial = static_cast<float>(number(params["initial"], 0, 1));
+            if (runtime().inputs.all().size() >= 16 || runtime().inputs.all().count(slot))
+                throw Invalid("slot_capacity", "draft slot already exists or exceeds capacity");
+            pending.expectedSlots.emplace(slot, initial);
+            draftConfigureSlot(runtime().inputs, slot, initial);
+        } else {
+            integer(params["layer"], 0, 0, "layer");
+            const auto name = text(params["name"], 128, "name");
+            std::set<std::string> slots;
+            for (const auto& [which, input] : runtime().inputs.all()) slots.insert(which);
+            checkDraftComponents(params["components"], slots, editableUniformComponents(layer, name));
+            auto binding = draftBinding(params["components"]);
+            pending.expectedBindings.push_back(name);
+            VariablePool::getPool(&layer.shader)[name] = binding;
+            layer.shader.vars[name] = std::move(binding);
+        }
+        draftCandidate.reset();
+        draftDraw = std::move(pending);
+        ++revision;
+        response = reply(id, "applied");
+        response["method"] = method;
+        response["applied_after_frame"] = frame;
+        return true;
+    }
+
+    if (method == "draft_sample") {
+        const auto slot = draftSlot(params["slot"]);
+        const auto sequence = cursor(params["sequence"], 9007199254740991ULL, "sequence");
+        const auto amplitude = static_cast<float>(number(params["value"], 0, 1));
+        if (activeLease != lease || sequence <= draftSampleSequence)
+            throw Invalid("stale_sample", "The sample no longer belongs to the active draft generation");
+        if (!runtime().inputs.all().count(slot)) throw Invalid("missing_slot", "The draft slot is not configured");
+        draftDraw.id = id;
+        draftDraw.expectedProgram = layer.shader.getShader().getProgram();
+        draftDraw.expectedSlots.emplace(slot, amplitude);
+        draftSample(runtime().inputs, slot, amplitude);
+        draftSampleSequence = sequence;
+        ++externalEpoch;
+        response = reply(id, "applied");
+        response["method"] = method;
+        return true;
+    }
+
+    const auto token = text(params["token"], 64, "token");
+    if (method == "draft_prepare") {
+        draftCandidate.reset();
+        auto candidate = std::make_unique<DraftCandidate>();
+        candidate->lease = lease;
+        candidate->token = token;
+        candidate->sourceDigest = draftDigest(params["source_digest"]);
+        candidate->revision = revision;
+        const auto source = decodeDraftSource(params["source_base64"]);
+        if (!params["slots"].is_object() || params["slots"].size() > 16 ||
+            !params["bindings"].is_object() || params["bindings"].size() > 128)
+            throw Invalid("invalid_params", "Draft slot or binding capacity exceeded");
+        candidate->slots = params["slots"];
+        candidate->bindings = Json::object();
+        auto conflicts = Json::array();
+        std::set<std::string> slots;
+        for (const auto& [key, value] : candidate->slots.items()) {
+            const auto slot = draftSlot(key);
+            const auto initial = static_cast<float>(number(value, 0, 1));
+            slots.insert(slot);
+            draftConfigureSlot(candidate->inputs, slot, initial);
+        }
+        for (const auto& [name, binding] : params["bindings"].items()) {
+            text(name, 128, "uniform name");
+            keys(binding, {"components"}, {"type"});
+            checkDraftComponents(binding["components"], slots, 0);
+            if (binding.count("type") && !binding["type"].is_null() &&
+                text(binding["type"], 8, "uniform type") != draftUniformType(static_cast<int>(binding["components"].size())))
+                throw Invalid("invalid_params", "Saved uniform type does not match binding arity");
+        }
+        if (!Shader::prepareDirectSource(source, candidate->program.source)) {
+            response = failure(id, "shader_failed", "shader compile/link failed", diagnostics(logStart, 128)["entries"]);
+            return true;
+        }
+        const auto& uniforms = candidate->program.source.uniforms;
+        for (const auto& [name, binding] : params["bindings"].items()) {
+            const auto found = uniforms.find(name);
+            const bool exists = found != uniforms.end();
+            const int arity = exists && !found->second.isArray() ? uniformComponents(found->second.type) : 0;
+            const auto previousArity = static_cast<int>(binding["components"].size());
+            const auto previousType = draftUniformType(previousArity);
+            const bool managed = managedUniform(layer, name);
+            if (!exists || managed || arity != previousArity) {
+                Json issue = {{"name", name}, {"previous_type", previousType},
+                    {"reason", managed ? "renderer_owned" : !exists ? "inactive" : "retyped"}};
+                if (exists) issue["actual_type"] = draftUniformType(arity);
+                if (exists && arity && !managed) {
+                    std::array<float, 4> values{};
+                    glGetUniformfv(candidate->program.source.program->getProgram(), found->second.location, values.data());
+                    issue["default_values"] = std::vector<float>(values.begin(), values.begin() + arity);
+                }
+                conflicts.push_back(std::move(issue));
+                continue;
+            }
+            candidate->bindings[name] = {{"type", previousType}, {"components", binding["components"]}};
+            auto variable = draftBinding(binding["components"], &candidate->inputs);
+            candidate->program.variables[name] = variable;
+            candidate->program.pool[name] = std::move(variable);
+        }
+        candidate->expiresAt = monotonicSeconds() + 30.;
+        response = reply(id, "prepared");
+        response["result"] = {{"token", token}, {"bindings", candidate->bindings}, {"conflicts", conflicts}};
+        draftCandidate = std::move(candidate);
+        return true;
+    }
+
+    if (!draftDraw.id.empty()) throw Invalid("draft_busy", "A draft mutation awaits its first composed frame");
+    if (!draftCandidate || draftCandidate->revision != revision || draftCandidate->lease != lease ||
+        draftCandidate->token != token || monotonicSeconds() >= draftCandidate->expiresAt)
+        throw Invalid("stale_candidate", "The prepared draft expired or its context changed");
+    const auto controlDigest = draftDigest(params["control_digest"]);
+    auto activation = Json{{"lease", lease}, {"token", token}, {"source_digest", draftCandidate->sourceDigest},
+        {"control_digest", controlDigest}, {"commit_id", id}};
+    auto applied = reply(id, "applied");
+    applied["method"] = method;
+    applied["revision"] = revision + 1;
+    applied["applied_after_frame"] = frame;
+
+    // Prepare all readback and ownership state before replacing any part of the live scene.
+    DraftDraw pending;
+    pending.id = id;
+    pending.previousActivation = draftActivation;
+    pending.previousRevision = revision;
+    pending.previousSampleSequence = draftSampleSequence;
+    pending.expectedProgram = draftCandidate->program.source.program->getProgram();
+    if (activeLease == lease) {
+        for (const auto& [slot, initial] : draftCandidate->slots.items()) {
+            const auto input = runtime().inputs.all().find(slot);
+            if (input != runtime().inputs.all().end())
+                draftSample(draftCandidate->inputs, slot, input->second->get());
+        }
+    }
+    for (const auto& [slot, input] : draftCandidate->inputs.all())
+        pending.expectedSlots.emplace(slot, input->get());
+    for (const auto& [name, binding] : draftCandidate->bindings.items())
+        pending.expectedBindings.push_back(name);
+    layer.shader.swapDraftProgram(draftCandidate->program);
+    runtime().inputs.swap(draftCandidate->inputs);
+    pending.baseline = std::move(draftCandidate);
+    draftDraw = std::move(pending);
+    draftActivation = std::move(activation);
+    if (activeLease != lease) draftSampleSequence = 0;
+    ++revision;
+    response = std::move(applied);
+    return true;
+}
+
+void EngineControl::settleDraftDraw() {
+    if (draftDraw.id.empty()) return;
+    auto& entry = receipts.at(draftDraw.id);
+    auto& shader = render().getLayers()[0]->shader;
+    const auto coherentDraw = [&] {
+        if (draftDraw.expectedProgram ? !shader.ownsProgram(draftDraw.expectedProgram) : shader.isShaderLoaded())
+            return false;
+        for (const auto& [slot, amplitude] : draftDraw.expectedSlots) {
+            const auto input = runtime().inputs.all().find(slot);
+            if (input == runtime().inputs.all().end() || input->second->get() != amplitude) return false;
+        }
+        if (!draftDraw.expectedBindings.empty()) {
+            const auto uniformValues = shader.getUniformValues(true);
+            for (const auto& name : draftDraw.expectedBindings) {
+                const auto readback = uniformValues.find(name);
+                const auto binding = shader.vars.find(name);
+                if (readback == uniformValues.end() || binding == shader.vars.end()) return false;
+                const auto variable = std::dynamic_pointer_cast<const Variable<float>>(binding->second);
+                if (!variable) return false;
+                auto observed = Json::parse(readback->second, nullptr, false);
+                if (observed.is_number()) observed = Json::array({observed});
+                const auto& composed = variable->getVec();
+                if (!observed.is_array() || observed.size() != composed.size()) return false;
+                for (size_t i = 0; i < composed.size(); ++i) {
+                    if (!observed[i].is_number() || observed[i].get<float>() != composed[i]) return false;
+                }
+            }
+        }
+        return true;
+    };
+    bool coherent = coherentDraw();
+    const auto method = entry.request["method"].get<std::string>();
+    if (draftDraw.restoring) {
+        entry.response = failure(draftDraw.id, coherent ? "draft_rolled_back" : "draft_state_lost",
+            coherent ? "The previous draft was restored and composed" : "The previous draft could not be observed");
+        entry.response["result"] = {{"scene", scene()}, {"restored_previous", coherent}};
+    } else if (draftDraw.baseline) {
+#ifdef VOSC_RECOVERY_TESTING
+        if (entry.request["params"]["token"] == "test-fail-first-draft-draw") coherent = false;
+#endif
+        if (!coherent) {
+            auto& baseline = *draftDraw.baseline;
+            draftDraw.expectedProgram = baseline.program.source.program ? baseline.program.source.program->getProgram() : 0;
+            draftDraw.expectedSlots.clear();
+            for (const auto& [slot, input] : baseline.inputs.all())
+                draftDraw.expectedSlots.emplace(slot, input->get());
+            draftDraw.expectedBindings.clear();
+            for (const auto& [name, variable] : baseline.program.variables)
+                draftDraw.expectedBindings.push_back(name);
+            shader.swapDraftProgram(baseline.program);
+            runtime().inputs.swap(baseline.inputs);
+            draftActivation = std::move(draftDraw.previousActivation);
+            draftSampleSequence = draftDraw.previousSampleSequence;
+            revision = draftDraw.previousRevision;
+            draftDraw.restoring = true;
+            return;
+        }
+        entry.response = reply(draftDraw.id, "rendered");
+        auto result = draftActivation;
+        result["scene"] = scene();
+        entry.response["result"] = std::move(result);
+    } else if (!coherent) {
+        entry.response = failure(draftDraw.id, "draft_state_lost", "The changed draft state could not be observed");
+    } else {
+        entry.response = reply(draftDraw.id, "rendered");
+        entry.response["result"] = {{"lease", draftActivation["lease"]}, {"scene", scene()}};
+        if (method == "draft_sample") entry.response["result"]["sequence"] = draftSampleSequence;
+    }
+    entry.response["method"] = method;
+    if (method == "draft_commit") draftCommitReceipt = entry;
+    else if (method == "draft_configure_slot" || method == "draft_bind_uniform") draftControlReceipt = entry;
+    draftDraw = {};
 }
 
 void EngineControl::startTrial(const std::string& id) {
@@ -1519,7 +1845,12 @@ void EngineControl::update() {
     telemetry.refreshGpuResults();
     updateTelemetry.refreshGpuResults();
     evaluateTrial();
+    if (draftCandidate && monotonicSeconds() >= draftCandidate->expiresAt) draftCandidate.reset();
     server.update([this](const std::string& line) { return handle(line); }, ofGetElapsedTimef());
+    if (!queuedDraftCommit.empty()) {
+        const auto commit = std::exchange(queuedDraftCommit, {});
+        execute(commit);
+    }
     for (auto it = queued.begin(); it != queued.end();) {
         auto id = *it;
         if (ofGetElapsedTimef() - receipts.at(id).acceptedAt > 30) {
@@ -1575,9 +1906,9 @@ Json EngineControl::capabilities() const {
                         {"recipe_images_bytes", 4194304}, {"recipe_bundle_bytes", 61440},
                         {"trial_ttl_ms_min", 1000}, {"trial_ttl_ms_max", 30000}}},
             {"revision_scope", "successful API controls; external_epoch counts legacy dispatch/input; animation and file-watch reloads are not versioned"}};
-    if (draftSamplePort) {
-        result["draft_sample_port"] = *draftSamplePort;
-        for (auto method : {"draft_activate", "draft_configure_slot", "draft_bind_uniform"})
+    if (draftPreview) {
+        for (auto method : {"draft_prepare", "draft_commit", "draft_cancel", "draft_fence", "draft_sample",
+                            "draft_configure_slot", "draft_bind_uniform"})
             result["operations"].push_back(method);
     }
     return result;
@@ -1694,7 +2025,7 @@ Json EngineControl::scene() const {
     for (const auto& layer : render().getLayers()) {
         const auto& shader = layer->shader;
         Json uniforms = Json::object(), textures = Json::object();
-        auto gpuValues = shader.getUniformValues(draftSamplePort.has_value());
+        auto gpuValues = shader.getUniformValues(draftPreview);
         for (const auto& [name, uniform] : shader.getUniforms()) {
             const bool array = uniform.isArray();
             Json value = {{"gl_type", uniform.type}, {"array", array},
@@ -1765,7 +2096,9 @@ Json EngineControl::scene() const {
             {"trial", trial ? trialSummary() : Json()},
             {"onset_gate", commands().isGateEnabled()}, {"legacy_pending", commands().pendingCount()},
             {"width", ofGetWidth()}, {"height", ofGetHeight()}, {"fps", ofGetFrameRate()}};
-    if (draftSamplePort) {
+    if (draftPreview) {
+        result["draft_activation"] = draftActivation;
+        result["draft_sample_sequence"] = draftSampleSequence;
         auto slots = Json::object();
         for (const auto& [name, input] : runtime().inputs.all()) slots[name] = input->get();
         result["draft_slots"] = std::move(slots);
@@ -1907,8 +2240,10 @@ void EngineControl::afterDraw() {
     if (!server.isRunning()) return;
     ++frame;
     renderedRevision = revision;
+    settleDraftDraw();
     for (auto& pair : receipts) {
         if (pair.second.response["status"] == "applied" &&
+            draftDraw.id != pair.first &&
             !(trial && trial->feedbackBaseline && trial->actionId == pair.first)) {
             pair.second.response["status"] = "rendered";
             pair.second.response["frame"] = frame;

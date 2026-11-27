@@ -53,6 +53,7 @@ export interface DrawReceipt {
   revision: number;
   external_epoch: number;
   status: string;
+  result?: { scene?: Record<string, unknown>; [name: string]: unknown };
 }
 export interface DraftUniform {
   name: string;
@@ -63,13 +64,24 @@ export interface DraftUniform {
   binding?: unknown;
 }
 export interface Slot { id: string; label: string; default: number }
-export interface ReflectedDraft {
+export interface RunIdentity {
+  lease: string;
+  documentId: string;
+  generation: number;
+  editSequence: number;
+  runSequence: number;
+  sourceDigest: string;
+}
+export interface ReflectedDraft extends Partial<RunIdentity> {
   target: string;
   epoch: string;
   revision: number;
   frame?: number;
   receipt?: DrawReceipt;
-  sourceDigest?: string;
+  token?: string;
+  controlDigest?: string;
+  commitID?: string;
+  samples?: Record<string, number>;
   uniforms: DraftUniform[];
   slots: Slot[];
   needsRestore: boolean;
@@ -116,10 +128,35 @@ export interface ControlSignature {
   arity: number;
   owner: "layer";
 }
+export type MappingReason = "inactive" | "renderer_owned" | "retyped";
+export interface PendingMapping {
+  name: string;
+  reason: MappingReason;
+  signature?: ControlSignature;
+  bindings: ComponentBinding[];
+}
+export interface MappingConflict {
+  name: string;
+  reason: MappingReason;
+  message: string;
+}
+export type RunMode = "manual" | "automatic";
+export interface RunProblem extends Diagnostic { line?: number; column?: number }
+export interface RunView {
+  phase: "idle" | "preparing" | "mapping_review" | "committing" | "reconciling" | "uncertain" | "failed" | "drawn" | "restore_required";
+  mode: RunMode | null;
+  message: string | null;
+  attempt: { source: string; sourceDigest: string; editSequence: number; runSequence: number } | null;
+  problems: RunProblem[];
+  review: { token: string; conflicts: MappingConflict[] } | null;
+  manualReady: boolean;
+  paused: boolean;
+}
 export interface DraftControls {
   slots: Slot[];
   bindings: ComponentBinding[];
   signatures: ControlSignature[];
+  pendingMappings?: PendingMapping[];
 }
 export interface AcceptedArtifact {
   id: string;
@@ -152,6 +189,8 @@ export interface DocumentView {
   language: "glsl";
   source: { name: string; digest: string; origin: string; text: string };
   dirty: boolean;
+  destination: Peer | null;
+  pendingMappings: PendingMapping[];
   acceptedArtifact: {
     id: string;
     sourceDigest: string;
@@ -164,6 +203,8 @@ export type FileCommand = "new" | "open" | "save" | "saveAs" | "close" | "quit";
 export interface LibraryItem { id: string; path: string; origin: string }
 
 export interface WorkspaceView {
+  run: RunView;
+  lastObservation: { revision: number; time: number } | null;
   document: DocumentView | null;
   documentGeneration: number;
   peer: Peer | null;
@@ -188,6 +229,12 @@ export interface AuthoringAPI {
   openLibrary(libraryId: string, generation: number): Promise<WorkspaceView>;
   previewLibrary(libraryId: string, generation: number): Promise<WorkspaceView>;
   reflect(): Promise<WorkspaceView>;
+  runDraft(mode?: RunMode): Promise<WorkspaceView>;
+  approveRun(token: string): Promise<WorkspaceView>;
+  cancelRun(token?: string): Promise<WorkspaceView>;
+  useSelectedHost(): Promise<WorkspaceView>;
+  discardMapping(name: string): Promise<WorkspaceView>;
+  remapMapping(name: string, target: string): Promise<WorkspaceView>;
   configureSlot(label: string): Promise<WorkspaceView>;
   bindComponent(name: string, component: number, binding: Binding): Promise<WorkspaceView>;
   startSamples(): Promise<WorkspaceView>;

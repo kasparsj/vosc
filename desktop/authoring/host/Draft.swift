@@ -13,11 +13,42 @@ final class Draft {
     private var slots: [String: WireObject] = [:]
     private var bindings: [String: [WireObject]] = [:]
     private var lastSampleTime: UInt64 = 0
+    private var activation: WireObject?
+    private struct Candidate {
+        let lease: String
+        let token: String
+        let revision: Int
+        let deadline: UInt64
+        let digest: String
+        let controlDigest: String
+        let slots: [String: WireObject]
+        let bindings: [String: [WireObject]]
+        let attempt: WireObject
+    }
+    private enum ControlChange {
+        case slot(String, WireObject, Double)
+        case uniform(String, [WireObject])
+    }
+    private enum Mutation {
+        case run(Candidate)
+        case controls(lease: String, revision: Int, change: ControlChange)
+    }
+    private var candidate: Candidate?
+    private var uncertainMutation: (id: String, mutation: Mutation)?
+    private var recoveredMutation: (id: String, outcome: Result<WireObject, Error>)?
+
+    // Fence admission runs independently of the normal request queue. The
+    // published child is immutable for socket exchanges and scoped by epoch.
+    private let fenceLock = NSLock()
+    private var fenceEpoch = ""
+    private var fenceChild: DraftRenderer?
+    private var fenced: Set<String> = []
     var onReset: (() -> Void)?
 
     init(target: String, queue: DispatchQueue) {
         self.target = target
         self.queue = queue
+        fenceEpoch = epoch
     }
 
     func reset() {
@@ -25,8 +56,17 @@ final class Draft {
         renderer = nil
         epoch = UUID().uuidString.lowercased()
         revision = 0
+        fenceLock.withLock {
+            fenceEpoch = epoch
+            fenceChild = nil
+            fenced.removeAll()
+        }
         needsRestore = true
         activeDigest = nil
+        activation = nil
+        candidate = nil
+        uncertainMutation = nil
+        recoveredMutation = nil
         slots.removeAll()
         bindings.removeAll()
         lastSampleTime = 0
@@ -40,36 +80,35 @@ final class Draft {
         switch request.method {
         case "health", "reflect":
             try request.require([])
-            do { return try state() }
-            catch {
-                reset()
-                return try state()
-            }
+            return try state()
         case "validate":
-            let fragment = try Fragment(request)
-            return try validate(fragment)
-        case "activate":
+            try request.require(["source", "sha256"])
+            return try validate(Fragment(request))
+        case "run.prepare":
+            try settleUnknown()
             try expected(request)
-            let fragment = try Fragment(request)
-            stopValidator()
-            return try withRenderer(start: true) { child in
-                let receipt = try child.mutate("draft_activate", ["layer": 0, "source": fragment.text])
-                let scene = try correlatedScene(child, receipt)
-                revision = wireInt(receipt["revision"]) ?? revision
-                activeDigest = fragment.digest
-                needsRestore = false
-                slots.removeAll()
-                bindings.removeAll()
-                return snapshot(scene, receipt: receipt)
+            return try prepare(request)
+        case "run.commit":
+            try settleUnknown()
+            try expected(request)
+            return try commit(request)
+        case "run.cancel":
+            try settleUnknown()
+            try request.require(["lease", "token"])
+            try expected(request)
+            if let staged = candidate, staged.lease == request.params["lease"] as? String,
+               staged.token == request.params["token"] as? String {
+                try discard(staged)
             }
+            return ["target": target, "epoch": epoch, "revision": revision]
         case "slot.configure":
-            try expected(request)
+            try requireActive(request)
             return try configureSlot(request)
         case "uniform.set":
-            try expected(request)
+            try requireActive(request)
             return try bindUniform(request)
         case "sample":
-            try expected(request)
+            try requireActive(request)
             return try relaySample(request)
         default:
             throw WireError("unsupported_method", "This draft operation is unavailable")
@@ -83,6 +122,219 @@ final class Draft {
         guard request.revision == revision else {
             throw WireError("stale_revision", "Draft revision changed. Read back current controls before applying edits")
         }
+    }
+
+    func fence(_ request: Request) throws -> WireObject {
+        try request.require(["lease"])
+        guard let lease = request.params["lease"] as? String else {
+            throw WireError("invalid_request", "A preview lease is required")
+        }
+        let child = try fenceLock.withLock {
+            guard request.epoch == fenceEpoch else {
+                throw WireError("stale_epoch", "Renderer process changed before the lease was fenced")
+            }
+            fenced.insert(lease)
+            return fenceChild
+        }
+        if let child = child {
+            try fenceNative(child, lease: lease, id: request.id)
+        }
+        return ["target": target, "epoch": request.epoch ?? "", "lease": lease]
+    }
+
+    func revoke(_ lease: String) throws {
+        let child = fenceLock.withLock {
+            fenced.insert(lease)
+            return fenceChild
+        }
+        if let child = child {
+            try fenceNative(child, lease: lease, id: UUID().uuidString)
+        }
+    }
+
+    private func fenceNative(_ child: DraftRenderer, lease: String, id: String) throws {
+        let receipt = try child.mutate("draft_fence", ["lease": lease], id: id, expecting: "ok")
+        guard (receipt["result"] as? WireObject)?["lease"] as? String == lease else {
+            throw WireError("renderer_protocol", "Native fence returned a different lease")
+        }
+    }
+
+    private func requireActive(_ request: Request) throws {
+        try settleUnknown()
+        try expected(request)
+        guard let lease = activation?["lease"] as? String, !isFenced(lease) else {
+            throw WireError("restore_required", "Run or restore this draft before changing its controls")
+        }
+    }
+
+    private func isFenced(_ lease: String) -> Bool {
+        fenceLock.withLock { fenced.contains(lease) }
+    }
+
+    private func discard(_ staged: Candidate) throws {
+        candidate = nil
+        if let renderer = renderer {
+            _ = try renderer.mutate("draft_cancel", ["lease": staged.lease, "token": staged.token], expecting: "ok")
+        }
+    }
+
+    private func prepare(_ request: Request) throws -> WireObject {
+        try request.require(["source", "sha256", "lease", "documentId", "generation", "editSequence",
+                             "runSequence", "slots", "bindings"])
+        guard let lease = request.params["lease"] as? String, UUID(uuidString: lease) != nil, !isFenced(lease),
+              let document = request.params["documentId"] as? String, UUID(uuidString: document) != nil,
+              let generation = wireInt(request.params["generation"]), generation >= 0,
+              let edit = wireInt(request.params["editSequence"]), edit >= 0,
+              let run = wireInt(request.params["runSequence"]), run > 0,
+              let requestedSlots = request.params["slots"] as? [WireObject], requestedSlots.count <= 16,
+              let intent = request.params["bindings"] as? WireObject, intent.count <= 128 else {
+            throw WireError("invalid_request", "Expected bounded draft source and control intent")
+        }
+        var definitions: [String: WireObject] = [:]
+        var defaults: WireObject = [:]
+        for raw in requestedSlots {
+            let (id, definition) = try slotDefinition(raw)
+            guard definitions[id] == nil else { throw WireError("invalid_slot", "Duplicate slot identity") }
+            definitions[id] = definition
+            defaults[id] = definition["default"]
+        }
+        let fragment = try Fragment(request)
+        if let previous = candidate { try discard(previous) }
+        stopValidator()
+        return try withRenderer(start: true) { child in
+            guard !isFenced(lease) else { throw WireError("stale_lease", "The draft lease was fenced") }
+            let baseline = try child.query("get_scene")
+            guard let nativeRevision = wireInt(baseline["revision"]) else {
+                throw WireError("renderer_protocol", "Native configuration revision is missing")
+            }
+            let receipt = try child.mutate("draft_prepare", [
+                "source_base64": fragment.base64, "source_digest": fragment.digest, "lease": lease, "token": request.id,
+                "revision": nativeRevision, "slots": defaults, "bindings": intent,
+            ], id: request.id, expecting: "prepared")
+            guard let result = receipt["result"] as? WireObject, result["token"] as? String == request.id,
+                  let effective = result["bindings"] as? [String: WireObject],
+                  let conflicts = result["conflicts"] as? [WireObject] else {
+                throw WireError("renderer_protocol", "Native preparation returned an unmatched token")
+            }
+            var applied: [String: [WireObject]] = [:]
+            for (name, binding) in effective {
+                guard let components = binding["components"] as? [WireObject] else {
+                    throw WireError("renderer_protocol", "Native preparation returned malformed bindings")
+                }
+                applied[name] = components
+            }
+            let digest = sha256Hex(try JSONSerialization.data(withJSONObject: ["slots": requestedSlots.sorted {
+                ($0["id"] as? String ?? "") < ($1["id"] as? String ?? "")
+            }, "bindings": effective], options: [.sortedKeys]))
+            let attempt: WireObject = ["documentId": document, "generation": generation,
+                                       "editSequence": edit, "runSequence": run]
+            let staged = Candidate(lease: lease, token: request.id, revision: nativeRevision,
+                                   deadline: DispatchTime.now().uptimeNanoseconds + 20_000_000_000,
+                                   digest: fragment.digest, controlDigest: digest, slots: definitions,
+                                   bindings: applied, attempt: attempt)
+            if isFenced(lease) {
+                try discard(staged)
+                throw WireError("stale_lease", "The draft lease was fenced")
+            }
+            candidate = staged
+            return attempt.merging([
+                "target": target, "epoch": epoch, "revision": revision, "lease": lease, "token": request.id,
+                "sourceDigest": fragment.digest, "controlDigest": digest, "bindings": effective, "conflicts": conflicts,
+            ]) { old, _ in old }
+        }
+    }
+
+    private func commit(_ request: Request) throws -> WireObject {
+        try request.require(["lease", "token"])
+        guard let staged = candidate, staged.lease == request.params["lease"] as? String,
+              staged.token == request.params["token"] as? String, !isFenced(staged.lease) else {
+            throw WireError("stale_candidate", "Prepare the current source again before applying it")
+        }
+        guard DispatchTime.now().uptimeNanoseconds < staged.deadline else {
+            try discard(staged)
+            throw WireError("stale_candidate", "The prepared draft expired")
+        }
+        candidate = nil
+        guard let child = renderer else { throw WireError("restore_required", "The draft renderer is unavailable") }
+        return try applyMutation(.run(staged), child: child, method: "draft_commit", params: [
+            "lease": staged.lease, "token": staged.token, "revision": staged.revision,
+            "control_digest": staged.controlDigest,
+        ], id: request.id)
+    }
+
+    private func applyMutation(_ mutation: Mutation, child: DraftRenderer, method: String,
+                               params: WireObject, id: String) throws -> WireObject {
+        do {
+            return try confirm(mutation, id: id, receipt: child.mutate(method, params, id: id))
+        } catch let error as WireError where isUncertain(error) {
+            uncertainMutation = (id, mutation)
+            try settleUnknown()
+            guard let recovered = recoveredMutation, recovered.id == id else { throw error }
+            return try recovered.outcome.get()
+        } catch let error as WireError where error.code == "draft_state_lost" {
+            reset()
+            throw error
+        }
+    }
+
+    private func isUncertain(_ failure: WireError) -> Bool {
+        ["renderer_timeout", "renderer_transport", "renderer_protocol", "request_not_found"].contains(failure.code)
+    }
+
+    private func settleUnknown() throws {
+        guard let unknown = uncertainMutation else { return }
+        guard let child = renderer else { throw WireError("restore_required", "The draft renderer is unavailable") }
+        do {
+            let receipt = try child.recover(unknown.id, expecting: "rendered")
+            let result = try confirm(unknown.mutation, id: unknown.id, receipt: receipt)
+            uncertainMutation = nil
+            recoveredMutation = (unknown.id, .success(result))
+        } catch let error as WireError where isUncertain(error) {
+            throw WireError("renderer_uncertain", "The native draw is unconfirmed. Recheck the same host or restart the draft service")
+        } catch {
+            if (error as? WireError)?.code == "draft_state_lost" { reset() }
+            uncertainMutation = nil
+            recoveredMutation = (unknown.id, .failure(error))
+        }
+    }
+
+    func recoverMutation(_ id: String) throws -> WireObject? {
+        if uncertainMutation?.id == id { try settleUnknown() }
+        return try completedMutation(id)?.get()
+    }
+
+    func completedMutation(_ id: String) -> Result<WireObject, Error>? {
+        guard let terminal = recoveredMutation, terminal.id == id else { return nil }
+        return terminal.outcome
+    }
+
+    private func confirm(_ mutation: Mutation, id: String, receipt: WireObject) throws -> WireObject {
+        switch mutation {
+        case .run(let staged):
+            return try confirmRun(staged, id: id, receipt: receipt)
+        case .controls(let lease, let previousRevision, let change):
+            return try confirmControls(change, lease: lease, previousRevision: previousRevision, receipt: receipt)
+        }
+    }
+
+    private func confirmRun(_ staged: Candidate, id: String, receipt: WireObject) throws -> WireObject {
+        guard let result = receipt["result"] as? WireObject, result["lease"] as? String == staged.lease,
+              result["token"] as? String == staged.token, result["source_digest"] as? String == staged.digest,
+              result["control_digest"] as? String == staged.controlDigest, result["commit_id"] as? String == id,
+              let scene = result["scene"] as? WireObject, let nativeRevision = wireInt(receipt["revision"]),
+              nativeRevision > staged.revision, wireInt(scene["rendered_revision"]) == nativeRevision,
+              wireInt(scene["frame"]) == wireInt(receipt["frame"]) else {
+            throw WireError("renderer_protocol", "The native draw did not confirm the prepared draft")
+        }
+        revision = nativeRevision
+        slots = staged.slots
+        bindings = staged.bindings
+        activeDigest = staged.digest
+        needsRestore = false
+        activation = staged.attempt.merging(["lease": staged.lease, "token": staged.token,
+                                             "controlDigest": staged.controlDigest, "commitID": id]) { old, _ in old }
+        lastSampleTime = 0
+        return snapshot(scene, receipt: receipt)
     }
 
     private func stopValidator() {
@@ -104,7 +356,7 @@ final class Draft {
             }
         }
         do {
-            let receipt = try child.mutate("publish_shader", ["layer": 0, "source": fragment.text])
+            let receipt = try child.mutate("publish_shader", ["layer": 0, "source_base64": fragment.base64])
             let scene = try correlatedScene(child, receipt)
             return ["target": target, "epoch": epoch, "sourceDigest": fragment.digest, "receipt": receipt,
                     "shader": ["uniforms": uniforms(scene)]]
@@ -120,26 +372,26 @@ final class Draft {
         return id
     }
 
+    private func slotDefinition(_ raw: WireObject) throws -> (String, WireObject) {
+        guard Set(raw.keys) == ["id", "label", "default"], let id = slotID(raw["id"]),
+              let label = raw["label"] as? String, (1...80).contains(label.utf8.count),
+              !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !label.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains),
+              let initial = wireNumber(raw["default"]), (0...1).contains(initial) else {
+            throw WireError("invalid_slot", "Expected a bounded slot ID, display label, and normalized default")
+        }
+        return (id, ["id": id, "label": label, "default": initial])
+    }
+
     private func configureSlot(_ request: Request) throws -> WireObject {
         try request.require(["id", "label", "default"])
-        guard let id = slotID(request.params["id"]), let label = request.params["label"] as? String,
-              (1...80).contains(label.utf8.count), !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              !label.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains),
-              let initial = wireNumber(request.params["default"]), (0...1).contains(initial) else {
-            throw WireError("invalid_slot", "Expected a bounded slot ID, a display label, and a normalized default")
+        let (id, definition) = try slotDefinition(request.params)
+        guard let initial = wireNumber(definition["default"]) else {
+            throw WireError("invalid_slot", "The configured slot has no normalized default")
         }
         guard slots.count < 16 || slots[id] != nil else { throw WireError("slot_capacity", "Draft has 16 slots") }
-        return try withRenderer { child in
-            let receipt = try child.mutate("draft_configure_slot", ["slot": id, "initial": initial])
-            let scene = try correlatedScene(child, receipt)
-            let samples = scene["draft_slots"] as? WireObject
-            guard let observed = wireNumber(samples?[id]), abs(observed - Double(Float(initial))) < 1e-6 else {
-                throw WireError("renderer_protocol", "Native renderer did not configure the requested slot")
-            }
-            slots[id] = ["id": id, "label": label, "default": initial]
-            revision = wireInt(receipt["revision"]) ?? revision
-            return snapshot(scene, receipt: receipt)
-        }
+        return try applyControls(.slot(id, definition, initial), request: request, method: "draft_configure_slot",
+                                 params: ["slot": id, "initial": initial])
     }
 
     private func bindingComponent(_ request: Request) throws -> WireObject {
@@ -183,40 +435,72 @@ final class Draft {
                 throw WireError("renderer_protocol", "Native reflection changed the uniform arity")
             }
             components[index] = component
-            let receipt = try child.mutate("draft_bind_uniform", ["layer": 0, "name": name, "components": components])
-            let scene = try correlatedScene(child, receipt)
+            return try applyControls(.uniform(name, components), request: request, method: "draft_bind_uniform",
+                                     params: ["layer": 0, "name": name, "components": components])
+        }
+    }
+
+    private func applyControls(_ change: ControlChange, request: Request, method: String,
+                               params: WireObject) throws -> WireObject {
+        guard let lease = activation?["lease"] as? String, !isFenced(lease) else {
+            throw WireError("stale_lease", "The draft lease was fenced before applying the controls")
+        }
+        return try withRenderer { child in
+            try applyMutation(.controls(lease: lease, revision: revision, change: change), child: child,
+                              method: method, params: params.merging(["lease": lease, "revision": revision]) { first, _ in first },
+                              id: request.id)
+        }
+    }
+
+    private func confirmControls(_ change: ControlChange, lease: String, previousRevision: Int,
+                                 receipt: WireObject) throws -> WireObject {
+        guard let result = receipt["result"] as? WireObject, result["lease"] as? String == lease,
+              let scene = result["scene"] as? WireObject,
+              let newRevision = wireInt(receipt["revision"]), newRevision > previousRevision,
+              wireInt(scene["rendered_revision"]) == newRevision,
+              wireInt(scene["frame"]) == wireInt(receipt["frame"]),
+              (scene["draft_activation"] as? WireObject)?["lease"] as? String == lease else {
+            throw WireError("renderer_protocol", "Native draw did not confirm the requested control change")
+        }
+        let samples = scene["draft_slots"] as? WireObject ?? [:]
+        switch change {
+        case let .slot(id, definition, initial):
+            guard let observed = wireNumber(samples[id]), abs(observed - Double(Float(initial))) < 1e-6 else {
+                throw WireError("renderer_protocol", "Native renderer did not configure the requested slot")
+            }
+            slots[id] = definition
+        case let .uniform(name, components):
             guard let returned = uniforms(scene).first(where: { $0["name"] as? String == name })?["values"] as? [Double],
                   returned.count == components.count else {
                 throw WireError("renderer_protocol", "Native readback did not return the edited uniform")
             }
-            let observed = scene["draft_slots"] as? WireObject ?? [:]
             for (part, actual) in zip(components, returned) {
-                let expected: Double
                 if let fixed = wireNumber(part["fixed"]) {
-                    expected = Double(Float(fixed))
-                } else if let slot = part["slot"] as? String, let amplitude = wireNumber(observed[slot]),
-                          let low = wireNumber(part["low"]), let high = wireNumber(part["high"]) {
-                    expected = Double(Float(low) + Float(high - low) * Float(amplitude))
+                    let expected = Double(Float(fixed))
+                    guard abs(actual - expected) <= max(1e-6, abs(expected) * 0.000001) else {
+                        throw WireError("renderer_protocol", "Drawn fixed uniform does not match its binding")
+                    }
                 } else {
-                    throw WireError("renderer_protocol", "Mapped native slot was not reflected")
-                }
-                guard abs(actual - expected) <= max(1e-6, abs(expected) * 0.000001) else {
-                    throw WireError("renderer_protocol", "Drawn uniform does not match its composed binding")
+                    // Native evaluation and readback use the shipped float expression parser.
+                    guard actual.isFinite, let slot = part["slot"] as? String, wireNumber(samples[slot]) != nil else {
+                        throw WireError("renderer_protocol", "Mapped native slot was not reflected")
+                    }
                 }
             }
             bindings[name] = components
-            revision = wireInt(receipt["revision"]) ?? revision
-            return snapshot(scene, receipt: receipt)
         }
+        candidate = nil
+        revision = newRevision
+        return snapshot(scene, receipt: receipt)
     }
 
     private func relaySample(_ request: Request) throws -> WireObject {
-        try request.require(["slot", "value"])
-        guard let slot = slotID(request.params["slot"]), slots[slot] != nil else {
-            throw WireError("missing_slot", "The sample slot is not configured in the selected draft")
-        }
-        guard let amplitude = wireNumber(request.params["value"]), (0...1).contains(amplitude) else {
-            throw WireError("invalid_sample", "Expected a normalized OSC amplitude")
+        try request.require(["lease", "sequence", "slot", "value"])
+        guard let lease = request.params["lease"] as? String, lease == activation?["lease"] as? String,
+              let sequence = wireInt(request.params["sequence"]), sequence > 0,
+              let slot = slotID(request.params["slot"]), slots[slot] != nil,
+              let amplitude = wireNumber(request.params["value"]), (0...1).contains(amplitude) else {
+            throw WireError("invalid_sample", "Expected a sample for the current draft lease and slot")
         }
         let now = DispatchTime.now().uptimeNanoseconds
         guard now - lastSampleTime >= 15_000_000 else {
@@ -224,49 +508,30 @@ final class Draft {
         }
         lastSampleTime = now
         return try withRenderer { child in
-            let until = DispatchTime.now().uptimeNanoseconds + 800_000_000
-            let first = try child.query("get_scene", until: until)
-            try child.sample(slot: slot, amplitude: amplitude)
-            let previousFrame = wireInt(first["frame"]) ?? 0
-            let previousExternal = wireInt(first["external_epoch"]) ?? 0
-            var observedAt: Int?
-            while DispatchTime.now().uptimeNanoseconds < until {
-                let result = try child.query("get_scene", until: until)
-                let values = result["draft_slots"] as? WireObject
-                if let frame = wireInt(result["frame"]), frame > previousFrame,
-                   (wireInt(result["external_epoch"]) ?? 0) > previousExternal,
-                   let observed = wireNumber(values?[slot]), abs(observed - Double(Float(amplitude))) < 1e-6 {
-                    // Input dispatch precedes composition. A sample seen by
-                    // get_scene can still have the preceding GPU readback.
-                    if let admitted = observedAt, frame > admitted { return snapshot(result) }
-                    if observedAt == nil { observedAt = frame }
-                } else {
-                    observedAt = nil
-                }
-                Thread.sleep(forTimeInterval: 0.01)
+            let receipt = try child.mutate("draft_sample", ["lease": lease, "revision": revision,
+                "sequence": sequence, "slot": slot, "value": amplitude], id: request.id)
+            guard let result = receipt["result"] as? WireObject, result["lease"] as? String == lease,
+                  wireInt(result["sequence"]) == sequence, let scene = result["scene"] as? WireObject,
+                  wireInt(scene["frame"]) == wireInt(receipt["frame"]),
+                  wireInt(receipt["revision"]) == revision else {
+                throw WireError("sample_unobserved", "The native renderer did not draw the tagged sample")
             }
-            throw WireError("sample_unobserved", "The native renderer did not draw the relayed sample")
+            return snapshot(scene)
         }
     }
 
     private func withRenderer(start: Bool = false, _ operation: (DraftRenderer) throws -> WireObject) throws -> WireObject {
-        do {
-            if start && renderer == nil {
-                let child = try DraftRenderer(validation: false)
-                renderer = child
-                child.process.terminationHandler = { [weak self, weak child] _ in
-                    guard let self = self, let child = child else { return }
-                    self.queue.async { if self.renderer === child { self.reset() } }
-                }
+        if start && renderer == nil {
+            let child = try DraftRenderer(validation: false)
+            renderer = child
+            fenceLock.withLock { fenceChild = child }
+            child.process.terminationHandler = { [weak self, weak child] _ in
+                guard let self = self, let child = child else { return }
+                self.queue.async { if self.renderer === child { self.reset() } }
             }
-            guard let child = renderer else { throw WireError("restore_required", "Activate a saved or staged shader first") }
-            return try operation(child)
-        } catch let failure as WireError {
-            if ["renderer_timeout", "renderer_protocol", "renderer_transport", "renderer_startup"].contains(failure.code) {
-                reset()
-            }
-            throw failure
         }
+        guard let child = renderer else { throw WireError("restore_required", "Run or restore a saved shader first") }
+        return try operation(child)
     }
 
     private func correlatedScene(_ child: DraftRenderer, _ receipt: WireObject) throws -> WireObject {
@@ -303,6 +568,7 @@ final class Draft {
     }
 
     private func state() throws -> WireObject {
+        try settleUnknown()
         let current = try renderer?.query("get_scene") ?? [:]
         return snapshot(current)
     }
@@ -315,6 +581,7 @@ final class Draft {
         if let samples = scene["draft_slots"] as? WireObject { result["samples"] = samples }
         if let receipt = receipt { result["receipt"] = receipt }
         if let digest = activeDigest { result["sourceDigest"] = digest }
+        if let active = activation { result.merge(active) { old, _ in old } }
         return result
     }
 }

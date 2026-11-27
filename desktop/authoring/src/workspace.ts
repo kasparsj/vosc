@@ -2,10 +2,12 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { constants, type BigIntStats } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
-import { BINDING_LIMIT, SLOT_LIMIT, type ControlSignature, type DocumentEdit, type DocumentView, type DraftDocument, type DraftProject, type DraftSource, type DraftUniform, type DrawReceipt,
-  type ReflectedDraft, type Slot, type WorkspaceView } from "./contracts";
+import { BINDING_LIMIT, SLOT_LIMIT, type Binding, type ComponentBinding, type ControlSignature, type DocumentEdit, type DocumentView,
+  type DraftControls, type DraftDocument, type DraftProject, type DraftSource, type DraftUniform, type DrawReceipt,
+  type MappingConflict, type Peer, type PendingMapping, type ReflectedDraft, type RunIdentity, type RunMode,
+  type RunProblem, type RunView, type Slot, type WorkspaceView } from "./contracts";
 import { editorText, MAX_PROJECT_BYTES, parseBinding, parseDocument, parseProject, source as checkedSource, sourceWithText, titleFor, validUniformName, writeReplay } from "./draft-project";
-import type { HostClient } from "./host-client";
+import { reportedError, type HostClient, type HostSession } from "./host-client";
 import { HostError, writeAtomically } from "./local-state";
 import { SampleRelay } from "./osc-samples";
 
@@ -16,11 +18,6 @@ export function isWritable(uniform: DraftUniform) {
   return uniform.writable && uniform.owner === "layer" && validUniformName(uniform.name) &&
     arity === uniform.values.length &&
     uniform.values.every(value => Number.isFinite(value) && Math.abs(value) <= BINDING_LIMIT);
-}
-
-function defaultBindings(uniforms: DraftUniform[]) {
-  return uniforms.filter(isWritable).flatMap(uniform => uniform.values.map((value, component) =>
-    ({ name: uniform.name, component, binding: { mode: "fixed" as const, value } })));
 }
 
 const GLSL_TEMPLATE = `#version 330
@@ -81,8 +78,133 @@ function documentFromSource(source: DraftSource): DraftDocument {
     controls: { slots: [], bindings: [], signatures: [] }, accepted: null };
 }
 
-function controlSignatures(uniforms: DraftUniform[]): ControlSignature[] {
-  return uniforms.filter(isWritable).map(({ name, type, owner, values }) => ({ name, type, owner, arity: values.length }));
+function controlSignatures(uniforms: DraftUniform[], bindings: ComponentBinding[]): ControlSignature[] {
+  const bound = new Set(bindings.map(item => item.name));
+  return uniforms.filter(uniform => bound.has(uniform.name) && isWritable(uniform)).map(({ name, type, owner, values }) => ({ name, type, owner, arity: values.length }));
+}
+
+const EMPTY_RUN: RunView = {
+  phase: "idle", mode: null, message: null, attempt: null, problems: [], review: null,
+  manualReady: false, paused: false,
+};
+
+type Version = { epoch: string; revision: number };
+type Lease = {
+  id: string;
+  host: HostSession;
+  version: Version | null;
+  sampleSequence: number;
+};
+type Attempt = {
+  identity: Omit<RunIdentity, "lease">;
+  source: DraftSource;
+  controls: DraftControls;
+  title: string;
+  mode: RunMode;
+  restoring: boolean;
+  context: number;
+  peer: Peer;
+};
+type WireComponent = { fixed: number } | { slot: string; low: number; high: number };
+type WireBindings = Record<string, { type?: string; components: WireComponent[] }>;
+type Prepared = RunIdentity & Version & {
+  target: string;
+  token: string;
+  controlDigest: string;
+  bindings: WireBindings;
+  conflicts: MappingConflict[];
+};
+type Commit = { attempt: Attempt; lease: Lease; prepared: Prepared; id: string; terminal: boolean };
+type ControlWrite = {
+  id: string;
+  lease: Lease;
+  prior: ReflectedDraft;
+  context: number;
+  previousRun: RunView;
+  apply: (state: ReflectedDraft) => void;
+  terminal: boolean;
+};
+type Retirement = {
+  lease: Lease;
+  commit: Commit | null;
+  control: ControlWrite | null;
+  initialFence: Promise<boolean>;
+  fenced: boolean;
+  recovering: Promise<boolean> | null;
+};
+type ReceiptStatus = {
+  state: string;
+  response?: { id: string; ok: boolean; result?: unknown;
+    error?: { code: string; message: string; diagnostics?: unknown } };
+};
+
+function samePeer(left: Peer | null, right: Peer | null) {
+  return left !== null && right !== null && left.target === right.target && left.fingerprint === right.fingerprint;
+}
+
+function hostKey(peer: Peer) { return `${peer.target}:${peer.fingerprint}`; }
+
+function signatureOf(controls: DraftControls, name: string) {
+  return controls.signatures.find(signature => signature.name === name);
+}
+
+function encodeBindings(controls: DraftControls): WireBindings {
+  const bindings: WireBindings = Object.create(null);
+  for (const { name, component, binding } of controls.bindings) {
+    const configured = bindings[name] ??= { type: signatureOf(controls, name)?.type, components: [] };
+    configured.components[component] = binding.mode === "fixed" ? { fixed: binding.value } :
+      { slot: binding.slot, low: binding.low, high: binding.high };
+  }
+  return bindings;
+}
+
+function decodeBindings(bindings: WireBindings, slots: Slot[]): ComponentBinding[] {
+  return Object.entries(bindings).flatMap(([name, { components }]) =>
+    components.map((component, index) => {
+      const binding = parseBinding("fixed" in component ?
+        { mode: "fixed", value: component.fixed } : { mode: "range", ...component }, slots);
+      return { name, component: index, binding };
+    }));
+}
+
+function identityMatches(expected: RunIdentity, actual: Partial<RunIdentity>) {
+  return actual.lease === expected.lease && actual.documentId === expected.documentId &&
+    actual.generation === expected.generation && actual.editSequence === expected.editSequence &&
+    actual.runSequence === expected.runSequence && actual.sourceDigest === expected.sourceDigest;
+}
+
+function problemEntries(error: HostError, source: string): RunProblem[] {
+  const lines = source.split("\n");
+  const hasLineDirective = /^\s*#\s*line\b/m.test(source);
+  const raw = error.diagnostics.length ? error.diagnostics : [error.message];
+  return raw.flatMap(message => message.split("\n").filter(Boolean).map(text => {
+    const match = hasLineDirective ? null :
+      text.match(/^\s*(?:ERROR|WARNING):\s*0:(\d+)(?::(\d+))?:/i) ??
+      text.match(/^\s*0\((\d+)\)\s*:/);
+    const line = Number(match?.[1]);
+    const column = Number(match?.[2]);
+    const location = line >= 1 && line <= lines.length ? { line,
+      ...(column >= 1 && column <= lines[line - 1].length + 1 ? { column } : {}) } : {};
+    return { code: error.code, message: text, ...location };
+  }));
+}
+
+function describeConflict(issue: unknown): MappingConflict {
+  const item = issue as { name?: string; reason?: MappingConflict["reason"]; actual_type?: string; default_values?: unknown };
+  if (!item || typeof item.name !== "string" || !validUniformName(item.name)) {
+    throw new HostError("state_mismatch", "The host returned an invalid mapping report.");
+  }
+  if (item.reason === "inactive") return { name: item.name, reason: item.reason, message: "Unavailable in candidate. No binding will be applied." };
+  if (item.reason === "renderer_owned") return { name: item.name, reason: item.reason, message: "The renderer owns this uniform and will supply its value." };
+  if (item.reason === "retyped") {
+    const type = typeof item.actual_type === "string" && TYPE_ARITY.has(item.actual_type) ? item.actual_type : null;
+    const values = Array.isArray(item.default_values) && item.default_values.every(Number.isFinite) ?
+      item.default_values.join(", ") : null;
+    return { name: item.name, reason: item.reason,
+      message: type && values ? `Changed to ${type}. The candidate will use native defaults (${values}).` :
+        "The uniform type changed. No binding will be applied." };
+  }
+  throw new HostError("state_mismatch", "The host returned an unknown mapping conflict.");
 }
 
 export class Workspace {
@@ -101,8 +223,21 @@ export class Workspace {
   private busy = false;
   private generation = 0;
   private observation: Promise<void> | null = null;
-  private pendingReply: { id: string; target: string; epoch: string } | null = null;
+  private pendingReply: ControlWrite | null = null;
   private notice: string | null = null;
+  private runView: RunView = EMPTY_RUN;
+  private lastObservation: WorkspaceView["lastObservation"] = null;
+  private context = 0;
+  private runSequence = 0;
+  private lease: Lease | null = null;
+  private flight: Promise<void> | null = null;
+  private queue: Attempt | null = null;
+  private prepared: { attempt: Attempt; lease: Lease; candidate: Prepared } | null = null;
+  private activeCommit: Commit | null = null;
+  private unknownCommit: Commit | null = null;
+  private retired = new Map<string, Retirement>();
+  private retiringAttempt: Attempt | null = null;
+  private sampleTask: Promise<void> | null = null;
   private samples = new SampleRelay((slot, value) => this.relaySample(slot, value));
 
   constructor(readonly host: HostClient) {}
@@ -121,10 +256,12 @@ export class Workspace {
       id: document.id, ...this.documentContext(), title: document.title, language: document.language,
       source: { name: source.name, origin: source.origin, digest: source.digest, text: editorText(source) },
       dirty: workingIdentity(document) !== this.savedWorking,
+      destination: document.destination,
+      pendingMappings: document.controls.pendingMappings ?? [],
       acceptedArtifact: accepted && {
         id: accepted.id, sourceDigest: accepted.project.source.digest, revision: accepted.revision,
         saved: this.savedArtifact === accepted.id,
-        stale: source.digest !== accepted.project.source.digest ||
+        stale: source.digest !== accepted.project.source.digest || !!document.controls.pendingMappings?.length ||
           JSON.stringify(document.controls.bindings) !== JSON.stringify(accepted.project.bindings) ||
           JSON.stringify(document.controls.slots) !== JSON.stringify(accepted.project.slots),
       },
@@ -141,6 +278,8 @@ export class Workspace {
   }
 
   private setDocument(document: DraftDocument | null, path: string | null = null, token: string | null = null) {
+    this.dropRun();
+    this.lastObservation = null;
     this.document = document;
     this.documentGeneration += 1;
     this.editSequence = 0;
@@ -198,7 +337,7 @@ export class Workspace {
       source: { name: this.project.source.name, digest: this.project.source.digest, origin: this.project.source.origin },
     };
     return {
-      document: this.documentView(), documentGeneration: this.documentGeneration, peer: this.host.peer, reflected: this.state, project, previewReady: this.previewMatches(),
+      run: this.runView, lastObservation: this.lastObservation, document: this.documentView(), documentGeneration: this.documentGeneration, peer: this.host.peer, reflected: this.state, project, previewReady: this.previewMatches(),
       drawnReceipt: this.previewMatches() ? this.acknowledged?.receipt ?? null : null,
       samplePort: this.samples.port, notice: this.notice,
     };
@@ -211,7 +350,8 @@ export class Workspace {
       this.project.destination.target === peer.target && this.project.destination.fingerprint === peer.fingerprint &&
       this.state.target === peer.target &&
       this.state.sourceDigest === this.project.source.digest &&
-      this.state.epoch === ack.epoch && this.state.revision === ack.revision && !this.pendingReply);
+      this.state.epoch === ack.epoch && this.state.revision === ack.revision && this.state.lease === this.lease?.id &&
+      !this.pendingReply && !this.unknownCommit);
   }
 
   private receive(raw: unknown, drawn = false) {
@@ -226,7 +366,9 @@ export class Workspace {
       throw new HostError("missing_drawn_receipt", "The host did not acknowledge a drawn frame.");
     }
     this.state = state;
-    if (!drawn && !this.previewMatches()) this.samples.stop();
+    if (this.previewMatches() && Number.isSafeInteger(state.frame ?? state.receipt?.frame)) {
+      this.lastObservation = { revision: state.revision, time: Date.now() };
+    }
     return state;
   }
 
@@ -242,13 +384,16 @@ export class Workspace {
 
   checkPair() {
     return this.perform(async () => {
+      const before = this.host.peer;
       const result = await this.host.checkPair();
+      if (result.peer && !samePeer(before, result.peer)) this.dropRun();
       return { state: result.state, ...(result.peer ? { workspace: await this.linked() } : {}) };
     });
   }
 
   connectRemembered(fingerprint: unknown) {
     return this.perform(async () => {
+      this.dropRun();
       await this.host.connectRemembered(fingerprint);
       return this.linked();
     });
@@ -256,6 +401,7 @@ export class Workspace {
 
   disconnect() {
     return this.perform(async () => {
+      this.dropRun();
       this.host.disconnect();
       this.state = null;
       this.acknowledged = null;
@@ -267,7 +413,7 @@ export class Workspace {
   }
 
   async reflect() {
-    if (this.busy) return this.view();
+    if (this.busy || this.flight) return this.view();
     if (!this.observation) {
       const generation = this.generation;
       const current = this.refresh(() => this.generation === generation)
@@ -280,13 +426,31 @@ export class Workspace {
 
   private async refresh(accept = () => true) {
     if (!this.host.peer) return;
+    if (this.unknownCommit) {
+      await this.resolveUnknownCommit(this.unknownCommit);
+      this.drainRun();
+      return;
+    }
+    if (this.pendingReply) {
+      await this.resolveControlWrite(this.pendingReply);
+      this.drainRun();
+      return;
+    }
     try {
+      const blocked = this.retiringAttempt;
+      if (blocked && this.current(blocked)) {
+        const prior = this.retired.get(hostKey(blocked.peer));
+        if (prior && !await this.settleRetirement(prior)) return;
+        if (!accept() || !this.current(blocked)) return;
+        if (prior) this.clearRetirement(blocked.peer, prior);
+        this.retiringAttempt = null;
+        this.setPhase(blocked, "idle", "The previous commit and lease are confirmed. Run this draft when ready.");
+      }
       const raw = await this.host.rpc("reflect", {});
       if (!accept()) return;
       const next = this.receive(raw);
-      if (this.pendingReply && (this.pendingReply.target !== next.target || this.pendingReply.epoch !== next.epoch)) {
-        this.pendingReply = null;
-        this.acknowledged = null;
+      if (this.lease?.version && next.epoch !== this.lease.version.epoch) {
+        this.requireRestoreAfterRestart();
       }
       if (this.project && !this.previewMatches()) {
         this.notice ??= next.needsRestore ? "The host needs this draft to be restored." :
@@ -311,6 +475,7 @@ export class Workspace {
       return await action();
     } finally {
       this.busy = false;
+      this.drainRun();
     }
   }
 
@@ -321,134 +486,664 @@ export class Workspace {
     return { project: this.project, state: this.state };
   }
 
-  private adopt(state: ReflectedDraft, project: DraftProject) {
+  private adopt(state: ReflectedDraft, project: DraftProject, pendingMappings?: PendingMapping[],
+                workingOverride?: DraftControls) {
     if (!state.receipt) throw new HostError("missing_drawn_receipt", "The host did not acknowledge a drawn frame.");
     this.acknowledged = { epoch: state.epoch, revision: state.revision, receipt: state.receipt };
+    this.lastObservation = { revision: state.revision, time: Date.now() };
+    if (this.lease) this.lease.version = state;
     if (!this.document) throw new HostError("no_draft", "Open or create a VOSC draft first.");
-    const signatures = controlSignatures(state.uniforms);
+    const signatures = controlSignatures(state.uniforms, project.bindings);
     const { name, origin, digest, base64 } = project.source;
     const acceptedProject = { ...project, source: { name, origin, digest, base64 } };
-    this.document = { ...this.document, destination: project.destination,
-      controls: { slots: project.slots, bindings: project.bindings, signatures },
+    this.document = { ...this.document,
+      destination: this.document.destination ?? project.destination,
+      controls: workingOverride ?? { slots: project.slots, bindings: project.bindings, signatures,
+        ...(pendingMappings?.length || this.document.controls.pendingMappings ?
+          { pendingMappings: pendingMappings ?? this.document.controls.pendingMappings } : {}) },
       accepted: { id: randomUUID(), revision: state.revision, project: acceptedProject, signatures } };
     this.notice = null;
     return this.view();
   }
 
-  private async change(method: string, params: Record<string, unknown>): Promise<ReflectedDraft> {
+  private async change(method: "slot.configure" | "uniform.set", params: Record<string, unknown>,
+                       apply: ControlWrite["apply"]) {
     const prior = this.state;
-    if (!prior) throw new HostError("host_unavailable", "Connect to a paired render host.");
-    if (this.pendingReply) {
-      const pending = this.pendingReply;
-      await this.reconcile(pending.id);
-      this.pendingReply = null;
-      this.acknowledged = null;
-      await this.refresh();
-      return this.change(method, params);
-    }
-
-    const id = randomUUID();
-    let result: unknown;
+    const lease = this.lease;
+    if (!prior || !lease) throw new HostError("host_unavailable", "Connect to a paired render host.");
+    const write = { id: randomUUID(), lease, prior, context: this.context, previousRun: this.runView, apply, terminal: false };
+    this.pendingReply = write;
+    let response: unknown;
     try {
-      result = await this.host.rpc(method, params, prior, id);
+      response = await lease.host.rpc(method, params, prior, write.id);
     } catch (error) {
-      if (!(error instanceof HostError) || !error.uncertainId) throw error;
-      this.pendingReply = { id, target: prior.target, epoch: prior.epoch };
-      try {
-        result = await this.reconcile(id);
-      } finally {
-        this.samples.stop();
+      if (!this.uncertainWrite(error)) {
+        this.rejectControl(write, error);
+        throw error;
       }
+      await this.resolveControlWrite(write);
+      return this.view();
     }
-    this.pendingReply = null;
-    const next = this.receive(result, true);
-    if (next.epoch !== prior.epoch || next.revision <= prior.revision || next.needsRestore) {
-      this.acknowledged = null;
-      throw new HostError("stale_revision", "The preview epoch or revision changed. Restore the draft.");
+    try {
+      this.confirmControl(write, response);
+    } catch {
+      await this.resolveControlWrite(write);
     }
-    return next;
+    return this.view();
   }
 
-  private async reconcile(id: string): Promise<unknown> {
-    type Receipt = {
-      state: string; response?: { id: string; ok: boolean; result?: unknown; error?: { code: string; message: string } };
+  private uncertainWrite(error: unknown) {
+    return !(error instanceof HostError) || !!error.uncertainId || error.code === "renderer_uncertain";
+  }
+
+  private currentControl(write: ControlWrite) {
+    return this.context === write.context && this.lease === write.lease && samePeer(this.host.peer, write.lease.host.peer);
+  }
+
+  private finishControl(write: ControlWrite) {
+    write.terminal = true;
+    if (this.pendingReply === write && this.currentControl(write)) {
+      this.pendingReply = null;
+      if (this.runView.phase === "uncertain" || this.runView.phase === "reconciling") this.runView = write.previousRun;
+    }
+  }
+
+  private rejectControl(write: ControlWrite, error: unknown) {
+    this.finishControl(write);
+    if (!this.currentControl(write) || !(error instanceof HostError)) return;
+    if (error.code === "stale_epoch" || error.code === "draft_state_lost") {
+      this.requireRestoreAfterRestart();
+    }
+    this.notice = error.message;
+  }
+
+  private confirmControl(write: ControlWrite, raw: unknown) {
+    const state = raw as ReflectedDraft | null;
+    const receipt = state?.receipt;
+    if (!state || state.target !== write.prior.target || state.lease !== write.lease.id || state.epoch !== write.prior.epoch ||
+        state.sourceDigest !== write.prior.sourceDigest || state.commitID !== write.prior.commitID || state.needsRestore ||
+        !Number.isSafeInteger(state.revision) || state.revision <= write.prior.revision || receipt?.id !== write.id ||
+        receipt.status !== "rendered" || receipt.revision !== state.revision || !Number.isSafeInteger(receipt.frame) ||
+        !Number.isSafeInteger(state.frame) || state.frame! < receipt.frame) {
+      throw new HostError("missing_drawn_receipt", "A matching native control receipt was not received.");
+    }
+    if (!this.currentControl(write)) { write.terminal = true; return; }
+    const observed = this.receive(state, true);
+    write.apply(observed);
+    this.finishControl(write);
+  }
+
+  private async resolveControlWrite(write: ControlWrite) {
+    if (write.terminal) return;
+    if (this.currentControl(write)) {
+      this.runView = { ...EMPTY_RUN, phase: "reconciling", paused: true, message: "Checking the native control receipt." };
+    }
+    try {
+      const terminal = await this.lookup(write.lease.host, write.id);
+      if (terminal?.error && !this.uncertainWrite(terminal.error)) {
+        this.rejectControl(write, terminal.error);
+        return;
+      }
+      if (terminal && "result" in terminal) {
+        this.confirmControl(write, terminal.result);
+        return;
+      }
+    } catch { /* A matching native readback can still resolve the write. */ }
+    try {
+      const reflected = await write.lease.host.recover("reflect", {}) as ReflectedDraft | null;
+      if (this.changedEpoch(reflected, write.prior)) {
+        this.finishControl(write);
+        if (this.currentControl(write)) this.requireRestoreAfterRestart();
+        return;
+      }
+      this.confirmControl(write, reflected);
+      return;
+    } catch { /* Keep the accepted configuration until its successor is proven. */ }
+    if (this.currentControl(write)) {
+      this.runView = { ...EMPTY_RUN, phase: "uncertain", paused: true, message: "The native control result is unconfirmed. Check this host." };
+    }
+  }
+
+  private current(attempt: Attempt) {
+    return attempt.context === this.context && attempt.identity.generation === this.documentGeneration &&
+      this.document?.id === attempt.identity.documentId && samePeer(attempt.peer, this.host.peer);
+  }
+
+  private dropRun() {
+    this.context += 1;
+    this.queue = null;
+    this.prepared = null;
+    const commit = this.unknownCommit ?? this.activeCommit;
+    const control = this.pendingReply;
+    this.pendingReply = null;
+    this.activeCommit = null;
+    this.unknownCommit = null;
+    this.retiringAttempt = null;
+    const lease = this.lease;
+    this.lease = null;
+    this.acknowledged = null;
+    this.samples.stop();
+    this.runView = EMPTY_RUN;
+    const flight = this.flight;
+    this.flight = null;
+    if (lease) {
+      // Fence immediately and retry after the in-flight operation returns.
+      // Either order still requires proving that commit's separate outcome.
+      const initialFence = this.fence(lease).then(async fenced => {
+        if (!flight) return fenced;
+        await flight;
+        return this.fence(lease);
+      });
+      const prior = { lease, commit, control, initialFence, fenced: false, recovering: null };
+      this.retired.set(hostKey(lease.host.peer), prior);
+      void this.reconcileRetirement(prior).then(settled => {
+        if (settled) this.clearRetirement(lease.host.peer, prior);
+      });
+    }
+  }
+
+  private async fence(lease: Lease) {
+    if (!lease.version) return true;
+    try {
+      const result = await lease.host.recover("run.fence", { lease: lease.id }, lease.version) as
+        { target?: string; epoch?: string; lease?: string };
+      return result.target === lease.host.peer.target && result.epoch === lease.version.epoch && result.lease === lease.id;
+    } catch (error) {
+      return error instanceof HostError && ["stale_epoch", "stale_lease"].includes(error.code);
+    }
+  }
+
+  private clearRetirement(peer: Peer, prior: Retirement) {
+    const key = hostKey(peer);
+    if (this.retired.get(key) === prior) this.retired.delete(key);
+  }
+
+  private reconcileRetirement(prior: Retirement) {
+    if (prior.recovering) return prior.recovering;
+    const recovering = (async () => {
+      if (!prior.fenced && (await prior.initialFence || await this.fence(prior.lease))) prior.fenced = true;
+      if (prior.commit && !prior.commit.terminal) await this.resolveUnknownCommit(prior.commit);
+      if (prior.control && !prior.control.terminal) await this.resolveControlWrite(prior.control);
+      return prior.fenced && (!prior.commit || prior.commit.terminal) && (!prior.control || prior.control.terminal);
+    })().finally(() => { prior.recovering = null; });
+    prior.recovering = recovering;
+    return recovering;
+  }
+
+  private async settleRetirement(prior: Retirement) {
+    const version = prior.lease.version;
+    const peer = prior.lease.host.peer;
+    if (version && samePeer(peer, this.host.peer)) {
+      try {
+        // A restarted service may use a new port. Only a currently selected
+        // authenticated session for the same target and certificate can
+        // prove that this retired epoch and all its writes are gone.
+        const selected = this.host.session();
+        if (samePeer(peer, selected.peer)) {
+          const observed = await selected.rpc("reflect", {}) as ReflectedDraft | null;
+          const current = this.host.peer;
+          if (samePeer(peer, current) && current?.endpoint.host === selected.peer.endpoint.host &&
+              current.endpoint.port === selected.peer.endpoint.port &&
+              this.changedEpoch(observed, { target: peer.target, epoch: version.epoch })) {
+            prior.fenced = true;
+            if (prior.commit) prior.commit.terminal = true;
+            if (prior.control) prior.control.terminal = true;
+            return true;
+          }
+        }
+      } catch { /* Recover against the original pinned session when fresh proof is unavailable. */ }
+    }
+    return this.reconcileRetirement(prior);
+  }
+
+  private async settleFence(attempt: Attempt) {
+    const prior = this.retired.get(hostKey(attempt.peer));
+    if (!prior) return true;
+    if (!await this.settleRetirement(prior)) {
+      if (this.current(attempt)) {
+        this.retiringAttempt = attempt;
+        this.setPhase(attempt, "uncertain", "Checking the previous draft’s commit and lease on this host.");
+      }
+      return false;
+    }
+    this.clearRetirement(attempt.peer, prior);
+    return true;
+  }
+
+  private setPhase(attempt: Attempt, phase: RunView["phase"], message: string | null,
+                   problems: RunProblem[] = [], review: RunView["review"] = null) {
+    if (!this.current(attempt)) return;
+    this.runView = { ...this.runView, phase, message, mode: attempt.mode, problems, review,
+      attempt: { source: editorText(attempt.source), sourceDigest: attempt.source.digest,
+        editSequence: attempt.identity.editSequence, runSequence: attempt.identity.runSequence },
+      paused: ["mapping_review", "reconciling", "uncertain", "restore_required"].includes(phase),
     };
-    let reply: Receipt;
+  }
+
+  private requireCurrent(attempt: Attempt) {
+    if (!this.current(attempt)) throw new HostError("stale_document", "The preview context changed.");
+  }
+
+  private captureRun(mode: RunMode, restoring = false): Attempt {
+    const document = this.document;
+    const peer = this.host.peer;
+    if (!document || !peer) throw new HostError("host_unavailable", "Open a GLSL draft and connect to a paired render host.");
+    if (document.destination && !samePeer(document.destination, peer)) {
+      throw new HostError("wrong_host", "Choose Use this host before running on a new destination.");
+    }
+    const artifact = restoring ? document.accepted : null;
+    if (restoring && (!artifact || !samePeer(artifact.project.destination, peer))) {
+      throw new HostError("wrong_host", "Connect to the accepted draft’s paired host before restoring.");
+    }
+    const source = artifact?.project.source ?? document.source;
+    const controls = artifact ? { slots: artifact.project.slots, bindings: artifact.project.bindings,
+      signatures: artifact.signatures } : document.controls;
+    return { identity: { documentId: document.id, generation: this.documentGeneration,
+      editSequence: this.editSequence, runSequence: ++this.runSequence, sourceDigest: source.digest },
+      source, controls, title: artifact?.project.title ?? document.title, mode, restoring, context: this.context, peer };
+  }
+
+  run(mode: unknown = "manual") {
+    if (mode !== "manual" && mode !== "automatic") throw new HostError("invalid_request", "Choose a Run mode.");
+    if (mode === "automatic" && (!this.runView.manualReady || this.runView.paused)) return Promise.resolve(this.view());
+    if (this.runView.phase === "restore_required" && this.project && samePeer(this.host.peer, this.project.destination)) {
+      throw new HostError("restore_required", "Restore the last accepted artifact before running here again.");
+    }
+    return this.submit(this.captureRun(mode));
+  }
+
+  private submit(attempt: Attempt) {
+    if (this.unknownCommit || this.pendingReply) {
+      throw new HostError("restore_required", "Check the previous native request before running again.");
+    }
+    if (this.flight || this.busy) {
+      if (this.queue?.mode !== "manual" || attempt.mode === "manual") this.queue = attempt;
+      return Promise.resolve(this.view());
+    }
+    return this.launch(() => this.prepareAndMaybeCommit(attempt));
+  }
+
+  private async launch(operation: () => Promise<void>): Promise<WorkspaceView> {
+    this.generation += 1;
+    const flight = Promise.resolve().then(operation);
+    this.flight = flight;
+    try { await flight; }
+    finally {
+      if (this.flight === flight) {
+        this.flight = null;
+        this.drainRun();
+      }
+    }
+    return this.view();
+  }
+
+  private drainRun() {
+    if (this.flight || this.busy || this.unknownCommit || !this.queue || (this.prepared && this.queue.mode === "automatic")) return;
+    const next = this.queue;
+    this.queue = null;
+    if (this.current(next) && (next.mode === "manual" || !this.runView.paused)) {
+      void this.launch(() => this.prepareAndMaybeCommit(next));
+    }
+  }
+
+  private async lookup(host: HostSession, id: string) {
     const deadline = Date.now() + 2400;
+    let value: ReceiptStatus;
     do {
-      reply = await this.host.rpc("receipt.get", { id }) as Receipt;
-      if (reply?.state !== "pending" || Date.now() >= deadline) break;
+      value = await host.recover("receipt.get", { id }) as ReceiptStatus;
+      if (value?.state !== "pending" || Date.now() >= deadline) break;
       await delay(180);
     } while (true);
-    if (reply?.state !== "completed" || reply.response?.id !== id) {
-      throw new HostError("ambiguous_request", "The earlier request has no final receipt. Refresh before retrying.");
-    }
-    if (!reply.response.ok) {
-      this.pendingReply = null;
-      throw new HostError(reply.response.error?.code ?? "host_failed", reply.response.error?.message ?? "Host rejected the request.");
-    }
-    return reply.response.result;
+    if (value?.state !== "completed" || value.response?.id !== id) return null;
+    if (value.response.ok === true) return { result: value.response.result };
+    if (value.response.ok === false && value.response.error) return { error: reportedError(value.response.error) };
+    return null;
   }
 
-  private async validateSource(source: DraftSource) {
-    const peer = this.host.peer;
-    const result = await this.host.rpc("validate", { source: source.base64, sha256: source.digest }) as
-      { target?: string; sourceDigest?: string; receipt?: DrawReceipt; shader?: { uniforms: DraftUniform[] } };
-    if (!result || result.target !== peer?.target || result.sourceDigest !== source.digest ||
-        result.receipt?.status !== "rendered" || !Array.isArray(result.shader?.uniforms)) {
-      throw new HostError("missing_native_receipt", "The host returned an unmatched shader receipt.");
-    }
-    return defaultBindings(result.shader.uniforms);
-  }
-
-  activate(readSource: () => Promise<DraftSource>) {
-    return this.perform(async () => {
-      const peer = this.host.peer;
-      if (!peer) throw new HostError("host_unavailable", "Connect to a paired render host.");
-      const initiatingDocument = this.documentContext();
-      const source = await readSource();
-      const project = parseProject({ format: "vosc.authoring.draft", version: 1, title: titleFor(source),
-        destination: peer, source, slots: [], bindings: [] });
-      const bindings = await this.validateSource(project.source);
-      parseProject({ ...project, bindings });
-      await this.refresh();
-      if (this.editSequence !== initiatingDocument.editSequence || this.documentGeneration !== initiatingDocument.generation) {
-        throw new HostError("stale_document", "The draft changed while the source was being prepared.");
-      }
-      const state = await this.change("activate", { source: source.base64, sha256: source.digest });
-      if (this.editSequence !== initiatingDocument.editSequence || this.documentGeneration !== initiatingDocument.generation) {
+  private async prepareAndMaybeCommit(attempt: Attempt) {
+    this.setPhase(attempt, "preparing", "Compiling GLSL on the render host.");
+    try {
+      await this.observation;
+      await this.sampleTask;
+      this.requireCurrent(attempt);
+      if (!attempt.source.base64) throw new HostError("empty_source", "Enter GLSL before running.");
+      await this.cancelPrepared();
+      if (!await this.settleFence(attempt)) return;
+      if (this.current(attempt)) this.retiringAttempt = null;
+      this.requireCurrent(attempt);
+      const previousLease = this.lease;
+      const lease = this.lease ??= { id: randomUUID(), host: this.host.session(), version: null, sampleSequence: 0 };
+      const raw = await lease.host.rpc("reflect", {});
+      this.requireCurrent(attempt);
+      const state = this.receive(raw);
+      if (lease.version && lease.version.epoch !== state.epoch) {
+        this.lease = null;
         this.acknowledged = null;
         this.samples.stop();
-        throw new HostError("stale_document", "Edits were kept. Preview the library source again to open it.");
+        throw new HostError("stale_epoch", "The renderer restarted. Restore the accepted artifact first.");
       }
-      if (state.sourceDigest !== source.digest) {
-        throw new HostError("source_mismatch", "The native preview did not acknowledge the selected shader.");
+      lease.version = state;
+      if (!previousLease && attempt.mode === "manual" && state.lease && state.lease !== lease.id) {
+        const fenced = await this.fence({ id: state.lease, host: lease.host, version: state, sampleSequence: 0 });
+        this.requireCurrent(attempt);
+        if (!fenced) throw new HostError("lease_owned", "Another controller may own the prior preview lease.");
       }
-      this.setDocument(documentFromSource(source));
-      const view = this.adopt(state, parseProject({ ...project, slots: state.slots, bindings: defaultBindings(state.uniforms) }));
-      this.savedWorking = workingIdentity(this.document!);
-      return { ...view, document: this.documentView() };
+      const id = randomUUID();
+      const identity = { ...attempt.identity, lease: lease.id };
+      const intent = encodeBindings(attempt.controls);
+      const { sourceDigest, ...wireAttempt } = identity;
+      let result: unknown;
+      try {
+        result = await lease.host.rpc("run.prepare", { ...wireAttempt, source: attempt.source.base64,
+          sha256: sourceDigest, slots: attempt.controls.slots, bindings: intent }, state, id);
+      } catch (error) {
+        if (!(error instanceof HostError) || !error.uncertainId) throw error;
+        const receipt = await this.lookup(lease.host, id);
+        if (receipt?.error) throw receipt.error;
+        if (!receipt) throw new HostError("prepare_unconfirmed", "The preparation was not confirmed. Run again after the host responds.");
+        result = receipt.result;
+      }
+      this.requireCurrent(attempt);
+      const candidate = this.preparedResult(result, identity, state, id, intent);
+      if (candidate.conflicts.length) {
+        if (attempt.restoring) {
+          await lease.host.rpc("run.cancel", { lease: lease.id, token: id }, candidate);
+          throw new HostError("restore_required", "The accepted artifact’s controls no longer match native reflection.");
+        }
+        this.prepared = { attempt, lease, candidate };
+        this.setPhase(attempt, "mapping_review", "Review the candidate’s control changes before applying it.", [],
+          { token: id, conflicts: candidate.conflicts });
+        return;
+      }
+      await this.commit(attempt, lease, candidate);
+    } catch (error) {
+      this.failAttempt(attempt, error);
+    }
+  }
+
+  private preparedResult(raw: unknown, identity: RunIdentity, state: ReflectedDraft, token: string,
+                         intent: WireBindings): Prepared {
+    const result = raw as Prepared | null;
+    if (!result || !identityMatches(identity, result) || result.target !== state.target || result.epoch !== state.epoch ||
+        result.revision !== state.revision || result.token !== token || !/^[a-f0-9]{64}$/.test(result.controlDigest) ||
+        !result.bindings || typeof result.bindings !== "object" || Array.isArray(result.bindings) || !Array.isArray(result.conflicts)) {
+      throw new HostError("state_mismatch", "The prepared candidate does not match this Run.");
+    }
+    const conflicts = (result.conflicts as unknown[]).map(describeConflict);
+    const names = new Set(conflicts.map(item => item.name));
+    if (names.size !== conflicts.length || Object.keys(result.bindings).length + names.size !== Object.keys(intent).length ||
+        Object.keys(intent).some(name => {
+          const returned = Object.hasOwn(result.bindings, name) ? result.bindings[name] : undefined;
+          if (names.has(name)) return Boolean(returned);
+          if (!returned) return true;
+          const requested = intent[name].components;
+          const expectedType = ["float", "vec2", "vec3", "vec4"][requested.length - 1];
+          if (returned.type !== expectedType || !Array.isArray(returned.components)) return true;
+          const effective = returned.components.map(component => "fixed" in component ?
+            { fixed: component.fixed } : { slot: component.slot, low: component.low, high: component.high });
+          return JSON.stringify(effective) !== JSON.stringify(requested);
+        })) {
+      throw new HostError("state_mismatch", "The effective candidate bindings do not match the requested controls.");
+    }
+    return { ...result, conflicts };
+  }
+
+  private async commit(attempt: Attempt, lease: Lease, prepared: Prepared) {
+    this.requireCurrent(attempt);
+    const commit = { attempt, lease, prepared, id: randomUUID(), terminal: false };
+    this.activeCommit = commit;
+    this.setPhase(attempt, "committing", "Waiting for the candidate’s first native draw.");
+    try {
+      let raw: unknown;
+      try {
+        raw = await lease.host.rpc("run.commit", { lease: lease.id, token: prepared.token }, prepared, commit.id);
+      } catch (error) {
+        if (!this.uncertainWrite(error)) {
+          commit.terminal = true;
+          throw error;
+        }
+        if (this.current(attempt)) {
+          this.unknownCommit = commit;
+          this.setPhase(attempt, "reconciling", "Checking the same host for the native draw receipt.");
+        }
+        await this.resolveUnknownCommit(commit);
+        return;
+      }
+      try {
+        this.confirmCommit(commit, raw);
+      } catch {
+        if (this.current(attempt)) this.unknownCommit = commit;
+        await this.resolveUnknownCommit(commit);
+      }
+    } finally {
+      if (this.activeCommit === commit) this.activeCommit = null;
+    }
+  }
+
+  private confirmCommit(commit: Commit, raw: unknown) {
+    const { attempt, prepared, id } = commit;
+    const state = raw as ReflectedDraft | null;
+    const receipt = state?.receipt;
+    const scene = receipt?.result?.scene;
+    const layers = scene?.layers as { shader?: { loaded?: boolean; program?: number } }[] | undefined;
+    const shader = Array.isArray(layers) ? layers[0]?.shader : undefined;
+    if (!state || state.target !== prepared.target || state.epoch !== prepared.epoch ||
+        !identityMatches(prepared, state) || state.token !== prepared.token || state.controlDigest !== prepared.controlDigest ||
+        state.commitID !== id || receipt?.id !== id || receipt.status !== "rendered" || !scene || state.needsRestore ||
+        !shader?.loaded || !Number.isSafeInteger(shader.program) || !(shader.program! > 0) ||
+        !Number.isSafeInteger(receipt.frame) || !Number.isSafeInteger(state.revision) || state.revision <= prepared.revision ||
+        receipt.revision !== state.revision || scene.rendered_revision !== state.revision ||
+        scene.frame !== receipt.frame || state.frame !== receipt.frame ||
+        receipt.result?.lease !== prepared.lease || receipt.result?.token !== prepared.token ||
+        receipt.result?.commit_id !== id || receipt.result?.source_digest !== prepared.sourceDigest ||
+        receipt.result?.control_digest !== prepared.controlDigest) {
+      throw new HostError("missing_drawn_receipt", "A matching native first-frame receipt was not received.");
+    }
+    if (!this.current(attempt)) { commit.terminal = true; return; }
+    const bindings = decodeBindings(prepared.bindings, attempt.controls.slots);
+    const project = parseProject({ format: "vosc.authoring.draft", version: 1, title: attempt.title,
+      destination: attempt.peer, source: attempt.source, slots: state.slots, bindings });
+    const pending = [...attempt.controls.pendingMappings ?? []];
+    for (const { name, reason } of prepared.conflicts) {
+      if (pending.some(item => item.name === name)) continue;
+      pending.push({ name, reason, bindings: attempt.controls.bindings.filter(item => item.name === name),
+        signature: signatureOf(attempt.controls, name) });
+    }
+    const observed = this.receive(state, true);
+    this.unknownCommit = null;
+    this.adopt(observed, project, pending, attempt.restoring ? this.document?.controls : undefined);
+    commit.terminal = true;
+    if (attempt.mode === "manual" && !attempt.restoring) this.runView = { ...this.runView, manualReady: true };
+    this.setPhase(attempt, "drawn", `Native revision ${state.revision} drew frame ${receipt.frame}.`);
+  }
+
+  private async resolveUnknownCommit(commit: Commit) {
+    if (commit.terminal) return;
+    let terminal: Awaited<ReturnType<Workspace["lookup"]>> = null;
+    try { terminal = await this.lookup(commit.lease.host, commit.id); }
+    catch { /* A successful readback can still prove the same commit. */ }
+    if (terminal?.error && !this.uncertainWrite(terminal.error)) {
+      commit.terminal = true;
+      if (this.current(commit.attempt)) {
+        this.unknownCommit = null;
+        this.failAttempt(commit.attempt, terminal.error);
+      }
+      return;
+    }
+    if (terminal && "result" in terminal) {
+      try { this.confirmCommit(commit, terminal.result); return; }
+      catch { /* Verify a fresh matching draw before trusting a malformed receipt. */ }
+    }
+    try {
+      const reflected = await commit.lease.host.recover("reflect", {}) as ReflectedDraft | null;
+      if (this.changedEpoch(reflected, commit.prepared)) {
+        commit.terminal = true;
+        if (this.current(commit.attempt)) {
+          this.unknownCommit = null;
+          this.lease = null;
+          this.failAttempt(commit.attempt, new HostError("stale_epoch", "The renderer restarted."));
+        }
+        return;
+      }
+      this.confirmCommit(commit, reflected);
+      return;
+    } catch { /* Keep the transaction fenced from further writes until it is proven. */ }
+    this.setPhase(commit.attempt, "uncertain", "The native outcome is unconfirmed. Check this host before retrying.");
+  }
+
+  private changedEpoch(state: ReflectedDraft | null, prior: { target: string; epoch: string }) {
+    return state?.target === prior.target && typeof state.epoch === "string" && state.epoch.length > 0 &&
+      state.epoch !== prior.epoch && Number.isSafeInteger(state.revision) && state.revision >= 0 &&
+      typeof state.needsRestore === "boolean" && Array.isArray(state.uniforms) && Array.isArray(state.slots);
+  }
+
+  private requireRestoreAfterRestart() {
+    this.lease = null;
+    this.dropRun();
+    this.runView = { ...EMPTY_RUN, phase: "restore_required", paused: true,
+      message: "The private renderer restarted. Restore the accepted artifact explicitly." };
+  }
+
+  private failAttempt(attempt: Attempt, error: unknown) {
+    if (!this.current(attempt)) return;
+    const failure = error instanceof HostError ? error : new HostError("run_failed", "The native run failed.");
+    const phase = ["stale_epoch", "restore_required", "stale_lease", "stale_revision", "draft_state_lost"].includes(failure.code) ?
+      "restore_required" : "failed";
+    if (phase === "restore_required") {
+      this.acknowledged = null;
+      this.samples.stop();
+      this.runView = { ...this.runView, manualReady: false };
+    }
+    this.setPhase(attempt, phase, failure.message.split("\n")[0], problemEntries(failure, editorText(attempt.source)));
+  }
+
+  private async cancelPrepared() {
+    const prepared = this.prepared;
+    if (!prepared) return;
+    this.prepared = null;
+    await prepared.lease.host.rpc("run.cancel", { lease: prepared.lease.id, token: prepared.candidate.token },
+      prepared.candidate);
+  }
+
+  approveRun(token: unknown) {
+    const staged = this.prepared;
+    if (!staged || staged.candidate.token !== token || this.busy || this.flight || this.pendingReply || this.unknownCommit) {
+      throw new HostError("stale_candidate", "The prepared mapping review is no longer available.");
+    }
+    return this.launch(async () => {
+      try {
+        await this.sampleTask;
+        if (this.prepared !== staged) return;
+        this.prepared = null;
+        this.requireCurrent(staged.attempt);
+        if (staged.attempt.identity.editSequence !== this.editSequence) {
+          await staged.lease.host.rpc("run.cancel", { lease: staged.lease.id, token }, staged.candidate);
+          await this.prepareAndMaybeCommit(this.captureRun("manual"));
+          return;
+        }
+        await this.commit(staged.attempt, staged.lease, staged.candidate);
+      } catch (error) { this.failAttempt(staged.attempt, error); }
     });
+  }
+
+  cancelRun(token?: unknown) {
+    if (this.queue?.mode === "automatic") this.queue = null;
+    if (token === undefined) return Promise.resolve(this.view());
+    const staged = this.prepared;
+    if (staged?.candidate.token !== token || this.flight || this.busy || this.pendingReply || this.unknownCommit) {
+      throw new HostError("stale_candidate", "The prepared mapping review is no longer available.");
+    }
+    return this.launch(async () => {
+      try { await this.sampleTask; await this.cancelPrepared(); }
+      catch (error) { if (staged) this.failAttempt(staged.attempt, error); return; }
+      if (staged) this.setPhase(staged.attempt, "idle", "Candidate cancelled. Previous preview retained.");
+    });
+  }
+
+  useSelectedHost() {
+    const document = this.document;
+    const peer = this.host.peer;
+    if (!document || !peer) throw new HostError("host_unavailable", "Connect to a paired host first.");
+    if (!samePeer(document.destination, peer)) {
+      this.dropRun();
+      this.document = { ...document, destination: peer };
+      this.notice = "Destination selected. Run GLSL when ready.";
+    }
+    return this.view();
+  }
+
+  discardMapping(name: unknown) {
+    return this.resolveMapping(name);
+  }
+
+  remapMapping(name: unknown, target: unknown) {
+    if (typeof target !== "string") throw new HostError("invalid_uniform", "Choose a target uniform.");
+    return this.resolveMapping(name, target);
+  }
+
+  private resolveMapping(name: unknown, target?: string) {
+    const document = this.document;
+    const pending = document?.controls.pendingMappings ?? [];
+    const mapping = pending.find(item => item.name === name);
+    if (!document || !mapping || this.flight || this.busy || this.prepared || this.unknownCommit || this.pendingReply) {
+      throw new HostError("invalid_mapping", "Choose an inactive mapping after the current Run.");
+    }
+    let bindings = document.controls.bindings;
+    if (target !== undefined) {
+      const uniform = this.state?.uniforms.find(item => item.name === target);
+      if (!this.previewMatches() || !uniform || !isWritable(uniform) || uniform.values.length !== mapping.bindings.length ||
+          (mapping.signature && mapping.signature.type !== uniform.type)) {
+        throw new HostError("invalid_uniform", "Choose an active uniform of the same type and size.");
+      }
+      bindings = [...bindings.filter(binding => binding.name !== target),
+        ...mapping.bindings.map(binding => ({ ...binding, name: target }))];
+    }
+    const signatures = target === undefined ? document.controls.signatures :
+      [...document.controls.signatures.filter(item => item.name !== target),
+        ...controlSignatures(this.state?.uniforms ?? [], bindings.filter(item => item.name === target))];
+    this.document = { ...document, controls: { ...document.controls, bindings, signatures,
+      pendingMappings: pending.filter(item => item !== mapping) } };
+    if (target !== undefined) this.notice = "Mapping assigned. Run to apply it to the preview.";
+    return this.view();
+  }
+
+  async activate(readSource: () => Promise<DraftSource>) {
+    const initial = this.documentContext();
+    const source = await readSource();
+    const current = this.documentContext();
+    if (initial.generation !== current.generation || initial.editSequence !== current.editSequence) {
+      throw new HostError("stale_document", "Edits were kept. Preview the library source again.");
+    }
+    if (!this.host.peer) throw new HostError("host_unavailable", "Connect to a paired render host first.");
+    await this.openSource(source);
+    return this.run();
   }
 
   configureSlot(label: unknown) {
     return this.perform(async () => {
+      this.requireControlIdle();
+      await this.sampleTask;
       const { project } = this.checkedPreview();
       if (typeof label !== "string" || !label.trim() || label.includes("\u0000") || Buffer.byteLength(label.trim()) > 80 ||
           project.slots.length >= SLOT_LIMIT) {
         throw new HostError("invalid_slot", `Enter a slot name up to 80 bytes. A draft can have ${SLOT_LIMIT} slots.`);
       }
       const slot: Slot = { id: "s" + randomBytes(6).toString("hex"), label: label.trim(), default: 0 };
-      const result = await this.change("slot.configure", { ...slot });
-      if (!result.slots.some(item => item.id === slot.id && item.label === slot.label)) {
-        throw new HostError("missing_slot", "The slot did not appear in the native draft.");
-      }
-      return this.adopt(result, { ...project, slots: result.slots });
+      return this.change("slot.configure", { ...slot }, result => {
+        if (!result.slots.some(item => item.id === slot.id && item.label === slot.label)) {
+          throw new HostError("missing_slot", "The slot did not appear in the native draft.");
+        }
+        this.invalidateReview();
+        const controls = this.document!.controls;
+        this.adopt(result, { ...project, slots: result.slots }, undefined, { ...controls, slots: result.slots });
+      });
     });
   }
 
   bindComponent(name: unknown, component: unknown, bindingValue: unknown) {
     return this.perform(async () => {
+      this.requireControlIdle();
+      await this.sampleTask;
       const { project, state } = this.checkedPreview();
       const uniform = state.uniforms.find(item => item.name === name);
       if (!uniform || !isWritable(uniform) || typeof component !== "number" ||
@@ -456,15 +1151,23 @@ export class Workspace {
         throw new HostError("invalid_uniform", "Choose a writable shader uniform component.");
       }
       const binding = parseBinding(bindingValue, project.slots);
-      const updated = await this.change("uniform.set", { name: uniform.name, component, ...binding });
-      const applied = updated.uniforms.find(item => item.name === name);
-      if (!applied || applied.values.length !== uniform.values.length ||
-          (binding.mode === "fixed" && Math.abs(applied.values[component] - Math.fround(binding.value)) > 0.00001)) {
-        throw new HostError("readback_mismatch", "The rendered uniform does not match the control.");
-      }
-      const bindings = project.bindings.map(item =>
-        item.name === name && item.component === component ? { ...item, binding } : item);
-      return this.adopt(updated, { ...project, bindings });
+      return this.change("uniform.set", { name: uniform.name, component, ...binding }, updated => {
+        const applied = updated.uniforms.find(item => item.name === name);
+        if (!applied || applied.values.length !== uniform.values.length ||
+            (binding.mode === "fixed" && Math.abs(applied.values[component] - Math.fround(binding.value)) > 0.00001)) {
+          throw new HostError("readback_mismatch", "The rendered uniform does not match the control.");
+        }
+        const current = project.bindings.filter(item => item.name === name);
+        const siblings: ComponentBinding[] = uniform.values.map((value, index) =>
+          ({ name: uniform.name, component: index, binding: current[index]?.binding ?? { mode: "fixed", value } }));
+        siblings[component] = { name: uniform.name, component, binding };
+        const bindings = [...project.bindings.filter(item => item.name !== name), ...siblings];
+        this.invalidateReview();
+        const controls = this.document!.controls;
+        const working = { ...controls, bindings: [...controls.bindings.filter(item => item.name !== name), ...siblings],
+          signatures: [...controls.signatures.filter(item => item.name !== name), ...controlSignatures(updated.uniforms, siblings)] };
+        this.adopt(updated, { ...project, bindings }, undefined, working);
+      });
     });
   }
 
@@ -481,19 +1184,43 @@ export class Workspace {
     return this.view();
   }
 
-  private async relaySample(slot: string, value: number) {
-    if (this.busy || !this.previewMatches() || !this.state?.slots.some(item => item.id === slot)) return;
-    const generation = this.generation;
-    try {
-      await this.host.rpc("sample", { slot, value }, this.state);
-    } catch (error) {
-      if (generation !== this.generation) return;
-      if (error instanceof HostError && error.code === "busy") return;
-      this.acknowledged = null;
-      this.samples.stop();
-      const detail = error instanceof HostError ? `${error.message} ` : "";
-      this.notice = `OSC input stopped. ${detail}Restore the draft and enable OSC input again.`;
+  private requireControlIdle() {
+    if (this.flight || this.unknownCommit || this.pendingReply) {
+      throw new HostError("busy", "Wait for the current native request before editing controls.");
     }
+  }
+
+  private invalidateReview() {
+    const staged = this.prepared;
+    if (!staged) return;
+    this.prepared = null;
+    this.setPhase(staged.attempt, "idle", "Controls changed. Run again to review the candidate.");
+  }
+
+  private relaySample(slot: string, value: number) {
+    const { lease, state } = this;
+    if (this.busy || this.flight || !lease || !state || !this.previewMatches() ||
+        !state.slots.some(item => item.id === slot)) return Promise.resolve();
+    const context = this.context;
+    const sequence = ++lease.sampleSequence;
+    const delivery = lease.host.rpc("sample", { lease: lease.id, sequence, slot, value }, state)
+      .then(raw => {
+        if (context !== this.context || state.revision !== this.state?.revision || this.unknownCommit) return;
+        const drawn = raw as ReflectedDraft | null;
+        if (!drawn || drawn.lease !== lease.id || drawn.epoch !== state.epoch || drawn.revision !== state.revision) {
+          throw new HostError("sample_unobserved", "The render host did not confirm the OSC sample.");
+        }
+        this.receive(drawn);
+      }).catch(error => {
+        if (context !== this.context || state.revision !== this.state?.revision) return;
+        if (error instanceof HostError && ["busy", "sample_rate", "stale_revision"].includes(error.code)) return;
+        this.acknowledged = null;
+        this.samples.stop();
+        const detail = error instanceof HostError ? `${error.message} ` : "";
+        this.notice = `OSC input stopped. ${detail}Restore the draft and enable OSC input again.`;
+      }).finally(() => { if (this.sampleTask === delivery) this.sampleTask = null; });
+    this.sampleTask = delivery;
+    return delivery;
   }
 
   captureSave() {
@@ -554,36 +1281,7 @@ export class Workspace {
   }
 
   restore() {
-    return this.perform(async () => {
-      const project = this.project;
-      const peer = this.host.peer;
-      if (!project || !peer || project.destination.target !== peer.target ||
-          project.destination.fingerprint !== peer.fingerprint) {
-        throw new HostError("wrong_host", "Connect to the saved draft’s paired host before restoring.");
-      }
-      const reflected = await this.validateSource(project.source);
-      const count = (bindings: DraftProject["bindings"]) => {
-        const counts = new Map<string, number>();
-        for (const { name } of bindings) counts.set(name, (counts.get(name) ?? 0) + 1);
-        return counts;
-      };
-      const native = count(reflected);
-      if ([...count(project.bindings)].some(([name, size]) => native.get(name) !== size)) {
-        throw new HostError("invalid_project", "The saved controls do not match the shader’s reflected uniforms.");
-      }
-      this.acknowledged = null;
-      this.samples.stop();
-      await this.refresh();
-      let state = await this.change("activate", { source: project.source.base64, sha256: project.source.digest });
-      for (const slot of project.slots) state = await this.change("slot.configure", { ...slot });
-      for (const { name, component, binding } of project.bindings) {
-        state = await this.change("uniform.set", { name, component, ...binding });
-      }
-      const working = this.document!;
-      const view = this.adopt(state, { ...project, destination: peer });
-      this.document = { ...this.document!, destination: working.destination, controls: working.controls };
-      return { ...view, document: this.documentView() };
-    });
+    return this.submit(this.captureRun("manual", true));
   }
 
   captureExport() {

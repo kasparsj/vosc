@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import type { EditorView } from "@codemirror/view";
-import type { AuthoringAPI, Discovery, DocumentEdit, FileCommand, LibraryItem, WorkspaceView } from "./contracts";
+import type { AuthoringAPI, Discovery, DocumentEdit, FileCommand, LibraryItem, RunMode, WorkspaceView } from "./contracts";
 import { DraftPane } from "./draft-pane";
 import { HostPane, message } from "./host-pane";
 import { ImportPane } from "./import-pane";
@@ -15,11 +15,12 @@ function Icon({ name }: { name: string }) {
   return <img className="icon" src={`/icons/${name}.svg`} alt="" />;
 }
 
-function WorkspaceDialog({ title, close, children, focusFallback }: {
+function WorkspaceDialog({ title, close, children, focusFallback, initialFocus }: {
   title: string;
   close: () => void;
   children: ReactNode;
   focusFallback: () => void;
+  initialFocus?: (dialog: HTMLDialogElement) => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const fallback = useRef(focusFallback);
@@ -28,7 +29,8 @@ function WorkspaceDialog({ title, close, children, focusFallback }: {
     const dialog = ref.current!;
     const trigger = document.activeElement;
     dialog.showModal();
-    (dialog.querySelector<HTMLElement>("select, .dialog-body button:not(:disabled), .dialog-body input:not(:disabled)") ??
+    if (initialFocus) initialFocus(dialog);
+    else (dialog.querySelector<HTMLElement>("select, .dialog-body button:not(:disabled), .dialog-body input:not(:disabled)") ??
       dialog.querySelector<HTMLElement>(".dialog-header h2"))?.focus();
     return () => {
       dialog.close();
@@ -52,6 +54,17 @@ function layout() {
   return matchMedia("(width >= 1200px)").matches ? "wide" : "standard";
 }
 
+function sourceLine(source: string, number: number) {
+  if (!Number.isInteger(number) || number < 1) return null;
+  const lines = source.split("\n");
+  if (number > lines.length) return null;
+  let start = 0;
+  for (let i = 0; i < number - 1; i++) start += lines[i].length + 1;
+  return { start, end: start + lines[number - 1].length };
+}
+
+const pendingRun = new Set(["preparing", "committing", "reconciling"]);
+
 function App() {
   const api = window.voscAuthoring;
   const [workspace, setWorkspace] = useState<WorkspaceView | null>(null);
@@ -68,6 +81,13 @@ function App() {
   const { problem, location } = diagnostic;
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [runsWaiting, setRunsWaiting] = useState(0);
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [dismissedReview, setDismissedReview] = useState<string | null>(null);
+  const [attempted, setAttempted] = useState<{ source: string; line: number; sequence: number } | null>(null);
+  const [autoScope, setAutoScope] = useState<string | null>(null);
+  const autoScopeRef = useRef<string | null>(null);
+  const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const view = useRef<EditorView>(null);
   const focusAfterNavigation = useRef<number | null>(null);
   const activeLocation = location?.document === view.current?.state.doc ? location : undefined;
@@ -76,8 +96,6 @@ function App() {
   const inspectorButton = useRef<HTMLButtonElement>(null);
   const commandRunning = useRef(false);
   const importRunning = useRef(false);
-  const dialogRef = useRef(dialog);
-  dialogRef.current = dialog;
   const pending = useRef<DocumentEdit | null>(null);
   const editSequence = useRef(0);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -87,6 +105,25 @@ function App() {
   const workspaceRef = useRef(workspace);
   workspaceRef.current = workspace;
   const connected = Boolean(workspace?.peer && workspace.reflected);
+  const run = workspace?.run;
+  const peer = workspace?.peer;
+  const peerMatches = !draft?.destination || (draft.destination.target === peer?.target &&
+    draft.destination.fingerprint === peer?.fingerprint);
+  const executionScope = connected && peerMatches && draft
+    ? `${generation}:${peer?.target}:${peer?.fingerprint}:${workspace.reflected?.epoch}` : null;
+  const currentScope = useRef(executionScope);
+  currentScope.current = executionScope;
+  const awaitingNative = runsWaiting > 0 || Boolean(run && pendingRun.has(run.phase));
+  const autoEnabled = Boolean(autoScope && autoScope === executionScope);
+  const review = run?.review;
+  const showReview = Boolean(review && review.token !== dismissedReview && !dialog && !attempted);
+  const modal = Boolean(dialog || attempted || showReview);
+  const modalRef = useRef(modal);
+  modalRef.current = modal;
+  const canRun = Boolean(draft && executionScope && !busy && !modal && run &&
+    run.phase !== "uncertain" && run.phase !== "reconciling" && (run.phase !== "restore_required" ||
+      workspace?.project?.destination.target !== peer?.target ||
+      workspace?.project?.destination.fingerprint !== peer?.fingerprint));
   const accepted = draft?.acceptedArtifact;
   const artifactName = accepted && (accepted.revision === null ? `artifact ${accepted.id.slice(0, 12)}` : `revision ${accepted.revision}`);
   const dirty = Boolean(draft?.dirty || editing);
@@ -117,6 +154,20 @@ function App() {
       return next;
     });
   }, []);
+
+  function jumpToNative(line: number) {
+    const attempt = run?.attempt;
+    const editor = view.current;
+    if (!attempt || !sourceLine(attempt.source, line)) return;
+    if (editor && draft?.source.digest === attempt.sourceDigest &&
+        editor.state.doc.toString() === attempt.source && line <= editor.state.doc.lines) {
+      const range = editor.state.doc.line(line);
+      editor.dispatch({ selection: { anchor: range.from, head: range.to }, scrollIntoView: true });
+      editor.focus();
+    } else {
+      setAttempted({ line, source: attempt.source, sequence: attempt.runSequence });
+    }
+  }
 
   async function refreshLibrary() {
     try { setLibrary(await api.listLibrary()); }
@@ -163,6 +214,20 @@ function App() {
     return () => { active = false; clearInterval(timer); };
   }, [api, adopt, target, fingerprint]);
 
+  useEffect(() => {
+    if (!awaitingNative) return;
+    let active = true;
+    let reading = false;
+    const timer = setInterval(() => {
+      if (reading) return;
+      reading = true;
+      void api.workspace().then(next => { if (active) adopt(next); })
+        .catch(error => { if (active) setProblem(message(error)); })
+        .finally(() => { reading = false; });
+    }, 160);
+    return () => { active = false; clearInterval(timer); };
+  }, [api, adopt, awaitingNative]);
+
   function focusSource() {
     if (view.current) view.current.focus();
     else newButton.current?.focus();
@@ -175,15 +240,24 @@ function App() {
     if (generation === requested) view.current?.focus();
   }, [dialog, generation]);
 
+  const manualRunRef = useRef(() => {});
+  manualRunRef.current = () => { if (canRun) void submitRun("manual"); };
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented || event.isComposing || dialogRef.current || !drawer) return;
-      event.preventDefault();
-      setDrawer(null);
-      (drawer === "library" ? libraryButton : inspectorButton).current?.focus();
+      if (event.defaultPrevented || event.isComposing || view.current?.composing || modalRef.current) return;
+      if (event.key === "Enter" && event.metaKey && !event.shiftKey && !event.altKey && !event.ctrlKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!event.repeat) manualRunRef.current();
+      } else if (event.key === "Escape" && drawer) {
+        event.preventDefault();
+        setDrawer(null);
+        (drawer === "library" ? libraryButton : inspectorButton).current?.focus();
+      }
     };
-    window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
+    // Handle Cmd+Return before the editor's keymap consumes the event.
+    window.addEventListener("keydown", key, true);
+    return () => window.removeEventListener("keydown", key, true);
   }, [drawer]);
 
   function flush() {
@@ -212,6 +286,78 @@ function App() {
     setEditing(true);
     setProblem("");
     scheduleSync();
+    scheduleAutomatic();
+  }
+
+  function clearAutomaticTimer() {
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+    autoTimer.current = null;
+  }
+
+  function pauseAutomatic() {
+    clearAutomaticTimer();
+    if (!autoScopeRef.current) return;
+    autoScopeRef.current = null;
+    setAutoScope(null);
+    void api.cancelRun().catch(error => setProblem(message(error)));
+  }
+
+  useEffect(() => {
+    if (autoScope && (!autoEnabled || run?.paused || !run?.manualReady)) pauseAutomatic();
+  }, [autoScope, autoEnabled, run?.paused, run?.manualReady]);
+
+  useEffect(() => () => clearAutomaticTimer(), []);
+
+  function scheduleAutomatic() {
+    clearAutomaticTimer();
+    const scope = autoScopeRef.current;
+    if (!scope || currentScope.current !== scope) return;
+    autoTimer.current = setTimeout(() => {
+      autoTimer.current = null;
+      if (autoScopeRef.current !== scope || currentScope.current !== scope ||
+          modalRef.current || commandRunning.current || view.current?.composing) return;
+      void submitRun("automatic");
+    }, 400);
+  }
+
+  async function submitRun(mode: RunMode) {
+    const scope = currentScope.current;
+    if (!scope || commandRunning.current || modalRef.current || view.current?.composing) return;
+    if (mode === "manual") clearAutomaticTimer();
+    setProblem("");
+    setRunsWaiting(value => value + 1);
+    try {
+      await flush();
+      if (currentScope.current !== scope || commandRunning.current || modalRef.current ||
+          (mode === "automatic" && autoScopeRef.current !== scope)) return;
+      await api.runDraft(mode);
+      const next = await api.workspace();
+      if (currentScope.current === scope) adopt(next);
+    } catch (error) {
+      if (currentScope.current === scope) setProblem(message(error));
+    } finally {
+      setRunsWaiting(value => value - 1);
+    }
+  }
+
+  async function finishReview(token: string, approve: boolean) {
+    if (reviewBusy) return;
+    setReviewBusy(true);
+    setRunsWaiting(value => value + 1);
+    try {
+      await flush();
+      if (approve) await api.approveRun(token);
+      else await api.cancelRun(token);
+      const next = await api.workspace();
+      adopt(next);
+      if (next.run.review?.token === token && !approve) setDismissedReview(token);
+    } catch (error) {
+      setProblem(message(error));
+      adopt(await api.workspace());
+    } finally {
+      setReviewBusy(false);
+      setRunsWaiting(value => value - 1);
+    }
   }
 
   function scheduleSync() {
@@ -245,7 +391,7 @@ function App() {
   }
 
   function fileCommand(name: FileCommand) {
-    if (dialogRef.current && name !== "quit" && name !== "close") return;
+    if (modalRef.current && name !== "quit" && name !== "close") return;
     void command(async () => {
       const expects = workspaceRef.current?.documentGeneration ?? 0;
       switch (name) {
@@ -297,6 +443,10 @@ function App() {
         <span aria-hidden="true" className={`status-dot ${connected ? "online" : ""}`} />
         {workspace?.peer?.endpoint.host ?? "Render Host"}<Icon name="down" />
       </button>
+      <button className="primary run-command" type="button" disabled={!canRun}
+        aria-keyshortcuts="Meta+Enter" onClick={() => void submitRun("manual")}>
+        <Icon name="run" />Run <kbd aria-hidden="true">⌘↵</kbd>
+      </button>
     </header>
 
     {size !== "wide" && <div className="library-tools">
@@ -336,21 +486,39 @@ function App() {
       <div className="source-header">
         <h2 id="source-heading">GLSL fragment</h2>
         {draft && <span className="muted source-origin" title={draft.source.origin}>{draft.source.origin}</span>}
+        {draft && <button type="button" className="quiet auto-control" aria-pressed={autoEnabled}
+          disabled={!autoEnabled && (!executionScope || !run?.manualReady || run.paused)}
+          onClick={() => {
+            if (autoEnabled) pauseAutomatic();
+            else if (executionScope) {
+              autoScopeRef.current = executionScope;
+              setAutoScope(executionScope);
+            }
+          }}>{autoEnabled ? "Pause auto-run" : "Auto-run off"}</button>}
       </div>
       {draft ? <SourceEditor key={draft.generation} source={draft.source.text} editor={view}
         onChange={edit} onPosition={(line, column) => setPosition({ line, column })} onProblem={setProblem}
-        onCompositionEnd={scheduleSync} /> :
+        onCompositionEnd={() => { scheduleSync(); scheduleAutomatic(); }} /> :
         <div className="empty-editor"><p>Create, open, or import a GLSL draft.</p></div>}
       <section className="problems" aria-labelledby="problems-heading" tabIndex={0}>
-        <h3 id="problems-heading">Problems{problem ? " · 1" : ""}</h3>
+        <h3 id="problems-heading">Problems{(problem || run?.problems.length) ? ` · ${Number(Boolean(problem)) + (run?.problems.length ?? 0)}` : ""}</h3>
         <div className="problem-row">
           <div>
             {problem && <p className="problem-source">{draft?.source.name ?? "Workspace"}
               {activeLocation && ` · line ${activeLocation.line}, column ${activeLocation.column}`}</p>}
-            <p role="status" className={problem ? "error" : "muted"}>{problem || "No reported problems"}</p>
+            {problem || !run?.problems.length ? <p role="status" className={problem ? "error" : "muted"}>{problem || "No reported problems"}</p> : null}
           </div>
           {activeLocation && <button type="button" onClick={jumpToProblem}>Jump to line</button>}
         </div>
+        {!!run?.problems.length && <ul className="native-problems">
+          {run.problems.map((item, index) => <li className="problem-row" key={`${run.attempt?.runSequence}-${index}`}>
+            <div><p className="problem-source">{draft?.source.name ?? "GLSL"}{item.line !== undefined ?
+              ` · Line ${item.line}${item.column ? `, column ${item.column}` : ""}` : " · Native log"}</p>
+              <p className="error native-log">{item.message}</p></div>
+            {run.attempt && item.line !== undefined && sourceLine(run.attempt.source, item.line) &&
+              <button type="button" onClick={() => jumpToNative(item.line!)}>Jump to line</button>}
+          </li>)}
+        </ul>}
       </section>
     </section>
 
@@ -363,10 +531,22 @@ function App() {
         <section className="native-target" aria-labelledby="native-title">
           <h2 id="native-title">Native render</h2>
           <p className="native-name">{workspace?.peer?.endpoint.host ?? "No render host connected"}</p>
-          {workspace?.previewReady && <p className="muted">Preview on render host · Layer 0</p>}
+          {workspace?.previewReady && <p className="muted">Preview window on render host · Layer 0</p>}
+          {draft?.destination && !peerMatches && <p className="muted">Draft destination: {draft.destination.endpoint.host}</p>}
+          {run?.phase === "uncertain" && <button type="button" className="quiet" onClick={() => void command(async () =>
+            adopt(await api.reflect()))}>Check native outcome</button>}
           <button className="quiet" type="button" onClick={() => setDialog({ type: "host", generation })}>Manage…</button>
         </section>
-        <DraftPane workspace={workspace} onWorkspace={adopt} />
+        <DraftPane workspace={workspace} onWorkspace={adopt} onControl={(action) =>
+          void command(async () => {
+            setRunsWaiting(value => value + 1);
+            try {
+              await action();
+              adopt(await api.workspace());
+            } finally {
+              setRunsWaiting(value => value - 1);
+            }
+          })} />
       </div>
       <div className="inspector-footer">
         <p className="muted">
@@ -386,16 +566,48 @@ function App() {
     <footer className="workspace-status">
       <div className="status-message" role="status">
         <span>{workspace?.previewReady && workspace.reflected ? `Live · revision ${workspace.reflected.revision}` :
+          workspace?.lastObservation ? `Preview unconfirmed · last confirmed revision ${workspace.lastObservation.revision} at ${new Date(workspace.lastObservation.time).toLocaleTimeString()}` :
           accepted ? `Preview offline · last accepted ${artifactName}` : "Preview offline"}</span>
+        {run?.message && <span className={run.phase === "failed" ? "error" : "muted"}>
+          {run.phase === "failed" ? "Run failed · " : ""}{run.message}</span>}
+        {review && !showReview && <button type="button" className="quiet"
+          onClick={() => setDismissedReview(null)}>Review mappings</button>}
         {dirty && <span>Unsaved changes</span>}
         {notice && <span className="status-notice" title={notice}>{notice}</span>}
       </div>
       {draft && <div className="position"><span>GLSL</span><span>UTF-8</span><span>Ln {position.line}, Col {position.column}</span></div>}
     </footer>
 
+    {showReview && review && <WorkspaceDialog key={review.token} title="Review changed mappings"
+      close={() => { if (!reviewBusy) setDismissedReview(review.token); }} focusFallback={focusSource}>
+      <section className="review-mappings">
+        <p className="muted">The current preview continues with its active controls while you review the candidate.</p>
+        <ul>{review.conflicts.map(item => <li key={item.name}><strong>{item.name}</strong><p>{item.message}</p></li>)}</ul>
+        <div className="actions">
+          <button type="button" disabled={reviewBusy} onClick={() => void finishReview(review.token, false)}>Cancel candidate</button>
+          <button type="button" className="primary" disabled={reviewBusy}
+            onClick={() => void finishReview(review.token, true)}>Apply candidate</button>
+        </div>
+      </section>
+    </WorkspaceDialog>}
+    {attempted && <WorkspaceDialog key={attempted.sequence} title={`Attempted source · Run ${attempted.sequence}`}
+      close={() => setAttempted(null)} focusFallback={focusSource} initialFocus={dialogNode => {
+        const text = dialogNode.querySelector("textarea");
+        const range = sourceLine(attempted.source, attempted.line);
+        if (!text || !range) return;
+        text.focus();
+        text.setSelectionRange(range.start, range.end);
+        text.scrollTop = (attempted.line - 1) * parseFloat(getComputedStyle(text).lineHeight);
+      }}>
+      <div className="attempted-source">
+        <p className="muted">Read-only snapshot · Line {attempted.line}</p>
+        <textarea aria-label="Attempted GLSL source" readOnly value={attempted.source} spellCheck={false} wrap="off" />
+      </div>
+    </WorkspaceDialog>}
     {dialog && <WorkspaceDialog title={dialog.type === "import" ? "Import GLSL" : "Render Host"} close={closeDialog} focusFallback={focusSource}>
       {dialog.type === "host"
-        ? <HostPane discovery={discovery} refresh={() => void discover()} workspace={workspace} onWorkspace={adopt} />
+        ? <HostPane discovery={discovery} refresh={() => void discover()} workspace={workspace} onWorkspace={adopt}
+          onUseSelectedHost={() => void command(async () => adopt(await api.useSelectedHost()))} />
         : <ImportPane connected={connected} openSource={(id, item) => command(async () =>
             navigate(await api.openImported(id, item, dialog.generation), dialog.generation))}
             onPublished={() => void refreshLibrary()} onRunning={value => { importRunning.current = value; }} />}

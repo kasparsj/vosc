@@ -7,11 +7,12 @@ export function message(error: unknown) {
     : "The operation could not be completed.";
 }
 
-export function HostPane({ discovery, refresh, workspace, onWorkspace }: {
+export function HostPane({ discovery, refresh, workspace, onWorkspace, onUseSelectedHost }: {
   discovery: Discovery | null;
   refresh: () => void;
   workspace: WorkspaceView | null;
   onWorkspace: (value: WorkspaceView) => void;
+  onUseSelectedHost: () => void;
 }) {
   const api = window.voscAuthoring;
   const [host, setHost] = useState("");
@@ -23,6 +24,10 @@ export function HostPane({ discovery, refresh, workspace, onWorkspace }: {
   const [busy, setBusy] = useState(false);
   const running = useRef(false);
   const [problem, setProblem] = useState("");
+  const destination = workspace?.document?.destination;
+  const peer = workspace?.peer;
+  const differentDestination = Boolean(peer && destination &&
+    (peer.target !== destination.target || peer.fingerprint !== destination.fingerprint));
 
   async function act(action: () => Promise<void>) {
     if (running.current) return;
@@ -63,6 +68,10 @@ export function HostPane({ discovery, refresh, workspace, onWorkspace }: {
     {workspace?.peer && <div className="form-strip">
       <div><strong>Connected</strong><p>{workspace.peer.endpoint.host}:{workspace.peer.endpoint.port}</p></div>
       <button disabled={busy} onClick={() => void act(async () => onWorkspace(await api.disconnect()))}>Disconnect</button>
+      {differentDestination && <div className="destination-choice">
+        <p>The draft destination is {destination!.endpoint.host}.</p>
+        <button type="button" disabled={busy} onClick={onUseSelectedHost}>Use this host</button>
+      </div>}
     </div>}
     <section className="feature-section" aria-labelledby="discover-heading">
       <h3 id="discover-heading">Discovered hosts</h3>

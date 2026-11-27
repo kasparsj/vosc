@@ -28,13 +28,21 @@ Install `controller/VOSC Editor.app` in Applications on the controller Mac. On t
 
 ## Import and preview
 
-Choose a local file, pasted GLSL, a GitHub file, a GitHub repository with a ref, or a supported Shadertoy URL. The import results retain source diagnostics, original and converted source, and known digests. Select **Validate imports** with a paired host connected, then choose a validated entry and **Open native preview**. A repeated import preserves edits in the library copy.
+Choose a local file, pasted GLSL, a GitHub file, a GitHub repository with a ref, or a supported Shadertoy URL. The import results retain source diagnostics, original and converted source, and known digests. Use **Validate and add selected** with a paired host connected. Open a converted source directly in the editor or open the editable copy from the library. A repeated import preserves edits in the library copy.
 
 Authorized Shadertoy imports use the API key in the local login Keychain under service `com.vosc.authoring.shadertoy` and account `api-key`.
 
+## Run and recover a native preview
+
+Open or create a GLSL draft, connect to its paired render host, and choose **Run** (⌘Return). The preview window opens on the render host. The status reports a live revision after the host confirms a draw. After a compile or link failure, use **Problems** to inspect the native log. **Jump to line** selects the reported line, opening an attempted-source snapshot when the working text has changed. The previous confirmed shader and controls keep drawing while an edit is being prepared or a mapping change is under review.
+
+Unchanged writable uniforms retain compatible fixed values and OSC mappings. When a mapping would change, review the candidate's fallback before applying it. Retained mappings can be staged against a compatible target for a later Run or discarded. Auto-run starts off. Enable it after the first successful manual Run and use **Pause auto-run** to stop scheduled attempts.
+
+**Restore preview** uses the accepted snapshot on its original paired host. If you connect to a different host, **Use this host** selects a destination. A separate Run sends the working source to it.
+
 ## Map OSC input
 
-On **Draft**, add a named slot and apply an **OSC range** to a writable shader component. Use the stable ID shown alongside the slot name and set **Low** and **High**. **Fixed** returns that component to a constant.
+In **Inspector**, add a named slot and apply an **OSC range** to a writable shader component. Use the stable ID shown alongside the slot name and set **Low** and **High**. **Fixed** returns that component to a constant.
 
 Choose **Enable OSC input** and use the displayed UDP port on the controller. The external sender runs on the same machine and sends one amplitude-only message to `127.0.0.1`. Use address `/input/data` with the slot ID as an OSC string and amplitude as an OSC float between 0 and 1. If the displayed port is 49152 and the slot ID is `s0123456789ab`, SuperCollider can send a midpoint sample as follows.
 
@@ -46,6 +54,6 @@ The relay accepts individual sample messages for configured slot IDs. The select
 
 ## Save and reopen
 
-**Save draft** captures the accepted shader, paired destination, slot definitions and bindings after checking the native preview receipt. **Open draft** reads the saved document offline. Connect to its paired host and choose **Restore preview** to resume.
+**Save draft** writes the working source and any accepted snapshot, including its slot definitions and bindings. You can open and save drafts offline, including work with GLSL errors.
 
-**Export replay** creates a new folder containing `scene.vosc.json` and `draft.frag`. Keep those files together and open the scene in a separate VOSC renderer with `vosc --scene "/path/to/scene.vosc.json"`. Runtime OSC samples stay external to the saved files.
+**Export replay** uses the named accepted revision and creates a new folder containing `scene.vosc.json` and `draft.frag`. Keep those files together and open the scene in a separate VOSC renderer with `vosc --scene "/path/to/scene.vosc.json"`. Runtime OSC samples stay external to the saved files.

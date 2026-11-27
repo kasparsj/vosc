@@ -357,6 +357,17 @@ void Shader::installDirectSource(PreparedDirectSource&& prepared,
     }
 }
 
+void Shader::swapDraftProgram(DraftProgram& draft) {
+    auto& bindings = VariablePool::getPool(this);
+    shader.swap(draft.source.program);
+    shaderPath.swap(draft.path);
+    directSource.swap(draft.source.source);
+    uniforms.swap(draft.source.uniforms);
+    uniformProgram = shader ? shader->getProgram() : 0;
+    vars.swap(draft.variables);
+    bindings.swap(draft.pool);
+}
+
 bool Shader::restoreDirectSource(const DirectSourceState& state) {
     if (!state.program || !state.program->isLoaded()) return false;
     auto& pool = VariablePool::getPool(this);

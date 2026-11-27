@@ -5,6 +5,8 @@
 #include "PerformanceTelemetry.hpp"
 #include "ShaderTrialPolicy.hpp"
 #include "../shader/Shader.h"
+#include "../input/Inputs.hpp"
+#include <set>
 #include <deque>
 #include <map>
 #include <optional>
@@ -32,7 +34,8 @@ public:
     void noteExternalSample() { ++externalEpoch; }
     void noteControlAdmission() { ++configurationEpoch; }
     void beforeLegacyControl(bool inputSample);
-    void setDraftSamplePort(unsigned int port) { draftSamplePort = port; }
+    void enableDraftPreview() { draftPreview = true; }
+    void enableDraftValidation() { draftValidation = true; }
     void interruptTrial();
     bool canBeginSceneReplay() const { return !trial && pendingCount() == 0 && queued.empty() && captures.empty(); }
     uint64_t configurationSerial() const { return revision ^ (configurationEpoch << 32); }
@@ -82,6 +85,7 @@ private:
     };
     std::string handle(const std::string& line);
     ofJson dispatch(const ofJson& request);
+    const Receipt* findReceipt(const std::string& id) const;
     void validate(const std::string& method, const ofJson& params) const;
     void execute(const std::string& id);
     ofJson scene() const;
@@ -150,7 +154,38 @@ private:
     uint64_t frame = 0;
     uint64_t externalEpoch = 0;
     uint64_t configurationEpoch = 0;
-    std::optional<unsigned int> draftSamplePort;
+    struct DraftCandidate {
+        Shader::DraftProgram program;
+        Inputs inputs;
+        ofJson slots;
+        ofJson bindings;
+        std::string lease, token, sourceDigest;
+        uint64_t revision = 0;
+        double expiresAt = 0;
+    };
+    struct DraftDraw {
+        std::string id;
+        std::unique_ptr<DraftCandidate> baseline;
+        ofJson previousActivation;
+        uint64_t previousRevision = 0;
+        uint64_t previousSampleSequence = 0;
+        GLuint expectedProgram = 0;
+        std::map<std::string, float> expectedSlots;
+        std::vector<std::string> expectedBindings;
+        bool restoring = false;
+    };
+    bool draftPreview = false;
+    bool draftValidation = false;
+    std::unique_ptr<DraftCandidate> draftCandidate;
+    DraftDraw draftDraw;
+    std::string queuedDraftCommit;
+    std::set<std::string> fencedDraftLeases;
+    ofJson draftActivation;
+    uint64_t draftSampleSequence = 0;
+    std::optional<Receipt> draftCommitReceipt;
+    std::optional<Receipt> draftControlReceipt;
+    bool executeDraft(const std::string& id, const std::string& method, const ofJson& params, uint64_t logStart);
+    void settleDraftDraw();
     std::unique_ptr<Trial> trial;
 #ifdef VOSC_RECOVERY_TESTING
     std::optional<double> recoveryTestPreviousDrawStart;

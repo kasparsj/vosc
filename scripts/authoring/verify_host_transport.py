@@ -9,6 +9,7 @@ from contextlib import closing, contextmanager
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import shlex
 import socket
@@ -16,6 +17,7 @@ import ssl
 import subprocess
 import sys
 import tempfile
+from threading import Event, Thread
 import time
 import uuid
 
@@ -119,11 +121,140 @@ def owned_draft(host_pid, binary):
         pid, parent, command = row.strip().split(maxsplit=2)
         if int(parent) == host_pid and command.startswith(str(binary) + " --draft-data-root "):
             arguments = shlex.split(command.removeprefix(str(binary) + " "))
-            if "--draft-sample-port" in arguments:
+            if "--draft-preview" in arguments:
                 matches.append((int(pid), Path(arguments[1]), command))
     require(len(matches) == 1, "expected exactly one owned native preview under the specified host")
     return matches[0]
 
+
+def prepare(wire, rpc, context, state, source, *, lease, document, sequence, slots=(), bindings=None):
+    request_id = uuid.uuid4().hex
+    data = {
+        **source, "lease": lease, "documentId": document, "generation": 1,
+        "editSequence": sequence - 1, "runSequence": sequence,
+        "slots": list(slots), "bindings": bindings or {},
+    }
+    result = accepted(wire.call(rpc, context, "run.prepare", data, state=state, id=request_id))
+    require(result["token"] == request_id and result["lease"] == lease
+            and result["sourceDigest"] == source["sha256"] and result["runSequence"] == sequence, result)
+    return result
+
+
+def commit(wire, rpc, context, state, staged, *, lose_reply=False):
+    request_id = uuid.uuid4().hex
+    args = {"lease": staged["lease"], "token": staged["token"]}
+    if lose_reply:
+        with wire.connect(rpc, context) as connection:
+            wire.send(connection, "run.commit", args, state=state, id=request_id)
+            # Confirm the request hit the host before dropping the unread reply.
+            retained(wire, rpc, context, request_id, {"pending", "completed"})
+        reply = retained(wire, rpc, context, request_id, {"completed"})["response"]
+        duplicate = wire.call(rpc, context, "run.commit", args, state=state, id=request_id)
+        require(duplicate == reply, "identical retry changed a retained commit")
+        conflicting = wire.call(rpc, context, "run.commit", {**args, "token": uuid.uuid4().hex},
+                                state=state, id=request_id)
+        require(conflicting["error"]["code"] == "id_conflict", conflicting)
+    else:
+        reply = wire.call(rpc, context, "run.commit", args, state=state, id=request_id)
+    result = accepted(reply)
+    receipt = result["receipt"]
+    draw = receipt["result"]["scene"]
+    require(result["commitID"] == receipt["id"] == request_id
+            and result["lease"] == staged["lease"] and result["token"] == staged["token"]
+            and result["sourceDigest"] == staged["sourceDigest"]
+            and result["controlDigest"] == staged["controlDigest"]
+            and receipt["status"] == "rendered"
+            and draw["frame"] == receipt["frame"] and draw["rendered_revision"] == result["revision"], result)
+    return result
+
+
+def retained(wire, rpc, context, request_id, wanted):
+    until = time.monotonic() + 4
+    while time.monotonic() < until:
+        result = accepted(wire.call(rpc, context, "receipt.get", {"id": request_id}))
+        if result["state"] in wanted:
+            return result
+        time.sleep(0.05)
+    raise RuntimeError(f"request {request_id} did not reach receipt state {wanted}")
+
+
+@contextmanager
+def drop_native_replies(control, request_id):
+    """Drop exactly the typed mutation reply and its first lookup on an owned socket."""
+    direct = control.with_name("direct.sock")
+    require(control.is_socket() and not direct.exists(), "expected an owned private native listening socket")
+    control.rename(direct)
+    received = []
+    failures = []
+    stopped = Event()
+    listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    proxy = None
+
+    def relay():
+        while not stopped.is_set():
+            try:
+                caller, _ = listener.accept()
+            except socket.timeout:
+                continue
+            except OSError as error:
+                if not stopped.is_set():
+                    failures.append(str(error))
+                return
+            try:
+                with caller, caller.makefile("rb") as incoming, socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as child:
+                    caller.settimeout(2)
+                    line = incoming.readline(256 * 1024 + 1)
+                    if not line:
+                        continue
+                    require(line.endswith(b"\n"), "private request was not bounded")
+                    request = json.loads(line)
+                    child.settimeout(2)
+                    child.connect(str(direct))
+                    child.sendall(line)
+                    with child.makefile("rb") as outbound:
+                        reply = outbound.readline(8 * 1024 * 1024 + 1)
+                    require(reply.endswith(b"\n"), "owned native endpoint returned no bounded reply")
+                    selected = (
+                        not received and request["id"] == request_id and request["method"] == "draft_configure_slot"
+                    ) or (
+                        len(received) == 1 and request["method"] == "get_request"
+                        and request["params"]["request_id"] == request_id
+                    )
+                    if selected:
+                        received.append({"method": request["method"], "request": request["id"],
+                                         "native": json.loads(reply)})
+                    else:
+                        caller.sendall(reply)
+            except (OSError, ValueError, RuntimeError) as error:
+                failures.append(str(error))
+
+    try:
+        listener.bind(str(control))
+        os.chmod(control, 0o600)
+        listener.listen()
+        listener.settimeout(0.1)
+        proxy = Thread(target=relay, name="owned-native-test-proxy")
+        proxy.start()
+        yield received
+    finally:
+        stopped.set()
+        listener.close()
+        if proxy is not None:
+            proxy.join(timeout=5)
+            require(not proxy.is_alive(), "owned fault proxy did not stop")
+        control.unlink(missing_ok=True)
+        direct.rename(control)
+    require(not failures, failures)
+
+
+def wait_for_renderer_reset(wire, rpc, context, epoch, root):
+    until = time.monotonic() + 5
+    while time.monotonic() < until:
+        state = accepted(wire.call(rpc, context, "health"))
+        if state["epoch"] != epoch and state["needsRestore"] and not root.exists():
+            return state
+        time.sleep(0.05)
+    raise RuntimeError("owned renderer did not invalidate its epoch and clean up on process loss")
 
 def run(args, output, report):
     host_binary = args.app.resolve(strict=True) / "Contents/MacOS/VOSC Render Host"
@@ -186,9 +317,12 @@ def run(args, output, report):
                 show_first = observe(show, "show-first", output, report)
                 report["show_baseline_cadence"] = cadence(show)
                 state = accepted(wire.call(rpc, a, "health"))
-                state = accepted(wire.call(rpc, a, "activate", data, state=state))
-                require(state["receipt"]["status"] == "rendered" and state["sourceDigest"] == data["sha256"], state)
-                report["activation"] = state
+                document = str(uuid.uuid4())
+                lease = str(uuid.uuid4())
+                staged = prepare(wire, rpc, a, state, data, lease=lease, document=document, sequence=1)
+                state = commit(wire, rpc, a, state, staged, lose_reply=True)
+                report["initial_prepare"] = staged
+                report["lost_commit_reply"] = state
                 report["show_concurrent_cadence"] = cadence(show)
                 pid, root, command = owned_draft(args.host_pid, binary)
                 report["native_preview"] = {"pid": pid, "root": str(root), "command": command}
@@ -226,7 +360,9 @@ def run(args, output, report):
                     report["samples"] = []
                     frames = []
                     for index, (sample, expected) in enumerate(((0, 0.2), (0.5, 0.5), (1, 0.8))):
-                        sampled = accepted(wire.call(rpc, a, "sample", {"slot": "sTransport", "value": sample}, state=state))
+                        sampled = accepted(wire.call(rpc, a, "sample", {
+                            "lease": lease, "sequence": index + 1, "slot": "sTransport", "value": sample,
+                        }, state=state))
                         gain = next(uniform["values"][0] for uniform in sampled["uniforms"] if uniform["name"] == "gain")
                         require(sampled["revision"] == state["revision"] and sampled["samples"]["sTransport"] == sample,
                                 sampled)
@@ -250,7 +386,38 @@ def run(args, output, report):
                         subprocess.run(["/bin/kill", "-CONT", str(pid)], check=True)
                 report["timeout"] = {"elapsed": time.monotonic() - before, "response": timeout}
                 require(not timeout["ok"] and timeout["error"]["code"] == "renderer_timeout", timeout)
-                require(not root.exists(), "stalled draft process did not release its private data")
+                live = accepted(wire.call(rpc, a, "health"))
+                require(owned_draft(args.host_pid, binary)[0] == pid and root.exists()
+                        and live["epoch"] == state["epoch"] and live["commitID"] == state["commitID"]
+                        and live["revision"] == state["revision"], "lost response reset the healthy private renderer")
+                report["healthy_after_timeout"] = live
+                # A real native request is forwarded, but the host loses the reply
+                # and the first lookup. Recovery must use the original native ID.
+                slot_request = uuid.uuid4().hex
+                require(owned_draft(args.host_pid, binary)[0] == pid, "draft owner changed before queued control")
+                with drop_native_replies(root.parent / "control.sock", slot_request) as native_wire:
+                    before = time.monotonic()
+                    delayed = wire.call(rpc, a, "slot.configure",
+                                        {"id": "sDelayed", "label": "Delayed", "default": 0.25},
+                                        state=state, id=slot_request)
+                    delayed_elapsed = time.monotonic() - before
+                    require(not delayed["ok"] and delayed["error"]["code"] == "renderer_uncertain", delayed)
+                    require([step["method"] for step in native_wire] == ["draft_configure_slot", "get_request"]
+                            and native_wire[0]["native"]["ok"]
+                            and native_wire[1]["native"]["result"]["id"] == slot_request, native_wire)
+                    recovered = retained(wire, rpc, a, slot_request, {"completed"})["response"]
+                changed = accepted(recovered)
+                slot_draw = changed["receipt"]
+                drawn_scene = slot_draw["result"]["scene"]
+                require(changed["epoch"] == state["epoch"] and changed["revision"] == state["revision"] + 1
+                        and slot_draw["id"] == slot_request and slot_draw["status"] == "rendered"
+                        and drawn_scene["frame"] == slot_draw["frame"]
+                        and drawn_scene["rendered_revision"] == changed["revision"]
+                        and drawn_scene["draft_slots"]["sDelayed"] == 0.25
+                        and owned_draft(args.host_pid, binary)[0] == pid, recovered)
+                report["late_control"] = {"elapsed": delayed_elapsed, "unconfirmed": delayed, "confirmed": recovered,
+                                          "dropped_native_replies": native_wire}
+                state = changed
                 show_after = observe(show, "show-after-stall", output, report)
                 require(compare(show_first, show_checkpoint)["max_channel_error"] == 0
                         and compare(show_checkpoint, show_after)["max_channel_error"] == 0
@@ -258,14 +425,23 @@ def run(args, output, report):
                                 for key in ("layers", "revision", "external_epoch"))
                         and report["show-after-stall"]["state"]["frame"] > report["show-before-stall"]["state"]["frame"],
                         "separate show did not keep drawing unchanged through the draft stall")
-                fresh = accepted(wire.call(rpc, a, "health"))
-                require(fresh["epoch"] != state["epoch"] and fresh["needsRestore"], fresh)
-                stale = wire.call(rpc, a, "sample", {"slot": "sTransport", "value": 0.2}, state=state)
-                require(stale["error"]["code"] == "stale_epoch", stale)
+                require(owned_draft(args.host_pid, binary)[0] == pid, "draft owner changed before explicit loss")
+                subprocess.run(["/bin/kill", "-TERM", str(pid)], check=True)
+                fresh = wait_for_renderer_reset(wire, rpc, a, state["epoch"], root)
+                stale = wire.call(rpc, a, "sample", {
+                    "lease": lease, "sequence": 4, "slot": "sTransport", "value": 0.2,
+                }, state=state)
+                require(stale["error"]["code"] in {"stale_epoch", "stale_lease"}, stale)
                 unknown = accepted(wire.call(rpc, a, "receipt.get", {"id": lost_id}))
                 require(unknown["state"] == "unknown", "stale receipt survived renderer loss")
-                rehydrated = accepted(wire.call(rpc, a, "activate", data, state=fresh))
-                require(rehydrated["epoch"] == fresh["epoch"] and rehydrated["receipt"]["status"] == "rendered", rehydrated)
+                staged = prepare(wire, rpc, a, fresh, data, lease=str(uuid.uuid4()), document=document, sequence=2,
+                                 slots=[{"id": "sTransport", "label": "Transport", "default": 0}],
+                                 bindings={"gain": {"type": "float", "components": [
+                                     {"slot": "sTransport", "low": 0.2, "high": 0.8},
+                                 ]}})
+                rehydrated = commit(wire, rpc, a, fresh, staged)
+                require(rehydrated["epoch"] == fresh["epoch"] and rehydrated["samples"]["sTransport"] == 0,
+                        rehydrated)
                 report.update(stale_epoch=stale, stale_receipt=unknown, reactivated=rehydrated)
 
         while time.time() * 1000 <= second["expiresAt"]:

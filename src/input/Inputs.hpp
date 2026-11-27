@@ -19,6 +19,7 @@ public:
     bool checkOnset();
     void log();
     void clear();
+    void swap(Inputs& other) noexcept { inputs.swap(other.inputs); }
     
 private:
     map<string, shared_ptr<OSCInput>> inputs;

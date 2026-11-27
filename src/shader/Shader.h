@@ -50,6 +50,14 @@ public:
         Uniforms uniforms;
     };
 
+    struct DraftProgram {
+        PreparedDirectSource source;
+        string path = "source";
+        map<string, shared_ptr<BaseVar>> variables;
+        map<string, shared_ptr<BaseVar>> pool;
+    };
+    void swapDraftProgram(DraftProgram& draft);
+
     static map<string, ofxAutoReloadedShader>& shaderCache();
     static string random();
     static bool isRendererUniform(const string& name);

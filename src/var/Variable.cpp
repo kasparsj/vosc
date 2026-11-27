@@ -92,7 +92,7 @@ void Variable<T>::set(const vector<string>& expr) {
 }
 
 template<typename T>
-void Variable<T>::set(const vector<string>& expressions, const vector<bool>& mask) {
+void Variable<T>::set(const vector<string>& expressions, const vector<bool>& mask, const Inputs* stagedInputs) {
     _isExpr = true;
     expressionMask = mask.size() == expressions.size() ? mask : vector<bool>(expressions.size(), true);
     componentExpressionMode = std::is_same<T, int>::value || supportsComponentExpressions<T>();
@@ -140,7 +140,7 @@ void Variable<T>::set(const vector<string>& expressions, const vector<bool>& mas
         values.resize(std::is_arithmetic<T>::value ? expressions.size() : 1);
         this->expr.set(expressions);
     }
-    addSharedVars();
+    addSharedVars(stagedInputs);
 }
 
 template<typename T>
@@ -184,14 +184,14 @@ void Variable<T>::set(const ofxOscMessage& m, int idx) {
 }
 
 template<typename T>
-void Variable<T>::addSharedVars() {
+void Variable<T>::addSharedVars(const Inputs* stagedInputs) {
     if (componentExpressionMode) {
         const auto& pool = VariablePool::sharedVariables();
         for (const auto& kv : pool) {
             Variable<float>* floatVar = dynamic_cast<Variable<float>*>(kv.second.get());
             if (floatVar != NULL) addExpressionVariable(componentExpressions, kv.first, floatVar->get());
         }
-        const auto& inputs = Inputs::get().all();
+        const auto& inputs = (stagedInputs ? *stagedInputs : Inputs::get()).all();
         for (const auto& kv : inputs)
             addExpressionVariable(componentExpressions, "in_" + kv.first, kv.second->get());
         addExpressionConstant(componentExpressions, "left", 0.f);
@@ -208,7 +208,7 @@ void Variable<T>::addSharedVars() {
             addExpressionVariable(expr, kv.first, floatVar->get());
         }
     }
-    const auto& inputs = Inputs::get().all();
+    const auto& inputs = (stagedInputs ? *stagedInputs : Inputs::get()).all();
     for (const auto& kv : inputs) {
         // todo: support other properties (e.g. loudness, raw amplitude)
         addExpressionVariable(expr, "in_" + kv.first, kv.second->get());
@@ -221,7 +221,7 @@ void Variable<T>::addSharedVars() {
 }
 
 template<>
-void Variable<int>::addSharedVars() {
+void Variable<int>::addSharedVars(const Inputs* stagedInputs) {
     // For int variables, use float expressions and cast to int
     const auto& pool = VariablePool::sharedVariables();
     for (const auto& kv : pool) {
@@ -230,7 +230,7 @@ void Variable<int>::addSharedVars() {
             addExpressionVariable(componentExpressions, kv.first, floatVar->get());
         }
     }
-    const auto& inputs = Inputs::get().all();
+    const auto& inputs = (stagedInputs ? *stagedInputs : Inputs::get()).all();
     for (const auto& kv : inputs) {
         addExpressionVariable(componentExpressions, "in_" + kv.first, kv.second->get());
     }

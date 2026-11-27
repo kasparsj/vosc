@@ -5,6 +5,8 @@
 #include "ofxExpr.hpp"
 #include <type_traits>
 
+class Inputs;
+
 template <typename T>
 class Variable : public BaseVar {
 public:
@@ -16,9 +18,9 @@ public:
     void set(vector<T> value);
     void set(const string& expr);
     void set(const vector<string>& expr);
-    void set(const vector<string>& expr, const vector<bool>& expressionMask);
+    void set(const vector<string>& expr, const vector<bool>& expressionMask, const Inputs* stagedInputs = nullptr);
     bool validateComponentExpressions();
-    void addSharedVars();
+    void addSharedVars(const Inputs* stagedInputs = nullptr);
     void set(const ofxOscMessage& m, int idx = 1);
     T& get(int idx = 0) {
         return values.at(idx);

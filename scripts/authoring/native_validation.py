@@ -171,9 +171,10 @@ class NativeValidator:
                        error.get("message", "renderer did not return a terminal drawn receipt"),
                        receipt=receipt)
 
-    async def _validate(self, source: str) -> dict:
+    async def _validate(self, source: bytes) -> dict:
         async with asyncio.timeout(self.timeout):
-            receipt = await self._request("publish_shader", {"layer": 0, "source": source})
+            payload = base64.b64encode(source).decode("ascii")
+            receipt = await self._request("publish_shader", {"layer": 0, "source_base64": payload})
             if receipt.get("ok") is not True or receipt.get("status") != "rendered":
                 return self._failure(receipt)
             snapshot = await self._client.query("get_scene", {})
@@ -216,7 +217,7 @@ class NativeValidator:
             except (OSError, TimeoutError, RuntimeError, EngineClientError) as error:
                 return self._interrupted("renderer_startup", error)
             try:
-                result = asyncio.run(self._validate(text))
+                result = asyncio.run(self._validate(source))
             except TimeoutError as error:
                 return self._interrupted("validation_timeout", error)
             except EngineClientError as error:

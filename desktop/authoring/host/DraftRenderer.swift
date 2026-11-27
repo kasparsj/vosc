@@ -9,11 +9,10 @@ private let vertexAssets = [
 ]
 
 struct Fragment {
-    let text: String
+    let base64: String
     let digest: String
 
     init(_ request: Request) throws {
-        try request.require(["source", "sha256"])
         guard let encoded = request.params["source"] as? String,
               encoded.utf8.count <= 4 * ((sourceLimit + 2) / 3),
               let bytes = Data(base64Encoded: encoded), !bytes.isEmpty, bytes.count <= sourceLimit,
@@ -26,14 +25,13 @@ struct Fragment {
               source.range(of: #"\\\r?\n"#, options: .regularExpression) == nil else {
             throw WireError("unsupported_dependency", "File includes and continued source directives are unsupported")
         }
-        text = source
+        base64 = encoded
         digest = claimed
     }
 }
 
 final class DraftRenderer {
     let process: Process
-    private(set) var samplePort: UInt16?
     private let root: URL
     private let controlPath: String
     private let logPath: URL
@@ -73,7 +71,7 @@ final class DraftRenderer {
         }
         process.executableURL = binary
         process.arguments = ["--draft-data-root", data.path, "--size", validation ? "160x120" : "640x480", "--fps", "30"]
-        if !validation { process.arguments?.append(contentsOf: ["--draft-sample-port", "0"]) }
+        if !validation { process.arguments?.append(contentsOf: ["--draft-preview"]) }
         process.currentDirectoryURL = root
         var env = ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("VOSC_") }
         env["VOSC_CONTROL_SOCKET"] = controlPath
@@ -99,11 +97,10 @@ final class DraftRenderer {
                 throw WireError("renderer_capabilities", "Installed VOSC cannot handle private draft operations")
             }
             if !validation {
-                guard let port = wireInt(capabilities["draft_sample_port"]), (1...65535).contains(port),
-                      ["draft_activate", "draft_configure_slot", "draft_bind_uniform"].allSatisfy(operations.contains) else {
-                    throw WireError("renderer_capabilities", "Installed VOSC cannot handle typed draft samples and bindings")
+                guard ["draft_prepare", "draft_commit", "draft_cancel", "draft_fence", "draft_sample",
+                       "draft_configure_slot", "draft_bind_uniform"].allSatisfy(operations.contains) else {
+                    throw WireError("renderer_capabilities", "Install the matching VOSC renderer to run draft transactions")
                 }
-                samplePort = UInt16(port)
             }
             _ = try mutate("configure_layers", ["count": 1, "layout": "stack"])
         } catch {
@@ -133,52 +130,34 @@ final class DraftRenderer {
         return data
     }
 
-    func mutate(_ method: String, _ params: WireObject) throws -> WireObject {
+    func mutate(_ method: String, _ params: WireObject, id: String = UUID().uuidString,
+                expecting status: String = "rendered") throws -> WireObject {
         let until = deadline()
-        let id = UUID().uuidString
-        var response = try exchange(method, params, id: id, deadline: until)
-        while ["queued", "applied"].contains(response["status"] as? String ?? "") {
-            Thread.sleep(forTimeInterval: 0.02)
-            let polled = try exchange("get_request", ["request_id": id], id: UUID().uuidString, deadline: until)
-            guard let next = polled["result"] as? WireObject, next["id"] as? String == id else {
-                throw WireError("renderer_protocol", "Native renderer returned a different request receipt")
-            }
-            response = next
-        }
-        try check(response)
-        guard response["status"] as? String == "rendered", wireInt(response["frame"]) != nil,
-              wireInt(response["revision"]) != nil else {
-            throw WireError("renderer_protocol", "Native renderer did not acknowledge a drawn frame")
-        }
-        return response
+        let response = try exchange(method, params, id: id, deadline: until)
+        return try settle(response, id: id, expecting: status, until: until)
     }
 
-    func sample(slot: String, amplitude: Double) throws {
-        guard let port = samplePort else { throw WireError("renderer_transport", "Draft sample listener is unavailable") }
-        let descriptor = socket(AF_INET, SOCK_DGRAM, 0)
-        guard descriptor >= 0 else { throw WireError("renderer_transport", "Could not open loopback UDP sender") }
-        defer { close(descriptor) }
-        var address = sockaddr_in()
-        address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
-        address.sin_family = sa_family_t(AF_INET)
-        address.sin_port = port.bigEndian
-        address.sin_addr.s_addr = in_addr_t(INADDR_LOOPBACK).bigEndian
+    func recover(_ id: String, expecting status: String) throws -> WireObject {
+        let until = deadline()
+        let response = try query("get_request", ["request_id": id], until: until)
+        return try settle(response, id: id, expecting: status, until: until)
+    }
 
-        var packet = Data("/input/data\0,sf\0".utf8)
-        packet.append(contentsOf: slot.utf8)
-        packet.append(0)
-        while packet.count % 4 != 0 { packet.append(0) }
-        var value = Float(amplitude).bitPattern.bigEndian
-        withUnsafeBytes(of: &value) { packet.append(contentsOf: $0) }
-        let sent = withUnsafePointer(to: &address) { address in
-            address.withMemoryRebound(to: sockaddr.self, capacity: 1) { destination in
-                packet.withUnsafeBytes { payload in
-                    sendto(descriptor, payload.baseAddress, payload.count, MSG_DONTWAIT,
-                           destination, socklen_t(MemoryLayout<sockaddr_in>.size))
-                }
-            }
+    private func settle(_ initial: WireObject, id: String, expecting status: String, until: UInt64) throws -> WireObject {
+        var response = initial
+        while ["queued", "applied", "rolling_back"].contains(response["status"] as? String ?? "") {
+            Thread.sleep(forTimeInterval: 0.02)
+            response = try query("get_request", ["request_id": id], until: until)
         }
-        guard sent == packet.count else { throw WireError("renderer_transport", "Could not relay the sample on loopback") }
+        guard response["id"] as? String == id else {
+            throw WireError("renderer_protocol", "Native renderer returned a different request receipt")
+        }
+        try check(response)
+        guard response["status"] as? String == status,
+              status != "rendered" || (wireInt(response["frame"]) != nil && wireInt(response["revision"]) != nil) else {
+            throw WireError("renderer_protocol", "Native renderer did not return a matching \(status) receipt")
+        }
+        return response
     }
 
     private func deadline() -> UInt64 { DispatchTime.now().uptimeNanoseconds + 1_850_000_000 }

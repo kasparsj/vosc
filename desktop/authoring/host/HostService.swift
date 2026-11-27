@@ -37,10 +37,28 @@ final class HostService {
     private var status = "Draft service is off"
     private var stopping = false
     private var busy = false
-    private var pendingRequest: String?
+    private var pendingRequests: [String: Data] = [:]
+    private enum DrawKind { case run, controls }
+    private struct UnconfirmedDraw {
+        let key: String
+        let id: String
+        let owner: String
+        let bytes: Data
+        let kind: DrawKind
+    }
+    private var uncertainRequest: UnconfirmedDraw?
+    private var leaseOwner: String?
+    private var previewLease: String?
+    private let fenceQueue = DispatchQueue(label: "com.vosc.render-host.draft-fence")
+    private var fencesInFlight = 0
+    private var revokedPreviewLease: String?
     private var receipts: [String: (Data, WireObject)] = [:]
     private var receiptOrder: [String] = []
-    private let mutations: Set<String> = ["activate", "slot.configure", "uniform.set"]
+    private var lastDraws: [DrawKind: (key: String, bytes: Data, response: WireObject)] = [:]
+    private let mutations: Set<String> = [
+        "run.prepare", "run.commit", "run.cancel", "run.fence", "slot.configure", "uniform.set",
+    ]
+    private let controlled: Set<String> = ["run.commit", "run.cancel", "run.fence", "slot.configure", "uniform.set", "sample"]
 
     init(updated: @escaping (HostView) -> Void) {
         let previous = preferences.string(forKey: "draft-host-target")
@@ -51,8 +69,20 @@ final class HostService {
         self.updated = updated
         draft.onReset = { [weak self] in
             self?.queue.async { [weak self] in
-                self?.receipts.removeAll()
-                self?.receiptOrder.removeAll()
+                guard let self = self else { return }
+                let revokedOutcome = self.uncertainRequest.map { self.approved[$0.owner] == nil } ?? false
+                let revocationPending = self.revokedPreviewLease != nil || revokedOutcome
+                self.receipts.removeAll()
+                self.receiptOrder.removeAll()
+                self.lastDraws.removeAll()
+                self.uncertainRequest = nil
+                self.leaseOwner = nil
+                self.previewLease = nil
+                self.revokedPreviewLease = nil
+                if revocationPending, self.bootstrap?.port != nil, self.authenticated?.port != nil {
+                    self.status = "Draft service is ready"
+                    self.publish()
+                }
             }
         }
         publish()
@@ -130,6 +160,28 @@ final class HostService {
             let prefix = fingerprint + ":"
             receipts = receipts.filter { !$0.key.hasPrefix(prefix) }
             receiptOrder.removeAll { $0.hasPrefix(prefix) }
+            lastDraws = lastDraws.filter { !$0.value.key.hasPrefix(prefix) }
+            if leaseOwner == fingerprint, let lease = previewLease, revokedPreviewLease != lease {
+                revokedPreviewLease = lease
+                fencesInFlight += 1
+                fenceQueue.async { [self] in
+                    let outcome = Result { try draft.revoke(lease) }
+                    queue.async { [self] in
+                        fencesInFlight -= 1
+                        guard previewLease == lease, leaseOwner == fingerprint else { return }
+                        switch outcome {
+                        case .success:
+                            leaseOwner = nil
+                            previewLease = nil
+                            revokedPreviewLease = nil
+                            if uncertainRequest?.owner == fingerprint { showUnconfirmedRevocation() }
+                        case .failure:
+                            status = "Controller revoked. Stop and restart the draft service to recover its private preview."
+                            publish()
+                        }
+                    }
+                }
+            }
             publish()
         }
     }
@@ -147,6 +199,7 @@ final class HostService {
         pairing.removeAll()
         receipts.removeAll()
         receiptOrder.removeAll()
+        lastDraws.removeAll()
     }
 
     private func publish() {
@@ -239,38 +292,121 @@ final class HostService {
                     throw WireError("invalid_request", "A bounded request ID is required")
                 }
                 let reference = fingerprint + ":" + query
-                let result: WireObject
-                if let (_, response) = receipts[reference] {
-                    result = ["state": "completed", "response": response]
+                if let (_, response) = recordedReceipt(reference) {
+                    session.respond(success(request, ["state": "completed", "response": response]))
+                } else if pendingRequests[reference] != nil || (uncertainRequest?.key == reference && busy) {
+                    session.respond(success(request, ["state": "pending"]))
+                } else if uncertainRequest?.key == reference {
+                    busy = true
+                    draftQueue.async { [self] in
+                        let result: WireObject
+                        do {
+                            if let recovered = try draft.recoverMutation(query) {
+                                result = ["state": "completed", "response": ["id": query, "ok": true, "result": recovered]]
+                            } else {
+                                result = ["state": "unknown"]
+                            }
+                        } catch let error as WireError where error.code == "renderer_uncertain" {
+                            result = ["state": "pending"]
+                        } catch {
+                            result = ["state": "completed", "response": ["id": query, "ok": false, "error":
+                                (error as? WireError ?? WireError("host_error", "Could not recover the native draw")).fields]]
+                        }
+                        queue.async { [self] in
+                            busy = false
+                            if let recovered = result["response"] as? WireObject,
+                               let uncertain = uncertainRequest, uncertain.key == reference {
+                                retireUncertain(uncertain, response: recovered)
+                            }
+                            if approved[fingerprint] != nil { session.respond(success(request, result)) }
+                            else { session.stop() }
+                        }
+                    }
                 } else {
-                    result = ["state": pendingRequest == reference ? "pending" : "unknown"]
+                    session.respond(success(request, ["state": "unknown"]))
                 }
-                session.respond(success(request, result))
                 return
             }
-            if let (bytes, previous) = receipts[key] {
+            if let (bytes, previous) = recordedReceipt(key) {
                 guard bytes == request.bytes else { throw WireError("id_conflict", "Request ID has different content") }
                 session.respond(previous)
                 return
             }
-            guard !busy else { throw WireError("busy", "A private renderer operation is already in flight") }
+            if let bytes = pendingRequests[key] {
+                guard bytes == request.bytes else { throw WireError("id_conflict", "Request ID has different content") }
+                throw WireError("busy", "The same request is already in flight. Check its receipt")
+            }
+            if let uncertain = uncertainRequest, uncertain.key == key {
+                guard uncertain.bytes == request.bytes else { throw WireError("id_conflict", "Request ID has different content") }
+                throw WireError("renderer_uncertain", "Check the receipt for the earlier request before retrying")
+            }
+            let isFence = request.method == "run.fence"
+            guard fencesInFlight == 0, isFence || !busy else {
+                throw WireError("busy", "A private renderer operation is already in flight")
+            }
+            if revokedPreviewLease != nil, mutations.contains(request.method) || request.method == "sample" {
+                throw WireError("revoked_lease_unconfirmed", "Restart the draft service before publishing or relaying samples")
+            }
+            if uncertainRequest != nil, !isFence, mutations.contains(request.method) || request.method == "sample" {
+                throw WireError("prior_draw_unconfirmed", "Verify the earlier native receipt before publishing or relaying samples")
+            }
+            let lease = request.params["lease"] as? String
+            let previousLease = previewLease
+            if request.method == "run.prepare" {
+                guard let lease = lease, UUID(uuidString: lease) != nil else {
+                    throw WireError("invalid_request", "A preview lease is required")
+                }
+                guard previewLease == nil || (leaseOwner == fingerprint && previewLease == lease) else {
+                    throw WireError("lease_owned", "The current preview lease must be fenced before switching drafts")
+                }
+                leaseOwner = fingerprint
+                previewLease = lease
+            } else if controlled.contains(request.method) {
+                guard leaseOwner == fingerprint, previewLease != nil,
+                      (!["run.commit", "run.cancel", "run.fence", "sample"].contains(request.method) || lease == previewLease) else {
+                    throw WireError("stale_lease", "This paired controller does not own the requested preview lease")
+                }
+            }
             let retained = mutations.contains(request.method)
-            busy = true
-            if retained { pendingRequest = key }
-            draftQueue.async { [self] in
+            let draw = drawKind(request.method)
+            if isFence { fencesInFlight += 1 } else { busy = true }
+            if retained { pendingRequests[key] = request.bytes }
+            let operationQueue = isFence ? fenceQueue : draftQueue
+            let previousUncertain = isFence ? nil : uncertainRequest
+            operationQueue.async { [self] in
                 let response: WireObject
-                do { response = success(request, try draft.execute(request)) }
-                catch { response = failure(request, error) }
+                let uncertain: Bool
+                do {
+                    let result = try isFence ? draft.fence(request) : draft.execute(request)
+                    response = success(request, result)
+                    uncertain = false
+                } catch {
+                    response = failure(request, error)
+                    uncertain = (error as? WireError)?.code == "renderer_uncertain"
+                }
+                let previousOutcome = previousUncertain.flatMap { draft.completedMutation($0.id) }
                 queue.async { [self] in
-                    busy = false
-                    pendingRequest = nil
-                    if retained && approved[fingerprint] != nil && bootstrap != nil {
-                        if receipts.count >= 64, let oldest = receiptOrder.first {
-                            receiptOrder.removeFirst()
-                            receipts.removeValue(forKey: oldest)
-                        }
-                        receiptOrder.append(key)
-                        receipts[key] = (request.bytes, response)
+                    if let previous = previousUncertain, let outcome = previousOutcome {
+                        retireUncertain(previous, response: drawResponse(previous.id, outcome))
+                    }
+                    let accepted = response["ok"] as? Bool == true
+                    if isFence { fencesInFlight -= 1 } else { busy = false }
+                    pendingRequests.removeValue(forKey: key)
+                    let failedInitialPrepare = request.method == "run.prepare" && !accepted &&
+                        previousLease == nil && revokedPreviewLease != lease
+                    if isFence && accepted || failedInitialPrepare,
+                       leaseOwner == fingerprint, previewLease == lease {
+                        if revokedPreviewLease == lease { revokedPreviewLease = nil }
+                        leaseOwner = nil
+                        previewLease = nil
+                    }
+                    if uncertain, let draw = draw {
+                        uncertainRequest = UnconfirmedDraw(key: key, id: request.id, owner: fingerprint,
+                                                           bytes: request.bytes, kind: draw)
+                        if approved[fingerprint] == nil { showUnconfirmedRevocation() }
+                    }
+                    if retained && !uncertain && approved[fingerprint] != nil && bootstrap != nil {
+                        remember(key, bytes: request.bytes, response: response, draw: draw)
                     }
                     if approved[fingerprint] != nil { session.respond(response) } else { session.stop() }
                 }
@@ -278,6 +414,55 @@ final class HostService {
         } catch {
             session.respond(failure(request, error))
         }
+    }
+
+    private func drawResponse(_ id: String, _ outcome: Result<WireObject, Error>) -> WireObject {
+        switch outcome {
+        case .success(let result): return ["id": id, "ok": true, "result": result]
+        case .failure(let error):
+            let failure = error as? WireError ?? WireError("host_error", "Could not recover the native draw")
+            return ["id": id, "ok": false, "error": failure.fields]
+        }
+    }
+
+    private func retireUncertain(_ request: UnconfirmedDraw, response: WireObject) {
+        guard uncertainRequest?.key == request.key else { return }
+        uncertainRequest = nil
+        if approved[request.owner] != nil, bootstrap != nil {
+            remember(request.key, bytes: request.bytes, response: response, draw: request.kind)
+        } else if revokedPreviewLease == nil, bootstrap?.port != nil, authenticated?.port != nil {
+            status = "Draft service is ready"
+            publish()
+        }
+    }
+
+    private func showUnconfirmedRevocation() {
+        status = "Controller revoked. Check the native outcome or stop and restart the draft service."
+        publish()
+    }
+
+    private func drawKind(_ method: String) -> DrawKind? {
+        switch method {
+        case "run.commit": return .run
+        case "slot.configure", "uniform.set": return .controls
+        default: return nil
+        }
+    }
+
+    private func recordedReceipt(_ key: String) -> (Data, WireObject)? {
+        if let current = receipts[key] { return current }
+        guard let retained = lastDraws.values.first(where: { $0.key == key }) else { return nil }
+        return (retained.bytes, retained.response)
+    }
+
+    private func remember(_ key: String, bytes: Data, response: WireObject, draw: DrawKind?) {
+        if let draw = draw, response["ok"] as? Bool == true { lastDraws[draw] = (key, bytes, response) }
+        if receipts.count >= 64, let oldest = receiptOrder.first {
+            receiptOrder.removeFirst()
+            receipts.removeValue(forKey: oldest)
+        }
+        receiptOrder.append(key)
+        receipts[key] = (bytes, response)
     }
 
     private func pair(_ request: Request) throws -> WireObject {

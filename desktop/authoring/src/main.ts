@@ -206,6 +206,12 @@ function installDraftHandlers() {
   handle("host:disconnect", () => workspace.disconnect());
   handle("draft:workspace", () => workspace.view());
   handle("draft:reflect", () => workspace.reflect());
+  handle("draft:run", (mode) => workspace.run(mode));
+  handle("draft:approve-run", (token) => workspace.approveRun(token));
+  handle("draft:cancel-run", (token) => workspace.cancelRun(token));
+  handle("draft:use-host", () => workspace.useSelectedHost());
+  handle("draft:mapping-discard", (name) => workspace.discardMapping(name));
+  handle("draft:mapping-remap", (name, target) => workspace.remapMapping(name, target));
   handle("draft:slot", (label) => workspace.configureSlot(label));
   handle("draft:binding", (name, component, binding) => workspace.bindComponent(name, component, binding));
   handle("draft:sample-start", () => workspace.startSamples());
