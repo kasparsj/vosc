@@ -9,9 +9,7 @@ import shutil
 import subprocess
 import tempfile
 
-from addon_compat import (EXPR_COMPILE_LOOP, POST_PROCESSING_ATTRIBUTE, SHADERTOY_TIMESTAMP,
-                          patch_expression_returns, patch_post_processing, patch_shadertoy_timestamp,
-                          replace_addon_anchor)
+from addon_compat import linux_addon_updates
 from stage_assets import stage_examples
 
 
@@ -32,55 +30,17 @@ def ignore_assets(directory, names):
     return excluded
 
 
-def patch_midi_config(text):
-    if re.search(r"^linuxaarch64:[ \t]*$", text, re.MULTILINE):
-        return text
-    armv7 = re.search(r"^linuxarmv7l:[ \t]*\n(.*?)(?=^[\w/-]+:[ \t]*$|\Z)",
-                      text, re.MULTILINE | re.DOTALL)
-    if armv7 is None:
-        return text
-    # The ARM64 SDK enables JACK when compiling RtMidi, which needs a direct link.
-    return (
-        text + ("" if text.endswith("\n") else "\n")
-        + "\nlinuxaarch64:\n" + armv7[1].rstrip()
-        + "\n\tADDON_PKG_CONFIG_LIBRARIES += jack\n"
-    )
-
-
 def stage_legacy_addons(sdk, stage, addons):
-    def patch_expr_header(text):
-        if '#include "ofUtils.h"' in text:
-            return text
-        return replace_addon_anchor(text, '#include "ofEvents.h"',
-                                    '#include "ofEvents.h"\n#include "ofUtils.h"',
-                                    "ofxExpr event include")
-
-    patches = {
-        "ofxExpr": (("src/ofxExpr.cpp", EXPR_COMPILE_LOOP, patch_expression_returns),
-                    ("src/ofxExprParser.hpp", '#include "ofEvents.h"', patch_expr_header)),
-        "ofxMidi": (("addon_config.mk", "linuxarmv7l:", patch_midi_config),),
-        "ofxPostProcessing": (("src/PostProcessing.cpp", POST_PROCESSING_ATTRIBUTE, patch_post_processing),),
-        "ofxShadertoy": (("src/ofxShadertoy.cpp", SHADERTOY_TIMESTAMP + ";", patch_shadertoy_timestamp),),
-    }
-    for name, files in patches.items():
-        if name not in addons:
-            continue
+    for index, name in enumerate(addons):
         root = sdk / "addons" / name
-        updated = {}
-        for filename, anchor, patch in files:
-            source = root / filename
-            if not source.is_file():
-                continue
-            text = source.read_text(encoding="latin-1")
-            if anchor in text and (patched := patch(text)) != text:
-                updated[filename] = patched
+        updated = linux_addon_updates(root)
         if not updated:
             continue
         local = Path("addons") / name
         shutil.copytree(root, stage / local, ignore=shutil.ignore_patterns(".git", ".DS_Store"))
-        for filename, text in updated.items():
-            (stage / local / filename).write_text(text, encoding="latin-1")
-        addons[addons.index(name)] = local.as_posix()
+        for filename, content in updated.items():
+            (stage / local / filename).write_bytes(content)
+        addons[index] = local.as_posix()
 
 
 def main():

@@ -315,8 +315,8 @@ std::string InspectorView::row(const Key& key, const Resource& current, const st
     const auto id = rowId(key, rail);
     const auto previous = visibleRows.find(id);
     uint64_t token;
-    if (restoreRow && restoreRow->first == id && restoreRow->second.item.identity == current.identity)
-        token = restoreRow->second.token;
+    if (restoreRow && restoreRow->id == id && restoreRow->row.item.identity == current.identity)
+        token = restoreRow->row.token;
     else if (previous != visibleRows.end() && previous->second.item.identity == current.identity)
         token = previous->second.token;
     else token = nextToken++;
@@ -343,7 +343,7 @@ std::optional<InspectorView::Navigation> InspectorView::activate(
         const auto resolved = resolvePages(renderer);
         const auto destination = std::min(resolved.live, pages.size() - 1);
         auto back = pages[destination].back;
-        restoreRow = std::make_pair(back.focus, pages[destination].origin);
+        restoreRow = RestoredRow{back.focus, pages[destination].origin};
         pages.erase(pages.begin() + destination, pages.end());
         invalid = State::Live;
         return back;

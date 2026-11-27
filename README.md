@@ -72,12 +72,21 @@ board and OS before relying on it in an installation.
 
 ### Desktop Linux build
 
-The default Linux Make build uses a desktop OpenGL 4.1 context and RmlUi for
-the operator overlay. It needs the complete `addons.make` set, CMake 3.16 or
-later, curl, and the FreeType development package. The first UI-enabled build
-fetches and verifies its pinned RmlUi source archive. Use
-`make Release VOSC_OPERATOR_UI=0 OF_ROOT=/absolute/path/to/openFrameworks` to
-build the desktop profile with the operator overlay excluded. Use the minimal profile above to also reduce the addon set.
+The default Linux Make build uses desktop OpenGL 4.1 and RmlUi for the operator
+overlay. Prepare openFrameworks 0.12.1 and the addons from the Linux guide
+above, then also install the pinned ofxDeferredShading addon from
+[`scripts/setup_macos_dependencies.json`](scripts/setup_macos_dependencies.json).
+When building the float muParser library on x86-64, install it under
+`ofxExpr/libs/muparser/lib/linux64/libmuparser.a` in the SDK.
+
+```sh
+make Release OF_ROOT=/absolute/path/to/openFrameworks
+```
+
+The Linux Make builds skip ofxHPVPlayer and ofxUltralight. The desktop build
+with the overlay needs CMake 3.16 or later, curl, and the FreeType development
+package. It fetches and verifies the pinned RmlUi archive on the first build.
+Pass `VOSC_OPERATOR_UI=0` to build the desktop renderer without the overlay.
 
 ## Building with Xcode on macOS
 

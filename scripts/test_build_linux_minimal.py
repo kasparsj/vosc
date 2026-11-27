@@ -44,6 +44,9 @@ def verify_desktop_selection(project, sdk, rules, run):
         "\t$(MAKE) ReleaseABI\n"
         "TARGET = bin/vosc\n"
         "OF_PROJECT_OBJS = obj/renderer.o\n"
+        "PLATFORM_REQUIRED_ADDONS = platformAddon\n"
+        "remove-dupes-func = $(if $1,$(strip $(word 1,$1) $(call $0,$(filter-out $(word 1,$1),$1))))\n"
+        "REQUESTED_PROJECT_ADDONS := $(shell cat addons.make)\n"
         "ReleaseABI: $(TARGET)\n"
         "CleanReleaseABI CleanDebugABI:\n"
         "\t@printf '%s\\n' '$(OF_ADDONS_PATH)'\n"
@@ -55,11 +58,13 @@ def verify_desktop_selection(project, sdk, rules, run):
         "\t@mkdir -p obj\n"
         "\t@printf '%s\\n' '$(PROJECT_CFLAGS)' '$(PROJECT_EXCLUSIONS)' > obj/compile-inputs\n"
         "\t@printf '%s\\n' '$(OF_ADDONS_PATH)' > obj/addon-path\n"
+        "\t@printf '%s\\n' '$(REQUESTED_PROJECT_ADDONS)' > obj/requested-addons\n"
         "\t@touch $@\n"
     )
     deferred = sdk / "addons/ofxDeferredShading/data/shaders/deferred"
     deferred.mkdir(parents=True)
     (deferred / "gbuffer.frag").write_text("Deferred shader fixture.\n")
+    (sdk / "addons/obj").mkdir()
     desktop = [f"OF_ROOT={sdk}", "VOSC_PROFILE=default"]
     enabled = project / "rmlui-enabled"
     disabled = project / "rmlui-disabled"
@@ -71,15 +76,35 @@ def verify_desktop_selection(project, sdk, rules, run):
     assert f"-I{enabled}/generated" in (project / "obj/compile-inputs").read_text()
     assert f"{enabled}/lib/libvosc_rmlui_gl3.a" in (project / "bin/link-inputs").read_text()
     picker_inputs = (project / "obj/compile-inputs").read_text()
+    assert "-DOFXEXPR_NOGUI" in picker_inputs
     assert "./src/operator/macos ./src/operator/macos/%" in picker_inputs
     assert "./src/macos ./src/macos/%" in picker_inputs
     render_addons = Path((project / "obj/addon-path").read_text().strip())
     assert render_addons.resolve().is_relative_to((project / "build/vosc-render-addons").resolve())
+    assert not (render_addons / "obj").exists()
+    requested = (project / "obj/requested-addons").read_text().split()
+    assert requested[0] == "platformAddon"
+    assert requested[1:] == [name for name in (project / "addons.make").read_text().split()
+                            if name not in {"ofxHPVPlayer", "ofxUltralight"}]
     post = Path("ofxPostProcessing/src/PostProcessing.cpp")
     assert "glPushAttrib" not in (render_addons / post).read_text()
     assert "glPushAttrib" in (sdk / "addons" / post).read_text()
     assert 'setUniform1i("isShadow", 0)' in (render_addons / "ofxDeferredShading/src/GBuffer.cpp").read_text()
     assert 'applyAo.setUniformTexture("colorTex"' in (render_addons / "ofxDeferredShading/src/pass/SsaoPass.cpp").read_text()
+    expr_header = Path("ofxExpr/src/ofxExprParser.hpp")
+    expr_source = Path("ofxExpr/src/ofxExpr.cpp")
+    shadertoy = Path("ofxShadertoy/src/ofxShadertoy.cpp")
+    midi_config = Path("ofxMidi/addon_config.mk")
+    assert '#include "ofUtils.h"' in (render_addons / expr_header).read_text()
+    assert '#include "ofUtils.h"' not in (sdk / "addons" / expr_header).read_text()
+    assert (render_addons / expr_source).read_text().count("return success;") == 4
+    assert "return success;" not in (sdk / "addons" / expr_source).read_text()
+    assert ".time_since_epoch().count()" in (render_addons / shadertoy).read_text()
+    assert ".time_since_epoch().count()" not in (sdk / "addons" / shadertoy).read_text()
+    assert "linuxaarch64:" in (render_addons / midi_config).read_text()
+    assert "linuxaarch64:" not in (sdk / "addons" / midi_config).read_text()
+    assert not (render_addons / "ofxMidi/libs").is_symlink()
+    assert (render_addons / "ofxMidi/libs/rtmidi/RtMidi.cpp").is_file()
     staged_shader = project / "bin/data/shaders/deferred/gbuffer.frag"
     assert staged_shader.read_bytes() == (deferred / "gbuffer.frag").read_bytes()
     verify_example_stage(project / "examples", project / "bin/data/examples")
@@ -101,6 +126,13 @@ def verify_desktop_selection(project, sdk, rules, run):
     for target in ("CleanReleaseABI", "CleanDebugABI"):
         result = run(["make", target, *desktop])
         assert result.returncode == 0 and result.stdout.strip() == str(render_addons), result
+    config = sdk / "addons" / midi_config
+    config.write_text(config.read_text() + "# Fixture update\n")
+    result = run(["make", "CleanReleaseABI", *desktop])
+    assert result.returncode == 0, result
+    updated_addons = Path(result.stdout.strip())
+    assert updated_addons != render_addons
+    assert "# Fixture update" in (updated_addons / midi_config).read_text()
 
 
 def main():
@@ -133,7 +165,7 @@ def main():
         header.parent.mkdir(parents=True)
         header.write_text("#define OF_VERSION_MAJOR 0\n#define OF_VERSION_MINOR 11\n#define OF_VERSION_PATCH 1\n")
         retained = set((project / "addons.make").read_text().split()) - EXCLUDED
-        for name in retained:
+        for name in retained | {"ofxHPVPlayer", "ofxUltralight"}:
             (sdk / "addons" / name).mkdir(parents=True)
         midi_settings = (
             "\tADDON_PKG_CONFIG_LIBRARIES = alsa\n"
@@ -145,9 +177,20 @@ def main():
         midi_config = sdk / "addons/ofxMidi/addon_config.mk"
         midi_original = f"linuxarmv7l:\n{midi_settings}\nosx:\n\tADDON_FRAMEWORKS = CoreMIDI\n"
         midi_config.write_bytes(midi_original.encode("ascii"))
+        midi_library = midi_config.parent / "libs/rtmidi/RtMidi.cpp"
+        midi_library.parent.mkdir(parents=True)
+        midi_library.touch()
         expr_header = sdk / "addons/ofxExpr/src/ofxExprParser.hpp"
         expr_header.parent.mkdir()
         expr_header.write_text('#include "ofEvents.h"\n')
+        (expr_header.parent / "ofxExpr.cpp").write_text(
+            "".join(f"    for (int i=0; i<size(); i++) {{\n        expr[i]->{call};\n    }}\n}}\n"
+                    for call in ("addVar(name, value, recompile, setTime)", "addDummyVar(name, recompile)",
+                                 "addConst(name, value, recompile)", "compile(setTime)"))
+        )
+        shadertoy = sdk / "addons/ofxShadertoy/src/ofxShadertoy.cpp"
+        shadertoy.parent.mkdir()
+        shadertoy.write_text("long latestUpdate = std::filesystem::last_write_time(ofToDataPath(mainShaderFile));\n")
         render_sources = {
             "ofxPostProcessing/src/PostProcessing.cpp": (
                 "glPushAttrib(GL_ENABLE_BIT);\n" * 3 + "glPopAttrib();\n" * 2 + "glDisable(GL_LIGHTING);\n"
@@ -195,7 +238,7 @@ def main():
         result = run(build)
         assert result.returncode == 0, result
         stage, = (project / ".vosc-linux").iterdir()
-        patched = {"ofxExpr", "ofxMidi", "ofxPostProcessing"}
+        patched = {"ofxExpr", "ofxMidi", "ofxPostProcessing", "ofxShadertoy"}
         assert set((stage / "addons.make").read_text().split()) == (retained - patched) | {f"addons/{name}" for name in patched}
         staged_midi = stage / "addons/ofxMidi/addon_config.mk"
         assert staged_midi.read_text() == (

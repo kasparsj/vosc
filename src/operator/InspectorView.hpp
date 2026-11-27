@@ -88,6 +88,10 @@ private:
         Item item;
         uint64_t token;
     };
+    struct RestoredRow {
+        std::string id;
+        Row row;
+    };
     struct Page {
         Item item;
         Navigation back;
@@ -125,7 +129,7 @@ private:
     std::vector<std::string> nextReadings, renderedReadings;
     std::vector<Page> pages;
     std::map<std::string, Row> visibleRows, nextRows;
-    std::optional<std::pair<std::string, Row>> restoreRow;
+    std::optional<RestoredRow> restoreRow;
     State invalid = State::Live;
     size_t firstInvalid = 0;
     uint64_t nextToken = 1;
