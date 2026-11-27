@@ -32,6 +32,7 @@ public:
     void noteExternalSample() { ++externalEpoch; }
     void noteControlAdmission() { ++configurationEpoch; }
     void beforeLegacyControl(bool inputSample);
+    void setDraftSamplePort(unsigned int port) { draftSamplePort = port; }
     void interruptTrial();
     bool canBeginSceneReplay() const { return !trial && pendingCount() == 0 && queued.empty() && captures.empty(); }
     uint64_t configurationSerial() const { return revision ^ (configurationEpoch << 32); }
@@ -149,6 +150,7 @@ private:
     uint64_t frame = 0;
     uint64_t externalEpoch = 0;
     uint64_t configurationEpoch = 0;
+    std::optional<unsigned int> draftSamplePort;
     std::unique_ptr<Trial> trial;
 #ifdef VOSC_RECOVERY_TESTING
     std::optional<double> recoveryTestPreviousDrawStart;

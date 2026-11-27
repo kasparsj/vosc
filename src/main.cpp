@@ -4,6 +4,9 @@
 #include "control/OscPort.hpp"
 #if defined(TARGET_OSX) && !(defined(APPSTORE) && APPSTORE)
 #include "macos/ManagedData.hpp"
+#endif
+#if defined(__unix__) || defined(__APPLE__)
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 #include <charconv>
@@ -28,10 +31,12 @@
 #endif
 
 namespace {
-constexpr auto usage = "Usage: vosc [--scene <path/to/scene.vosc.json>] [--size WIDTHxHEIGHT] [--fps FPS] [--scene-input name=value]";
+constexpr auto usage = "Usage: vosc [--scene <path/to/scene.vosc.json>] [--size WIDTHxHEIGHT] [--fps FPS] [--scene-input name=value] [--draft-data-root <private-directory> [--draft-sample-port 0]]";
 
 struct StartupOptions {
     std::string scenePath;
+    std::optional<std::filesystem::path> draftDataRoot;
+    bool draftSamples = false;
     scene::Inputs inputs;
     std::optional<std::pair<int, int>> size;
     std::optional<int> fps;
@@ -51,13 +56,19 @@ StartupOptions parseOptions(int argc, char** argv) {
     StartupOptions options;
     for (int i = 1; i < argc; ++i) {
         const std::string_view flag = argv[i];
-        if (flag != "--scene" && flag != "--size" && flag != "--fps" && flag != "--scene-input")
+        if (flag != "--scene" && flag != "--size" && flag != "--fps" && flag != "--scene-input"
+                && flag != "--draft-data-root" && flag != "--draft-sample-port")
             throw std::invalid_argument("unknown option " + std::string(flag));
         if (i + 1 == argc || std::string_view(argv[i + 1]).rfind("--", 0) == 0 || !argv[i + 1][0])
             throw std::invalid_argument("missing value for " + std::string(flag));
         const std::string_view value = argv[++i];
         if (flag == "--scene" && options.scenePath.empty()) {
             options.scenePath = value;
+        } else if (flag == "--draft-data-root" && !options.draftDataRoot) {
+            options.draftDataRoot.emplace(value);
+        } else if (flag == "--draft-sample-port" && !options.draftSamples) {
+            if (value != "0") throw std::invalid_argument("--draft-sample-port requires 0 for an ephemeral loopback port");
+            options.draftSamples = true;
         } else if (flag == "--scene-input") {
             const auto separator = value.find('=');
             if (separator == 0 || separator == std::string_view::npos || separator == value.size() - 1)
@@ -78,7 +89,26 @@ StartupOptions parseOptions(int argc, char** argv) {
     }
     if (!options.inputs.empty() && options.scenePath.empty())
         throw std::invalid_argument("--scene-input requires --scene");
+    if (options.draftSamples && !options.draftDataRoot)
+        throw std::invalid_argument("--draft-sample-port requires --draft-data-root");
     return options;
+}
+
+void selectDraftDataRoot(const std::filesystem::path& path) {
+#if defined(__unix__) || defined(__APPLE__)
+    struct stat status {};
+    if (!path.is_absolute() || ::lstat(path.c_str(), &status) != 0 || !S_ISDIR(status.st_mode)
+            || status.st_uid != ::geteuid() || (status.st_mode & (S_IRWXG | S_IRWXO)) != 0)
+        throw std::invalid_argument("--draft-data-root requires an absolute private directory owned by the current user");
+    const char* socket = std::getenv("VOSC_CONTROL_SOCKET");
+    if (!socket || !std::filesystem::path(socket).is_absolute())
+        throw std::invalid_argument("--draft-data-root requires an absolute VOSC_CONTROL_SOCKET path");
+    const auto resolved = std::filesystem::canonical(path);
+    ofSetDataPathRoot(resolved);
+    std::cout << "VOSC_DRAFT_DATA_ROOT " << resolved.string() << std::endl;
+#else
+    throw std::invalid_argument("--draft-data-root requires Unix domain socket support");
+#endif
 }
 
 class StartupDeadline {
@@ -127,30 +157,34 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    unsigned int oscPort;
+    std::optional<unsigned int> oscPort;
     std::optional<scene::File> startupScene;
     try {
-#if defined(TARGET_OSX)
-        const auto contents = ofFilePath::getCurrentExePathFS().parent_path().parent_path();
-        const auto bundledData = contents / "Resources/data";
-#if defined(APPSTORE) && APPSTORE
-        ofSetDataPathRoot(bundledData);
-#else
-        if (vosc::macos::initializeManagedData(argc == 1 && getppid() == 1)) {
-            const auto& root = vosc::macos::managedDataRoot();
-            ofSetDataPathRoot(root);
-            std::cout << "VOSC_DATA_ROOT " << root.string() << std::endl;
+        if (options.draftDataRoot) {
+            selectDraftDataRoot(*options.draftDataRoot);
         } else {
-            // Non-distribution builds may stage data beside the app.
-            std::error_code error;
-            if (std::filesystem::is_directory(bundledData, error) &&
-                !std::filesystem::is_directory(contents.parent_path().parent_path() / "data", error)) {
-                ofSetDataPathRoot(bundledData);
+#if defined(TARGET_OSX)
+            const auto contents = ofFilePath::getCurrentExePathFS().parent_path().parent_path();
+            const auto bundledData = contents / "Resources/data";
+#if defined(APPSTORE) && APPSTORE
+            ofSetDataPathRoot(bundledData);
+#else
+            if (vosc::macos::initializeManagedData(argc == 1 && getppid() == 1)) {
+                const auto& root = vosc::macos::managedDataRoot();
+                ofSetDataPathRoot(root);
+                std::cout << "VOSC_DATA_ROOT " << root.string() << std::endl;
+            } else {
+                // Non-distribution builds may stage data beside the app.
+                std::error_code error;
+                if (std::filesystem::is_directory(bundledData, error) &&
+                    !std::filesystem::is_directory(contents.parent_path().parent_path() / "data", error)) {
+                    ofSetDataPathRoot(bundledData);
+                }
             }
+#endif
+#endif
+            oscPort = control::oscPortFromEnvironment();
         }
-#endif
-#endif
-        oscPort = control::oscPortFromEnvironment();
         if (!options.scenePath.empty()) {
             startupScene = scene::load(options.scenePath, options.inputs);
             CommandSystem::validateStartupScene(*startupScene);
@@ -195,7 +229,8 @@ int main(int argc, char** argv) {
 #endif
     
     bool startupFailed = false;
-    const int status = ofRunApp(new ofApp(oscPort, std::move(startupScene), startupFailed, options.fps.value_or(60), [&] {
+    const int status = ofRunApp(new ofApp(oscPort, options.draftSamples, std::move(startupScene), startupFailed,
+                                        options.fps.value_or(60), [&] {
         if (deadline) deadline->stop();
     }));
     if (startupFailed) return EXIT_FAILURE;

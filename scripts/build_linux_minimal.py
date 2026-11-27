@@ -87,6 +87,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--make", default="make")
     parser.add_argument("--of-root", required=True, type=Path)
+    parser.add_argument("--stage-only", action="store_true",
+                        help="Prepare a fresh project and runtime data without invoking Make")
     args = parser.parse_args()
     sdk = args.of_root.resolve()
     header = sdk / "libs/openFrameworks/utils/ofConstants.h"
@@ -126,6 +128,9 @@ def main():
     shutil.copytree(ROOT / "assets", stage / "bin/data", ignore=ignore_assets)
     (stage / "bin/data/videos").mkdir()
     stage_examples(stage / "bin/data/examples")
+    if args.stage_only:
+        print(f"Staged VOSC minimal in {stage}")
+        return 0
     print(f"Building VOSC minimal in {stage}", flush=True)
     result = subprocess.run([*shlex.split(args.make), f"OF_ROOT={sdk}", "Release"], cwd=stage)
     if result.returncode:

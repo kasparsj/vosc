@@ -212,6 +212,16 @@ def main():
         assert list((stage / "bin/data/videos").iterdir()) == []
         assert not list(stage.rglob("*RmlUi*"))
         verify_example_stage(project / "examples", stage / "bin/data/examples")
+        staged = run(["python3", "scripts/build_linux_minimal.py", "--of-root", str(sdk),
+                      "--make", "vosc-test-make-must-not-run", "--stage-only"])
+        assert staged.returncode == 0, staged
+        message = "Staged VOSC minimal in "
+        assert staged.stdout.startswith(message), staged
+        stage_only = Path(staged.stdout.strip().removeprefix(message))
+        assert stage_only != stage
+        assert not (stage_only / "bin/vosc").exists()
+        assert (stage_only / "bin/data/shaders/direct.frag").is_file()
+        verify_example_stage(project / "examples", stage_only / "bin/data/examples")
         verify_desktop_selection(project, sdk, rules, run)
     print("PASS Linux minimal staging and desktop operator UI input selection with a fixture SDK")
 

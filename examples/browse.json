@@ -29,13 +29,13 @@
   "intro": {
     "category": "Built-in",
     "summary": "A grid opens with a shader texture in its first layer.",
-    "cues": "Cues demonstrate layouts, images, sketches, layer controls and a synthetic amplitude sample.",
+    "cues": "Cues demonstrate layouts, images, sketches, an animated prism texture, layer controls and a synthetic amplitude sample.",
     "requirements": "",
     "attach": "attach"
   },
   "shaders": {
     "category": "Built-in",
-    "summary": "The bundled RotStringsV shader runs as a texture.",
+    "summary": "An animated ribbon field demonstrates shader texture controls.",
     "cues": "Cues demonstrate sine and input-controlled glow and color, unload and grid reload.",
     "requirements": "",
     "attach": "attach"
@@ -49,14 +49,14 @@
   },
   "performance": {
     "category": "Built-in",
-    "summary": "Three layers open with sketch and shader sources ready for transitions.",
+    "summary": "Crossfade between two sketches and a pulsing ring shader.",
     "cues": "Run the companion cues for two ten-second fades.",
     "requirements": "",
     "attach": "attach"
   },
   "test": {
     "category": "Built-in",
-    "summary": "Shows an image, shader texture, sketch and solid color in a grid.",
+    "summary": "Shows an image, animated grid shader, sketch and solid color.",
     "cues": "Cues exercise transforms, reset and unload.",
     "requirements": "",
     "attach": "attach"

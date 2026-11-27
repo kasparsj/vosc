@@ -436,7 +436,8 @@ bool Shader::loadShadertoy(const string& shadertoyId) {
     }
 }
 
-ShaderPaths Shader::getShaderPaths(const string& path) {
+namespace {
+ShaderPaths findShaderPaths(const string& path, bool reportMissing) {
     ShaderPaths paths;
     string fragPath = "";
     vector<string> fragPaths;
@@ -475,9 +476,21 @@ ShaderPaths Shader::getShaderPaths(const string& path) {
         if (ofFile(tmpGeomPath).exists()) {
             paths.geomPath = tmpGeomPath;
         }
+    } else if (reportMissing) {
+        std::ostringstream message;
+        message << "Missing fragment shader '" << path << "'. Searched";
+        for (const auto& candidate : fragPaths)
+            message << " '" << std::filesystem::path(ofFile(candidate).getAbsolutePath()).lexically_normal().string()
+                    << "'";
+        ofLogError("shader") << message.str();
     }
     
     return paths;
+}
+}
+
+ShaderPaths Shader::getShaderPaths(const string& path) {
+    return findShaderPaths(path, false);
 }
 
 bool Shader::loadNativeStages(const ShaderPaths& paths) {
@@ -495,7 +508,7 @@ bool Shader::loadNativeStages(const ShaderPaths& paths) {
 }
 
 bool Shader::loadFromFileAndWatch(const string& path) {
-    ShaderPaths paths = getShaderPaths(path);
+    ShaderPaths paths = findShaderPaths(path, true);
     if (!paths.isValid()) return false;
     auto watch = std::make_unique<FileWatch>(paths);
     auto candidate = watch->compile();
@@ -1527,8 +1540,15 @@ const Shader::Uniforms& Shader::getUniforms() const {
     return uniforms;
 }
 
-map<string, string> Shader::getUniformValues() const {
+map<string, string> Shader::getUniformValues(bool preciseFloats) const {
     map<string, string> values;
+    const auto floatString = [preciseFloats](float value) {
+        if (!preciseFloats) return ofToString(value);
+        std::ostringstream out;
+        out.imbue(std::locale::classic());
+        out << std::setprecision(std::numeric_limits<float>::max_digits10) << value;
+        return out.str();
+    };
     
     if (!isShaderLoaded() || shader == NULL) {
         return values;
@@ -1556,7 +1576,7 @@ map<string, string> Shader::getUniformValues() const {
         if (type == GL_FLOAT) {
             float value;
             glGetUniformfv(program, location, &value);
-            valueStr = ofToString(value);
+            valueStr = floatString(value);
         }
         else if (type == GL_INT || type == GL_SAMPLER_2D || type == GL_SAMPLER_3D || 
                  type == GL_SAMPLER_CUBE || type == GL_SAMPLER_BUFFER) {
@@ -1567,17 +1587,17 @@ map<string, string> Shader::getUniformValues() const {
         else if (type == GL_FLOAT_VEC2) {
             float values[2];
             glGetUniformfv(program, location, values);
-            valueStr = "[" + ofToString(values[0]) + ", " + ofToString(values[1]) + "]";
+            valueStr = "[" + floatString(values[0]) + ", " + floatString(values[1]) + "]";
         }
         else if (type == GL_FLOAT_VEC3) {
             float values[3];
             glGetUniformfv(program, location, values);
-            valueStr = "[" + ofToString(values[0]) + ", " + ofToString(values[1]) + ", " + ofToString(values[2]) + "]";
+            valueStr = "[" + floatString(values[0]) + ", " + floatString(values[1]) + ", " + floatString(values[2]) + "]";
         }
         else if (type == GL_FLOAT_VEC4) {
             float values[4];
             glGetUniformfv(program, location, values);
-            valueStr = "[" + ofToString(values[0]) + ", " + ofToString(values[1]) + ", " + ofToString(values[2]) + ", " + ofToString(values[3]) + "]";
+            valueStr = "[" + floatString(values[0]) + ", " + floatString(values[1]) + ", " + floatString(values[2]) + ", " + floatString(values[3]) + "]";
         }
         else if (type == GL_INT_VEC2) {
             int values[2];

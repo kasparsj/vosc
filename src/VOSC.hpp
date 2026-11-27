@@ -19,7 +19,7 @@ public:
     VOSC();
     ~VOSC();
 
-    void setup(unsigned int port, const scene::File* scene, CommandSystem::ScenePrograms& programs,
+    void setup(std::optional<unsigned int> port, bool draftSamples, const scene::File* scene, CommandSystem::ScenePrograms& programs,
                CommandSystem::SceneResult result);
     void update();
     void draw();

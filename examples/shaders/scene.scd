@@ -23,8 +23,8 @@
     ~rendererPort ? ("VOSC_OSC_PORT".getenv ? "33333").asInteger,
     reset: true);
 ~visuals.send('/layers', 1, "stack");
-~visuals.send('/tex', 0, ~exampleAssetRoot +/+ "assets/100fragments/RotStringsV.frag");
-~visuals.send('/tex/var', 0, "glow", 1);
+~visuals.send('/tex', 0, ~exampleAssetRoot +/+ "assets/glow-ribbons.frag");
+~visuals.send('/tex/var', 0, "glow", 1.0);
 )
 // END GENERATED EXAMPLE SETUP
 
@@ -55,7 +55,7 @@
 ~visuals.send('/layers', 9, "grid");
 
 // Load the same bundled example into all nine layers.
-~visuals.send('/tex', "*", "shader:" ++ (~exampleAssetRoot +/+ "assets/100fragments/RotStringsV.frag"));
+~visuals.send('/tex', "*", "shader:" ++ (~exampleAssetRoot +/+ "assets/glow-ribbons.frag"));
 ~visuals.send('/tex/var', "*", "glow", 1.0);
 
 ~visuals.send('/input/list');

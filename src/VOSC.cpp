@@ -316,7 +316,7 @@ RenderSystem& VOSC::renderSystem() { return activeScene->render; }
 const RenderSystem& VOSC::renderSystem() const { return activeScene->render; }
 CommandSystem& VOSC::commandSystem() { return activeScene->commands; }
 
-void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::ScenePrograms& programs,
+void VOSC::setup(std::optional<unsigned int> port, bool draftSamples, const scene::File* scene, CommandSystem::ScenePrograms& programs,
                  CommandSystem::SceneResult result) {
 #if VOSC_OPERATOR_UI
     applicationCompositionStyle = ofGetStyle();
@@ -328,8 +328,13 @@ void VOSC::setup(unsigned int port, const scene::File* scene, CommandSystem::Sce
         throw std::runtime_error("forced no-argument setup failure");
     CommandSystem::traceStartupBoundary("receiver");
 #endif
-    if (!inputSystem.setup(port)) {
-        throw std::runtime_error("Could not bind OSC receiver to UDP port " + std::to_string(port));
+    if (port && !inputSystem.setup(*port)) {
+        throw std::runtime_error("Could not bind OSC receiver to UDP port " + std::to_string(*port));
+    }
+    if (draftSamples) {
+        const auto samplePort = inputSystem.setupDraftSamples();
+        if (!samplePort) throw std::runtime_error("Could not bind draft sample receiver to loopback");
+        engineControl.setDraftSamplePort(*samplePort);
     }
     runtime().camera.setup();
     renderSystem().setup(INITIAL_LAYERS);

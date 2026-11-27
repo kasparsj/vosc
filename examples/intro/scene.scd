@@ -96,8 +96,8 @@ void main() {
 ");
 )
 
-// Load a bundled rainbow shader.
-~visuals.send('/tex', 2, "shader:" ++ (~exampleAssetRoot +/+ "assets/100fragments/RotRainbow.frag"));
+// Load the local animated prism shader.
+~visuals.send('/tex', 2, "shader:" ++ (~exampleAssetRoot +/+ "assets/prism-bands.frag"));
 
 // solo layer 2 (zero-based index)
 ~visuals.send('/layer/solo', 2);

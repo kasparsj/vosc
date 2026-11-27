@@ -1,0 +1,22 @@
+{
+  "name": "vosc-authoring",
+  "productName": "VOSC Authoring",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "build": "tsc --noEmit && node scripts/build.mjs"
+  },
+  "dependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.10",
+    "@types/react": "19.3.3",
+    "@types/react-dom": "19.3.0",
+    "electron": "45.5.0",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  }
+}

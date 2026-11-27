@@ -129,6 +129,53 @@ void setNumericBinding(VarsHolder& holder, const std::string& name, const std::v
     holder.vars[name] = variable;
 }
 
+int editableUniformComponents(const Layer& layer, const std::string& name) {
+    const auto& shader = layer.shader;
+    const auto& types = shader.getUniforms();
+    const auto found = types.find(name);
+    if (managedUniform(layer, name) || (found != types.end() && found->second.isArray()))
+        throw Invalid("invalid_uniform", "uniform is engine-managed or an array");
+    if (!shader.isShaderLoaded()) throw Invalid("invalid_uniform", "no ordinary GLSL shader loaded");
+    if (found == types.end() || !uniformComponents(found->second.type))
+        throw Invalid("invalid_uniform", "uniform is absent or has an unsupported type");
+    return uniformComponents(found->second.type);
+}
+
+std::string draftSlot(const Json& value) {
+    auto id = text(value, 32, "slot");
+    if (!validDraftSlot(id)) throw Invalid("invalid_slot", "slot ID must be an ASCII expression identifier");
+    return id;
+}
+
+void setDraftBinding(Shader& shader, const std::string& name, const Json& components) {
+    std::vector<float> values;
+    std::vector<std::string> expressions;
+    std::vector<bool> mapped;
+    bool hasMapping = false;
+    for (const auto& component : components) {
+        if (component.contains("fixed")) {
+            values.push_back(component["fixed"].get<float>());
+            expressions.push_back(component["fixed"].dump());
+            mapped.push_back(false);
+        } else {
+            const auto low = component["low"].get<double>();
+            const auto high = component["high"].get<double>();
+            expressions.push_back("(" + component["low"].dump() + ")+(" + Json(high - low).dump() +
+                                  ")*in_" + component["slot"].get<std::string>());
+            mapped.push_back(true);
+            hasMapping = true;
+        }
+    }
+    if (!hasMapping) {
+        setNumericBinding(shader, name, values);
+        return;
+    }
+    auto variable = std::make_shared<Variable<float>>();
+    variable->set(expressions, mapped);
+    VariablePool::getPool(&shader)[name] = variable;
+    shader.vars[name] = variable;
+}
+
 std::string base64(const ofBuffer& buffer) {
     static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     const auto* bytes = reinterpret_cast<const unsigned char*>(buffer.getData());
@@ -821,32 +868,53 @@ void EngineControl::validate(const std::string& method, const Json& params) cons
     } else if (method == "accept_trial" || method == "cancel_trial") {
         keys(params, {"trial_id"});
         text(params["trial_id"], 64, "trial_id");
-    } else if (method == "publish_shader" || method == "set_uniform" || method == "set_layer") {
-        if (method == "publish_shader") keys(params, {"layer", "source"}, {"timing"});
+    } else if (method == "draft_configure_slot") {
+        if (!draftSamplePort) throw Invalid("unknown_method", "draft operations are disabled");
+        keys(params, {"slot", "initial"});
+        const auto id = draftSlot(params["slot"]);
+        number(params["initial"], 0, 1);
+        if (runtime().inputs.all().size() >= 16 && !runtime().inputs.all().count(id))
+            throw Invalid("slot_capacity", "draft has the maximum number of slots");
+    } else if (method == "publish_shader" || method == "set_uniform" || method == "set_layer" ||
+               method == "draft_activate" || method == "draft_bind_uniform") {
+        if (method == "draft_activate" || method == "draft_bind_uniform") {
+            if (!draftSamplePort) throw Invalid("unknown_method", "draft operations are disabled");
+            if (method == "draft_activate") keys(params, {"layer", "source"});
+            else keys(params, {"layer", "name", "components"});
+        } else if (method == "publish_shader") keys(params, {"layer", "source"}, {"timing"});
         else if (method == "set_uniform") keys(params, {"layer", "name", "value"}, {"timing"});
         else keys(params, {"layer", "property", "value"}, {"timing"});
         int index = integer(params["layer"], 0, 31, "layer");
         if (static_cast<size_t>(index) >= render().getLayers().size())
             throw Invalid("invalid_target", "layer does not exist");
         const auto& layer = *render().getLayers()[index];
-        const auto& shader = layer.shader;
-        if (method == "publish_shader") {
+        if (method == "publish_shader" || method == "draft_activate") {
             text(params["source"], 128 * 1024, "source");
         } else if (method == "set_uniform") {
             auto name = text(params["name"], 128, "name");
-            const auto& types = shader.getUniforms();
-            auto found = types.find(name);
-            if (managedUniform(layer, name) || (found != types.end() && found->second.isArray()))
-                throw Invalid("invalid_uniform", "uniform is engine-managed or an array");
-            if (!shader.isShaderLoaded()) throw Invalid("invalid_uniform", "no ordinary GLSL shader loaded");
-            if (found == types.end() || !uniformComponents(found->second.type))
-                throw Invalid("invalid_uniform", "uniform is absent or has an unsupported type");
-            int count = uniformComponents(found->second.type);
+            const int count = editableUniformComponents(layer, name);
             if (count == 1) number(params["value"], -1000000, 1000000);
             else {
                 if (!params["value"].is_array() || params["value"].size() != static_cast<size_t>(count))
                     throw Invalid("invalid_params", "uniform value component count mismatch");
                 for (const auto& value : params["value"]) number(value, -1000000, 1000000);
+            }
+        } else if (method == "draft_bind_uniform") {
+            const auto name = text(params["name"], 128, "name");
+            const auto& components = params["components"];
+            if (!components.is_array() || components.size() != static_cast<size_t>(editableUniformComponents(layer, name)))
+                throw Invalid("invalid_params", "uniform value component count mismatch");
+            for (const auto& component : components) {
+                if (component.contains("fixed")) {
+                    keys(component, {"fixed"});
+                    number(component["fixed"], -1000000, 1000000);
+                } else {
+                    keys(component, {"slot", "low", "high"});
+                    if (!runtime().inputs.all().count(draftSlot(component["slot"])))
+                        throw Invalid("missing_slot", "OSC slot is absent in this draft");
+                    number(component["low"], -1000000, 1000000);
+                    number(component["high"], -1000000, 1000000);
+                }
             }
         } else {
             auto property = text(params["property"], 16, "property");
@@ -908,13 +976,34 @@ void EngineControl::execute(const std::string& id) {
             payload.layerCount = params["count"].get<int>();
             payload.layout = LayoutMap.at(params["layout"].get<std::string>());
             render().applyLayersPayload(payload);
+        } else if (method == "draft_configure_slot") {
+            ofxOscMessage setup;
+            setup.addStringArg(params["slot"].get<std::string>());
+            setup.addStringArg("");
+            setup.addInt32Arg(0);
+            setup.addInt32Arg(256);
+            runtime().inputs.oscCommand("/input", setup);
+            ofxOscMessage initial;
+            initial.addStringArg(params["slot"].get<std::string>());
+            initial.addFloatArg(params["initial"].get<float>());
+            initial.addFloatArg(0.f);
+            initial.addInt32Arg(0);
+            runtime().inputs.oscCommand("/input/data", initial);
         } else {
             auto& layer = *render().getLayers()[params["layer"].get<int>()];
-            if (method == "publish_shader") {
-                if (!layer.shader.loadFromSource(params["source"].get<std::string>())) {
+            if (method == "publish_shader" || method == "draft_activate") {
+                const auto source = params["source"].get<std::string>();
+                Shader::PreparedDirectSource prepared;
+                const bool loaded = method == "draft_activate"
+                    ? Shader::prepareDirectSource(source, prepared) : layer.shader.loadFromSource(source);
+                if (!loaded) {
                     auto logs = diagnostics(logStart, 128);
                     entry.response = failure(id, "shader_failed", "shader compile/link failed", logs["entries"]);
                     return;
+                }
+                if (method == "draft_activate") {
+                    layer.shader.installDirectSource(std::move(prepared), {});
+                    runtime().inputs.clear();
                 }
             } else if (method == "set_uniform") {
                 std::vector<float> values;
@@ -922,6 +1011,8 @@ void EngineControl::execute(const std::string& id) {
                 if (value.is_array()) for (const auto& component : value) values.push_back(component.get<float>());
                 else values.push_back(value.get<float>());
                 setNumericBinding(layer.shader, params["name"].get<std::string>(), values);
+            } else if (method == "draft_bind_uniform") {
+                setDraftBinding(layer.shader, params["name"].get<std::string>(), params["components"]);
             } else if (method == "set_layer") {
                 auto property = params["property"].get<std::string>();
                 float value = property == "visible" ? float(params["value"].get<bool>()) : params["value"].get<float>();
@@ -1463,7 +1554,7 @@ Json EngineControl::diagnostics(uint64_t after, size_t limit) const {
 }
 
 Json EngineControl::capabilities() const {
-    return {{"version", 1}, {"transport", "unix-ndjson"},
+    Json result = {{"version", 1}, {"transport", "unix-ndjson"},
             {"operations", {"get_capabilities", "get_scene", "get_performance", "get_diagnostics", "get_request",
                 "export_scene",
                 "configure_layers", "publish_shader", "set_uniform", "set_layer", "capture_preview",
@@ -1484,6 +1575,12 @@ Json EngineControl::capabilities() const {
                         {"recipe_images_bytes", 4194304}, {"recipe_bundle_bytes", 61440},
                         {"trial_ttl_ms_min", 1000}, {"trial_ttl_ms_max", 30000}}},
             {"revision_scope", "successful API controls; external_epoch counts legacy dispatch/input; animation and file-watch reloads are not versioned"}};
+    if (draftSamplePort) {
+        result["draft_sample_port"] = *draftSamplePort;
+        for (auto method : {"draft_activate", "draft_configure_slot", "draft_bind_uniform"})
+            result["operations"].push_back(method);
+    }
+    return result;
 }
 
 namespace {
@@ -1597,7 +1694,7 @@ Json EngineControl::scene() const {
     for (const auto& layer : render().getLayers()) {
         const auto& shader = layer->shader;
         Json uniforms = Json::object(), textures = Json::object();
-        auto gpuValues = shader.getUniformValues();
+        auto gpuValues = shader.getUniformValues(draftSamplePort.has_value());
         for (const auto& [name, uniform] : shader.getUniforms()) {
             const bool array = uniform.isArray();
             Json value = {{"gl_type", uniform.type}, {"array", array},
@@ -1662,12 +1759,18 @@ Json EngineControl::scene() const {
         if (status == "queued" || status == "applied" || status == "evaluating" ||
             status == "ready" || status == "committing" || status == "rolling_back") pending.push_back(response);
     }
-    return {{"layers", layers}, {"layout", layout}, {"camera_enabled", runtime().camera.isEnabled()},
+    Json result = {{"layers", layers}, {"layout", layout}, {"camera_enabled", runtime().camera.isEnabled()},
             {"revision", revision}, {"rendered_revision", renderedRevision}, {"frame", frame},
             {"external_epoch", externalEpoch}, {"pending", pending},
             {"trial", trial ? trialSummary() : Json()},
             {"onset_gate", commands().isGateEnabled()}, {"legacy_pending", commands().pendingCount()},
             {"width", ofGetWidth()}, {"height", ofGetHeight()}, {"fps", ofGetFrameRate()}};
+    if (draftSamplePort) {
+        auto slots = Json::object();
+        for (const auto& [name, input] : runtime().inputs.all()) slots[name] = input->get();
+        result["draft_slots"] = std::move(slots);
+    }
+    return result;
 }
 
 namespace {

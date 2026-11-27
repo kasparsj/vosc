@@ -36,12 +36,19 @@ bool validString(const std::string& value) {
     return value.size() <= 2048 && value.find('\0') == std::string::npos;
 }
 
-fs::path resolveAsset(const fs::path& root, const std::string& name) {
+fs::path resolveAsset(const fs::path& root, const std::string& name, const char* kind) {
     const fs::path relative(name);
     if (name.empty() || relative.has_root_path() || name.find(':') != std::string::npos ||
         name.find('\\') != std::string::npos || std::find(relative.begin(), relative.end(), "..") != relative.end())
         throw std::runtime_error("expected a scene-relative asset path: " + name);
-    const auto resolved = fs::canonical(root / relative);
+    const auto candidate = (root / relative).lexically_normal();
+    std::error_code error;
+    const auto resolved = fs::canonical(candidate, error);
+    if (error == std::errc::no_such_file_or_directory || error == std::errc::not_a_directory)
+        throw std::runtime_error(std::string("Missing ") + kind + " '" + name + "' at " + candidate.string());
+    if (error)
+        throw std::runtime_error(std::string("Unable to resolve ") + kind + " '" + name + "' at " +
+                                 candidate.string() + " (" + error.message() + ")");
     const auto relation = resolved.lexically_relative(root);
     if (relation.empty() || *relation.begin() == ".." || !fs::is_regular_file(resolved))
         throw std::runtime_error("asset must be a regular file inside the scene folder: " + name);
@@ -248,7 +255,7 @@ private:
     }
 
     fs::path asset(const std::string& name, const std::string& kind) {
-        const auto path = resolveAsset(root, name);
+        const auto path = resolveAsset(root, name, kind.c_str());
         if (auto previous = assetKinds.find(path); previous != assetKinds.end()) {
             if (previous->second != kind) throw std::runtime_error("asset used with conflicting kinds: " + name);
             return path;
@@ -701,7 +708,11 @@ File load(const fs::path& path, const Inputs& inputs) {
                 if (static_cast<int>(index) == pathIndex) {
                     if (type != "asset" || !value.is_string() || !validString(value.get<std::string>()))
                         throw std::runtime_error("expected a scene-relative asset argument");
-                    command.asset = resolveAsset(result.path.parent_path(), value.get<std::string>());
+                    const auto reference = value.get<std::string>();
+                    const bool fragmentAsset = address == "/shader" ||
+                        (address == "/tex" && fs::path(reference).extension() == ".frag");
+                    command.asset = resolveAsset(result.path.parent_path(), reference,
+                                                 fragmentAsset ? "shader" : "asset");
                     command.feedback = address == "/tex" && command.asset.extension() == ".frag";
                     const auto source = (command.feedback ? "shader_pp:" : "") + value.get<std::string>();
                     assets.insert(command.asset);

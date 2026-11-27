@@ -52,22 +52,6 @@
     "preview": "images/noise.png"
   },
   {
-    "id": "osc-circle",
-    "name": "OscCircle.frag",
-    "kind": "Fragment shader",
-    "source": "shaders/100fragments/OscCircle.frag",
-    "uses": [
-      "shader-texture",
-      "layer-program"
-    ],
-    "origin": "VOSC shared library",
-    "requirements": "Uses the default vertex stage and renderer time and resolution.",
-    "dependencies": [
-      "shaders/include/of_default_uniforms.glsl",
-      "shaders/include/of_default_vertex_in_attributes.glsl"
-    ]
-  },
-  {
     "id": "penguin",
     "name": "Penguin",
     "kind": "Model",
@@ -82,36 +66,6 @@
       "models/penguin/penguin.jpg"
     ],
     "preview": "models/penguin/penguin.jpg"
-  },
-  {
-    "id": "scan-grid",
-    "name": "ScanGrid.frag",
-    "kind": "Fragment shader",
-    "source": "shaders/100fragments/ScanGrid.frag",
-    "uses": [
-      "layer-program"
-    ],
-    "origin": "VOSC shared library",
-    "requirements": "Uses the default vertex stage and renderer time and resolution.",
-    "dependencies": [
-      "shaders/include/of_default_uniforms.glsl",
-      "shaders/include/of_default_vertex_in_attributes.glsl"
-    ]
-  },
-  {
-    "id": "scan-lines",
-    "name": "ScanLines.frag",
-    "kind": "Fragment shader",
-    "source": "shaders/100fragments/ScanLines.frag",
-    "uses": [
-      "layer-program"
-    ],
-    "origin": "VOSC shared library",
-    "requirements": "Uses the default vertex stage and renderer time and resolution.",
-    "dependencies": [
-      "shaders/include/of_default_uniforms.glsl",
-      "shaders/include/of_default_vertex_in_attributes.glsl"
-    ]
   },
   {
     "id": "square-grid",

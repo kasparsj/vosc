@@ -149,7 +149,7 @@ public:
     const string& getDirectSource() const { return directSource; }
     bool getExportSource(string& source, string& reason) const;
     const Uniforms& getUniforms() const;
-    map<string, string> getUniformValues() const;
+    map<string, string> getUniformValues(bool preciseFloats = false) const;
     
 protected:
     bool hasWatchedShader() const { return static_cast<bool>(fileWatch); }

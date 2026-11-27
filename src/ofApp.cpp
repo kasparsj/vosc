@@ -18,14 +18,15 @@ void ofApp::setup(){
     
     try {
 #if VOSC_OPERATOR_UI
-        overlay.setup(oscPort);
+        if (oscPort) overlay.setup(*oscPort);
 #endif
         CommandSystem::ScenePrograms programs;
         if (startupScene) {
             programs = CommandSystem::prepareStartupScene(*startupScene);
             ofSetWindowTitle(startupScene->title);
         }
-        vosc.setup(oscPort, startupScene ? &*startupScene : nullptr, programs,
+        if (!oscPort && !startupScene) ofSetWindowTitle(draftSamples ? "VOSC Draft Preview" : "VOSC Shader Validation");
+        vosc.setup(oscPort, draftSamples, startupScene ? &*startupScene : nullptr, programs,
                    [this](int frame, const std::string& detail) {
             if (frame < 0) {
                 failStartup(detail);
@@ -42,7 +43,7 @@ void ofApp::setup(){
             const auto marker = "VOSC_SCENE_READY frame=" + std::to_string(frame) +
                                 " title=" + startupScene->title;
 #if VOSC_OPERATOR_UI
-            overlay.rememberScene(*startupScene, vosc);
+            if (oscPort) overlay.rememberScene(*startupScene, vosc);
 #endif
             finishStartup();
             std::cout << marker << std::endl;
@@ -88,7 +89,7 @@ void ofApp::exit() {
 }
 
 void ofApp::keyPressed(int key) {
-    vosc.keyPressed(key);
+    if (oscPort) vosc.keyPressed(key);
 }
 
 void ofApp::windowResized(int w, int h){

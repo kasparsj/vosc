@@ -24,7 +24,7 @@
     reset: true);
 ~visuals.send('/layers', 4, "grid");
 ~visuals.send('/tex', 0, ~exampleAssetRoot +/+ "assets/black_hole.jpg");
-~visuals.send('/tex', 1, ~exampleAssetRoot +/+ "assets/100fragments/OscCircle.frag");
+~visuals.send('/tex', 1, ~exampleAssetRoot +/+ "assets/motion-grid.frag");
 ~visuals.send('/tex', 2, "NoisySpirals");
 ~visuals.send('/tex', 3, "0xff0000");
 )

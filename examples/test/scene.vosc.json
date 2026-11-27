@@ -6,7 +6,7 @@
   "commands": [
     {"address": "/layers/reset", "args": [{"type": "i", "value": 4}, {"type": "s", "value": "grid"}]},
     {"address": "/tex", "args": [{"type": "layer", "value": 0}, {"type": "source", "value": {"kind": "image", "path": "assets/black_hole.jpg"}}]},
-    {"address": "/tex", "args": [{"type": "layer", "value": 1}, {"type": "source", "value": {"kind": "fragment", "path": "assets/100fragments/OscCircle.frag"}}]},
+    {"address": "/tex", "args": [{"type": "layer", "value": 1}, {"type": "source", "value": {"kind": "fragment", "path": "assets/motion-grid.frag"}}]},
     {"address": "/tex", "args": [{"type": "layer", "value": 2}, {"type": "source", "value": {"kind": "sketch", "name": "NoisySpirals"}}]},
     {"address": "/tex", "args": [{"type": "layer", "value": 3}, {"type": "source", "value": {"kind": "color", "value": "0xff0000"}}]}
   ]

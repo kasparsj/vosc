@@ -11,9 +11,9 @@
 class ofApp : public ofBaseApp {
 
 public:
-    ofApp(unsigned int oscPort, std::optional<scene::File> startupScene, bool& startupFailed,
+    ofApp(std::optional<unsigned int> oscPort, bool draftSamples, std::optional<scene::File> startupScene, bool& startupFailed,
           int frameRate, std::function<void()> finishStartup)
-        : oscPort(oscPort), startupScene(std::move(startupScene)), startupFailed(startupFailed),
+        : oscPort(oscPort), draftSamples(draftSamples), startupScene(std::move(startupScene)), startupFailed(startupFailed),
           frameRate(frameRate), finishStartup(std::move(finishStartup)) {}
 
 	void setup();
@@ -30,7 +30,8 @@ public:
     
 private:
     void failStartup(const std::string& detail);
-    unsigned int oscPort;
+    std::optional<unsigned int> oscPort;
+    bool draftSamples;
     std::optional<scene::File> startupScene;
     bool& startupFailed;
     int frameRate;

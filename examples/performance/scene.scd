@@ -26,7 +26,7 @@
 ~visuals.send('/layers', 3, "stack");
 ~visuals.send('/tex', 0, "NoisySpirals");
 ~visuals.send('/tex', 1, "WaveClock");
-~visuals.send('/tex', 2, ~exampleAssetRoot +/+ "assets/100fragments/OscCircle.frag");
+~visuals.send('/tex', 2, ~exampleAssetRoot +/+ "assets/pulse-rings.frag");
 ~visuals.send('/layer/tint', 0, [0.15, 0.75, 1.0]);
 ~visuals.send('/layer/tint', 1, [1.0, 0.45, 0.0]);
 ~visuals.send('/layer/alpha', "*", 0);
