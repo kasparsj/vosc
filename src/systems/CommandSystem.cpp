@@ -819,7 +819,7 @@ CommandSystem::ScenePrograms CommandSystem::prepareStartupScene(const scene::Fil
                                      ": asset changed since preflight: " + command.asset.string());
         const bool layerShader = command.message.getArgAsString(2) == "/shader";
         if (layerShader || command.feedback) {
-            if (!Shader::prepareDirectSource(command.assetBytes, programs[i], layerShader))
+            if (!Shader::prepareDirectSource(command.assetBytes, programs[i], layerShader, layerShader))
                 throw std::runtime_error(scene::commandContext(i, command.message) +
                                          ": shader compilation or linking failed: " + command.asset.string());
         }

@@ -46,6 +46,8 @@ map<string, ofxAutoReloadedShader> loadShaderCache() {
 namespace {
 
 constexpr char previousFrameUniform[] = "u_vosc_previous";
+constexpr char currentFrameUniform[] = "u_vosc_current";
+constexpr std::string_view graphGuard = "#ifndef VOSC_HYDRA_TWO_OUTPUT";
 constexpr std::string_view selfFeedbackGuard = "#ifndef VOSC_SELF_FEEDBACK";
 
 std::optional<size_t> consumeLine(const string& source, size_t offset, std::string_view expected) {
@@ -55,6 +57,16 @@ std::optional<size_t> consumeLine(const string& source, size_t offset, std::stri
     if (!line.empty() && line.back() == '\r') line.remove_suffix(1);
     if (line != expected) return {};
     return end + 1;
+}
+
+std::optional<size_t> feedbackBody(const string& source, size_t start) {
+    auto version = consumeLine(source, start, "#version 330");
+    if (!version) version = consumeLine(source, start, "#version 330 core");
+    if (!version) return {};
+    const auto guard = consumeLine(source, *version, selfFeedbackGuard);
+    if (!guard) return {};
+    const auto error = consumeLine(source, *guard, "#error VOSC self-feedback requires a matching renderer");
+    return error ? consumeLine(source, *error, "#endif") : std::nullopt;
 }
 
 std::string_view takeShaderToken(std::string_view& body) {
@@ -166,9 +178,53 @@ Shader::Uniforms reflectUniforms(GLuint program) {
         // The driver reports singleton arrays with a [0] suffix as well.
         const auto key = reflected.substr(0, bracket);
         uniforms.insert_or_assign(key, Shader::UniformInfo{type, size, bracket != string::npos,
-                                                          glGetUniformLocation(program, key.c_str())});
+                                                          glGetUniformLocation(program, key.c_str()), program});
     }
     return uniforms;
+}
+
+std::shared_ptr<ofShader> compileDirectFragment(const string& fragment) {
+    ofShaderSettings settings;
+    settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
+    settings.shaderSources[GL_FRAGMENT_SHADER] = fragment;
+    auto candidate = make_shared<ofShader>();
+    if (!candidate->setup(settings) || !isValidShaderProgram(*candidate)) return {};
+    return candidate;
+}
+
+bool validateFeedbackUniforms(GLuint program, std::string_view output, const Shader::Uniforms& uniforms,
+                              const char* sampler) {
+    const string name(output);
+    if (glGetFragDataLocation(program, name.c_str()) != 0 || glGetFragDataIndex(program, name.c_str()) != 0) {
+        ofLogError("Shader") << "Feedback pass requires one explicit vec4 output at location and index zero";
+        return false;
+    }
+    const auto feedback = uniforms.find(sampler);
+    if (feedback == uniforms.end() || feedback->second.type != GL_SAMPLER_2D ||
+        feedback->second.isArray() || feedback->second.location < 0 ||
+        std::any_of(uniforms.begin(), uniforms.end(), [&](const auto& uniform) {
+            return uniform.first != sampler && isSampler(uniform.second.type);
+        })) {
+        ofLogError("Shader") << "Feedback pass requires one active scalar sampler2D " << sampler;
+        return false;
+    }
+    return true;
+}
+
+bool allocateFeedbackBuffers(FboPingPong& buffers) {
+    ofFboSettings settings;
+    settings.width = Shader::selfFeedbackWidth;
+    settings.height = Shader::selfFeedbackHeight;
+    settings.numColorbuffers = 1;
+    settings.useDepth = false;
+    settings.useStencil = false;
+    settings.numSamples = 0;
+    settings.internalformat = GL_RGBA8;
+    settings.textureTarget = GL_TEXTURE_2D;
+    settings.wrapModeHorizontal = settings.wrapModeVertical = GL_CLAMP_TO_EDGE;
+    settings.minFilter = settings.maxFilter = GL_LINEAR;
+    buffers.allocate(settings, ofColor(0, 0, 0, 0));
+    return buffers.isAllocated() && glGetError() == GL_NO_ERROR;
 }
 
 class ValidatedShadertoy : public ofxShadertoy {
@@ -330,9 +386,9 @@ bool Shader::load(string path) {
     return success;
 }
 
-bool Shader::loadFromSource(const string& source, bool allowSelfFeedback) {
+bool Shader::loadFromSource(const string& source, bool allowSelfFeedback, bool allowGraph) {
     PreparedDirectSource prepared;
-    if (!prepareDirectSource(source, prepared, allowSelfFeedback)) return false;
+    if (!prepareDirectSource(source, prepared, allowSelfFeedback, allowGraph)) return false;
     shader = std::move(prepared.program);
     selfFeedback = std::move(prepared.selfFeedback);
     shadertoy.reset();
@@ -347,76 +403,118 @@ bool Shader::loadFromSource(const string& source, bool allowSelfFeedback) {
 }
 
 bool Shader::prepareDirectSource(const string& source, PreparedDirectSource& prepared,
-                                 bool allowSelfFeedback) {
-    auto guardStart = consumeLine(source, 0, "#version 330");
-    if (!guardStart) guardStart = consumeLine(source, 0, "#version 330 core");
-    std::optional<size_t> bodyStart;
-    if (guardStart) {
-        if (const auto errorStart = consumeLine(source, *guardStart, selfFeedbackGuard)) {
-            if (const auto endStart = consumeLine(source, *errorStart, "#error VOSC self-feedback requires a matching renderer"))
-                bodyStart = consumeLine(source, *endStart, "#endif");
+                                 bool allowSelfFeedback, bool allowGraph) {
+    const auto version = consumeLine(source, 0, "#version 330");
+    const auto graphStart = version ? consumeLine(source, *version, graphGuard) : std::nullopt;
+    if (graphStart && allowGraph) {
+        if (source.size() > 128 * 1024 || source.find('\0') != string::npos) {
+            ofLogError("Shader") << "Two-output Hydra source must be text within 128 KiB";
+            return false;
         }
+        const auto error = consumeLine(source, *graphStart, "#error VOSC two-output Hydra requires a matching renderer");
+        const auto endGuard = error ? consumeLine(source, *error, "#endif") : std::nullopt;
+        const auto first = endGuard ? consumeLine(source, *endGuard, "// VOSC pass o0") : std::nullopt;
+        const auto firstBody = first ? feedbackBody(source, *first) : std::nullopt;
+        std::optional<size_t> separator, secondBody;
+        if (firstBody) {
+            for (size_t offset = *firstBody; offset < source.size();) {
+                const auto newline = source.find('\n', offset);
+                auto line = std::string_view(source).substr(offset, newline - offset);
+                if (!line.empty() && line.back() == '\r') line.remove_suffix(1);
+                if (line == "// VOSC pass o0" || (line == "// VOSC pass o1" && separator)) {
+                    separator.reset();
+                    break;
+                }
+                if (line == "// VOSC pass o1" && newline != string::npos) {
+                    separator = offset;
+                    secondBody = feedbackBody(source, newline + 1);
+                }
+                if (newline == string::npos) break;
+                offset = newline + 1;
+            }
+        }
+        if (!separator || !secondBody) {
+            ofLogError("Shader") << "Malformed two-output Hydra artifact";
+            return false;
+        }
+        const auto compilePass = [&](size_t begin, size_t end, const char* outputName, const char* sampler, Uniforms& reflection)
+            -> shared_ptr<ofShader> {
+            const auto body = std::string_view(source).substr(begin, end - begin);
+            const auto output = selfFeedbackOutput(body);
+            if (output.empty()) {
+                ofLogError("Shader") << "Hydra " << outputName << " requires one explicit vec4 output and no extra directives";
+                return {};
+            }
+            // Match compiler error line numbers to the full accepted artifact.
+            string fragment = "#version 330";
+            fragment.append(std::count(source.begin(), source.begin() + begin, '\n'), '\n');
+            fragment.append(body);
+            auto program = compileDirectFragment(fragment);
+            if (!program) {
+                ofLogError("Shader") << "Hydra " << outputName << " compile/link failed";
+                return {};
+            }
+            reflection = reflectUniforms(program->getProgram());
+            if (!validateFeedbackUniforms(program->getProgram(), output, reflection, sampler)) return {};
+            if (reflection.count("u_vosc_callback") ||
+                reflection.count(sampler == previousFrameUniform ? currentFrameUniform : previousFrameUniform)) {
+                ofLogError("Shader") << "Unsupported reserved uniform in Hydra " << outputName;
+                return {};
+            }
+            reflection.at(sampler).graphSampler = true;
+            return program;
+        };
+        Uniforms uniforms, secondUniforms;
+        auto firstProgram = compilePass(*firstBody, *separator, "o0", previousFrameUniform, uniforms);
+        if (!firstProgram) return false;
+        auto secondProgram = compilePass(*secondBody, source.size(), "o1", currentFrameUniform, secondUniforms);
+        if (!secondProgram) return false;
+        for (const auto& [name, uniform] : secondUniforms) {
+            const auto [existing, added] = uniforms.emplace(name, uniform);
+            if (!added && (existing->second.type != uniform.type || existing->second.size != uniform.size ||
+                           existing->second.indexed != uniform.indexed)) {
+                ofLogError("Shader") << "Hydra pass uniform types differ for " << name;
+                return false;
+            }
+        }
+        auto history = std::make_unique<SelfFeedback>();
+        history->output = std::make_unique<GraphOutput>();
+        history->output->program = std::move(secondProgram);
+        if (!allocateFeedbackBuffers(history->buffers) || !allocateFeedbackBuffers(history->output->buffers)) {
+            ofLogError("Shader") << "Could not initialize Hydra graph framebuffers";
+            return false;
+        }
+        prepared = {std::move(firstProgram), source, std::move(uniforms), std::move(history)};
+        return true;
     }
-    const bool guarded = bodyStart.has_value();
-    string feedbackOutput;
-    if (guarded && allowSelfFeedback) {
-        feedbackOutput = selfFeedbackOutput(std::string_view(source).substr(*bodyStart));
-        if (feedbackOutput.empty()) {
+
+    const auto bodyStart = allowSelfFeedback ? feedbackBody(source, 0) : std::nullopt;
+    string fragment = source;
+    std::string_view output;
+    if (bodyStart) {
+        output = selfFeedbackOutput(std::string_view(source).substr(*bodyStart));
+        if (output.empty()) {
             ofLogError("Shader") << "Self-feedback requires one explicit vec4 output and no extra directives";
             return false;
         }
+        fragment.replace(source.find('\n') + 1, selfFeedbackGuard.size(), "#if 0");
     }
-    ofShaderSettings settings;
-    settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
-    auto& fragment = settings.shaderSources[GL_FRAGMENT_SHADER];
-    fragment = source;
-    if (guarded && allowSelfFeedback) {
-        // Preserve generated line locations for compiler diagnostics.
-        fragment.replace(*guardStart, selfFeedbackGuard.size(), "#if 0");
-    }
-    shared_ptr<ofShader> candidate = make_shared<ofShader>();
-    if (!candidate->setup(settings) || !isValidShaderProgram(*candidate)) {
-        return false;
-    }
-    auto uniforms = reflectUniforms(candidate->getProgram());
-    const auto previous = uniforms.find(previousFrameUniform);
+    auto program = compileDirectFragment(fragment);
+    if (!program) return false;
+    auto uniforms = reflectUniforms(program->getProgram());
     std::unique_ptr<SelfFeedback> history;
-    if (guarded && allowSelfFeedback) {
-        if (glGetFragDataLocation(candidate->getProgram(), feedbackOutput.c_str()) != 0 ||
-            glGetFragDataIndex(candidate->getProgram(), feedbackOutput.c_str()) != 0) {
-            ofLogError("Shader") << "Self-feedback requires one explicit vec4 output at location and index zero";
-            return false;
-        }
-        if (previous == uniforms.end() || previous->second.type != GL_SAMPLER_2D ||
-            previous->second.isArray() || previous->second.location < 0 ||
-            std::any_of(uniforms.begin(), uniforms.end(), [&](const auto& uniform) {
-                return uniform.first != previousFrameUniform && isSampler(uniform.second.type);
-            })) {
-            ofLogError("Shader") << "Self-feedback requires one active scalar sampler2D u_vosc_previous";
-            return false;
-        }
-        ofFboSettings settings;
-        settings.width = selfFeedbackWidth;
-        settings.height = selfFeedbackHeight;
-        settings.numColorbuffers = 1;
-        settings.useDepth = false;
-        settings.useStencil = false;
-        settings.numSamples = 0;
-        settings.internalformat = GL_RGBA8;
-        settings.textureTarget = GL_TEXTURE_2D;
-        settings.wrapModeHorizontal = settings.wrapModeVertical = GL_CLAMP_TO_EDGE;
-        settings.minFilter = settings.maxFilter = GL_LINEAR;
+    if (bodyStart) {
+        if (!validateFeedbackUniforms(program->getProgram(), output, uniforms, previousFrameUniform)) return false;
         history = std::make_unique<SelfFeedback>();
-        history->buffers.allocate(settings, ofColor(0, 0, 0, 0));
-        if (!history->buffers.isAllocated() || glGetError() != GL_NO_ERROR) {
+        if (!allocateFeedbackBuffers(history->buffers)) {
             ofLogError("Shader") << "Could not initialize self-feedback framebuffer pair";
             return false;
         }
-    } else if (previous != uniforms.end()) {
+    } else if (uniforms.count(previousFrameUniform)) {
         ofLogError("Shader") << "u_vosc_previous requires the VOSC self-feedback guard";
         return false;
     }
-    prepared = {std::move(candidate), source, std::move(uniforms), std::move(history)};
+    prepared = {std::move(program), source, std::move(uniforms), std::move(history)};
     return true;
 }
 
@@ -752,7 +850,7 @@ GLenum Shader::reflectedNonArrayUniformType(const string& name) const {
     const auto& reflected = getUniforms();
     const auto found = reflected.find(name);
     if (found == reflected.end() || found->second.isArray() ||
-        glGetUniformLocation(uniformProgram, name.c_str()) < 0)
+        found->second.location < 0)
         return 0;
     return found->second.type;
 }
@@ -1023,6 +1121,7 @@ const char* Shader::sceneUniformError(const Uniforms& uniforms, const string& na
     const auto found = uniforms.find(name);
     if (found == uniforms.end()) return "shader binding is absent from the active program";
     const auto& info = found->second;
+    if (info.graphSampler) return "renderer-owned shader uniform";
     // Layer data uploads follow explicit layer-shader bindings in begin().
     static const std::set<string> layerScalars = {"alpha", "bri", "speed", "visible", "visibleThresh", "onsetThresh"};
     static const std::set<string> layerVectors = {"pos", "size", "rotation", "pivot", "scale"};
@@ -1085,7 +1184,108 @@ void Shader::begin(TexData& data, int delay, const Camera* camera) {
     }
 }
 
+bool Shader::graphOutputBindingMatches(const string& name, const vector<float>& expected) const {
+    const auto program = graphOutputProgram();
+    if (!program) return true;
+    const auto location = glGetUniformLocation(program, name.c_str());
+    if (location < 0) return true; // Active only in o0.
+    std::array<float, 4> values{};
+    glGetUniformfv(program, location, values.data());
+    return std::equal(expected.begin(), expected.end(), values.begin());
+}
+
+void Shader::drawGraph(TexData& data, const glm::vec3& pos, const glm::vec2& size, int layer) {
+    auto& history = *selfFeedback;
+    auto& output = *history.output;
+    const auto present = [&](ofFbo& image) {
+        image.getTexture().drawSubsection(pos.x, pos.y, size.x, size.y,
+            0, selfFeedbackHeight, selfFeedbackWidth, -selfFeedbackHeight);
+    };
+
+    GLint activeTexture, texture, program;
+    glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTexture);
+    glActiveTexture(GL_TEXTURE0);
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
+    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+    const bool depth = glIsEnabled(GL_DEPTH_TEST);
+    const bool dither = glIsEnabled(GL_DITHER);
+    ofPushStyle();
+    ofSetColor(255);
+    ofFill();
+    ofSetRectMode(OF_RECTMODE_CORNER);
+    ofDisableDepthTest();
+    ofDisableBlendMode();
+
+    const auto drawPass = [&](shared_ptr<ofShader>& pass, ofFbo& target, ofFbo& source, const char* sampler) {
+        target.begin();
+        ofClear(0, 0, 0, 0);
+        pass->begin();
+        pass->setUniform1f("time", data.time);
+        pass->setUniform1i("random", data.randomSeed);
+        setUniforms(pass, vars);
+        setUniforms(pass, data.getVars());
+        pass->setUniform2f("resolution", selfFeedbackWidth, selfFeedbackHeight);
+        pass->setUniform2f("offset", 0, 0);
+        pass->setUniform1i("layer", layer);
+        pass->setUniformTexture(sampler, source.getTexture(), 0);
+        ofDrawRectangle(0, 0, selfFeedbackWidth, selfFeedbackHeight);
+        pass->end();
+        target.end();
+        return glGetError() == GL_NO_ERROR;
+    };
+    bool presented = false;
+    const auto frame = uint64_t(ofGetFrameNum());
+    if (output.attemptedFrame != frame) {
+        output.attemptedFrame = frame;
+        for (int i = 0; i < 16 && glGetError() != GL_NO_ERROR; ++i) {}
+        glDisable(GL_DITHER);
+        const bool firstDrawn = drawPass(shader, history.buffers.dest(), history.buffers.source(), previousFrameUniform);
+        bool skipSecond = false;
+#ifdef VOSC_RECOVERY_TESTING
+        if (firstDrawn && !output.faultFired) {
+            const auto* failStep = std::getenv("VOSC_TEST_FAIL_HYDRA_O1_STEP");
+            const bool candidateFault = history.step == 0 &&
+                directSource.find("VOSC_TEST_FAIL_HYDRA_O1_FIRST_DRAW") != string::npos;
+            skipSecond = candidateFault || (failStep && std::to_string(history.step + 1) == failStep);
+            if (skipSecond) {
+                output.faultFired = true;
+                output.faultFrame = frame;
+            }
+        }
+#endif
+        const bool secondDrawn = firstDrawn && !skipSecond &&
+            drawPass(output.program, output.buffers.dest(), history.buffers.dest(), currentFrameUniform);
+        if (dither) glEnable(GL_DITHER);
+        if (secondDrawn) {
+            present(output.buffers.dest());
+            if (glGetError() == GL_NO_ERROR) {
+                history.buffers.swap();
+                output.buffers.swap();
+                ++history.step;
+                history.drawFrame = frame;
+                presented = true;
+            } else {
+                ofLogError("Shader") << "Hydra o1 presentation failed";
+            }
+        } else {
+            ofLogError("Shader") << "Hydra " << (firstDrawn ? "o1" : "o0") << " framebuffer draw failed";
+        }
+    }
+    if (!presented && history.step) present(output.buffers.source());
+
+    if (depth) ofEnableDepthTest();
+    ofPopStyle();
+    glUseProgram(program);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glActiveTexture(activeTexture);
+}
+
 void Shader::drawSelfFeedback(TexData& data, const glm::vec3& pos, const glm::vec2& size, int layer) {
+    if (selfFeedback->output) {
+        drawGraph(data, pos, size, layer);
+        return;
+    }
     auto& history = *selfFeedback;
     auto& buffers = history.buffers;
     ofPushStyle();
@@ -1754,18 +1954,14 @@ map<string, string> Shader::getUniformValues(bool preciseFloats) const {
         return values;
     }
     
-    GLuint program = shader->getProgram();
-    if (program == 0) {
-        return values;
-    }
-    
     const auto& reflected = getUniforms();
     
     for (const auto& it : reflected) {
         const string& name = it.first;
         GLenum type = it.second.type;
         
-        GLint location = glGetUniformLocation(program, name.c_str());
+        const auto program = it.second.program;
+        const auto location = it.second.location;
         if (location < 0) {
             continue;
         }

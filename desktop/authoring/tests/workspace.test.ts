@@ -878,6 +878,18 @@ const compilePatch = (text: string) => compileHydra(evaluateHydraPatch(text), te
 const candidateCalls = (host: FixtureHost) =>
   host.requested.filter(({ method }) => method === "run.prepare" || method === "run.commit");
 
+test("Hydra keeps an existing patch's local o1 declaration and source locations", () => {
+  const source = "const o1 = osc();\no1.out();";
+  assert.deepEqual(compilePatch(source), compilePatch("const a1 = osc();\na1.out();"));
+  assert(compilePatch(source).spans.some(span => span.location?.line === 1 && span.location.column === 12));
+  const invalid = "const o1 = osc();\no1.src().out();";
+  assert.throws(() => compilePatch(invalid), error => {
+    assert(error instanceof Error);
+    assert.deepEqual(patchErrorLocation(error, invalid), { line: 2, column: 4 });
+    return true;
+  });
+});
+
 test("Hydra compiler maps helper operations, sorts reachable uniforms and bounds the graph", async () => {
   const animated = await readFile("tests/fixtures/hydra/animated.js", "utf8");
   const result = compilePatch(animated);
@@ -898,6 +910,7 @@ test("Hydra compiler maps helper operations, sorts reachable uniforms and bounds
   assert.throws(() => compilePatch("let x = osc(); for(let i = 0; i < 7; i++) x = x.blend(x); x.out();"), /128 operations/);
   assert.throws(() => compilePatch("for(let i = 0; i < 17; i++) param('x' + i, 0); osc().out();"), /16 parameters/);
   const program = evaluateHydraPatch(HYDRA);
+  assert("functions" in program);
   assert.throws(() => compileHydra({ ...program, colorExpression: "sampler2D(st)" }, HYDRA), /Invalid Triode/);
   assert.throws(() => compilePatch("try { osc().out(0); } catch {} osc().out();"), /exactly one/);
   assert.throws(() => compilePatch("osc([1, 2]).out();"), /array sequences/);
@@ -961,9 +974,102 @@ test("Hydra emits a guarded previous-frame sample for its single output", () => 
 
   const patch = "src(o0).out();";
   const program = evaluateHydraPatch(patch);
+  assert("functions" in program);
   assert.throws(() => compileHydra({ ...program, feedback: null }, patch), /Invalid Triode/);
   assert.throws(() => compileHydra({ ...program, feedback: { location: null, source: "untrusted" } }, patch),
     /Invalid Triode previous-frame source/);
+});
+
+const TWO_OUTPUT_HYDRA = [
+  'const shared = param("shared", 0.25);',
+  'const display = param("display", 0.75);',
+  'src(o0).blend(osc(11), shared).out(o0);',
+  'src(o0).blend(osc(7), shared).blend(osc(13), display).out(o1);',
+].join("\n");
+
+test("Hydra emits the same ordered two-pass graph for either declaration order", () => {
+  const { fragment, spans } = compilePatch(TWO_OUTPUT_HYDRA);
+  const sourceLines = TWO_OUTPUT_HYDRA.split("\n");
+  assert.equal(compilePatch([...sourceLines.slice(0, 2), sourceLines[3], sourceLines[2]].join("\n")).fragment, fragment);
+  assert.equal(compilePatch(TWO_OUTPUT_HYDRA.replace("out(o0)", "out()")).fragment, fragment);
+  const [header, previous, current] = fragment.split(/\/\/ VOSC pass o[01]\n/);
+  assert.equal(header, "#version 330\n#ifndef VOSC_HYDRA_TWO_OUTPUT\n#error VOSC two-output Hydra requires a matching renderer\n#endif\n");
+  assert.match(previous, /^#version 330\n#ifndef VOSC_SELF_FEEDBACK\n/);
+  assert.match(previous, /texture\(u_vosc_previous, st\)/);
+  assert.match(current, /^#version 330\n#ifndef VOSC_SELF_FEEDBACK\n/);
+  assert.match(current, /texture\(u_vosc_current, st\)/);
+  assert.doesNotMatch(previous, /u_vosc_current|u_hydra_display/);
+  assert.doesNotMatch(current, /u_vosc_previous/);
+  for (const pass of [previous, current]) assert.match(pass, /uniform float u_hydra_shared = 0.25;/);
+  assert.match(current, /uniform float u_hydra_display = 0.75;/);
+  const lines = fragment.split("\n");
+  for (const [sampler, patchLine] of [["u_vosc_previous", 3], ["u_vosc_current", 4]] as const) {
+    const generatedLine = lines.findIndex(line => line.includes(`return texture(${sampler},`)) + 1;
+    assert(generatedLine > 0);
+    assert.equal(spans.find(span => span.firstLine <= generatedLine && generatedLine <= span.lastLine)?.location?.line, patchLine);
+  }
+});
+
+test("Hydra rejects unbounded or malformed two-output graphs", () => {
+  for (const source of [
+    "src(o0).out(o1);",
+    "src(o0).out(); src(o0).out(o1); src(o0).out(o1);",
+    "src(o0).out(); try { src(o0).out(o1, o0); } catch {} src(o0).out(o1);",
+    "src(o0).out(); src(o0).out(o2);",
+  ]) assert.throws(() => compilePatch(source), /output|o2/);
+  assert.throws(() => compilePatch("src(o0).out(); src(o1).out(o1);"), /only src\(o0\)/);
+  assert.throws(() => compilePatch("src(o0).out(); src('camera').out(o1);"), /only src\(o0\)/);
+  assert.throws(() => compilePatch("osc().out(); src(o0).out(o1);"), /sample src\(o0\) in both passes/);
+  assert.throws(() => compilePatch("src(o0).out(); osc().out(o1);"), /sample src\(o0\) in both passes/);
+  assert.throws(() => compilePatch('let x = src(o0); for (let i = 0; i < 6; i++) x = x.blend(x); x.out(); x.out(o1);'),
+    /128 expanded operations/);
+  const markerBody = "/*\n// VOSC pass o1\n*/\nreturn _c0;";
+  assert.throws(() => compilePatch(`setFunction({name:"tint",type:"color",inputs:[],glsl:${JSON.stringify(markerBody)}});
+    src(o0).tint().out(); src(o0).out(o1);`), /pass framing/);
+
+  const program = evaluateHydraPatch(TWO_OUTPUT_HYDRA);
+  assert("passes" in program && program.passes);
+  const [previous, current] = program.passes;
+  assert.throws(() => compileHydra({ passes: [previous] }, TWO_OUTPUT_HYDRA), /two-output compiler result/);
+  assert.throws(() => compileHydra({ passes: [previous, current], feedback: null }, TWO_OUTPUT_HYDRA), /two-output compiler result/);
+  const altered = { ...current, uniforms: current.uniforms.map(uniform => uniform.name === "u_hydra_shared" ?
+    { ...uniform, value: 0.5 } : uniform) };
+  assert.throws(() => compileHydra({ passes: [previous, altered] }, TWO_OUTPUT_HYDRA), /Conflicting defaults/);
+});
+
+test("Hydra saves, exports and restores the accepted two-output artifact without re-evaluating", async () => {
+  const host = new FixtureHost();
+  host.validatedUniforms = [{ name: "u_hydra_display", values: [0.75], type: "float", owner: "layer", writable: true }];
+  let evaluations = 0;
+  const evaluate = async (source: string) => { evaluations++; return compilePatch(source); };
+  const workspace = new Workspace(host as unknown as HostClient, evaluate);
+  await workspace.create("hydra-js");
+  setSource(workspace, TWO_OUTPUT_HYDRA);
+  const result = await workspace.run();
+  assert.equal(result.run.phase, "drawn");
+  const fragment = compilePatch(TWO_OUTPUT_HYDRA).fragment;
+  assert.equal(result.document?.acceptedArtifact?.generated?.digest, hash(fragment));
+  await workspace.bindComponent("u_hydra_display", 0, { mode: "fixed", value: 0.4 });
+  setSource(workspace, "src(o1).out();");
+  const directory = await mkdtemp(join(tmpdir(), "vosc-hydra-two-output-"));
+  try {
+    const path = join(directory, "two-output.vosc-draft");
+    await workspace.save(path);
+    host.peer = null;
+    const reopened = new Workspace(host as unknown as HostClient, evaluate);
+    await reopened.open(path);
+    const recipe = await reopened.export(directory);
+    assert.equal(await readFile(join(recipe, "..", "draft.frag"), "utf8"), fragment);
+    assert.match(await readFile(recipe, "utf8"), /u_hydra_display/);
+    host.peer = PEER;
+    const restored = await reopened.restore();
+    assert.equal(restored.run.phase, "drawn");
+    assert.equal(restored.document?.source.text, "src(o1).out();");
+    assert.equal(restored.document?.acceptedArtifact?.generated?.digest, hash(fragment));
+    assert.equal(evaluations, 1);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("Feedback Echo stays cold until manual Run and retains accepted GLSL across offline save, export and Restore", async () => {

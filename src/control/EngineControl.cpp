@@ -139,7 +139,8 @@ int editableUniformComponents(const Layer& layer, const std::string& name) {
     const auto& shader = layer.shader;
     const auto& types = shader.getUniforms();
     const auto found = types.find(name);
-    if (managedUniform(layer, name) || (found != types.end() && found->second.isArray()))
+    if (managedUniform(layer, name) ||
+        (found != types.end() && (found->second.isArray() || found->second.graphSampler)))
         throw Invalid("invalid_uniform", "uniform is engine-managed or an array");
     if (!shader.isShaderLoaded()) throw Invalid("invalid_uniform", "no ordinary GLSL shader loaded");
     if (found == types.end() || !uniformComponents(found->second.type))
@@ -1074,7 +1075,8 @@ void EngineControl::execute(const std::string& id) {
             if (method == "publish_shader") {
                 const auto source = draftValidation ? decodeDraftSource(params["source_base64"]) :
                     params["source"].get<std::string>();
-                if (!layer.shader.loadFromSource(source, draftValidation)) {
+                if (!layer.shader.loadFromSource(source, draftValidation,
+                        draftValidation && render().getLayers().size() == 1)) {
                     auto logs = diagnostics(logStart, 128);
                     entry.response = failure(id, "shader_failed", "shader compile/link failed", logs["entries"]);
                     return;
@@ -1242,7 +1244,7 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
                 text(binding["type"], 8, "uniform type") != draftUniformType(static_cast<int>(binding["components"].size())))
                 throw Invalid("invalid_params", "Saved uniform type does not match binding arity");
         }
-        if (!Shader::prepareDirectSource(source, candidate->program.source, true)) {
+        if (!Shader::prepareDirectSource(source, candidate->program.source, true, true)) {
             response = failure(id, "shader_failed", "shader compile/link failed", diagnostics(logStart, 128)["entries"]);
             return true;
         }
@@ -1264,14 +1266,15 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
             const int arity = exists && !found->second.isArray() ? uniformComponents(found->second.type) : 0;
             const auto previousArity = static_cast<int>(binding["components"].size());
             const auto previousType = draftUniformType(previousArity);
-            const bool managed = managedUniform(layer, name) || (usesCallback && name == draftCallbackUniform);
+            const bool managed = managedUniform(layer, name) || (exists && found->second.graphSampler) ||
+                (usesCallback && name == draftCallbackUniform);
             if (!exists || managed || arity != previousArity) {
                 Json issue = {{"name", name}, {"previous_type", previousType},
                     {"reason", managed ? "renderer_owned" : !exists ? "inactive" : "retyped"}};
                 if (exists) issue["actual_type"] = draftUniformType(arity);
                 if (exists && arity && !managed) {
                     std::array<float, 4> values{};
-                    glGetUniformfv(candidate->program.source.program->getProgram(), found->second.location, values.data());
+                    glGetUniformfv(found->second.program, found->second.location, values.data());
                     issue["default_values"] = std::vector<float>(values.begin(), values.begin() + arity);
                 }
                 conflicts.push_back(std::move(issue));
@@ -1358,7 +1361,8 @@ bool EngineControl::settleDraftDraw() {
                 auto observed = Json::parse(readback->second, nullptr, false);
                 if (observed.is_number()) observed = Json::array({observed});
                 const auto& composed = variable->getVec();
-                if (!observed.is_array() || observed.size() != composed.size()) return false;
+                if (!observed.is_array() || observed.size() != composed.size() ||
+                    !shader.graphOutputBindingMatches(name, composed)) return false;
                 for (size_t i = 0; i < composed.size(); ++i) {
                     if (!observed[i].is_number() || observed[i].get<float>() != composed[i]) return false;
                 }
@@ -1420,14 +1424,27 @@ bool EngineControl::settleDraftDraw() {
 
 void EngineControl::observeSelfFeedbackDraw() {
     selfFeedbackDraw = nullptr;
+    graphDraw = nullptr;
     const auto& layers = render().getLayers();
     if (layers.size() != 1 || !layers[0]) return;
     const auto& shader = layers[0]->shader;
     if (!shader.drewSelfFeedbackThisFrame()) return;
-    selfFeedbackDraw = {{"step", shader.selfFeedbackStep()}, {"program", shader.getShader().getProgram()},
-                        {"frame", frame}};
-    if (draftPreview && draftActivation.contains("commit_id"))
-        selfFeedbackDraw["commit_id"] = draftActivation["commit_id"];
+    const auto program = shader.getShader().getProgram();
+    const auto step = shader.selfFeedbackStep();
+    const auto outputProgram = shader.graphOutputProgram();
+    if (outputProgram) {
+        graphDraw = {{"frame", frame}, {"step", step}, {"displayed_output", "o1"},
+                     {"passes", Json::array({
+                         {{"output", "o0"}, {"program", program}, {"source_step", step - 1}},
+                         {{"output", "o1"}, {"program", outputProgram}, {"source_step", step}}
+                     })}};
+        if (draftPreview && draftActivation.contains("commit_id"))
+            graphDraw["commit_id"] = draftActivation["commit_id"];
+    } else {
+        selfFeedbackDraw = {{"step", step}, {"program", program}, {"frame", frame}};
+        if (draftPreview && draftActivation.contains("commit_id"))
+            selfFeedbackDraw["commit_id"] = draftActivation["commit_id"];
+    }
 }
 
 void EngineControl::startTrial(const std::string& id) {
@@ -2096,7 +2113,8 @@ Json EngineControl::scene() const {
             const bool callbackOwned = draftPreview && name == draftCallbackUniform &&
                 draftActivation.contains("callback_uniform");
             Json value = {{"gl_type", uniform.type}, {"array", array},
-                {"writable", uniformComponents(uniform.type) > 0 && !managedUniform(*layer, name) && !array && !callbackOwned}};
+                {"writable", uniformComponents(uniform.type) > 0 && !managedUniform(*layer, name) &&
+                    !array && !callbackOwned && !uniform.graphSampler}};
             auto gpu = gpuValues.find(name);
             if (gpu != gpuValues.end()) value["rendered_value"] = gpu->second;
             auto var = shader.vars.find(name);
@@ -2171,6 +2189,7 @@ Json EngineControl::scene() const {
         result["draft_slots"] = std::move(slots);
     }
     if (!selfFeedbackDraw.is_null()) result["self_feedback"] = selfFeedbackDraw;
+    if (!graphDraw.is_null()) result["graph_draw"] = graphDraw;
     return result;
 }
 
@@ -2206,6 +2225,30 @@ void captureComposedPng(const Json& params, int& backingWidth, int& backingHeigh
 } // namespace
 
 #ifdef VOSC_RECOVERY_TESTING
+void EngineControl::recoveryTestCaptureGraph(const char* phase, const Json& previous, uint64_t heldStep) {
+    const auto* directory = std::getenv("VOSC_TEST_HYDRA_CAPTURE_DIR");
+    if (!directory || directory[0] != '/') return;
+    const auto path = std::string(directory) + "/" + phase + "-" + std::to_string(frame);
+    try {
+        int width = 0, height = 0;
+        ofPixels pixels;
+        ofBuffer png;
+        captureComposedPng(Json{{"max_width", 640}}, width, height, pixels, png);
+        if (!ofBufferToFile(path + ".png", png, true)) throw std::runtime_error("PNG write failed");
+        Json receipt = {{"phase", phase}, {"frame", frame}, {"revision", revision},
+                        {"graph_draw", graphDraw}, {"previous_graph_draw", previous},
+                        {"held_step", heldStep}, {"draft_activation", draftActivation}};
+        if (draftCommitReceipt && draftCommitReceipt->response.value("frame", uint64_t(0)) == frame)
+            receipt["commit"] = draftCommitReceipt->response;
+        ofBuffer metadata;
+        metadata.set(receipt.dump(2));
+        if (!ofBufferToFile(path + ".json", metadata, false))
+            throw std::runtime_error("draw witness receipt write failed");
+    } catch (const std::exception& error) {
+        ofLogError("control") << "Could not capture Hydra graph witness: " << error.what();
+    }
+}
+
 Json EngineControl::recoveryTestConflictFeedbackTrial(const Json& command) {
     Json result;
     if (command.value("invalidate_baseline_program", false) && trial && trial->feedbackBaseline) {
@@ -2293,6 +2336,8 @@ void EngineControl::capture(const std::string& id) {
             entry.response["result"]["feedback_trial"] = feedbackPreviewDraw;
         if (!selfFeedbackDraw.is_null() && selfFeedbackDraw["frame"] == frame)
             entry.response["result"]["self_feedback"] = selfFeedbackDraw;
+        if (!graphDraw.is_null() && graphDraw["frame"] == frame)
+            entry.response["result"]["graph_draw"] = graphDraw;
         images.push_back(id);
         while (images.size() > 2) {
             auto old = receipts.find(images.front());
@@ -2313,8 +2358,30 @@ void EngineControl::afterDraw() {
     if (!server.isRunning()) return;
     ++frame;
     renderedRevision = revision;
+#ifdef VOSC_RECOVERY_TESTING
+    const auto previousGraph = graphDraw;
+    const auto& layers = render().getLayers();
+    const auto* drawnShader = layers.size() == 1 && layers[0] ? &layers[0]->shader : nullptr;
+    const bool graphFault = drawnShader && drawnShader->graphFaultThisFrame();
+    const bool graphCommitFault = graphFault && !draftDraw.id.empty() && draftDraw.baseline;
+    const auto heldStep = graphFault ? drawnShader->selfFeedbackStep() : 0;
+#endif
     observeSelfFeedbackDraw();
     const bool coherentDraft = settleDraftDraw();
+#ifdef VOSC_RECOVERY_TESTING
+    if (graphCommitFault) {
+        recoveryTestCaptureGraph("rollback", previousGraph, 0);
+    } else if (graphFault) {
+        recoveryTestGraphHeld = true;
+        recoveryTestCaptureGraph("held", previousGraph, heldStep);
+    } else if (!graphDraw.is_null()) {
+        if (graphDraw["step"] == 1) recoveryTestCaptureGraph("first", previousGraph, 0);
+        if (recoveryTestGraphHeld) {
+            recoveryTestCaptureGraph("resumed", previousGraph, 0);
+            recoveryTestGraphHeld = false;
+        }
+    }
+#endif
     for (auto& pair : receipts) {
         if (pair.second.response["status"] == "applied" &&
             draftDraw.id != pair.first &&

@@ -31,9 +31,10 @@ export function evaluateHydraPatch(source: string) {
   const handles = new WeakMap<object, string>();
   const parameters = new Map<string, number>();
   const custom = new Map<string, { definition: ColorTransform; location: HydraLocation | null }>();
-  let output: PatchNode | undefined;
+  const outputs = new Map<object, PatchNode>();
   let outputError = false;
-  const o0 = Object.freeze(Object.create(null));
+  const o0: object = Object.freeze(Object.create(null));
+  const o1: object = Object.freeze(Object.create(null));
   let operations = 0;
   let customBytes = 0;
   const bytes = new TextEncoder();
@@ -61,11 +62,13 @@ export function evaluateHydraPatch(source: string) {
     const node = { name, args, input, other, location: location(), depth, expanded };
     const surface = Object.freeze({
       out(...args: unknown[]) {
-        if (args.length > 1 || (args.length === 1 && args[0] !== o0) || output) {
+        const target = args.length === 0 ? o0 : args[0];
+        if (args.length > 1 || (target !== o0 && target !== o1) || outputs.has(target)) {
           outputError = true;
-          throw new UnsupportedHydraOperation("Hydra supports exactly one output using out() or out(o0).");
+          throw new UnsupportedHydraOperation(
+            "Use exactly one output for each target. Use out() or out(o0) for o0 and out(o1) for the optional second output.");
         }
-        output = node;
+        outputs.set(target, node);
       },
     });
     const graph = new Proxy(surface, {
@@ -113,7 +116,7 @@ export function evaluateHydraPatch(source: string) {
 
   function src(...args: unknown[]) {
     if (args.length !== 1 || args[0] !== o0) {
-      throw new UnsupportedHydraOperation("Hydra supports only src(o0) for previous-frame sampling.");
+      throw new UnsupportedHydraOperation("Hydra supports only src(o0) for sampling between frames or passes.");
     }
     return wrap("src", []);
   }
@@ -163,29 +166,44 @@ export function evaluateHydraPatch(source: string) {
       { definition: { name: definition.name, type: "color", inputs, glsl: definition.glsl }, location: location() });
   }
 
-  const patch = new Function("osc", "param", "setFunction", "src", "o0",
-    `"use strict";\n${source}\n//# sourceURL=${sourceURL}`);
-  if (patch(osc, param, setFunction, src, o0) !== undefined) throw new Error("Hydra patch must finish synchronously with out().");
-  const root = output;
-  if (!root || outputError) throw new UnsupportedHydraOperation("Hydra requires exactly one output using out() or out(o0).");
+  // Keep patch declarations in their own scope without shifting diagnostic lines.
+  const patch = new Function("osc", "param", "setFunction", "src", "o0", "o1",
+    `"use strict"; {\n${source}\n}\n//# sourceURL=${sourceURL}`);
+  if (patch(osc, param, setFunction, src, o0, o1) !== undefined) throw new Error("Hydra patch must finish synchronously with out().");
+  const root = outputs.get(o0);
+  const display = outputs.get(o1);
+  if (!root || outputError) throw new UnsupportedHydraOperation("Hydra requires exactly one output targeting o0 using out() or out(o0).");
+  if (display && root.expanded + display.expanded > HYDRA_OPERATION_LIMIT) {
+    throw new Error("The two-output Hydra graph exceeds 128 expanded operations.");
+  }
 
-  const locations = new Map<string, HydraLocation | null>();
-  const program = compileSinglePass(api => {
-    for (const { definition } of custom.values()) api.setFunction(definition);
-    function replay(node: PatchNode): Chain {
-      const prior = locations.get(node.name);
-      if (!locations.has(node.name)) locations.set(node.name, node.location);
-      else if (prior?.line !== node.location?.line || prior?.column !== node.location?.column) locations.set(node.name, null);
-      if (!node.input) return node.name === "src" ? api.previousFrame() : api.osc(...node.args as number[]);
-      const chain = replay(node.input);
-      const args = node.args.map(value => typeof value === "string" ? api.parameter(value, parameters.get(value)!) : value);
-      return node.other ? chain[node.name](replay(node.other), ...args) : chain[node.name](...args);
-    }
-    replay(root).out();
-  });
-  const { readsPreviousFrame, ...shader } = program;
-  return { ...shader, feedback: readsPreviousFrame ? { location: locations.get("src") ?? null } : null,
-    functions: program.functions.map(fn => ({
-    ...fn, location: custom.get(fn.name)?.location ?? locations.get(fn.name) ?? null,
-  })), location: root.expanded === 1 ? root.location : null };
+  function compilePass(root: PatchNode) {
+    const locations = new Map<string, HydraLocation | null>();
+    const program = compileSinglePass(api => {
+      for (const { definition } of custom.values()) api.setFunction(definition);
+      function replay(node: PatchNode): Chain {
+        const prior = locations.get(node.name);
+        if (!locations.has(node.name)) locations.set(node.name, node.location);
+        else if (prior?.line !== node.location?.line || prior?.column !== node.location?.column) locations.set(node.name, null);
+        if (!node.input) return node.name === "src" ? api.previousFrame() : api.osc(...node.args as number[]);
+        const chain = replay(node.input);
+        const args = node.args.map(value => typeof value === "string" ? api.parameter(value, parameters.get(value)!) : value);
+        return node.other ? chain[node.name](replay(node.other), ...args) : chain[node.name](...args);
+      }
+      replay(root).out();
+    });
+    const { readsPreviousFrame, ...shader } = program;
+    return { ...shader, feedback: readsPreviousFrame ? { location: locations.get("src") ?? null } : null,
+      functions: program.functions.map(fn => ({
+        ...fn, location: custom.get(fn.name)?.location ?? locations.get(fn.name) ?? null,
+      })), location: root.expanded === 1 ? root.location : null };
+  }
+
+  const first = compilePass(root);
+  if (!display) return first;
+  const second = compilePass(display);
+  if (!first.feedback || !second.feedback) {
+    throw new UnsupportedHydraOperation("A two-output Hydra patch must sample src(o0) in both passes.");
+  }
+  return { passes: [first, second] as const };
 }

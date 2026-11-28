@@ -57,6 +57,16 @@ const builtinSignatures: Record<string, string> = Object.assign(Object.create(nu
 const coordinateFunctions = new Set<string>(["rotate", "rotateDeg", "rotateRad", "modulate"]);
 const previousFrameName = "voscPrevious";
 const previousFrameSampler = "u_vosc_previous";
+const currentFrameSampler = "u_vosc_current";
+const firstPassMarker = "// VOSC pass o0";
+const secondPassMarker = "// VOSC pass o1";
+const twoOutputHeader = [
+  "#version 330",
+  "#ifndef VOSC_HYDRA_TWO_OUTPUT",
+  "#error VOSC two-output Hydra requires a matching renderer",
+  "#endif",
+  firstPassMarker,
+];
 const customName = /^[A-Za-z][A-Za-z_0-9]{0,63}$/;
 const glslTypes = new Set(["bool", "int", "uint", "float", ...["b", "i", "u", ""].flatMap(prefix =>
   [2, 3, 4].map(size => `${prefix}vec${size}`)), "mat2", "mat3", "mat4"]);
@@ -144,16 +154,17 @@ export function validateColorBody(source: string, inputs: readonly string[]) {
   if (delimiters.length) throw new Error("Custom color transform has unbalanced delimiters.");
 }
 
-export function compileHydra(program: unknown, source: string) {
-  const sourceLines = source.split(/\r\n|[\n\r\u2028\u2029]/);
+function emitHydraPass(program: unknown, sourceLines: string[], graphSampler?: string) {
   if (!record(program) || !Array.isArray(program.functions) ||
       !Array.isArray(program.uniforms) ||
       program.uniforms.length > HYDRA_PARAMETER_LIMIT || typeof program.colorExpression !== "string") {
     throw new Error("Invalid Triode single-pass compiler result.");
   }
   const feedback = program.feedback;
-  if (feedback !== null && (!record(feedback) || Object.keys(feedback).length !== 1 ||
-      (feedback.location !== null && !validHydraLocation(feedback.location, sourceLines)))) {
+  const sampler = graphSampler ?? previousFrameSampler;
+  if ((graphSampler && feedback === null) ||
+      (feedback !== null && (!record(feedback) || Object.keys(feedback).length !== 1 ||
+      (feedback.location !== null && !validHydraLocation(feedback.location, sourceLines))))) {
     throw new Error("Invalid Triode previous-frame source.");
   }
   const functionCount = program.functions.length + Number(feedback !== null);
@@ -163,29 +174,32 @@ export function compileHydra(program: unknown, source: string) {
   const lines = ["#version 330"];
   if (feedback) {
     lines.push("#ifndef VOSC_SELF_FEEDBACK", "#error VOSC self-feedback requires a matching renderer",
-      "#endif", `uniform sampler2D ${previousFrameSampler};`);
+      "#endif", `uniform sampler2D ${sampler};`);
   }
   lines.push("uniform float time;", "uniform vec2 resolution;");
   const allowed = new Set(["st", "clamp"]);
+  const defaults = new Map<string, number>();
   let previous = "";
   for (const uniform of program.uniforms) {
     if (!record(uniform) || typeof uniform.name !== "string" || !/^u_hydra_[a-z][a-z0-9_]{0,31}$/.test(uniform.name) ||
         uniform.name <= previous || uniform.type !== "float") throw new Error("Invalid Triode scalar parameter.");
     previous = uniform.name;
     allowed.add(uniform.name);
-    lines.push(`uniform float ${uniform.name} = ${glsl(hydraNumber(uniform.value, "param default", 0, 1))};`);
+    const value = hydraNumber(uniform.value, "param default", 0, 1);
+    defaults.set(uniform.name, value);
+    lines.push(`uniform float ${uniform.name} = ${glsl(value)};`);
   }
   lines.push("out vec4 hydraColor;", "");
   const spans: HydraSpan[] = [];
   if (feedback) {
     allowed.add(previousFrameName);
     const firstLine = lines.length + 1;
-    lines.push(`vec4 ${previousFrameName}(vec2 st) {`, `    return texture(${previousFrameSampler}, st);`, "}");
+    lines.push(`vec4 ${previousFrameName}(vec2 st) {`, `    return texture(${sampler}, st);`, "}");
     spans.push({ firstLine, lastLine: lines.length, location: feedback.location as HydraLocation | null });
     lines.push("");
   }
   for (const fn of program.functions) {
-    if (!record(fn) || typeof fn.name !== "string" || allowed.has(fn.name) ||
+    if (!record(fn) || typeof fn.name !== "string" || allowed.has(fn.name) || fn.name === graphSampler ||
         (!TRI_BUILTINS.some(name => name === fn.name) && !validCustomName(fn.name)) || typeof fn.source !== "string" ||
         (fn.location !== null && !validHydraLocation(fn.location, sourceLines))) {
       throw new Error("Invalid Triode shader function or location.");
@@ -225,7 +239,48 @@ export function compileHydra(program: unknown, source: string) {
   const expressionLine = lines.length + 1;
   lines.push(`    hydraColor = ${expression};`, "}", "");
   if (program.location) spans.push({ firstLine: expressionLine, lastLine: expressionLine, location: program.location });
-  const fragment = lines.join("\n");
+  return { lines, spans, defaults };
+}
+
+export function compileHydra(program: unknown, source: string) {
+  const sourceLines = source.split(/\r\n|[\n\r\u2028\u2029]/);
+  if (!record(program) || !("passes" in program)) {
+    const { lines, spans } = emitHydraPass(program, sourceLines);
+    return checkedArtifact(lines.join("\n"), spans);
+  }
+  if (Object.keys(program).length !== 1 || !Array.isArray(program.passes) || program.passes.length !== 2) {
+    throw new Error("Invalid Triode two-output compiler result.");
+  }
+
+  const previous = emitHydraPass(program.passes[0], sourceLines, previousFrameSampler);
+  const current = emitHydraPass(program.passes[1], sourceLines, currentFrameSampler);
+  if ([previous, current].some(pass =>
+    pass.lines.includes(firstPassMarker) || pass.lines.includes(secondPassMarker))) {
+    throw new Error("Invalid Triode two-output pass framing.");
+  }
+  for (const [name, value] of current.defaults) {
+    if (previous.defaults.has(name) && previous.defaults.get(name) !== value) {
+      throw new Error(`Conflicting defaults for shared Hydra uniform "${name}".`);
+    }
+  }
+  if (new Set([...previous.defaults.keys(), ...current.defaults.keys()]).size > HYDRA_PARAMETER_LIMIT) {
+    throw new Error("Hydra supports at most 16 parameters across both passes.");
+  }
+
+  const previousLines = previous.lines.slice(0, -1); // The last entry represents the fragment's final newline.
+  const beforeCurrent = twoOutputHeader.length + previousLines.length + 1;
+  const shiftSpans = (spans: HydraSpan[], offset: number) => spans.map(span => ({
+    ...span, firstLine: span.firstLine + offset, lastLine: span.lastLine + offset,
+  }));
+  const spans = [...shiftSpans(previous.spans, twoOutputHeader.length), ...shiftSpans(current.spans, beforeCurrent)];
+  if (spans.length > HYDRA_OPERATION_LIMIT) {
+    throw new Error("Generated two-output Hydra shader exceeds its source map limit.");
+  }
+  const fragment = [...twoOutputHeader, ...previousLines, secondPassMarker, ...current.lines].join("\n");
+  return checkedArtifact(fragment, spans);
+}
+
+function checkedArtifact(fragment: string, spans: HydraSpan[]) {
   const bytes = new TextEncoder();
   if (bytes.encode(fragment).length > HYDRA_SOURCE_LIMIT ||
       bytes.encode(JSON.stringify(spans)).length > HYDRA_EXCHANGE_LIMIT) {

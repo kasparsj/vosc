@@ -27,8 +27,18 @@ struct ShaderPaths {
 class Camera;
 
 class Shader : public VarsHolder {
+    struct GraphOutput {
+        shared_ptr<ofShader> program;
+        FboPingPong buffers;
+        uint64_t attemptedFrame = UINT64_MAX;
+#ifdef VOSC_RECOVERY_TESTING
+        bool faultFired = false;
+        uint64_t faultFrame = UINT64_MAX;
+#endif
+    };
     struct SelfFeedback {
         FboPingPong buffers;
+        std::unique_ptr<GraphOutput> output;
         uint64_t step = 0;
         uint64_t drawFrame = UINT64_MAX;
     };
@@ -47,6 +57,8 @@ public:
         GLint size;
         bool indexed;
         GLint location;
+        GLuint program;
+        bool graphSampler = false;
 
         bool isArray() const { return indexed || size != 1; }
     };
@@ -85,10 +97,20 @@ public:
         return shader != NULL && shader->isLoaded();
     }
     bool load(string path);
-    bool loadFromSource(const string& source, bool allowSelfFeedback = false);
+    bool loadFromSource(const string& source, bool allowSelfFeedback = false, bool allowGraph = false);
     bool snapshotDirectSource(DirectSourceState& state, string& reason) const;
     static bool prepareDirectSource(const string& source, PreparedDirectSource& prepared,
-                                    bool allowSelfFeedback = false);
+                                    bool allowSelfFeedback = false, bool allowGraph = false);
+    GLuint graphOutputProgram() const {
+        return selfFeedback && selfFeedback->output ? selfFeedback->output->program->getProgram() : 0;
+    }
+    bool graphOutputBindingMatches(const string& name, const vector<float>& expected) const;
+#ifdef VOSC_RECOVERY_TESTING
+    bool graphFaultThisFrame() const {
+        return selfFeedback && selfFeedback->output &&
+            selfFeedback->output->faultFrame == uint64_t(ofGetFrameNum());
+    }
+#endif
     bool hasSelfFeedback() const { return bool(selfFeedback); }
     uint64_t selfFeedbackStep() const { return selfFeedback ? selfFeedback->step : 0; }
     bool drewSelfFeedbackThisFrame() const {
@@ -210,6 +232,7 @@ private:
     map<string, shared_ptr<Texture>> textures;
     map<string, shared_ptr<Buffer>> buffers;
     shared_ptr<ofShader> shader;
+    void drawGraph(TexData& data, const glm::vec3& pos, const glm::vec2& size, int layer);
     std::unique_ptr<SelfFeedback> selfFeedback;
     shared_ptr<ofxShadertoy> shadertoy;
     string shaderPath;

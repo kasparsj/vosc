@@ -187,8 +187,11 @@ private:
     bool settleDraftDraw();
     void observeSelfFeedbackDraw();
     ofJson selfFeedbackDraw;
+    ofJson graphDraw;
     std::unique_ptr<Trial> trial;
 #ifdef VOSC_RECOVERY_TESTING
+    void recoveryTestCaptureGraph(const char* phase, const ofJson& previous, uint64_t heldStep);
+    bool recoveryTestGraphHeld = false;
     std::optional<double> recoveryTestPreviousDrawStart;
     std::optional<double> recoveryTestDrawInterval;
     std::string recoveryTestFeedbackCapture;
