@@ -24,7 +24,7 @@ VOSC_PROFILE_MAKE := $(MAKE)
 all: Release
 
 Release:
-	python3 scripts/build_linux_minimal.py --make "$(VOSC_PROFILE_MAKE)" --of-root "$(OF_ROOT)"
+	python3 scripts/build_linux_minimal.py --make "$(VOSC_PROFILE_MAKE)" --of-root "$(OF_ROOT)" $(if $(VOSC_DAWN_SDK),--dawn-sdk "$(VOSC_DAWN_SDK)")
 else
 ifeq ($(shell uname -s),Darwin)
 XCODEBUILD ?= xcodebuild
@@ -33,7 +33,7 @@ XCODEBUILD ?= xcodebuild
 all: Release
 
 Debug Release:
-	python3 scripts/build_macos_profile.py --xcodebuild "$(XCODEBUILD)" --configuration "$@" --in-place -- VOSC_OPERATOR_UI=$(VOSC_OPERATOR_UI) $(XCODEBUILD_FLAGS)
+	python3 scripts/build_macos_profile.py --xcodebuild "$(XCODEBUILD)" --configuration "$@" --in-place -- VOSC_OPERATOR_UI=$(VOSC_OPERATOR_UI) $(if $(VOSC_DAWN_SDK),VOSC_WEBGPU_M1=1 "VOSC_DAWN_SDK=$(VOSC_DAWN_SDK)") $(XCODEBUILD_FLAGS)
 
 clean: CleanDebug CleanRelease
 
@@ -83,6 +83,7 @@ else
 override PROJECT_EXCLUSIONS += $(PROJECT_ROOT)/src/operator $(PROJECT_ROOT)/src/operator/%
 endif
 
+include scripts/webgpu_m1.mk
 include $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk
 
 ifeq ($(VOSC_OPERATOR_UI),1)

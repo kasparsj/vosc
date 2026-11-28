@@ -10,6 +10,10 @@ ICON_FILE_PATH = $(OF_PATH)/libs/openFrameworksCompiled/project/osx/
 
 // The core build phase prepares the overlay before app sources compile.
 VOSC_COMPAT_BUILD_DIR = $(PROJECT_TEMP_DIR)/vosc-of-$(VOSC_OF_VERSION)/$(CONFIGURATION)
+VOSC_WEBGPU_M1 = 0
+VOSC_DAWN_CXXFLAGS_1 = -DVOSC_WEBGPU_M1=1 -I"$(VOSC_DAWN_SDK)/include"
+VOSC_DAWN_LINK_1 = "$(VOSC_DAWN_SDK)/lib/libwebgpu_dawn.a" -framework CoreFoundation -framework Foundation -framework IOSurface -framework QuartzCore -framework Cocoa -framework IOKit -framework Metal
+
 // The numeric build setting selects operator sources, headers, and link inputs.
 VOSC_OPERATOR_UI = 1
 VOSC_RMLUI_DIR = $(VOSC_COMPAT_BUILD_DIR)/operator-ui

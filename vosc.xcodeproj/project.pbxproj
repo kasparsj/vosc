@@ -160,6 +160,8 @@
 		2A9B67A870E5B82AABA8DAE0 /* CommandRouter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7094275A3A9A13020C8F1E4A /* CommandRouter.cpp */; };
 		F15A63E3641690C65BCAA906 /* ResourceRegistry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 488356C753F24907382D94C2 /* ResourceRegistry.cpp */; };
 		790C55E0D370677873BBAFF1 /* Button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD47A323265005F721937F9F /* Button.cpp */; };
+		A7321E4F98524AA3B03BE30A /* M1Preview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7321E4F98524AA3B03BE30B /* M1Preview.cpp */; };
+		A7321E4F98524AA3B03BE30C /* WebGPUM1Surface.mm in Sources */ = {isa = PBXBuildFile; fileRef = A7321E4F98524AA3B03BE30D /* WebGPUM1Surface.mm */; };
 		6D3ACB993857C8DD55398569 /* EngineControl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6E88769ED5B5F5E9C20D256A /* EngineControl.cpp */; };
 		B01915FEBA95E83A13B492BF /* LocalControlServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8BA0368F9DB14B6223C2848 /* LocalControlServer.cpp */; };
 		A1B2C3D4E5F6012345678901 /* PerformanceTelemetry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6012345678903 /* PerformanceTelemetry.cpp */; };
@@ -839,6 +841,8 @@
 		7094275A3A9A13020C8F1E4A /* CommandRouter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandRouter.cpp; path = src/osc/CommandRouter.cpp; sourceTree = SOURCE_ROOT; };
 		488356C753F24907382D94C2 /* ResourceRegistry.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/ResourceRegistry.cpp; sourceTree = SOURCE_ROOT; };
 		AD47A323265005F721937F9F /* Button.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Button.cpp; path = src/ui/Button.cpp; sourceTree = SOURCE_ROOT; };
+		A7321E4F98524AA3B03BE30B /* M1Preview.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = M1Preview.cpp; path = src/webgpu/M1Preview.cpp; sourceTree = SOURCE_ROOT; };
+		A7321E4F98524AA3B03BE30D /* WebGPUM1Surface.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = WebGPUM1Surface.mm; path = src/macos/WebGPUM1Surface.mm; sourceTree = SOURCE_ROOT; };
 		6E88769ED5B5F5E9C20D256A /* EngineControl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = EngineControl.cpp; path = src/control/EngineControl.cpp; sourceTree = SOURCE_ROOT; };
 		E8BA0368F9DB14B6223C2848 /* LocalControlServer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = LocalControlServer.cpp; path = src/control/LocalControlServer.cpp; sourceTree = SOURCE_ROOT; };
 		A1B2C3D4E5F6012345678903 /* PerformanceTelemetry.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = PerformanceTelemetry.cpp; path = src/control/PerformanceTelemetry.cpp; sourceTree = SOURCE_ROOT; };
@@ -2285,6 +2289,8 @@
 		CF8B7B2D54B1A38EE764C8EF /* control */ = {
 			isa = PBXGroup;
 			children = (
+				A7321E4F98524AA3B03BE30B /* M1Preview.cpp */,
+				A7321E4F98524AA3B03BE30D /* WebGPUM1Surface.mm */,
 				6E88769ED5B5F5E9C20D256A /* EngineControl.cpp */,
 				1995E9778F1E70DD8341129C /* EngineControl.hpp */,
 				E8BA0368F9DB14B6223C2848 /* LocalControlServer.cpp */,
@@ -2453,6 +2459,8 @@
 			files = (
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				B01915FEBA95E83A13B492BF /* LocalControlServer.cpp in Sources */,
+				A7321E4F98524AA3B03BE30A /* M1Preview.cpp in Sources */,
+				A7321E4F98524AA3B03BE30C /* WebGPUM1Surface.mm in Sources */,
 				6D3ACB993857C8DD55398569 /* EngineControl.cpp in Sources */,
 				A1B2C3D4E5F6012345678901 /* PerformanceTelemetry.cpp in Sources */,
 				B2C3D4E5F601234567890123 /* ShaderTrialPolicy.cpp in Sources */,
@@ -2908,6 +2916,7 @@
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
 					"$(VOSC_RMLUI_LIBRARIES_$(VOSC_OPERATOR_UI))",
+					"$(VOSC_DAWN_LINK_$(VOSC_WEBGPU_M1))",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF)",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/assimp.a",
@@ -3368,6 +3377,7 @@
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
 					"$(VOSC_RMLUI_LIBRARIES_$(VOSC_OPERATOR_UI))",
+					"$(VOSC_DAWN_LINK_$(VOSC_WEBGPU_M1))",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF_DEBUG)",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/assimp.a",
@@ -3529,6 +3539,7 @@
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
 					"$(VOSC_RMLUI_LIBRARIES_$(VOSC_OPERATOR_UI))",
+					"$(VOSC_DAWN_LINK_$(VOSC_WEBGPU_M1))",
 					"$(OF_CORE_FRAMEWORKS)",
 					"$(LIB_OF)",
 					"$(VOSC_ADDONS)/ofxAssimpModelLoader/libs/assimp/lib/macos/assimp.xcframework/macos-arm64_x86_64/assimp.a",
