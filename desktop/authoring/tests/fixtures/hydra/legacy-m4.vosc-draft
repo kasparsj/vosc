@@ -1,0 +1,177 @@
+{
+  "format": "vosc.authoring.draft",
+  "version": 2,
+  "id": "f50e487e-4bac-4c55-b91e-5ccad6c49578",
+  "title": "Legacy Hydra draft",
+  "language": "hydra-js",
+  "source": {
+    "name": "Untitled.js",
+    "origin": "M4 Editor release witness",
+    "digest": "52fcac886cbe6f4f33effcec0236ffbf430e9ae745474c354cd460f29530aac6",
+    "base64": "ZnVuY3Rpb24gd2F2ZShmcmVxdWVuY3ksIHN5bmMsIG9mZnNldCwgYW5nbGUsIHNwZWVkKSB7CiAgbGV0IG5vZGUgPSBvc2MoZnJlcXVlbmN5LCBzeW5jLCBvZmZzZXQpOwogIGZvciAoY29uc3Qgc3RlcCBvZiBbYW5nbGUsIDldKSB7CiAgICBub2RlID0gbm9kZS5yb3RhdGUoc3RlcCwgc3BlZWQpOwogIH0KICByZXR1cm4gbm9kZTsKfQoKd2F2ZSgxMSwgMCwgMC43LCAyMywgMCkKICAuYmxlbmQod2F2ZSg3LCAwLCAxLjEsIC0zMSwgMCksIHBhcmFtKCJtaXgiLCAwLjUpKQogIC5yb3RhdGUoMTkpCiAgLm91dCgpOwo="
+  },
+  "destination": {
+    "target": "acd631f3-2b03-4d5e-b129-29cadff3ed18",
+    "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+    "endpoint": {
+      "host": "127.0.0.1",
+      "port": 37209
+    }
+  },
+  "controls": {
+    "slots": [
+      {
+        "id": "s27c5a1f1947f",
+        "label": "Hydra mix",
+        "default": 0
+      }
+    ],
+    "bindings": [
+      {
+        "name": "u_hydra_mix",
+        "component": 0,
+        "binding": {
+          "mode": "range",
+          "slot": "s27c5a1f1947f",
+          "low": 0.15,
+          "high": 0.85
+        }
+      }
+    ],
+    "signatures": [
+      {
+        "name": "u_hydra_mix",
+        "type": "float",
+        "arity": 1,
+        "owner": "layer"
+      }
+    ]
+  },
+  "accepted": {
+    "id": "2793991f-3c5c-400d-9628-52c675366ec7",
+    "revision": 12,
+    "project": {
+      "format": "vosc.authoring.draft",
+      "version": 1,
+      "title": "Legacy Hydra draft",
+      "destination": {
+        "target": "acd631f3-2b03-4d5e-b129-29cadff3ed18",
+        "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+        "endpoint": {
+          "host": "127.0.0.1",
+          "port": 37209
+        }
+      },
+      "source": {
+        "name": "Generated Hydra GLSL",
+        "origin": "M4 Editor release witness",
+        "digest": "43e9c7cf437d172d8103d490c6ff949009a7980603043284246f77e94a2eecc9",
+        "base64": "I3ZlcnNpb24gMzMwCnVuaWZvcm0gZmxvYXQgdGltZTsKdW5pZm9ybSB2ZWMyIHJlc29sdXRpb247CnVuaWZvcm0gZmxvYXQgdV9oeWRyYV9taXggPSAwLjU7Cm91dCB2ZWM0IGh5ZHJhQ29sb3I7Cgp2ZWM0IGh5ZHJhXzEodmVjMiB1dikgewogICAgZmxvYXQgcGhhc2UgPSAodXYueCArIHRpbWUgKiAwLjApICogMTEuMDsKICAgIHJldHVybiB2ZWM0KDAuNSArIDAuNSAqIHNpbih2ZWMzKHBoYXNlKSArIHZlYzMoLSgwLjY5OTk5OTk4ODA3OTA3MSksIDAuMCwgMC42OTk5OTk5ODgwNzkwNzEpKSwgMS4wKTsKfQoKdmVjNCBoeWRyYV8yKHZlYzIgdXYpIHsKICAgIGZsb2F0IGFuZ2xlID0gcmFkaWFucygyMy4wKSArIHRpbWUgKiAwLjA7CiAgICB2ZWMyIHAgPSB1diAtIHZlYzIoMC41KTsKICAgIGZsb2F0IGMgPSBjb3MoYW5nbGUpLCBzID0gc2luKGFuZ2xlKTsKICAgIHJldHVybiBoeWRyYV8xKHZlYzIoYyAqIHAueCArIHMgKiBwLnksIC1zICogcC54ICsgYyAqIHAueSkgKyB2ZWMyKDAuNSkpOwp9Cgp2ZWM0IGh5ZHJhXzModmVjMiB1dikgewogICAgZmxvYXQgYW5nbGUgPSByYWRpYW5zKDkuMCkgKyB0aW1lICogMC4wOwogICAgdmVjMiBwID0gdXYgLSB2ZWMyKDAuNSk7CiAgICBmbG9hdCBjID0gY29zKGFuZ2xlKSwgcyA9IHNpbihhbmdsZSk7CiAgICByZXR1cm4gaHlkcmFfMih2ZWMyKGMgKiBwLnggKyBzICogcC55LCAtcyAqIHAueCArIGMgKiBwLnkpICsgdmVjMigwLjUpKTsKfQoKdmVjNCBoeWRyYV80KHZlYzIgdXYpIHsKICAgIGZsb2F0IHBoYXNlID0gKHV2LnggKyB0aW1lICogMC4wKSAqIDcuMDsKICAgIHJldHVybiB2ZWM0KDAuNSArIDAuNSAqIHNpbih2ZWMzKHBoYXNlKSArIHZlYzMoLSgxLjEwMDAwMDAyMzg0MTg1OCksIDAuMCwgMS4xMDAwMDAwMjM4NDE4NTgpKSwgMS4wKTsKfQoKdmVjNCBoeWRyYV81KHZlYzIgdXYpIHsKICAgIGZsb2F0IGFuZ2xlID0gcmFkaWFucygtMzEuMCkgKyB0aW1lICogMC4wOwogICAgdmVjMiBwID0gdXYgLSB2ZWMyKDAuNSk7CiAgICBmbG9hdCBjID0gY29zKGFuZ2xlKSwgcyA9IHNpbihhbmdsZSk7CiAgICByZXR1cm4gaHlkcmFfNCh2ZWMyKGMgKiBwLnggKyBzICogcC55LCAtcyAqIHAueCArIGMgKiBwLnkpICsgdmVjMigwLjUpKTsKfQoKdmVjNCBoeWRyYV82KHZlYzIgdXYpIHsKICAgIGZsb2F0IGFuZ2xlID0gcmFkaWFucyg5LjApICsgdGltZSAqIDAuMDsKICAgIHZlYzIgcCA9IHV2IC0gdmVjMigwLjUpOwogICAgZmxvYXQgYyA9IGNvcyhhbmdsZSksIHMgPSBzaW4oYW5nbGUpOwogICAgcmV0dXJuIGh5ZHJhXzUodmVjMihjICogcC54ICsgcyAqIHAueSwgLXMgKiBwLnggKyBjICogcC55KSArIHZlYzIoMC41KSk7Cn0KCnZlYzQgaHlkcmFfNyh2ZWMyIHV2KSB7CiAgICByZXR1cm4gbWl4KGh5ZHJhXzModXYpLCBoeWRyYV82KHV2KSwgY2xhbXAodV9oeWRyYV9taXgsIDAuMCwgMS4wKSk7Cn0KCnZlYzQgaHlkcmFfOCh2ZWMyIHV2KSB7CiAgICBmbG9hdCBhbmdsZSA9IHJhZGlhbnMoMTcuMCkgKyB0aW1lICogMC4wOwogICAgdmVjMiBwID0gdXYgLSB2ZWMyKDAuNSk7CiAgICBmbG9hdCBjID0gY29zKGFuZ2xlKSwgcyA9IHNpbihhbmdsZSk7CiAgICByZXR1cm4gaHlkcmFfNyh2ZWMyKGMgKiBwLnggKyBzICogcC55LCAtcyAqIHAueCArIGMgKiBwLnkpICsgdmVjMigwLjUpKTsKfQoKdm9pZCBtYWluKCkgewogICAgaHlkcmFDb2xvciA9IGh5ZHJhXzgoZ2xfRnJhZ0Nvb3JkLnh5IC8gcmVzb2x1dGlvbik7Cn0K"
+      },
+      "slots": [
+        {
+          "id": "s27c5a1f1947f",
+          "label": "Hydra mix",
+          "default": 0
+        }
+      ],
+      "bindings": [
+        {
+          "name": "u_hydra_mix",
+          "component": 0,
+          "binding": {
+            "mode": "range",
+            "slot": "s27c5a1f1947f",
+            "low": 0.15,
+            "high": 0.85
+          }
+        }
+      ]
+    },
+    "signatures": [
+      {
+        "name": "u_hydra_mix",
+        "type": "float",
+        "arity": 1,
+        "owner": "layer"
+      }
+    ],
+    "hydra": {
+      "version": 1,
+      "emitterVersion": 1,
+      "patch": {
+        "name": "Untitled.js",
+        "origin": "M4 Editor release witness",
+        "digest": "c9e3e9d3ceb572296715724026f52ea47145fbbda4d514aae5169c388e175406",
+        "base64": "ZnVuY3Rpb24gd2F2ZShmcmVxdWVuY3ksIHN5bmMsIG9mZnNldCwgYW5nbGUsIHNwZWVkKSB7CiAgbGV0IG5vZGUgPSBvc2MoZnJlcXVlbmN5LCBzeW5jLCBvZmZzZXQpOwogIGZvciAoY29uc3Qgc3RlcCBvZiBbYW5nbGUsIDldKSB7CiAgICBub2RlID0gbm9kZS5yb3RhdGUoc3RlcCwgc3BlZWQpOwogIH0KICByZXR1cm4gbm9kZTsKfQoKd2F2ZSgxMSwgMCwgMC43LCAyMywgMCkKICAuYmxlbmQod2F2ZSg3LCAwLCAxLjEsIC0zMSwgMCksIHBhcmFtKCJtaXgiLCAwLjUpKQogIC5yb3RhdGUoMTcpCiAgLm91dCgpOwo="
+      },
+      "generatedDigest": "43e9c7cf437d172d8103d490c6ff949009a7980603043284246f77e94a2eecc9",
+      "spans": [
+        {
+          "firstLine": 7,
+          "lastLine": 10,
+          "location": {
+            "line": 2,
+            "column": 14
+          }
+        },
+        {
+          "firstLine": 12,
+          "lastLine": 17,
+          "location": {
+            "line": 4,
+            "column": 17
+          }
+        },
+        {
+          "firstLine": 19,
+          "lastLine": 24,
+          "location": {
+            "line": 4,
+            "column": 17
+          }
+        },
+        {
+          "firstLine": 26,
+          "lastLine": 29,
+          "location": {
+            "line": 2,
+            "column": 14
+          }
+        },
+        {
+          "firstLine": 31,
+          "lastLine": 36,
+          "location": {
+            "line": 4,
+            "column": 17
+          }
+        },
+        {
+          "firstLine": 38,
+          "lastLine": 43,
+          "location": {
+            "line": 4,
+            "column": 17
+          }
+        },
+        {
+          "firstLine": 45,
+          "lastLine": 47,
+          "location": {
+            "line": 10,
+            "column": 4
+          }
+        },
+        {
+          "firstLine": 49,
+          "lastLine": 54,
+          "location": {
+            "line": 11,
+            "column": 4
+          }
+        }
+      ]
+    }
+  }
+}

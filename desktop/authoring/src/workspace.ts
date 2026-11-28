@@ -1,3 +1,4 @@
+import { TRIODE_COMPILER_ID } from "vosc-triode-identity";
 import { HYDRA_EMITTER_VERSION } from "./hydra-compiler";
 import type { HydraEvaluator } from "./hydra-evaluator";
 import { randomBytes, randomUUID } from "node:crypto";
@@ -881,7 +882,8 @@ export class Workspace {
           if (job.signal.aborted || !this.freshHydraRun(attempt)) return;
           const source = sourceWithText({ name: "Generated Hydra GLSL", origin: patch.name, digest: "", base64: "" }, fragment);
           attempt = { ...attempt, source, identity: { ...attempt.identity, sourceDigest: source.digest },
-            hydra: { version: 1, emitterVersion: HYDRA_EMITTER_VERSION, patch, generatedDigest: source.digest, spans } };
+            hydra: { version: 2, emitterVersion: HYDRA_EMITTER_VERSION, compilerId: TRIODE_COMPILER_ID,
+              patch, generatedDigest: source.digest, spans } };
         } catch (error) {
           if (job.signal.aborted || !this.freshHydraRun(attempt)) return;
           throw error;
@@ -1108,7 +1110,8 @@ export class Workspace {
       this.samples.stop();
       this.runView = { ...this.runView, manualReady: false };
     }
-    let problems = problemEntries(failure, editorText(attempt.source));
+    let problems = failure.sourceLocation ? [{ code: failure.code, message: failure.message, ...failure.sourceLocation }] :
+      problemEntries(failure, editorText(attempt.source));
     if (attempt.hydra) {
       problems = problems.map(({ line, column: _column, ...problem }) => {
         const span = line === undefined ? undefined :

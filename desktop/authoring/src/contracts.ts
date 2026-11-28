@@ -162,13 +162,12 @@ export interface DraftControls {
   pendingMappings?: PendingMapping[];
 }
 export type DraftLanguage = "glsl" | "hydra-js";
-export interface HydraProvenance {
-  version: 1;
-  emitterVersion: number;
+export type HydraProvenance = ({ version: 1; emitterVersion: 1 } |
+  { version: 2; emitterVersion: 2; compilerId: string }) & {
   patch: DraftSource;
   generatedDigest: string;
   spans: HydraSpan[];
-}
+};
 export interface AcceptedArtifact {
   id: string;
   revision: number | null;

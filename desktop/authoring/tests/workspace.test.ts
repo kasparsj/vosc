@@ -11,8 +11,9 @@ import { createServer, type TLSSocket } from "node:tls";
 import { parseDocument, parseProject, replay, sourceName, sourceWithText, titleFor, writeReplay } from "../src/draft-project";
 import { hash, HostError } from "../src/local-state";
 import { readSample } from "../src/osc-samples";
+import { TRIODE_COMPILER_ID } from "vosc-triode-identity";
 import { compileHydra } from "../src/hydra-compiler";
-import { evaluateHydraPatch } from "../src/hydra-patch";
+import { evaluateHydraPatch, patchErrorLocation } from "../src/hydra-patch";
 import { Workspace } from "../src/workspace";
 import { HostClient } from "../src/host-client";
 import { Importer } from "../src/importer";
@@ -770,12 +771,13 @@ test("Hydra compiler maps helper operations, sorts reachable uniforms and bounds
   const result = compilePatch(animated);
   assert.deepEqual(result, compilePatch(animated));
   assert.match(result.fragment, /^#version 330\nuniform float time;\nuniform vec2 resolution;\nuniform float u_hydra_mix = 0.5;/);
-  assert.match(result.fragment, /hydra_8\(gl_FragCoord.xy \/ resolution\)/);
-  assert.deepEqual(result.spans.slice(0, 3).map(item => item.location),
-    [{ line: 2, column: 14 }, { line: 4, column: 17 }, { line: 4, column: 17 }]);
+  assert.match(result.fragment, /vec2 st = gl_FragCoord.xy \/ resolution;/);
+  assert.match(result.fragment, /hydraColor = blend\(osc\(rotate\(rotate\(rotate\(st/);
+  assert.match(result.fragment, /clamp\(u_hydra_mix, 0.0, 1.0\)/);
+  assert(result.spans.some(span => span.location?.line === 2));
   assert.doesNotMatch(compilePatch('param("unused", 0.4); osc().out();').fragment, /u_hydra_unused/);
   assert.throws(() => compilePatch('param("x", 0.4); param("x", 0.5); osc().out();'), /Conflicting/);
-  assert.throws(() => compilePatch("osc().out(0);"), /out expects 0/);
+  assert.throws(() => compilePatch("osc().out(0);"), /argument-free out/);
   assert.throws(() => compilePatch("osc().out(); osc().out();"), /exactly one/);
   assert.throws(() => compilePatch("osc(() => 4).out();"), /osc frequency/);
   assert.throws(() => compilePatch("osc(-1).out();"), /osc frequency/);
@@ -783,8 +785,41 @@ test("Hydra compiler maps helper operations, sorts reachable uniforms and bounds
   assert.throws(() => compilePatch("let x = osc(); for(let i = 0; i < 32; i++) x = x.rotate(); x.out();"), /depth 32/);
   assert.throws(() => compilePatch("let x = osc(); for(let i = 0; i < 7; i++) x = x.blend(x); x.out();"), /128 operations/);
   assert.throws(() => compilePatch("for(let i = 0; i < 17; i++) param('x' + i, 0); osc().out();"), /16 parameters/);
-  const graph = evaluateHydraPatch(HYDRA);
-  assert.throws(() => compileHydra({ ...graph, output: { op: "raw", location: null } }, HYDRA), /Unsupported/);
+  const program = evaluateHydraPatch(HYDRA);
+  assert.throws(() => compileHydra({ ...program, colorExpression: "sampler2D(st)" }, HYDRA), /Invalid Triode/);
+  assert.throws(() => compilePatch("try { osc().out(0); } catch {} osc().out();"), /exactly one/);
+  assert.throws(() => compilePatch("osc([1, 2]).out();"), /array sequences/);
+  assert.throws(() => compilePatch("osc().src().out();"), /Unsupported Hydra/);
+  assert.throws(() => compilePatch("osc().blend(osc(), () => 1).out();"), /Frame callbacks/);
+  assert.throws(() => compilePatch('setFunction({name:"tint",type:"color",inputs:[],glsl:"return texture(s0, st);"}); osc().out();'), /dependency/);
+  const reused = compilePatch('const a = osc(1e-38); a.rotate(9).blend(a.rotate(7)).out();').fragment;
+  assert.match(reused, /blend\(osc\(rotate\(st, 9.0,[^,]*\), [\d.e-]+, [^,]*, 0\.0\), osc\(rotate\(st, 7\.0/);
+  assert.match(reused, /9\.999999350456404e-39/);
+  assert.doesNotMatch(reused, /offset\/frequency/);
+  const commentBody = '// A comment with vec4 tint(vec4 _c0)\nreturn _c0;';
+  const colorPatch = (name: string, inputs: unknown[], glsl: string) =>
+    `setFunction(${JSON.stringify({ name, type: "color", inputs, glsl })}); osc().${name}().out();`;
+  assert.match(compilePatch(colorPatch("tint", [], commentBody)).fragment,
+    /vec4 tint\(vec4 _c0\) \{\n +\/\/ A comment with vec4 tint\(vec4 _c0\)\nreturn _c0;/);
+  for (const name of ["sampler2D", "precision", "uimage2D", "row_major"]) {
+    assert.throws(() => compilePatch(colorPatch(name, [], "return _c0;")), /uniquely named/);
+    assert.throws(() => compilePatch(colorPatch("tint", [{ name, type: "float", default: 0 }], "return _c0;")),
+      /unique named float inputs/);
+  }
+  const exact = 'const glsl = "return _c0;"; setFunction({name:"tint",type:"color",inputs:[],' +
+    'glsl:glsl.padEnd(16384," ")}); osc().tint().out();';
+  assert.match(compilePatch(exact).fragment, /vec4 tint\(vec4 _c0\)/);
+  assert.throws(() => compilePatch('setFunction({name:"tint",type:"color",inputs:[],glsl:" ".repeat(16385)}); osc().out();'), /16 KiB/);
+  assert.throws(() => compilePatch('for (let i=0; i<5; i++) setFunction({name:"tint"+i,type:"color",inputs:[],glsl:" ".repeat(16000)}); osc().out();'), /64 KiB/);
+  const unsupported = 'const wave = osc();\nwave.rotate().src().out();';
+  assert.throws(() => compilePatch(unsupported), error => {
+    assert(error instanceof Error);
+    assert.equal(patchErrorLocation(error, unsupported)?.line, 2);
+    return true;
+  });
+  const badFunctions = program.functions.map((fn, index) =>
+    index ? fn : { ...fn, source: fn.source.replace("float frequency", "vec2 frequency") });
+  assert.throws(() => compileHydra({ ...program, functions: badFunctions }, HYDRA), /Invalid Triode shader function inputs/);
 });
 
 test("Hydra stays cold until manual Run and retains separate accepted bytes across offline save and Restore", async () => {
@@ -823,6 +858,12 @@ test("Hydra stays cold until manual Run and retains separate accepted bytes acro
     const saved = JSON.parse(await readFile(path, "utf8"));
     assert.equal(saved.accepted.hydra.patch.digest, hash(HYDRA));
     assert.equal(saved.accepted.hydra.generatedDigest, generated.digest);
+    assert.equal(saved.accepted.hydra.version, 2);
+    assert.equal(saved.accepted.hydra.compilerId, TRIODE_COMPILER_ID);
+    assert.throws(() => parseDocument({ ...saved, accepted: { ...saved.accepted,
+      hydra: { ...saved.accepted.hydra, version: 3 } } }), /provenance/);
+    assert.throws(() => parseDocument({ ...saved, accepted: { ...saved.accepted,
+      hydra: { ...saved.accepted.hydra, compilerId: "unpinned" } } }), /provenance/);
     assert.throws(() => parseDocument({ ...saved, accepted: { ...saved.accepted,
       hydra: { ...saved.accepted.hydra, generatedDigest: hash("different") } } }), /provenance/);
     const invalid = structuredClone(saved);
@@ -847,6 +888,41 @@ test("Hydra stays cold until manual Run and retains separate accepted bytes acro
     assert.equal(restored.document?.acceptedArtifact?.generated?.digest, generated.digest);
     assert(restored.document?.acceptedArtifact?.stale);
     assert.equal(evaluations, 1);
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
+  }
+});
+
+test("Legacy M4 accepted GLSL and OSC mappings survive Restore before the first Triode Run", async () => {
+  const path = "tests/fixtures/hydra/legacy-m4.vosc-draft";
+  const original = parseDocument(JSON.parse(await readFile(path, "utf8")));
+  const artifact = original.accepted!;
+  assert.equal(artifact.hydra?.version, 1);
+  const host = new FixtureHost();
+  host.validatedUniforms = [{ name: "u_hydra_mix", values: [0.5], type: "float", owner: "layer", writable: true }];
+  host.peer = null;
+  let evaluations = 0;
+  const workspace = new Workspace(host as unknown as HostClient, async js => { evaluations++; return compilePatch(js); });
+  const temporary = await mkdtemp(join(tmpdir(), "vosc-hydra-legacy-"));
+  try {
+    await workspace.open(path);
+    assert.equal(candidateCalls(host).length, 0);
+    const saved = join(temporary, "saved.vosc-draft");
+    await workspace.save(saved);
+    assert.deepEqual(parseDocument(JSON.parse(await readFile(saved, "utf8"))), original);
+    const recipe = await workspace.export(temporary);
+    assert.equal(hash(await readFile(join(recipe, "..", "draft.frag"))), artifact.project.source.digest);
+    host.peer = PEER;
+    assert.equal((await workspace.restore()).run.phase, "drawn");
+    assert.equal(candidateCalls(host).at(-2)?.params.sha256, artifact.project.source.digest);
+    assert.equal(evaluations, 0);
+    assert.equal((await workspace.run()).run.phase, "drawn");
+    assert.equal(evaluations, 1);
+    const migrated = join(temporary, "triode.vosc-draft");
+    await workspace.save(migrated);
+    const upgraded = parseDocument(JSON.parse(await readFile(migrated, "utf8")));
+    assert.equal(upgraded.accepted?.hydra?.version, 2);
+    assert.deepEqual(upgraded.accepted?.project.bindings, artifact.project.bindings);
   } finally {
     await rm(temporary, { recursive: true, force: true });
   }
@@ -903,12 +979,20 @@ test("Hydra native diagnostics refer to immutable generated bytes, and edited ma
   await workspace.run();
   await workspace.bindComponent("u_hydra_mix", 0, { mode: "fixed", value: 0.4 });
   const accepted = workspace.view().document?.acceptedArtifact?.id;
-  host.compileError = new HostError("compile_error", "Failed", undefined, ["0(8) : invalid type", "unknown driver record"]);
+  const custom = [
+    'setFunction({name:"nativeFailure", type:"color", inputs:[],',
+    '  glsl:"float bad = vec3(1.0); return vec4(bad);"});',
+    HYDRA.replace(".out()", ".nativeFailure().out()"),
+  ].join("\n");
+  setSource(workspace, custom);
+  const generatedLine = compilePatch(custom).fragment.split("\n").findIndex(line => line.includes("float bad")) + 1;
+  assert(generatedLine > 0);
+  host.compileError = new HostError("compile_error", "Failed", undefined, [`0(${generatedLine}) : invalid type`, "unknown driver record"]);
   const failed = await workspace.run();
   setSource(workspace, "osc().out();");
   assert.deepEqual(failed.run.problems.map(({ generatedLine, line, message }) => [generatedLine, line, message]),
-    [[8, 1, "0(8) : invalid type"], [undefined, undefined, "unknown driver record"]]);
-  assert.equal(failed.run.attempt?.source, HYDRA);
+    [[generatedLine, 1, `0(${generatedLine}) : invalid type`], [undefined, undefined, "unknown driver record"]]);
+  assert.equal(failed.run.attempt?.source, custom);
   assert.equal(workspace.view().document?.acceptedArtifact?.id, accepted);
   host.compileError = null;
   host.conflicts = [{ name: "u_hydra_mix", reason: "inactive" }];

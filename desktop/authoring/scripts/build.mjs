@@ -1,10 +1,14 @@
-import { cp, mkdir, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import metadata from "../package.json" with { type: "json" };
+import { compilerPlugin, digest, readStagedCompiler } from "./triode-compiler.mjs";
 
 const cwd = fileURLToPath(new URL("../", import.meta.url));
 const output = new URL("../build/app/", import.meta.url);
+const auditPath = new URL("triode-compiler-audit.json", output);
+await rm(auditPath, { force: true });
+const compiler = await readStagedCompiler();
 await mkdir(output, { recursive: true });
 await build({
   absWorkingDir: cwd,
@@ -16,8 +20,9 @@ await build({
   platform: "node",
   format: "cjs",
   target: "es2023",
+  plugins: [compilerPlugin(compiler, { includeCompiler: false })],
 });
-await build({
+const worker = await build({
   absWorkingDir: cwd,
   entryPoints: { renderer: "src/renderer.tsx", "hydra-worker": "src/hydra-worker.ts" },
   bundle: true,
@@ -27,7 +32,14 @@ await build({
   define: { "process.env.NODE_ENV": '"production"' },
   jsx: "automatic",
   minify: true,
+  metafile: true,
+  plugins: [compilerPlugin(compiler)],
 });
+const compilerOutputs = Object.entries(worker.metafile.outputs)
+  .filter(([, item]) => item.inputs["vosc-triode:vosc-triode-compiler"]?.bytesInOutput > 0);
+if (compilerOutputs.length !== 1 || compilerOutputs[0][0] !== "build/app/hydra-worker.js") {
+  throw new Error("The staged Triode compiler must be bundled only into the isolated Editor worker.");
+}
 for (const file of ["index.html", "styles.css", "hydra-bootstrap.js"]) {
   await cp(new URL(`../src/${file}`, import.meta.url), new URL(file, output));
 }
@@ -41,3 +53,10 @@ await writeFile(new URL("package.json", output), JSON.stringify({
   version: metadata.version,
   main: metadata.main,
 }) + "\n");
+await writeFile(auditPath, JSON.stringify({
+  bundleSha256: compiler.pin.bundleSha256,
+  workerSha256: digest(await readFile(new URL("hydra-worker.js", output))),
+  workerCompilerInputs: compiler.pin.compilerInputs,
+  distribution: compiler.pin.distribution,
+  externalDistribution: compiler.pin.externalDistribution,
+}, null, 2) + "\n");

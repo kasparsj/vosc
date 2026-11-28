@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { compileHydra, HYDRA_EXCHANGE_LIMIT, HYDRA_SOURCE_LIMIT } from "./hydra-compiler";
+import { compileHydra, HYDRA_EXCHANGE_LIMIT, HYDRA_SOURCE_LIMIT, validHydraLocation } from "./hydra-compiler";
 import { HostError } from "./local-state";
 
 export const HYDRA_SCHEME = "vosc-hydra";
@@ -104,11 +104,12 @@ export class ElectronHydraEvaluator {
       if (typeof raw !== "string" || Buffer.byteLength(raw) > HYDRA_EXCHANGE_LIMIT) {
         throw new HostError("hydra_graph", "Hydra evaluator result exceeds 64 KiB.");
       }
-      const result = JSON.parse(raw) as { error?: { code?: string; message?: string } };
+      const result = JSON.parse(raw) as { error?: { code?: string; message?: string; location?: unknown } };
       if (result?.error) {
-        const { code, message } = result.error;
+        const { code, message, location } = result.error;
         throw new HostError(code === "hydra_syntax" || code === "hydra_unsupported" ? code : "hydra_evaluation",
-          typeof message === "string" ? message.slice(0, 2048) : "The Hydra patch could not be evaluated.");
+          typeof message === "string" ? message.slice(0, 2048) : "The Hydra patch could not be evaluated.", undefined, [],
+          validHydraLocation(location, source.split(/\r\n|[\n\r\u2028\u2029]/)) ? location : undefined);
       }
       return compileHydra(result, source);
     } catch (error) {

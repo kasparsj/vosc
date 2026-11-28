@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "baseRevision": "fdd9421dab4b119131c8bec54fe88965949b179f",
+  "compilerRevision": "d8a4d2c56928e287ae580e32d1c45dcb357a039c",
+  "proofSha256": "4de6fb6eb84fe472515a1d70bcd8d85aeb2d5acfd90d84c32c48d3d557795260",
+  "entry": "src/vosc-single-pass.js",
+  "adapterSource": "compiler/vosc-single-pass.js",
+  "esbuild": "0.28.2",
+  "distribution": "private-qualification-only",
+  "externalDistribution": "pending-disposition",
+  "bundleSha256": "1928670e09ddece138168752c11910a50cf86a9d7f78eb8c6da28d1b467058ab",
+  "compilerInputs": [
+    "src/generate-glsl.js",
+    "src/glsl/single-pass-transforms.js",
+    "src/types.js",
+    "src/vosc-single-pass.js"
+  ],
+  "sourceSha256": {
+    "LICENSE": "7f8f48e4266aa8fd3033dfaa4bb7f6e83a60c6e099f82d4959b81de90e67cd8f",
+    "NOTICE": "6a4985a7696407df70c46354377289151f6f8e7e3a008f3aa371897d784b884e",
+    "package-lock.json": "6a4563f053e2efaef9ffb24cd6327263f58f680ea1af9071d5e89bcdc7a29a13",
+    "package.json": "839aaf2cf731c67fb83135c26335d8460ae4b0e85b6ec4190915c4309e2c0396",
+    "src/generate-glsl.js": "3a4eb7d3988ee8d109da1125b1ca9ba9882cc14173ad0f64b4abcf890d0c8041",
+    "src/glsl/single-pass-transforms.js": "b9218ad2ab9263cf0c5a4c68dcef3672611a69e4bd17bd3d5e6b478e3387caba",
+    "src/types.js": "635fdb270872bab7467743290c79dea52fb2caf21795d720ff2513c82c38ad73",
+    "src/vosc-single-pass.js": "437df51aca6ca3d1f4a861781b71b049b9a83082339b9ea21909ed22e5a17055"
+  }
+}

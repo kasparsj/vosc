@@ -201,7 +201,9 @@ export function parseProject(value: unknown): DraftProject {
 
 function parseHydra(value: unknown, generated: DraftSource): HydraProvenance {
   const invalid = () => new HostError("invalid_project", "The accepted Hydra provenance is invalid.");
-  if (!record(value) || value.version !== 1 || value.emitterVersion !== HYDRA_EMITTER_VERSION ||
+  if (!record(value) || !((value.version === 1 && value.emitterVersion === 1) ||
+      (value.version === 2 && value.emitterVersion === HYDRA_EMITTER_VERSION &&
+        typeof value.compilerId === "string" && digestPattern.test(value.compilerId))) ||
       value.generatedDigest !== generated.digest || !Array.isArray(value.spans) ||
       value.spans.length === 0 || value.spans.length > HYDRA_OPERATION_LIMIT ||
       Buffer.byteLength(JSON.stringify(value.spans)) > HYDRA_EXCHANGE_LIMIT) throw invalid();
@@ -219,7 +221,9 @@ function parseHydra(value: unknown, generated: DraftSource): HydraProvenance {
     return { firstLine: span.firstLine, lastLine: span.lastLine,
       location: span.location && { line: span.location.line, column: span.location.column } };
   });
-  return { version: 1, emitterVersion: value.emitterVersion, patch, generatedDigest: generated.digest, spans };
+  const artifact = { patch, generatedDigest: generated.digest, spans };
+  return value.version === 1 ? { version: 1, emitterVersion: 1, ...artifact } :
+    { version: 2, emitterVersion: HYDRA_EMITTER_VERSION, compilerId: value.compilerId as string, ...artifact };
 }
 
 export function parseDocument(value: unknown): DraftDocument {

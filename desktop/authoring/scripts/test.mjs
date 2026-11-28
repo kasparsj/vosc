@@ -1,9 +1,10 @@
 import { build } from "esbuild";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { compilerPlugin, readStagedCompiler } from "./triode-compiler.mjs";
 
 const cwd = fileURLToPath(new URL("../", import.meta.url));
-const entryPoints = ["workspace", "documents", "editor-imports"];
+const entryPoints = ["workspace", "documents", "editor-imports", "vosc-single-pass"];
 if (process.platform === "linux") entryPoints.push("local-discovery");
 const outputDirectory = "build/tests";
 await build({
@@ -11,7 +12,7 @@ await build({
   entryPoints: entryPoints.map(name => `tests/${name}.test.ts`),
   bundle: true,
   platform: "node",
-  plugins: [{
+  plugins: [compilerPlugin(await readStagedCompiler()), {
     name: "test-electron-storage",
     setup(build) {
       build.onResolve({ filter: /^electron$/ }, () => ({ path: "electron", namespace: "test-electron" }));

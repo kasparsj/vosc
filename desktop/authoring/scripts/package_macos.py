@@ -88,6 +88,37 @@ def stage_python(archive, destination):
     return python
 
 
+def stage_triode_sources(resources):
+    pin_path = DESKTOP / "triode-compiler-pin.json"
+    pin = json.loads(pin_path.read_bytes())
+    audit = json.loads((resources / "app/triode-compiler-audit.json").read_bytes())
+    if (pin["distribution"], pin["externalDistribution"]) != ("private-qualification-only", "pending-disposition"):
+        raise RuntimeError("Unexpected distribution disposition for the private Triode package")
+    if audit != {
+        "bundleSha256": pin["bundleSha256"],
+        "workerSha256": digest(resources / "app/hydra-worker.js"),
+        "workerCompilerInputs": pin["compilerInputs"],
+        "distribution": pin["distribution"],
+        "externalDistribution": pin["externalDistribution"],
+    }:
+        raise RuntimeError("Triode compiler audit does not match the pinned Editor worker")
+    source_dir = resources / "triode-compiler-source"
+    source_dir.mkdir()
+    for relative, expected_hash in pin["sourceSha256"].items():
+        path = Path(relative)
+        if (path.is_absolute() or ".." in path.parts or
+                relative not in ("LICENSE", "NOTICE", "package.json", "package-lock.json") and
+                (not path.parts or path.parts[0] != "src")):
+            raise RuntimeError(f"Invalid Triode input path: {relative}")
+        source = DESKTOP / "build/triode/source" / path
+        target = source_dir / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+        if digest(target) != expected_hash:
+            raise RuntimeError(f"Triode source checksum mismatch: {relative}")
+    shutil.copyfile(pin_path, source_dir / pin_path.name)
+
+
 def stage_controller(output, electron_dist, python_archive, manifest, fixture=None):
     source = electron_dist / "Electron.app"
     app_name = manifest["productName"] + (" Fixture" if fixture else "")
@@ -116,6 +147,7 @@ def stage_controller(output, electron_dist, python_archive, manifest, fixture=No
     resources = target / "Contents/Resources"
     (resources / "default_app.asar").unlink(missing_ok=True)
     shutil.copytree(DESKTOP / "build/app", resources / "app")
+    stage_triode_sources(resources)
     package_metadata = resources / "app/package.json"
     package = json.loads(package_metadata.read_bytes())
     package.update(productName=storage_name, voscProductName=app_name)

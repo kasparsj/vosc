@@ -1,19 +1,13 @@
 export const HYDRA_SOURCE_LIMIT = 128 * 1024;
 export const HYDRA_EXCHANGE_LIMIT = 64 * 1024;
-export const HYDRA_EMITTER_VERSION = 1;
+export const HYDRA_EMITTER_VERSION = 2;
 export const HYDRA_DEPTH_LIMIT = 32;
 export const HYDRA_OPERATION_LIMIT = 128;
 export const HYDRA_PARAMETER_LIMIT = 16;
+export const HYDRA_COLOR_BODY_LIMIT = 16 * 1024;
 
 export type HydraLocation = { line: number; column: number };
 export type HydraSpan = { firstLine: number; lastLine: number; location: HydraLocation | null };
-type Amount = number | string;
-export type HydraNode =
-  | { op: "osc"; location: HydraLocation | null; frequency: number; sync: number; offset: number }
-  | { op: "rotate"; location: HydraLocation | null; input: HydraNode; angle: number; speed: number }
-  | { op: "blend"; location: HydraLocation | null; input: HydraNode; other: HydraNode; amount: Amount };
-export type HydraGraph = { output: HydraNode; parameters: [string, number][] };
-
 export function hydraNumber(value: unknown, label: string, minimum = -10000, maximum = 10000) {
   if (typeof value !== "number" || !Number.isFinite(value) || value < minimum || value > maximum ||
       (value !== 0 && Math.fround(value) === 0)) {
@@ -35,9 +29,8 @@ export function hydraParameterId(value: unknown) {
   return value;
 }
 
-function record(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid Hydra graph.");
-  return value as Record<string, unknown>;
+export function record(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 export function validHydraLocation(value: unknown, source: readonly string[]): value is HydraLocation {
@@ -52,90 +45,158 @@ function glsl(value: number) {
   return /[.e]/.test(number) ? number : `${number}.0`;
 }
 
-export function compileHydra(graph: unknown, source: string) {
+export const TRI_BUILTINS = ["osc", "rotate", "rotateDeg", "rotateRad", "blend", "modulate"] as const;
+const builtinSignatures: Record<string, string> = Object.assign(Object.create(null), {
+  osc: "vec2 _st, float frequency, float sync, float offset",
+  rotate: "vec2 _st, float angle, float speed",
+  rotateDeg: "vec2 _st, float angle, float speed",
+  rotateRad: "vec2 _st, float angle, float speed",
+  blend: "vec4 _c0, vec4 _c1, float amount",
+  modulate: "vec2 _st, vec4 _c0, float amount",
+});
+const coordinateFunctions = new Set<string>(["rotate", "rotateDeg", "rotateRad", "modulate"]);
+const customName = /^[A-Za-z][A-Za-z_0-9]{0,63}$/;
+const glslTypes = new Set(["bool", "int", "uint", "float", ...["b", "i", "u", ""].flatMap(prefix =>
+  [2, 3, 4].map(size => `${prefix}vec${size}`)), "mat2", "mat3", "mat4"]);
+const intrinsics = new Set([
+  "radians", "degrees", "sin", "cos", "tan", "asin", "acos", "atan", "pow", "exp", "log", "exp2", "log2", "sqrt",
+  "inversesqrt", "abs", "sign", "floor", "trunc", "round", "ceil", "fract", "mod", "min", "max", "clamp", "mix",
+  "step", "smoothstep", "length", "distance", "dot", "cross", "normalize", "reflect", "refract",
+  "lessThan", "lessThanEqual", "greaterThan", "greaterThanEqual", "equal", "notEqual", "any", "all", "not",
+]);
+// Desktop GLSL 3.30, section 3.6, including words reserved for future use.
+const glslKeywords = `
+  attribute const uniform varying layout centroid flat smooth noperspective
+  break continue do for while switch case default if else in out inout
+  float int void bool true false invariant discard return
+  mat2 mat3 mat4 mat2x2 mat2x3 mat2x4 mat3x2 mat3x3 mat3x4 mat4x2 mat4x3 mat4x4
+  vec2 vec3 vec4 ivec2 ivec3 ivec4 bvec2 bvec3 bvec4 uint uvec2 uvec3 uvec4
+  lowp mediump highp precision
+  sampler1D sampler2D sampler3D samplerCube sampler1DShadow sampler2DShadow samplerCubeShadow
+  sampler1DArray sampler2DArray sampler1DArrayShadow sampler2DArrayShadow
+  isampler1D isampler2D isampler3D isamplerCube isampler1DArray isampler2DArray
+  usampler1D usampler2D usampler3D usamplerCube usampler1DArray usampler2DArray
+  sampler2DRect sampler2DRectShadow isampler2DRect usampler2DRect
+  samplerBuffer isamplerBuffer usamplerBuffer
+  sampler2DMS isampler2DMS usampler2DMS sampler2DMSArray isampler2DMSArray usampler2DMSArray
+  struct
+  common partition active asm class union enum typedef template this packed goto
+  inline noinline volatile public static extern external interface
+  long short double half fixed unsigned superp input output
+  hvec2 hvec3 hvec4 dvec2 dvec3 dvec4 fvec2 fvec3 fvec4 sampler3DRect filter
+  image1D image2D image3D imageCube iimage1D iimage2D iimage3D iimageCube
+  uimage1D uimage2D uimage3D uimageCube image1DArray image2DArray
+  iimage1DArray iimage2DArray uimage1DArray uimage2DArray
+  image1DShadow image2DShadow image1DArrayShadow image2DArrayShadow
+  imageBuffer iimageBuffer uimageBuffer sizeof cast namespace using row_major
+`.trim().split(/\s+/);
+const reserved = new Set([
+  ...TRI_BUILTINS, ...glslKeywords, ...intrinsics, ...Object.getOwnPropertyNames(Object.prototype),
+  "setFunction", "param", "parameter", "then", "main", "time", "resolution", "st", "hydraColor",
+  "src", "prev", "noise", "shape", "gradient", "solid", "render", "camera", "s0", "o0",
+]);
+
+export function validCustomName(name: unknown): name is string {
+  return typeof name === "string" && customName.test(name) && !reserved.has(name) &&
+    !name.startsWith("u_hydra_") && !name.startsWith("gl_") && !name.includes("__");
+}
+
+function tokens(source: string) {
+  const scanner = /\s+|\/\/[^\n\r]*|\/\*[\s\S]*?\*\/|(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?[uU]?|[A-Za-z_]\w*|[{}(),;.+*\/%!?:<>=&|\-]/gy;
+  const result: string[] = [];
+  for (let index = 0; index < source.length;) {
+    scanner.lastIndex = index;
+    const match = scanner.exec(source);
+    if (!match) throw new Error("Custom color transforms require renderer-independent GLSL.");
+    index = scanner.lastIndex;
+    if (!/^\s|^\/[/\*]/.test(match[0])) result.push(match[0]);
+  }
+  return result;
+}
+
+export function validateColorBody(source: string, inputs: readonly string[]) {
+  if (new TextEncoder().encode(source).length > HYDRA_COLOR_BODY_LIMIT) {
+    throw new Error("Custom color transform body exceeds 16 KiB.");
+  }
+  const parts = tokens(source);
+  const locals = new Set(inputs);
+  const protectedNames = new Set(inputs);
+  for (let index = 0; index + 1 < parts.length; index++) {
+    if (glslTypes.has(parts[index]) && validCustomName(parts[index + 1]) && !protectedNames.has(parts[index + 1])) {
+      locals.add(parts[index + 1]);
+    }
+  }
+  const delimiters: string[] = [];
+  parts.forEach((part, index) => {
+    if (part === "(" || part === "{") delimiters.push(part);
+    if ((part === ")" && delimiters.pop() !== "(") || (part === "}" && delimiters.pop() !== "{")) {
+      throw new Error("Custom color transform has unbalanced delimiters.");
+    }
+    if (!/^[A-Za-z_]/.test(part)) return;
+    const isSwizzle = parts[index - 1] === "." && /^(?:[rgba]{1,4}|[xyzw]{1,4}|[stpq]{1,4})$/.test(part);
+    if (isSwizzle || locals.has(part) || glslTypes.has(part) || intrinsics.has(part) ||
+        ["_c0", "time", "resolution", "const", "return", "if", "else", "true", "false"].includes(part)) return;
+    throw new Error(`Unsupported custom color dependency "${part}".`);
+  });
+  if (delimiters.length) throw new Error("Custom color transform has unbalanced delimiters.");
+}
+
+export function compileHydra(program: unknown, source: string) {
   const sourceLines = source.split(/\r\n|[\n\r\u2028\u2029]/);
-  const { output, parameters } = record(graph);
-  if (!Array.isArray(parameters) || parameters.length > HYDRA_PARAMETER_LIMIT) {
-    throw new Error("Hydra supports at most 16 parameters.");
+  if (!record(program) || !Array.isArray(program.functions) || !program.functions.length ||
+      program.functions.length > HYDRA_OPERATION_LIMIT || !Array.isArray(program.uniforms) ||
+      program.uniforms.length > HYDRA_PARAMETER_LIMIT || typeof program.colorExpression !== "string") {
+    throw new Error("Invalid Triode single-pass compiler result.");
   }
-  const defaults = new Map<string, number>();
-  for (const entry of parameters) {
-    if (!Array.isArray(entry) || entry.length !== 2) throw new Error("Invalid Hydra parameter.");
-    const id = hydraParameterId(entry[0]);
-    const value = hydraNumber(entry[1], "param default", 0, 1);
-    if (defaults.has(id) && defaults.get(id) !== value) throw new Error(`Conflicting defaults for param "${id}".`);
-    defaults.set(id, value);
-  }
-
-  const used = new Set<string>();
-  const operations: { body: string[]; location: HydraLocation | null }[] = [];
-  let visits = 0;
-
-  function emit(value: unknown, depth: number): string {
-    if (++visits > HYDRA_OPERATION_LIMIT || depth > HYDRA_DEPTH_LIMIT) {
-      throw new Error("Hydra graph exceeds 128 operations or depth 32.");
-    }
-    const node = record(value);
-    const { location } = node;
-    if (location !== null && !validHydraLocation(location, sourceLines)) throw new Error("Invalid Hydra source location.");
-    let body: string[];
-    switch (node.op) {
-      case "osc": {
-        const frequency = glsl(hydraFrequency(node.frequency));
-        const sync = glsl(hydraNumber(node.sync, "osc sync"));
-        const offset = glsl(hydraNumber(node.offset, "osc offset"));
-        body = [
-          `float phase = (uv.x + time * ${sync}) * ${frequency};`,
-          `return vec4(0.5 + 0.5 * sin(vec3(phase) + vec3(-(${offset}), 0.0, ${offset})), 1.0);`,
-        ];
-        break;
-      }
-      case "rotate": {
-        const input = emit(node.input, depth + 1);
-        const angle = glsl(hydraNumber(node.angle, "rotate angle"));
-        const speed = glsl(hydraNumber(node.speed, "rotate speed"));
-        body = [
-          `float angle = radians(${angle}) + time * ${speed};`,
-          "vec2 p = uv - vec2(0.5);",
-          "float c = cos(angle), s = sin(angle);",
-          `return ${input}(vec2(c * p.x + s * p.y, -s * p.x + c * p.y) + vec2(0.5));`,
-        ];
-        break;
-      }
-      case "blend": {
-        const input = emit(node.input, depth + 1);
-        const other = emit(node.other, depth + 1);
-        let amount: string;
-        if (typeof node.amount === "string") {
-          const id = hydraParameterId(node.amount);
-          if (!defaults.has(id)) throw new Error(`Missing Hydra parameter "${id}".`);
-          used.add(id);
-          amount = `clamp(u_hydra_${id}, 0.0, 1.0)`;
-        } else {
-          amount = glsl(hydraNumber(node.amount, "blend amount", 0, 1));
-        }
-        body = [`return mix(${input}(uv), ${other}(uv), ${amount});`];
-        break;
-      }
-      default: throw new Error("Unsupported Hydra graph operation.");
-    }
-
-    operations.push({ body, location });
-    return `hydra_${operations.length}`;
-  }
-
-  const root = emit(output, 1);
   const lines = ["#version 330", "uniform float time;", "uniform vec2 resolution;"];
-  for (const id of [...used].sort()) lines.push(`uniform float u_hydra_${id} = ${glsl(defaults.get(id)!)};`);
+  const allowed = new Set(["st", "clamp"]);
+  let previous = "";
+  for (const uniform of program.uniforms) {
+    if (!record(uniform) || typeof uniform.name !== "string" || !/^u_hydra_[a-z][a-z0-9_]{0,31}$/.test(uniform.name) ||
+        uniform.name <= previous || uniform.type !== "float") throw new Error("Invalid Triode scalar parameter.");
+    previous = uniform.name;
+    allowed.add(uniform.name);
+    lines.push(`uniform float ${uniform.name} = ${glsl(hydraNumber(uniform.value, "param default", 0, 1))};`);
+  }
   lines.push("out vec4 hydraColor;", "");
   const spans: HydraSpan[] = [];
-  operations.forEach(({ body, location }, index) => {
+  for (const fn of program.functions) {
+    if (!record(fn) || typeof fn.name !== "string" || allowed.has(fn.name) ||
+        (!TRI_BUILTINS.some(name => name === fn.name) && !validCustomName(fn.name)) || typeof fn.source !== "string" ||
+        (fn.location !== null && !validHydraLocation(fn.location, sourceLines))) {
+      throw new Error("Invalid Triode shader function or location.");
+    }
+    const signature = /^\s*(vec[24]) ([A-Za-z]\w*)\(([^()]*)\)\s*\{([\s\S]*)\}\s*$/.exec(fn.source);
+    if (!signature || signature[2] !== fn.name || signature[1] !== (coordinateFunctions.has(fn.name) ? "vec2" : "vec4")) {
+      throw new Error("Invalid Triode shader function declaration.");
+    }
+    const args = signature[3].split(", ");
+    const builtin = builtinSignatures[fn.name];
+    const inputNames = args.map(arg => /^(?:float|vec[24]) ([A-Za-z_]\w*)$/.exec(arg)?.[1]);
+    if (inputNames.some(name => !name) || (builtin ? signature[3] !== builtin :
+      args[0] !== "vec4 _c0" || args.length > 17 || args.slice(1).some((arg, index) =>
+        !arg.startsWith("float ") || !validCustomName(inputNames[index + 1])) ||
+      new Set(inputNames).size !== inputNames.length)) {
+      throw new Error("Invalid Triode shader function inputs.");
+    }
+    // Triode adds whitespace while wrapping the body. Keep generated lines intact.
+    validateColorBody(signature[4].trim(), inputNames as string[]);
+    allowed.add(fn.name);
     const firstLine = lines.length + 1;
-    lines.push(`vec4 hydra_${index + 1}(vec2 uv) {`, ...body.map(line => `    ${line}`), "}");
-    spans.push({ firstLine, lastLine: lines.length, location });
+    lines.push(...fn.source.trim().split(/\r\n|[\n\r]/));
+    spans.push({ firstLine, lastLine: lines.length, location: fn.location });
     lines.push("");
-  });
-  lines.push("void main() {", `    hydraColor = ${root}(gl_FragCoord.xy / resolution);`, "}", "");
+  }
+  const expression = program.colorExpression;
+  if (!expression || !/^[\w.(),+\- ]+$/.test(expression) || tokens(expression).some(token =>
+    /^[A-Za-z_]/.test(token) && !allowed.has(token))) throw new Error("Invalid Triode shader expression.");
+  if (program.location !== null && !validHydraLocation(program.location, sourceLines)) {
+    throw new Error("Invalid Triode expression location.");
+  }
+  lines.push("void main() {", "    vec2 st = gl_FragCoord.xy / resolution;");
+  const expressionLine = lines.length + 1;
+  lines.push(`    hydraColor = ${expression};`, "}", "");
+  if (program.location) spans.push({ firstLine: expressionLine, lastLine: expressionLine, location: program.location });
   const fragment = lines.join("\n");
   const bytes = new TextEncoder();
   if (bytes.encode(fragment).length > HYDRA_SOURCE_LIMIT ||

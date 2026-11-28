@@ -4,7 +4,8 @@ import { dirname, join } from "node:path";
 
 export class HostError extends Error {
   constructor(readonly code: string, message: string, readonly uncertainId?: string,
-              readonly diagnostics: readonly string[] = []) {
+              readonly diagnostics: readonly string[] = [],
+              readonly sourceLocation?: { line: number; column: number }) {
     super(message);
   }
 }

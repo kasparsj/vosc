@@ -10,12 +10,24 @@ Use a macOS arm64 machine with Xcode, Node 24, npm, Python 3.12 or newer, and an
 
 ```sh
 npm ci
+node scripts/stage-triode.mjs ../../../hydra/triode
+node scripts/stage-triode.mjs --verify-staged
 npm run build
 python3 scripts/package_macos.py \
   --output "/path/to/new-package-directory" \
   --identity "Developer ID Application: YOUR TEAM" \
   --vosc-app "/path/to/staged/vosc.app"
 ```
+
+The staging command combines the shared GLSL modules from the Triode commit in
+`triode-compiler-pin.json` with Editor's adapter in `compiler/vosc-single-pass.js`.
+The pin records the source hashes, base revision and historical proof digest.
+For an offline Editor build without a sibling Triode checkout, copy the
+verified `build/triode/` directory into the Editor tree and
+run `node scripts/stage-triode.mjs --verify-staged` before building. The signed
+private qualification package includes the pinned compiler sources, LICENSE and
+NOTICE plus the worker's compiler audit. External distribution awaits a
+decision on the exact AGPL-3.0-only compiler and its use in the package.
 
 Install `controller/VOSC Editor.app` in Applications on the controller Mac. On the render Mac, keep `VOSC Render Host.app` and `vosc.app` beside each other. Open both desktop tools from Finder.
 
@@ -39,6 +51,33 @@ Open or create a GLSL draft, connect to its paired render host, and choose **Run
 Unchanged writable uniforms retain compatible fixed values and OSC mappings. When a mapping would change, review the candidate's fallback before applying it. Retained mappings can be staged against a compatible target for a later Run or discarded. Auto-run starts off. Enable it after the first successful manual Run and use **Pause auto-run** to stop scheduled attempts.
 
 **Restore preview** uses the accepted snapshot on its original paired host. If you connect to a different host, **Use this host** selects a destination. A separate Run sends the working source to it.
+
+## Run a single-pass JavaScript patch
+
+Open a local JavaScript file or choose **New** and **Hydra patch**. Pair with a Render Host and
+choose **Run** to compile the patch in Editor. **Generated GLSL** shows the exact
+shader sent to the host. Save keeps the working patch and the last accepted
+shader separately. Restore and standalone export use that accepted shader.
+
+| Operation | Arguments and behavior |
+| --- | --- |
+| `osc(frequency, sync, offset)` | Defaults to `60, 0.1, 0`. Frequency must be positive. |
+| `.rotate(angle, speed)`, `.rotateDeg(angle, speed)` | Angle in degrees and speed in radians per second. Defaults to `10, 0`. |
+| `.rotateRad(angle, speed)` | Angle in radians and speed in radians per second. Defaults to `0.174533, 0`. |
+| `.blend(source, amount)` | Defaults to `0.5`. A `param(id, default)` handle exposes the blend amount to native OSC mapping. |
+| `.modulate(source, amount)` | Displaces source coordinates using another chain. Defaults to `0.1`. |
+| `setFunction(definition)` | Registers a patch-local color transform with finite scalar inputs and a GLSL color body. |
+| `.out()` | Ends the patch with one implicit output. |
+
+```js
+osc(11, 0.18, 0.7)
+  .blend(osc(7).rotateDeg(-31), param("mix", 0.5))
+  .rotate(17)
+  .out();
+```
+
+JavaScript helpers and loops can build a chain during Run. Callback uniforms,
+feedback, multiple outputs and media belong to later milestones.
 
 ## Map OSC input
 
