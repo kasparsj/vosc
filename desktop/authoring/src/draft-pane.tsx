@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { BINDING_LIMIT, type Binding, type DraftUniform, type PendingMapping, type Slot, type WorkspaceView } from "./contracts";
+import { BINDING_LIMIT, CALLBACK_UNIFORM, type Binding, type DraftUniform, type PendingMapping, type Slot, type WorkspaceView } from "./contracts";
 import { message } from "./host-pane";
 
 const uniformArity: Readonly<Record<string, number>> = { float: 1, vec2: 2, vec3: 3, vec4: 4 };
@@ -124,7 +124,9 @@ export function DraftPane({ workspace, onWorkspace, onControl }: {
   const ready = Boolean(workspace?.previewReady);
   const pending = workspace?.document?.pendingMappings ?? [];
   const uniforms = ready ? reflected?.uniforms ?? [] : [];
-  const managedUniforms = uniforms.filter(uniform => !writableUniform(uniform));
+  const callback = workspace?.callback;
+  const managedUniforms = uniforms.filter(uniform => !writableUniform(uniform) &&
+    !(callback && uniform.name === CALLBACK_UNIFORM));
   const savedBindings = draft?.bindings ?? [];
   const liveBindings = new Map(savedBindings.map(binding => [`${binding.name}:${binding.component}`, binding.binding]));
   const controls = ready ? uniforms.filter(writableUniform).flatMap(uniform =>
@@ -183,6 +185,10 @@ export function DraftPane({ workspace, onWorkspace, onControl }: {
     </section>}
     {draft && <section className="feature-section" aria-labelledby="uniforms-heading">
       <h3 id="uniforms-heading">Shader controls</h3>
+      {callback && <div>
+        <p><code>{CALLBACK_UNIFORM}</code> · {callback.active ? "Editor callback" : "Last confirmed"} · {callback.value.toFixed(4)}</p>
+        {callback.error && <p className="error" role="status">{callback.error}</p>}
+      </div>}
       {controls.length === 0 && <p className="muted">{ready ? "This shader has no writable controls." : "No saved shader controls."}</p>}
       {controls.map(item => <ComponentControl key={`${workspace?.documentGeneration}-${item.name}-${item.component}`}
         name={item.name} component={item.component} value={item.value} binding={item.binding}

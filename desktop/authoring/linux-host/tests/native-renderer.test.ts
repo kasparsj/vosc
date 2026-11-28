@@ -12,7 +12,7 @@ const receipts = new Map();
 const calls = [];
 const operations = ["configure_layers", "publish_shader", "get_scene", "get_request",
   "draft_prepare", "draft_commit", "draft_cancel", "draft_fence",
-  "draft_sample", "draft_configure_slot", "draft_bind_uniform"];
+  "draft_sample", "draft_callback", "draft_configure_slot", "draft_bind_uniform"];
 const preview = process.argv.includes("--draft-preview");
 const socket = process.env.VOSC_CONTROL_SOCKET;
 if (process.env.DISPLAY === "ignore-sigterm") process.on("SIGTERM", () => {});
@@ -30,7 +30,7 @@ const server = net.createServer(connection => {
     switch (method) {
       case "get_capabilities":
         reply({ result: { version: 1, transport: "unix-ndjson", operations:
-          process.env.DISPLAY === "missing-capabilities" ? ["get_scene"] : operations } });
+          process.env.DISPLAY === "missing-callback" ? operations.filter(operation => operation !== "draft_callback") : operations } });
         break;
       case "configure_layers":
       case "draft_commit":
@@ -171,7 +171,7 @@ test("validator mode, response budget, exact correlation and child exit notifica
 test("startup rejects incompatible capabilities and a confirmed cleanup permits retry", async () => {
   const installDirectory = await installation();
   const priorDisplay = process.env.DISPLAY;
-  process.env.DISPLAY = "missing-capabilities";
+  process.env.DISPLAY = "missing-callback";
   let renderer: NativeRenderer | undefined;
   try {
     await assert.rejects(NativeRenderer.start({ installDirectory, validation: false }), { code: "renderer_capabilities" });

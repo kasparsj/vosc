@@ -76,8 +76,8 @@ osc(11, 0.18, 0.7)
   .out();
 ```
 
-JavaScript helpers and loops can build a chain during Run. Callback uniforms,
-feedback, multiple outputs and media belong to later milestones.
+JavaScript helpers and loops can build a chain during Run. Per-frame JavaScript
+callbacks, feedback, multiple outputs and media belong to later milestones.
 
 ## Map OSC input
 
@@ -90,6 +90,16 @@ NetAddr("127.0.0.1", 49152).sendMsg("/input/data", "s0123456789ab", 0.5);
 ```
 
 The relay accepts individual sample messages for configured slot IDs. The selected native draft receives the samples.
+
+## Preview a synthetic callback uniform
+
+Declare and use `uniform float u_vosc_callback;` in a GLSL draft, then choose **Run**. [Example fragment](tests/fixtures/callback.frag)
+
+The native preview starts at 0.25. Editor evaluates a synthetic sine wave between 0.25 and 0.75 and sends samples at up to 10 Hz. It skips samples while a draft operation or sample is in flight. The callback owns its uniform during preview. Fixed controls and OSC can still drive other uniforms.
+
+The host holds the last applied value when Editor disconnects or a callback stops. Controls shows the last value confirmed by a native draw and any callback error. Reconnect and choose **Restore preview** to start the callback on a new preview lease.
+
+**Export replay** freezes the last value confirmed by Editor for the accepted artifact. A saved draft carries the snapshot taken at Save. Standalone replay uses that fixed value with the accepted fragment and existing OSC mappings.
 
 ## Save and reopen
 

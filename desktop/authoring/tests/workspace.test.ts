@@ -17,7 +17,7 @@ import { evaluateHydraPatch, patchErrorLocation } from "../src/hydra-patch";
 import { Workspace } from "../src/workspace";
 import { HostClient } from "../src/host-client";
 import { Importer } from "../src/importer";
-import type { DraftProject, DraftSource, DraftUniform, Peer, ReflectedDraft } from "../src/contracts";
+import { CALLBACK_UNIFORM, type DraftProject, type DraftSource, type DraftUniform, type Peer, type ReflectedDraft } from "../src/contracts";
 
 const SOURCE_BYTES = Buffer.from("#version 330\nuniform vec3 tone;\nout vec4 color;\nvoid main() { color = vec4(tone, 1); }");
 const SOURCE: DraftSource = { name: "tone.frag", origin: "Test source", digest: hash(SOURCE_BYTES),
@@ -113,6 +113,7 @@ class FixtureHost {
   commitReply: "valid" | "lost" | "wrong" = "valid";
   receiptAvailable = true;
   onCommit?: () => Promise<void>;
+  onCallback?: (drawn: ReflectedDraft) => Promise<ReflectedDraft>;
   afterCommit?: () => Promise<void>;
   unreachablePorts = new Set<number>();
   sessionRequests: { method: string; port: number; recovery: boolean }[] = [];
@@ -160,6 +161,19 @@ class FixtureHost {
       if (this.sampleError) throw this.sampleError;
       return structuredClone(this.state);
     }
+    if (method === "callback.sample") {
+      const state = this.state;
+      assert.equal(state.callbackUniform, CALLBACK_UNIFORM);
+      const uniform = state.uniforms.find(item => item.name === CALLBACK_UNIFORM)!;
+      uniform.values = [Number(params.value)];
+      const frame = state.frame! + 1;
+      state.frame = frame;
+      const drawn = structuredClone({ ...state, receipt: {
+        id: id!, revision: state.revision, frame, status: "rendered", external_epoch: 0,
+        result: { lease: params.lease, sequence: params.sequence, scene: { frame, rendered_revision: state.revision } },
+      } });
+      return this.onCallback?.(drawn) ?? drawn;
+    }
     if (method === "run.prepare") {
       await this.onValidate?.();
       if (this.compileError) throw this.compileError;
@@ -191,6 +205,7 @@ class FixtureHost {
         binding?.components.forEach(({ fixed }, i) => { if (fixed !== undefined) uniform.values[i] = Math.fround(fixed); });
       }
       this.state = { ...this.state, revision, frame, needsRestore: false, sourceDigest: String(staged.sha256), uniforms,
+        callbackUniform: uniforms.some(uniform => uniform.name === CALLBACK_UNIFORM) ? CALLBACK_UNIFORM : undefined,
         lease: String(staged.lease), token: prepared.id, commitID: id, controlDigest: SOURCE.digest,
         runSequence: Number(staged.runSequence), editSequence: Number(staged.editSequence), generation: Number(staged.generation),
         documentId: String(staged.documentId), slots: staged.slots as ReflectedDraft["slots"],
@@ -237,6 +252,102 @@ class FixtureHost {
 
   disconnect() { this.peer = null; }
 }
+
+async function waitForCallback(condition: () => boolean) {
+  for (let elapsed = 0; !condition() && elapsed < 3_000; elapsed += 10) await delay(10);
+  assert.ok(condition(), "Timed out waiting for the Editor callback");
+}
+
+function callbackHost() {
+  const host = new FixtureHost();
+  host.validatedUniforms.push({ name: CALLBACK_UNIFORM, type: "float", owner: "layer", writable: false, values: [0.25] });
+  return host;
+}
+
+test("callback dispatch has no backlog and ignores a draw reply after disconnect", async () => {
+  const host = callbackHost();
+  const times: number[] = [];
+  const workspace = new Workspace(host as unknown as HostClient, undefined, () => {
+    times.push(performance.now());
+    return times.length / 10 + 0.5;
+  });
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  try {
+    await workspace.activate(async () => SOURCE);
+    assert.equal(workspace.view().callback?.value, 0.25);
+    await waitForCallback(() => times.length >= 2 && workspace.view().callback?.value !== 0.25);
+    assert.ok(times[1] - times[0] >= 99);
+    host.onCallback = async drawn => { await gate; return drawn; };
+    await waitForCallback(() => times.length >= 3);
+    const count = times.length;
+    const confirmed = workspace.view().callback?.value;
+    await delay(240);
+    assert.equal(times.length, count);
+    await workspace.disconnect();
+    release();
+    await delay(120);
+    assert.equal(times.length, count);
+    assert.deepEqual(workspace.view().callback, { value: confirmed, active: false, error: null });
+  } finally {
+    release();
+    workspace.clear();
+  }
+});
+
+test("a snapshot freezes the last confirmed callback across Save, disconnect, and offline export", async () => {
+  const host = callbackHost();
+  const workspace = new Workspace(host as unknown as HostClient, undefined, () => 0.625);
+  const dir = await mkdtemp(join(tmpdir(), "vosc-callback-test-"));
+  try {
+    await workspace.activate(async () => SOURCE);
+    const initial = workspace.captureExport();
+    const path = join(dir, "test.vosc-draft");
+    await workspace.save(path);
+    await waitForCallback(() => workspace.view().callback?.value === 0.625);
+    assert.equal(workspace.needsSave(), false);
+    await workspace.save(path);
+    const latest = workspace.captureExport();
+    assert.equal(initial.callbackValue, 0.25);
+    assert.equal(latest.callbackValue, 0.625);
+    await workspace.disconnect();
+    await workspace.open(path);
+    assert.deepEqual(workspace.view().callback, { value: 0.625, active: false, error: null });
+    const recipe = JSON.parse(await readFile(await workspace.export(dir), "utf8"));
+    assert.deepEqual(recipe.commands.at(-1), { address: "/shader/var", args: [
+      { type: "i", value: 0 }, { type: "s", value: CALLBACK_UNIFORM }, { type: "f", value: 0.625 },
+    ] });
+  } finally {
+    workspace.clear();
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a nonfinite callback pauses, survives unrelated changes, and restarts on explicit Restore", async () => {
+  const host = callbackHost();
+  let invalid = true;
+  const workspace = new Workspace(host as unknown as HostClient, undefined, () => invalid ? Infinity : 0.75);
+  try {
+    await workspace.activate(async () => SOURCE);
+    await waitForCallback(() => !!workspace.view().callback?.error);
+    assert.equal(workspace.view().callback?.value, 0.25);
+    assert.equal(host.requested.some(item => item.method === "callback.sample"), false);
+    await assert.rejects(workspace.bindComponent(CALLBACK_UNIFORM, 0, { mode: "fixed", value: 1 }), { code: "invalid_uniform" });
+    await workspace.bindComponent("tone", 0, { mode: "fixed", value: 0.5 });
+    assert.match(workspace.view().callback?.error ?? "", /finite value/);
+    await workspace.disconnect();
+    host.onConnect = async () => PEER;
+    await workspace.connectRemembered(PEER.fingerprint);
+    invalid = false;
+    await delay(220);
+    assert.equal(host.requested.some(item => item.method === "callback.sample"), false);
+    await workspace.restore();
+    await waitForCallback(() => workspace.view().callback?.value === 0.75);
+    assert.equal(workspace.view().callback?.error, null);
+  } finally {
+    workspace.clear();
+  }
+});
 
 test("a lost fixed binding reply is read back and can be saved offline", async () => {
   const host = new FixtureHost();

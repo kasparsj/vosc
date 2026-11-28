@@ -3,6 +3,11 @@ import type { HydraSpan } from "./hydra-compiler";
 export const SOURCE_LIMIT = 128 * 1024;
 export const SLOT_LIMIT = 16;
 export const BINDING_LIMIT = 1_000_000;
+export const CALLBACK_UNIFORM = "u_vosc_callback";
+
+export function isCallbackValue(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
+}
 
 export interface Diagnostic {
   code: string;
@@ -84,6 +89,7 @@ export interface ReflectedDraft extends Partial<RunIdentity> {
   controlDigest?: string;
   commitID?: string;
   samples?: Record<string, number>;
+  callbackUniform?: typeof CALLBACK_UNIFORM;
   uniforms: DraftUniform[];
   slots: Slot[];
   needsRestore: boolean;
@@ -174,6 +180,7 @@ export interface AcceptedArtifact {
   project: DraftProject;
   signatures: ControlSignature[];
   hydra?: HydraProvenance;
+  callbackValue?: number;
 }
 export interface DraftDocument {
   format: "vosc.authoring.draft";
@@ -225,6 +232,7 @@ export interface WorkspaceView {
   previewReady: boolean;
   drawnReceipt: DrawReceipt | null;
   samplePort: number | null;
+  callback: { value: number; active: boolean; error: string | null } | null;
   notice: string | null;
 }
 export interface AuthoringAPI {

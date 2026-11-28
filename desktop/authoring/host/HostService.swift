@@ -58,7 +58,7 @@ final class HostService {
     private let mutations: Set<String> = [
         "run.prepare", "run.commit", "run.cancel", "run.fence", "slot.configure", "uniform.set",
     ]
-    private let controlled: Set<String> = ["run.commit", "run.cancel", "run.fence", "slot.configure", "uniform.set", "sample"]
+    private let explicitLease: Set<String> = ["run.commit", "run.cancel", "run.fence", "sample", "callback.sample"]
 
     init(updated: @escaping (HostView) -> Void) {
         let previous = preferences.string(forKey: "draft-host-target")
@@ -344,10 +344,11 @@ final class HostService {
             guard fencesInFlight == 0, isFence || !busy else {
                 throw WireError("busy", "A private renderer operation is already in flight")
             }
-            if revokedPreviewLease != nil, mutations.contains(request.method) || request.method == "sample" {
+            let isSample = request.method == "sample" || request.method == "callback.sample"
+            if revokedPreviewLease != nil, mutations.contains(request.method) || isSample {
                 throw WireError("revoked_lease_unconfirmed", "Restart the draft service before publishing or relaying samples")
             }
-            if uncertainRequest != nil, !isFence, mutations.contains(request.method) || request.method == "sample" {
+            if uncertainRequest != nil, !isFence, mutations.contains(request.method) || isSample {
                 throw WireError("prior_draw_unconfirmed", "Verify the earlier native receipt before publishing or relaying samples")
             }
             let lease = request.params["lease"] as? String
@@ -361,9 +362,9 @@ final class HostService {
                 }
                 leaseOwner = fingerprint
                 previewLease = lease
-            } else if controlled.contains(request.method) {
+            } else if explicitLease.contains(request.method) || request.method == "slot.configure" || request.method == "uniform.set" {
                 guard leaseOwner == fingerprint, previewLease != nil,
-                      (!["run.commit", "run.cancel", "run.fence", "sample"].contains(request.method) || lease == previewLease) else {
+                      (!explicitLease.contains(request.method) || lease == previewLease) else {
                     throw WireError("stale_lease", "This paired controller does not own the requested preview lease")
                 }
             }

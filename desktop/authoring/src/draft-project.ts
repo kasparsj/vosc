@@ -2,7 +2,7 @@ import { HYDRA_EMITTER_VERSION, HYDRA_EXCHANGE_LIMIT, HYDRA_OPERATION_LIMIT, val
 import { randomUUID } from "node:crypto";
 import { basename, join } from "node:path";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
-import { BINDING_LIMIT, SLOT_LIMIT, SOURCE_LIMIT, type Binding, type DraftProject,
+import { BINDING_LIMIT, CALLBACK_UNIFORM, SLOT_LIMIT, SOURCE_LIMIT, isCallbackValue, type Binding, type DraftProject,
   type ControlSignature, type HydraProvenance, type DraftDocument, type DraftSource, type PendingMapping, type Peer, type Slot, type SourceProvenance } from "./contracts";
 import { hash, HostError } from "./local-state";
 
@@ -250,9 +250,14 @@ export function parseDocument(value: unknown): DraftDocument {
       throw new HostError("invalid_project", "The last accepted artifact is invalid.");
     }
     const project = parseProject(artifact.project);
+    if (artifact.callbackValue !== undefined && (!isCallbackValue(artifact.callbackValue) ||
+        project.bindings.some(item => item.name === CALLBACK_UNIFORM))) {
+      throw new HostError("invalid_project", "The accepted callback snapshot is invalid.");
+    }
     accepted = {
       id: artifact.id, revision: artifact.revision, project, signatures: parseSignatures(artifact.signatures),
       ...(value.language === "hydra-js" ? { hydra: parseHydra(artifact.hydra, project.source) } : {}),
+      ...(artifact.callbackValue === undefined ? {} : { callbackValue: artifact.callbackValue }),
     };
   }
   const controls = parseControls(value.controls);
@@ -282,7 +287,7 @@ function arg(type: Arg["type"], value: Arg["value"]): Arg {
   return { type, value };
 }
 
-export function replay(document: DraftProject) {
+export function replay(document: DraftProject, callbackValue?: number) {
   const checked = parseProject(document);
   const commands: { address: string; args: Arg[] }[] = [];
   const add = (address: string, ...args: Arg[]) => commands.push({ address, args });
@@ -302,11 +307,17 @@ export function replay(document: DraftProject) {
     });
     add("/shader/var", arg("i", 0), arg("s", name), ...settings);
   }
+  if (callbackValue !== undefined) {
+    if (!isCallbackValue(callbackValue) || uniformNames.has(CALLBACK_UNIFORM)) {
+      throw new HostError("invalid_project", "The accepted callback snapshot is invalid.");
+    }
+    add("/shader/var", arg("i", 0), arg("s", CALLBACK_UNIFORM), arg("f", callbackValue));
+  }
   return { version: 1, title: checked.title, size: [640, 480], onset_gate: 0, commands };
 }
 
-export async function writeReplay(parent: string, document: DraftProject) {
-  const manifest = replay(document);
+export async function writeReplay(parent: string, document: DraftProject, callbackValue?: number) {
+  const manifest = replay(document, callbackValue);
   // Native v1 uses the JSON numeric token to distinguish OSC ints from OSC floats.
   const { rawJSON } = JSON as JSON & { rawJSON(value: string): unknown };
   const recipeBytes = JSON.stringify(manifest, (_key, value: unknown) => {

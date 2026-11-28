@@ -5,7 +5,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { constants, type BigIntStats } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
-import { BINDING_LIMIT, SLOT_LIMIT, type Binding, type ComponentBinding, type ControlSignature, type DocumentEdit, type DocumentView,
+import { BINDING_LIMIT, CALLBACK_UNIFORM, SLOT_LIMIT, isCallbackValue, type Binding, type ComponentBinding, type ControlSignature, type DocumentEdit, type DocumentView,
   type DraftControls, type DraftDocument, type DraftLanguage, type HydraProvenance, type DraftProject, type DraftSource, type DraftUniform, type DrawReceipt,
   type MappingConflict, type Peer, type PendingMapping, type ReflectedDraft, type RunIdentity, type RunMode,
   type RunProblem, type RunView, type Slot, type WorkspaceView } from "./contracts";
@@ -15,6 +15,18 @@ import { HostError, writeAtomically } from "./local-state";
 import { SampleRelay } from "./osc-samples";
 
 const TYPE_ARITY = new Map([["float", 1], ["vec2", 2], ["vec3", 3], ["vec4", 4]]);
+const CALLBACK_INTERVAL_MS = 100;
+const evaluateSyntheticCallback = (elapsed: number) => 0.5 + 0.25 * Math.sin(elapsed * Math.PI / 1000);
+
+function callbackReadback(state: ReflectedDraft) {
+  if (state.callbackUniform !== CALLBACK_UNIFORM) return undefined;
+  const uniform = state.uniforms.find(item => item.name === CALLBACK_UNIFORM);
+  const value = uniform?.values[0];
+  if (uniform?.type !== "float" || uniform.writable !== false || uniform.values.length !== 1 || !isCallbackValue(value)) {
+    throw new HostError("readback_mismatch", "The render host did not confirm the callback uniform.");
+  }
+  return value;
+}
 
 export function isWritable(uniform: DraftUniform) {
   const arity = TYPE_ARITY.get(uniform.type);
@@ -252,12 +264,15 @@ export class Workspace {
   private retiringAttempt: Attempt | null = null;
   private sampleTask: Promise<void> | null = null;
   private samples = new SampleRelay((slot, value) => this.relaySample(slot, value));
+  private callbackTimer: ReturnType<typeof setInterval> | null = null;
+  private callbackError: string | null = null;
 
   private evaluation: AbortController | null = null;
   private hydraPendingEdit = 0;
   private cancelledHydraRun = 0;
 
-  constructor(readonly host: HostClient, private readonly evaluateHydra?: HydraEvaluator) {}
+  constructor(readonly host: HostClient, private readonly evaluateHydra?: HydraEvaluator,
+              private readonly evaluateCallback = evaluateSyntheticCallback) {}
 
   private cancelEvaluation() {
     if (this.evaluation || this.runView.phase === "evaluating") {
@@ -377,10 +392,13 @@ export class Workspace {
       ...this.project,
       source: { name: this.project.source.name, digest: this.project.source.digest, origin: this.project.source.origin },
     };
+    const callbackValue = this.document?.accepted?.callbackValue;
     return {
       run: this.runView, lastObservation: this.lastObservation, document: this.documentView(), documentGeneration: this.documentGeneration, peer: this.host.peer, reflected: this.state, project, previewReady: this.previewMatches(),
       drawnReceipt: this.previewMatches() ? this.acknowledged?.receipt ?? null : null,
       samplePort: this.samples.port, notice: this.notice,
+      callback: callbackValue === undefined ? null : { value: callbackValue,
+        active: Boolean(this.callbackTimer && this.previewMatches()), error: this.callbackError },
     };
   }
 
@@ -454,7 +472,7 @@ export class Workspace {
   }
 
   async reflect() {
-    if (this.busy || this.flight) return this.view();
+    if (this.busy || this.flight || (this.callbackTimer && this.sampleTask)) return this.view();
     if (!this.observation) {
       const generation = this.generation;
       const current = this.refresh(() => this.generation === generation)
@@ -500,6 +518,7 @@ export class Workspace {
     } catch (error) {
       if (!accept()) return;
       if (error instanceof HostError && error.code === "busy") return;
+      if (this.callbackTimer) this.pauseCallback("The render host could not be reached. Restore the preview to restart the callback.");
       this.acknowledged = null;
       this.state = null;
       this.samples.stop();
@@ -530,6 +549,7 @@ export class Workspace {
   private adopt(state: ReflectedDraft, project: DraftProject, pendingMappings?: PendingMapping[],
                 workingOverride?: DraftControls,
                 hydra = this.document?.accepted?.hydra) {
+    const callbackValue = callbackReadback(state);
     if (!state.receipt) throw new HostError("missing_drawn_receipt", "The host did not acknowledge a drawn frame.");
     this.acknowledged = { epoch: state.epoch, revision: state.revision, receipt: state.receipt };
     this.lastObservation = { revision: state.revision, time: Date.now() };
@@ -543,7 +563,8 @@ export class Workspace {
       controls: workingOverride ?? { slots: project.slots, bindings: project.bindings, signatures,
         ...(pendingMappings?.length || this.document.controls.pendingMappings ?
           { pendingMappings: pendingMappings ?? this.document.controls.pendingMappings } : {}) },
-      accepted: { id: randomUUID(), revision: state.revision, project: acceptedProject, signatures, ...(hydra ? { hydra } : {}) } };
+      accepted: { id: randomUUID(), revision: state.revision, project: acceptedProject, signatures, ...(hydra ? { hydra } : {}),
+        ...(callbackValue === undefined ? {} : { callbackValue }) } };
     this.notice = null;
     return this.view();
   }
@@ -653,6 +674,8 @@ export class Workspace {
 
   private dropRun() {
     this.cancelEvaluation();
+    this.stopCallback();
+    this.callbackError = null;
     this.context += 1;
     this.queue = null;
     this.prepared = null;
@@ -1048,6 +1071,7 @@ export class Workspace {
     const observed = this.receive(state, true);
     this.unknownCommit = null;
     this.adopt(observed, project, pending, attempt.restoring ? this.document?.controls : undefined, attempt.hydra);
+    this.startCallback(observed);
     commit.terminal = true;
     if (attempt.mode === "manual" && !attempt.restoring && attempt.language === "glsl") this.runView = { ...this.runView, manualReady: true };
     this.setPhase(attempt, "drawn", `Native revision ${state.revision} drew frame ${receipt.frame}.`);
@@ -1317,7 +1341,7 @@ export class Workspace {
 
   private relaySample(slot: string, value: number) {
     const { lease, state } = this;
-    if (this.busy || this.flight || !lease || !state || !this.previewMatches() ||
+    if (this.busy || this.flight || this.sampleTask || !lease || !state || !this.previewMatches() ||
         !state.slots.some(item => item.id === slot)) return Promise.resolve();
     const context = this.context;
     const sequence = ++lease.sampleSequence;
@@ -1339,6 +1363,76 @@ export class Workspace {
       }).finally(() => { if (this.sampleTask === delivery) this.sampleTask = null; });
     this.sampleTask = delivery;
     return delivery;
+  }
+
+  private stopCallback() {
+    if (this.callbackTimer) clearInterval(this.callbackTimer);
+    this.callbackTimer = null;
+  }
+
+  private startCallback(state: ReflectedDraft) {
+    this.stopCallback();
+    this.callbackError = null;
+    if (state.callbackUniform !== CALLBACK_UNIFORM) return;
+    const started = performance.now();
+    let lastDispatch = -Infinity;
+    this.callbackTimer = setInterval(() => {
+      const now = performance.now();
+      if (this.busy || this.flight || this.observation || this.sampleTask || !this.previewMatches() ||
+          now - lastDispatch < CALLBACK_INTERVAL_MS) return;
+      lastDispatch = now;
+      this.relayCallback(now - started);
+    }, CALLBACK_INTERVAL_MS);
+    this.callbackTimer.unref();
+  }
+
+  private pauseCallback(message: string) {
+    this.stopCallback();
+    this.callbackError = message;
+  }
+
+  private relayCallback(elapsed: number) {
+    const { lease, state, context } = this;
+    if (!lease || !state || state.callbackUniform !== CALLBACK_UNIFORM) return;
+    let value: number;
+    try {
+      const evaluated = this.evaluateCallback(elapsed);
+      if (!isCallbackValue(evaluated)) throw new Error("Invalid normalized callback value");
+      value = Math.fround(evaluated);
+    } catch {
+      this.pauseCallback("The Editor callback did not produce a finite value from 0 to 1. Run or Restore to restart it.");
+      return;
+    }
+    const id = randomUUID();
+    const sequence = ++lease.sampleSequence;
+    const current = () => context === this.context && lease === this.lease &&
+      state.epoch === this.state?.epoch && state.revision === this.state?.revision &&
+      state.commitID === this.state?.commitID && this.previewMatches();
+    const delivery = lease.host.rpc("callback.sample", { lease: lease.id, sequence, value }, state, id)
+      .then(raw => {
+        if (!current() || !this.document?.accepted) return;
+        const drawn = raw as ReflectedDraft | null;
+        const receipt = drawn?.receipt;
+        const scene = receipt?.result?.scene;
+        if (!drawn || drawn.target !== state.target || drawn.epoch !== state.epoch || drawn.revision !== state.revision ||
+            drawn.lease !== lease.id || drawn.commitID !== state.commitID || drawn.sourceDigest !== state.sourceDigest ||
+            drawn.needsRestore || receipt?.id !== id || receipt.status !== "rendered" || receipt.revision !== state.revision ||
+            !Number.isSafeInteger(receipt.frame) || drawn.frame !== receipt.frame || scene?.frame !== receipt.frame ||
+            scene.rendered_revision !== state.revision || receipt.result?.lease !== lease.id || receipt.result.sequence !== sequence) {
+          throw new HostError("sample_unobserved", "The render host did not confirm the callback draw.");
+        }
+        const observed = callbackReadback(drawn);
+        if (observed === undefined || Math.fround(observed) !== value) {
+          throw new HostError("readback_mismatch", "The drawn callback value did not match the Editor sample.");
+        }
+        this.receive(drawn);
+        this.document = { ...this.document, accepted: { ...this.document.accepted, callbackValue: observed } };
+      }).catch(error => {
+        if (!current() || (error instanceof HostError && ["busy", "sample_rate"].includes(error.code))) return;
+        const detail = error instanceof HostError ? error.message + " " : "";
+        this.pauseCallback(detail + "Run or Restore to restart the callback.");
+      }).finally(() => { if (this.sampleTask === delivery) this.sampleTask = null; });
+    this.sampleTask = delivery;
   }
 
   captureSave() {
@@ -1407,9 +1501,11 @@ export class Workspace {
   captureExport() {
     const accepted = this.document?.accepted;
     if (!accepted) throw new HostError("no_draft", "There is no accepted native artifact to export.");
+    const { callbackValue } = accepted;
     return {
       label: accepted.revision === null ? `Artifact ${accepted.id.slice(0, 8)}` : `Revision ${accepted.revision}`,
-      write: (directory: string) => writeReplay(directory, accepted.project),
+      callbackValue,
+      write: (directory: string) => writeReplay(directory, accepted.project, callbackValue),
     };
   }
 

@@ -18,7 +18,8 @@ type Recorded = { peer: string; bytes: string; outcome: Outcome };
 type Lease = { peer: string; id: string };
 
 const mutations = new Set(["run.prepare", "run.commit", "run.cancel", "run.fence", "slot.configure", "uniform.set"]);
-const explicitLease = new Set(["run.commit", "run.cancel", "run.fence", "sample"]);
+const samples = new Set(["sample", "callback.sample"]);
+const explicitLease = new Set(["run.commit", "run.cancel", "run.fence", ...samples]);
 const controlled = new Set([...explicitLease, "slot.configure", "uniform.set"]);
 
 function drawKind(method: string): DrawKind | undefined {
@@ -137,7 +138,7 @@ export class DraftService {
       throw new WireError("busy", "A private renderer operation is already in flight");
     }
     const mutation = mutations.has(request.method);
-    const affectsPreview = mutation || request.method === "sample";
+    const affectsPreview = mutation || samples.has(request.method);
     if (this.revokedLease && affectsPreview) {
       throw new WireError("revoked_lease_unconfirmed", "Restart the draft service before publishing or relaying samples");
     }

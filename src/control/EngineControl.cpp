@@ -27,6 +27,9 @@ namespace control {
 namespace {
 using Json = ofJson;
 
+constexpr char draftCallbackUniform[] = "u_vosc_callback";
+constexpr float draftCallbackInitial = 0.25f;
+
 struct Invalid : std::runtime_error {
     std::string code;
     Invalid(const std::string& code, const std::string& message)
@@ -963,7 +966,7 @@ void EngineControl::validate(const std::string& method, const Json& params) cons
         keys(params, {"trial_id"});
         text(params["trial_id"], 64, "trial_id");
     } else if (method == "draft_prepare" || method == "draft_commit" || method == "draft_cancel" ||
-               method == "draft_fence" || method == "draft_sample" ||
+               method == "draft_fence" || method == "draft_sample" || method == "draft_callback" ||
                method == "draft_configure_slot" || method == "draft_bind_uniform") {
         if (!draftPreview) throw Invalid("unknown_method", "draft operations are disabled");
         if (method == "draft_prepare")
@@ -974,6 +977,7 @@ void EngineControl::validate(const std::string& method, const Json& params) cons
         else if (method == "draft_fence") keys(params, {"lease"});
         else if (method == "draft_configure_slot") keys(params, {"lease", "revision", "slot", "initial"});
         else if (method == "draft_bind_uniform") keys(params, {"lease", "revision", "layer", "name", "components"});
+        else if (method == "draft_callback") keys(params, {"lease", "revision", "sequence", "value"});
         else keys(params, {"lease", "revision", "sequence", "slot", "value"});
     } else if (method == "publish_shader" || method == "set_uniform" || method == "set_layer") {
         if (method == "publish_shader")
@@ -989,6 +993,8 @@ void EngineControl::validate(const std::string& method, const Json& params) cons
             else text(params["source"], maxDraftSourceBytes, "source");
         } else if (method == "set_uniform") {
             auto name = text(params["name"], 128, "name");
+            if (draftPreview && name == draftCallbackUniform && draftActivation.contains("callback_uniform"))
+                throw Invalid("callback_owned", "The Editor callback owns this uniform");
             const int count = editableUniformComponents(layer, name);
             if (count == 1) number(params["value"], -1000000, 1000000);
             else {
@@ -1104,7 +1110,7 @@ void EngineControl::execute(const std::string& id) {
 bool EngineControl::executeDraft(const std::string& id, const std::string& method,
                                  const Json& params, uint64_t logStart) {
     if (method != "draft_prepare" && method != "draft_commit" && method != "draft_cancel" &&
-        method != "draft_fence" && method != "draft_sample" &&
+        method != "draft_fence" && method != "draft_sample" && method != "draft_callback" &&
         method != "draft_configure_slot" && method != "draft_bind_uniform") return false;
     auto& response = receipts.at(id).response;
     const auto lease = text(params["lease"], 64, "lease");
@@ -1132,6 +1138,7 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
         throw Invalid("invalid_target", "Draft transactions require one private preview layer");
     auto& layer = *render().getLayers()[0];
     const auto activeLease = draftActivation.is_object() ? draftActivation.value("lease", std::string()) : std::string();
+    const bool callbackActive = draftActivation.contains("callback_uniform");
 
     if (method == "draft_configure_slot" || method == "draft_bind_uniform") {
         if (activeLease != lease) throw Invalid("stale_lease", "The active draft has a different lease");
@@ -1149,6 +1156,8 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
         } else {
             integer(params["layer"], 0, 0, "layer");
             const auto name = text(params["name"], 128, "name");
+            if (callbackActive && name == draftCallbackUniform)
+                throw Invalid("callback_owned", "The Editor callback owns this uniform");
             std::set<std::string> slots;
             for (const auto& [which, input] : runtime().inputs.all()) slots.insert(which);
             checkDraftComponents(params["components"], slots, editableUniformComponents(layer, name));
@@ -1166,17 +1175,26 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
         return true;
     }
 
-    if (method == "draft_sample") {
-        const auto slot = draftSlot(params["slot"]);
+    if (method == "draft_sample" || method == "draft_callback") {
         const auto sequence = cursor(params["sequence"], 9007199254740991ULL, "sequence");
         const auto amplitude = static_cast<float>(number(params["value"], 0, 1));
         if (activeLease != lease || sequence <= draftSampleSequence)
             throw Invalid("stale_sample", "The sample no longer belongs to the active draft generation");
-        if (!runtime().inputs.all().count(slot)) throw Invalid("missing_slot", "The draft slot is not configured");
-        draftDraw.id = id;
-        draftDraw.expectedProgram = layer.shader.getShader().getProgram();
-        draftDraw.expectedSlots.emplace(slot, amplitude);
-        draftSample(runtime().inputs, slot, amplitude);
+        DraftDraw pending;
+        pending.id = id;
+        pending.expectedProgram = layer.shader.getShader().getProgram();
+        if (method == "draft_callback") {
+            if (!callbackActive || !layer.shader.isShaderLoaded())
+                throw Invalid("callback_not_active", "The current draft has no Editor callback");
+            pending.expectedBindings.emplace_back(draftCallbackUniform);
+            setNumericBinding(layer.shader, draftCallbackUniform, {amplitude});
+        } else {
+            const auto slot = draftSlot(params["slot"]);
+            if (!runtime().inputs.all().count(slot)) throw Invalid("missing_slot", "The draft slot is not configured");
+            pending.expectedSlots.emplace(slot, amplitude);
+            draftSample(runtime().inputs, slot, amplitude);
+        }
+        draftDraw = std::move(pending);
         draftSampleSequence = sequence;
         ++externalEpoch;
         response = reply(id, "applied");
@@ -1219,13 +1237,24 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
             return true;
         }
         const auto& uniforms = candidate->program.source.uniforms;
+        const auto callback = uniforms.find(draftCallbackUniform);
+        const bool usesCallback = callback != uniforms.end();
+        if (usesCallback) {
+            if (callback->second.type != GL_FLOAT || callback->second.isArray() ||
+                callback->second.location < 0 || managedUniform(layer, draftCallbackUniform))
+                throw Invalid("invalid_callback_uniform", "u_vosc_callback must be an active non-array float uniform");
+            auto variable = std::make_shared<Variable<float>>();
+            variable->set(std::vector<float>{draftCallbackInitial});
+            candidate->program.variables[draftCallbackUniform] = variable;
+            candidate->program.pool[draftCallbackUniform] = std::move(variable);
+        }
         for (const auto& [name, binding] : params["bindings"].items()) {
             const auto found = uniforms.find(name);
             const bool exists = found != uniforms.end();
             const int arity = exists && !found->second.isArray() ? uniformComponents(found->second.type) : 0;
             const auto previousArity = static_cast<int>(binding["components"].size());
             const auto previousType = draftUniformType(previousArity);
-            const bool managed = managedUniform(layer, name);
+            const bool managed = managedUniform(layer, name) || (usesCallback && name == draftCallbackUniform);
             if (!exists || managed || arity != previousArity) {
                 Json issue = {{"name", name}, {"previous_type", previousType},
                     {"reason", managed ? "renderer_owned" : !exists ? "inactive" : "retyped"}};
@@ -1257,6 +1286,8 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
     const auto controlDigest = draftDigest(params["control_digest"]);
     auto activation = Json{{"lease", lease}, {"token", token}, {"source_digest", draftCandidate->sourceDigest},
         {"control_digest", controlDigest}, {"commit_id", id}};
+    const bool usesCallback = draftCandidate->program.variables.count(draftCallbackUniform) != 0;
+    if (usesCallback) activation["callback_uniform"] = draftCallbackUniform;
     auto applied = reply(id, "applied");
     applied["method"] = method;
     applied["revision"] = revision + 1;
@@ -1280,6 +1311,7 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
         pending.expectedSlots.emplace(slot, input->get());
     for (const auto& [name, binding] : draftCandidate->bindings.items())
         pending.expectedBindings.push_back(name);
+    if (usesCallback) pending.expectedBindings.emplace_back(draftCallbackUniform);
     layer.shader.swapDraftProgram(draftCandidate->program);
     runtime().inputs.swap(draftCandidate->inputs);
     pending.baseline = std::move(draftCandidate);
@@ -1357,7 +1389,8 @@ void EngineControl::settleDraftDraw() {
     } else {
         entry.response = reply(draftDraw.id, "rendered");
         entry.response["result"] = {{"lease", draftActivation["lease"]}, {"scene", scene()}};
-        if (method == "draft_sample") entry.response["result"]["sequence"] = draftSampleSequence;
+        if (method == "draft_sample" || method == "draft_callback")
+            entry.response["result"]["sequence"] = draftSampleSequence;
     }
     entry.response["method"] = method;
     if (method == "draft_commit") draftCommitReceipt = entry;
@@ -1908,7 +1941,7 @@ Json EngineControl::capabilities() const {
             {"revision_scope", "successful API controls; external_epoch counts legacy dispatch/input; animation and file-watch reloads are not versioned"}};
     if (draftPreview) {
         for (auto method : {"draft_prepare", "draft_commit", "draft_cancel", "draft_fence", "draft_sample",
-                            "draft_configure_slot", "draft_bind_uniform"})
+                            "draft_callback", "draft_configure_slot", "draft_bind_uniform"})
             result["operations"].push_back(method);
     }
     return result;
@@ -2028,8 +2061,10 @@ Json EngineControl::scene() const {
         auto gpuValues = shader.getUniformValues(draftPreview);
         for (const auto& [name, uniform] : shader.getUniforms()) {
             const bool array = uniform.isArray();
+            const bool callbackOwned = draftPreview && name == draftCallbackUniform &&
+                draftActivation.contains("callback_uniform");
             Json value = {{"gl_type", uniform.type}, {"array", array},
-                {"writable", uniformComponents(uniform.type) > 0 && !managedUniform(*layer, name) && !array}};
+                {"writable", uniformComponents(uniform.type) > 0 && !managedUniform(*layer, name) && !array && !callbackOwned}};
             auto gpu = gpuValues.find(name);
             if (gpu != gpuValues.end()) value["rendered_value"] = gpu->second;
             auto var = shader.vars.find(name);

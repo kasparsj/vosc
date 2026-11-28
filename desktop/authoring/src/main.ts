@@ -5,7 +5,7 @@ import { open, readFile } from "node:fs/promises";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { Importer } from "./importer";
 import { HostClient } from "./host-client";
-import { SOURCE_LIMIT, type FileCommand } from "./contracts";
+import { CALLBACK_UNIFORM, SOURCE_LIMIT, type FileCommand } from "./contracts";
 import { sourceName, sourceWithText } from "./draft-project";
 import { ElectronHydraEvaluator, HYDRA_SCHEME } from "./hydra-evaluator";
 import { HostError } from "./local-state";
@@ -290,8 +290,13 @@ function installDraftHandlers() {
   handle("draft:export", () => navigate(async () => {
     if (!window || !workspace.view().project) return null;
     const artifact = workspace.captureExport();
+    const title = `Export ${artifact.label} for native replay`;
+    const frozen = artifact.callbackValue === undefined ? undefined :
+      `Standalone replay freezes ${CALLBACK_UNIFORM} at ${artifact.callbackValue}.`;
     const result = await dialog.showOpenDialog(window, {
-      title: `Export ${artifact.label} for native replay`, properties: ["openDirectory", "createDirectory"],
+      title: process.platform === "darwin" ? title : frozen ?? title,
+      message: frozen,
+      properties: ["openDirectory", "createDirectory"],
     });
     return result.canceled ? null : artifact.write(result.filePaths[0]);
   }));

@@ -55,6 +55,8 @@ test("peer receipts use canonical envelope equality, evict oldest entries, and p
   await assert.rejects(service.dispatch({ ...prepare, revision: 4 }, peer), { code: "id_conflict" });
   await assert.rejects(service.dispatch(prepare, other), { code: "lease_owned" });
   await assert.rejects(service.dispatch(wire("sample", "sample", { lease }), other), { code: "stale_lease" });
+  await assert.rejects(service.dispatch(wire("callback.sample", "callback", { lease }), other), { code: "stale_lease" });
+  await assert.rejects(service.dispatch(wire("callback.sample", "callback", { lease: replacement }), peer), { code: "stale_lease" });
   assert.deepEqual(await ask("prepare", other), { state: "unknown" });
   await service.dispatch(wire("run.commit", "commit", { lease }), peer);
   await service.dispatch(wire("slot.configure", "slot", {}), peer);
@@ -101,6 +103,7 @@ test("an admitted draw is pending, then blocks resubmission until exact receipt 
   await assert.rejects(writing, { code: "renderer_uncertain" });
   await assert.rejects(service.dispatch(commit, peer), { code: "renderer_uncertain" });
   await assert.rejects(service.dispatch(wire("sample", "sample", { lease }), peer), { code: "prior_draw_unconfirmed" });
+  await assert.rejects(service.dispatch(wire("callback.sample", "callback", { lease }), peer), { code: "prior_draw_unconfirmed" });
   assert.deepEqual(await ask("commit"), { state: "pending" });
   const finished = { frame: 29, commitID: "commit" };
   assert.deepEqual(await ask("commit"), { state: "completed", response: { id: "commit", ok: true, result: finished } });

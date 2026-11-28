@@ -155,7 +155,7 @@ export class NativeRenderer {
       const required = ["configure_layers", "publish_shader", "get_scene", "get_request"];
       if (!options.validation) required.push(
         "draft_prepare", "draft_commit", "draft_cancel", "draft_fence",
-        "draft_sample", "draft_configure_slot", "draft_bind_uniform",
+        "draft_sample", "draft_callback", "draft_configure_slot", "draft_bind_uniform",
       );
       const operations = capabilities.operations;
       if (capabilities.version !== 1 || capabilities.transport !== "unix-ndjson" ||

@@ -24,6 +24,7 @@ type Outcome = { ok: true; result: Row } | { ok: false; error: unknown };
 
 const sourceLimit = 128 * 1024;
 const wireVersion = 1;
+const callbackUniform = "u_vosc_callback";
 const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const scalarTypes = new Map([[0x1406, "float"], [0x8b50, "vec2"], [0x8b51, "vec3"], [0x8b52, "vec4"]]);
 const uncertainCodes = new Set(["renderer_timeout", "renderer_transport", "renderer_protocol", "request_not_found"]);
@@ -101,7 +102,8 @@ function uniforms(scene: Row): Uniform[] {
       try { observation = JSON.parse(observation); } catch { observation = undefined; }
     }
     result.push({
-      name, owner: "layer", writable: type !== undefined && declaration.writable === true,
+      name, owner: "layer", writable: type !== undefined && declaration.writable === true &&
+        object(scene.draft_activation)?.callback_uniform !== name,
       type: type ?? "0x" + declaration.gl_type.toString(16),
       values: (Array.isArray(observation) ? observation : [observation]).filter(numeric),
       ...(typeof declaration.binding === "string" ? { binding: declaration.binding } : {}),
@@ -210,6 +212,7 @@ export class Draft {
       case "slot.configure":
       case "uniform.set":
       case "sample":
+      case "callback.sample":
         await this.settleUnknown();
         this.expected(request);
         if (!this.activation || this.fenced.has(this.activation.lease)) {
@@ -600,18 +603,20 @@ export class Draft {
   }
 
   private async relaySample(request: WireRequest): Promise<Row> {
-    requireFields(request, ["lease", "sequence", "slot", "value"]);
+    const callback = request.method === "callback.sample";
+    requireFields(request, callback ? ["lease", "sequence", "value"] : ["lease", "sequence", "slot", "value"]);
     const { lease, sequence, slot, value } = request.params;
     if (typeof lease !== "string" || lease !== this.activation?.lease || this.fenced.has(lease) ||
-        !integer(sequence) || sequence <= 0 || !slotID(slot) || !this.slots.has(slot) ||
+        !integer(sequence) || sequence <= 0 || (!callback && (!slotID(slot) || !this.slots.has(slot))) ||
         !numeric(value) || value < 0 || value > 1) {
-      throw new WireError("invalid_sample", "Expected a sample for the current draft lease and slot");
+      throw new WireError("invalid_sample", "Expected a normalized sample for the current draft lease");
     }
     const now = performance.now();
     if (now - this.lastSampleTime < 15) throw new WireError("sample_rate", "Sample relay rate exceeded");
     this.lastSampleTime = now;
     const child = this.currentRenderer();
-    const receipt = await child.mutate("draft_sample", { lease, revision: this.revision, sequence, slot, value }, request.id);
+    const receipt = await child.mutate(callback ? "draft_callback" : "draft_sample",
+      { lease, revision: this.revision, sequence, value, ...(callback ? {} : { slot }) }, request.id);
     this.assertRenderer(child);
     const result = object(receipt.result);
     const scene = object(result?.scene);
@@ -619,7 +624,15 @@ export class Draft {
         scene.frame !== receipt.frame || receipt.revision !== this.revision) {
       throw new WireError("sample_unobserved", "The native renderer did not draw the tagged sample");
     }
-    return this.snapshot(scene);
+    if (callback) {
+      const readback = uniforms(scene).find(item => item.name === callbackUniform)?.values;
+      if (object(scene.draft_activation)?.callback_uniform !== callbackUniform ||
+          scene.rendered_revision !== receipt.revision || readback?.length !== 1 ||
+          Math.abs(readback[0] - Math.fround(value)) > 1e-6) {
+        throw new WireError("sample_unobserved", "The native callback draw did not confirm the uniform value");
+      }
+    }
+    return this.snapshot(scene, callback ? receipt : undefined);
   }
 
   private snapshot(scene: Row, receipt?: Row): Row {
@@ -628,6 +641,7 @@ export class Draft {
       role: "draft", version: wireVersion, target: this.target, epoch: this.epoch, revision: this.revision,
       uniforms: uniforms(scene), slots: [...this.slots.keys()].sort().map(id => this.slots.get(id)!),
       needsRestore: !this.activation,
+      ...(object(scene.draft_activation)?.callback_uniform === callbackUniform ? { callbackUniform } : {}),
       ...(integer(scene.frame) ? { frame: scene.frame } : {}),
       ...(samples ? { samples } : {}),
       ...(receipt ? { receipt } : {}),

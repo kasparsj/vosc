@@ -1,5 +1,7 @@
 import Foundation
 
+private let callbackUniform = "u_vosc_callback"
+
 final class Draft {
     private let target: String
     private let queue: DispatchQueue
@@ -107,7 +109,7 @@ final class Draft {
         case "uniform.set":
             try requireActive(request)
             return try bindUniform(request)
-        case "sample":
+        case "sample", "callback.sample":
             try requireActive(request)
             return try relaySample(request)
         default:
@@ -495,12 +497,14 @@ final class Draft {
     }
 
     private func relaySample(_ request: Request) throws -> WireObject {
-        try request.require(["lease", "sequence", "slot", "value"])
+        let callback = request.method == "callback.sample"
+        try request.require(callback ? ["lease", "sequence", "value"] : ["lease", "sequence", "slot", "value"])
+        let slot = slotID(request.params["slot"])
         guard let lease = request.params["lease"] as? String, lease == activation?["lease"] as? String,
               let sequence = wireInt(request.params["sequence"]), sequence > 0,
-              let slot = slotID(request.params["slot"]), slots[slot] != nil,
+              callback || slot.map({ slots[$0] != nil }) == true,
               let amplitude = wireNumber(request.params["value"]), (0...1).contains(amplitude) else {
-            throw WireError("invalid_sample", "Expected a sample for the current draft lease and slot")
+            throw WireError("invalid_sample", "Expected a normalized sample for the current draft lease")
         }
         let now = DispatchTime.now().uptimeNanoseconds
         guard now - lastSampleTime >= 15_000_000 else {
@@ -508,15 +512,23 @@ final class Draft {
         }
         lastSampleTime = now
         return try withRenderer { child in
-            let receipt = try child.mutate("draft_sample", ["lease": lease, "revision": revision,
-                "sequence": sequence, "slot": slot, "value": amplitude], id: request.id)
+            var params: WireObject = ["lease": lease, "revision": revision, "sequence": sequence, "value": amplitude]
+            if let slot = slot { params["slot"] = slot }
+            let receipt = try child.mutate(callback ? "draft_callback" : "draft_sample", params, id: request.id)
             guard let result = receipt["result"] as? WireObject, result["lease"] as? String == lease,
                   wireInt(result["sequence"]) == sequence, let scene = result["scene"] as? WireObject,
                   wireInt(scene["frame"]) == wireInt(receipt["frame"]),
                   wireInt(receipt["revision"]) == revision else {
                 throw WireError("sample_unobserved", "The native renderer did not draw the tagged sample")
             }
-            return snapshot(scene)
+            if callback {
+                let observed = uniforms(scene).first { ($0["name"] as? String) == callbackUniform }?["values"] as? [Double]
+                guard ownsCallback(scene), wireInt(scene["rendered_revision"]) == revision,
+                      let values = observed, values.count == 1, abs(values[0] - Double(Float(amplitude))) <= 1e-6 else {
+                    throw WireError("sample_unobserved", "The native callback draw did not confirm the uniform value")
+                }
+            }
+            return snapshot(scene, receipt: callback ? receipt : nil)
         }
     }
 
@@ -554,7 +566,8 @@ final class Draft {
             guard let declaration = declarations[name] as? WireObject,
                   let glType = wireInt(declaration["gl_type"]) else { return nil }
             let types = [0x1406: "float", 0x8b50: "vec2", 0x8b51: "vec3", 0x8b52: "vec4"]
-            let writable = types[glType] != nil && declaration["writable"] as? Bool == true
+            let writable = types[glType] != nil && declaration["writable"] as? Bool == true &&
+                (name != callbackUniform || !ownsCallback(scene))
             var observation = declaration["rendered_value"]
             if let raw = observation as? String {
                 observation = try? JSONSerialization.jsonObject(with: Data(raw.utf8), options: [.fragmentsAllowed])
@@ -573,6 +586,10 @@ final class Draft {
         return snapshot(current)
     }
 
+    private func ownsCallback(_ scene: WireObject) -> Bool {
+        (scene["draft_activation"] as? WireObject)?["callback_uniform"] as? String == callbackUniform
+    }
+
     private func snapshot(_ scene: WireObject, receipt: WireObject? = nil) -> WireObject {
         var result: WireObject = ["role": "draft", "version": wireVersion, "target": target, "epoch": epoch,
                                   "revision": revision, "uniforms": uniforms(scene),
@@ -580,6 +597,7 @@ final class Draft {
         if let frame = wireInt(scene["frame"]) { result["frame"] = frame }
         if let samples = scene["draft_slots"] as? WireObject { result["samples"] = samples }
         if let receipt = receipt { result["receipt"] = receipt }
+        if ownsCallback(scene) { result["callbackUniform"] = callbackUniform }
         if let digest = activeDigest { result["sourceDigest"] = digest }
         if let active = activation { result.merge(active) { old, _ in old } }
         return result

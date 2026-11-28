@@ -97,7 +97,7 @@ final class DraftRenderer {
                 throw WireError("renderer_capabilities", "Installed VOSC cannot handle private draft operations")
             }
             if !validation {
-                guard ["draft_prepare", "draft_commit", "draft_cancel", "draft_fence", "draft_sample",
+                guard ["draft_prepare", "draft_commit", "draft_cancel", "draft_fence", "draft_sample", "draft_callback",
                        "draft_configure_slot", "draft_bind_uniform"].allSatisfy(operations.contains) else {
                     throw WireError("renderer_capabilities", "Install the matching VOSC renderer to run draft transactions")
                 }

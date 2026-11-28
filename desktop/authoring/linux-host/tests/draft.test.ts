@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
 import { Draft } from "../draft";
 import { NativeCleanupError, NativeRenderer, type NativeObject } from "../native-renderer";
 import { WireError, type WireRequest } from "../transport";
@@ -123,6 +124,18 @@ test("real v1 request fields correlate the original draw and recover a lost repl
         scene = nativeScene(8, 152, 0.625, 0.75);
         return { id, revision: 8, frame: 152, result: { scene, lease, sequence: params.sequence } };
       }
+      if (method === "draft_callback") {
+        assert.deepEqual(params, { lease, revision: 8, sequence: id === "callback" ? 2 : 3, value: 0.5 });
+        const base = nativeScene(8, id === "callback" ? 153 : 154, 0.625, 0.75);
+        const callbackScene = {
+          ...base, draft_activation: { lease, callback_uniform: "u_vosc_callback" },
+          layers: [{ shader: { uniforms: {
+            u_vosc_callback: { gl_type: 0x1406, writable: true, rendered_value: id === "callback" ? "0.5" : "0.75" },
+          } } }],
+        };
+        return { id, revision: 8, frame: callbackScene.frame, status: "rendered",
+          result: { scene: callbackScene, lease, sequence: params.sequence } };
+      }
       throw new Error("Unexpected native method " + method);
     },
     async recover(id: string, terminal: string) {
@@ -161,6 +174,17 @@ test("real v1 request fields correlate the original draw and recover a lost repl
     assert.deepEqual(sampled.samples, { [slot.id]: 0.75 });
     assert.equal(sampled.receipt, undefined);
     assert.equal(sampled.revision, 8);
+    await delay(20);
+    await assert.rejects(draft.execute(request("callback.sample", { ...sampled, epoch: cold.epoch + "-stale" },
+      { lease, sequence: 2, value: 0.5 })), { code: "stale_epoch" });
+    const callback = await draft.execute(request("callback.sample", sampled, { lease, sequence: 2, value: 0.5 }, "callback"));
+    assert.equal(callback.callbackUniform, "u_vosc_callback");
+    assert.equal(callback.revision, 8);
+    assert.deepEqual(callback.uniforms, [{ name: "u_vosc_callback", owner: "layer", writable: false, type: "float", values: [0.5] }]);
+    assert.equal((callback.receipt as NativeObject).id, "callback");
+    await delay(20);
+    await assert.rejects(draft.execute(request("callback.sample", sampled, { lease, sequence: 3, value: 0.5 }, "wrong-value")),
+      { code: "sample_unobserved" });
     await draft.reset();
     const restarted = await draft.execute(request("health"));
     assert.notEqual(restarted.epoch, cold.epoch);
