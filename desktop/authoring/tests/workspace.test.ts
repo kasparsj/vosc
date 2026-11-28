@@ -16,9 +16,9 @@ import { TRIODE_COMPILER_ID } from "vosc-triode-identity";
 import { compileHydra } from "../src/hydra-compiler";
 import { evaluateHydraPatch, patchErrorLocation } from "../src/hydra-patch";
 import { Workspace } from "../src/workspace";
-import { HostClient } from "../src/host-client";
+import { HostClient, reportedError } from "../src/host-client";
 import { Importer } from "../src/importer";
-import { CALLBACK_UNIFORM, type DraftProject, type DraftSource, type DraftUniform, type Peer, type ReflectedDraft } from "../src/contracts";
+import { CALLBACK_UNIFORM, type AcceptedRendering, type DraftBackend, type DraftProject, type DraftSource, type DraftUniform, type Peer, type ReflectedDraft } from "../src/contracts";
 
 const SOURCE_BYTES = Buffer.from("#version 330\nuniform vec3 tone;\nout vec4 color;\nvoid main() { color = vec4(tone, 1); }");
 const SOURCE: DraftSource = { name: "tone.frag", origin: "Test source", digest: hash(SOURCE_BYTES),
@@ -108,7 +108,10 @@ class FixtureHost {
   sampleCount = 0;
   samples: { lease: string; sequence: number; revision: number }[] = [];
   requested: { id?: string; method: string; params: Record<string, unknown> }[] = [];
-  prepared: { id: string; params: Record<string, unknown>; bindings: Record<string, unknown> } | null = null;
+  prepared: { id: string; params: Record<string, unknown>; bindings: Record<string, unknown>;
+    rendering?: AcceptedRendering } | null = null;
+  autoBackend: DraftBackend = "webgpu";
+  translation = { artifactDigest: "a".repeat(64), compilerIdentity: "b".repeat(64) };
   conflicts: { name: string; reason: string }[] = [];
   compileError: HostError | null = null;
   commitReply: "valid" | "lost" | "wrong" = "valid";
@@ -182,8 +185,14 @@ class FixtureHost {
       const bindings = { ...params.bindings as Record<string, { type?: string; components: unknown[] }> };
       for (const binding of Object.values(bindings)) binding.type ??= ["float", "vec2", "vec3", "vec4"][binding.components.length - 1];
       for (const issue of this.conflicts) delete bindings[issue.name];
-      this.prepared = { id: id!, params, bindings };
-      return { ...params, target: this.state.target, epoch: expected?.epoch, revision: expected?.revision, sourceDigest: params.sha256,
+      const { backend: preference, artifactDigest: _pinned, compilerIdentity: _compiler, ...attempt } = params;
+      if (preference) assert.equal(this.state.webgpuAuto, true);
+      const actual = preference === "auto" ? this.autoBackend : preference;
+      const rendering: AcceptedRendering | undefined = actual === "webgpu" ?
+        { backend: "webgpu", ...(params.language === "wgsl" ? {} : this.translation) } :
+        actual === "opengl" ? { backend: "opengl" } : undefined;
+      this.prepared = { id: id!, params, bindings, rendering };
+      return { ...attempt, ...rendering, target: this.state.target, epoch: expected?.epoch, revision: expected?.revision, sourceDigest: params.sha256,
         token: id, controlDigest: SOURCE.digest, bindings, conflicts: this.conflicts };
     }
     if (method === "run.cancel") {
@@ -201,22 +210,31 @@ class FixtureHost {
       const staged = prepared.params;
       const revision = this.state.revision + 1;
       const frame = revision * 2;
-      const backend = staged.language === "wgsl" ? "webgpu" : undefined;
-      const uniforms = backend ? [] : structuredClone(this.validatedUniforms);
+      const rendering = prepared.rendering;
+      const backend = rendering?.backend ?? (staged.language === "wgsl" ? "webgpu" : undefined);
+      const translated = rendering?.backend === "webgpu" && Boolean(rendering.artifactDigest);
+      const nativeRender = backend ? { backend, first_frame: frame,
+        ...(translated ? { artifact_digest: this.translation.artifactDigest, compiler_identity: this.translation.compilerIdentity } : {}),
+      } : {};
+      const runIdentity = { lease: staged.lease, token: prepared.id, source_digest: staged.sha256,
+        control_digest: SOURCE.digest, commit_id: id };
+      const uniforms = backend === "webgpu" ? [] : structuredClone(this.validatedUniforms);
       for (const uniform of uniforms) {
         const binding = (prepared.bindings[uniform.name] as { components: { fixed?: number }[] } | undefined);
         binding?.components.forEach(({ fixed }, i) => { if (fixed !== undefined) uniform.values[i] = Math.fround(fixed); });
       }
       this.state = { ...this.state, revision, frame, backend, needsRestore: false, sourceDigest: String(staged.sha256), uniforms,
+        artifactDigest: translated ? this.translation.artifactDigest : undefined,
+        compilerIdentity: translated ? this.translation.compilerIdentity : undefined,
         callbackUniform: uniforms.some(uniform => uniform.name === CALLBACK_UNIFORM) ? CALLBACK_UNIFORM : undefined,
         lease: String(staged.lease), token: prepared.id, commitID: id, controlDigest: SOURCE.digest,
         runSequence: Number(staged.runSequence), editSequence: Number(staged.editSequence), generation: Number(staged.generation),
         documentId: String(staged.documentId), slots: staged.slots as ReflectedDraft["slots"],
         receipt: { id: id!, revision, frame, status: "rendered", external_epoch: 0, result: {
-          lease: staged.lease, token: prepared.id, source_digest: staged.sha256, control_digest: SOURCE.digest, commit_id: id,
-          ...(backend ? { backend, first_frame: frame } : {}),
+          ...runIdentity, ...nativeRender,
           scene: { rendered_revision: revision, frame, backend,
-            layers: backend ? [] : [{ shader: { loaded: true, program: revision } }] },
+            ...(rendering ? { draft_activation: { ...runIdentity, ...nativeRender } } : {}),
+            layers: backend === "webgpu" ? [] : [{ shader: { loaded: true, program: revision } }] },
         } } };
       this.corruptRunReceipt?.(this.state);
       const result = structuredClone(this.state);
@@ -1339,7 +1357,17 @@ test("WGSL Run and Restore send accepted bytes explicitly as WGSL and save worki
     assert.equal(restored.reflected?.sourceDigest, source.digest);
     const restorePrepare = candidateCalls(host).at(-2)!;
     assert.equal(restorePrepare.params.language, "wgsl");
+    assert.equal(restorePrepare.params.backend, undefined);
     assert.equal(restorePrepare.params.source, source.base64);
+
+    host.state.webgpuAuto = true;
+    const negotiated = await workspace.restore();
+    assert.equal(negotiated.previewReady, true);
+    const negotiatedRestore = candidateCalls(host).at(-2)!;
+    assert.equal(negotiatedRestore.params.language, "wgsl");
+    assert.equal(negotiatedRestore.params.backend, "webgpu");
+    assert.equal(negotiatedRestore.params.artifactDigest, undefined);
+    assert.equal(negotiated.reflected?.artifactDigest, undefined);
 
     host.state.needsRestore = true;
     assert.equal((await workspace.reflect()).previewReady, false);
@@ -1365,8 +1393,8 @@ for (const malformed of ["backend", "first_frame"] as const) {
   });
 }
 
-for (const action of ["cancel", "supersede"] as const) {
-  test(`A WGSL prepare cannot commit after the Editor chooses to ${action} it`, async () => {
+for (const language of ["wgsl", "glsl"] as const) for (const action of ["cancel", "supersede"] as const) {
+  test(`A WebGPU prepare from ${language} cannot commit after the Editor chooses to ${action} it`, async () => {
     const host = new FixtureHost();
     const workspace = new Workspace(host as unknown as HostClient);
     const entered = Promise.withResolvers<void>();
@@ -1375,7 +1403,8 @@ for (const action of ["cancel", "supersede"] as const) {
       entered.resolve();
       await finish.promise;
     };
-    const draft = (await workspace.create("wgsl")).document!;
+    host.state.webgpuAuto = language === "glsl";
+    const draft = (await workspace.create(language)).document!;
     const first = workspace.run();
     await entered.promise;
     host.onValidate = undefined;
@@ -1396,3 +1425,144 @@ for (const action of ["cancel", "supersede"] as const) {
       action === "cancel" ? undefined : hash(Buffer.from(latest)));
   });
 }
+
+for (const language of ["glsl", "hydra-js"] as const) {
+  test(`Translated ${language} saves editable and compiled identities and restores only the pinned artifact`, async () => {
+    const host = new FixtureHost();
+    host.state.webgpuAuto = true;
+    const emitted = compilePatch(HYDRA);
+    let evaluations = 0;
+    const workspace = new Workspace(host as unknown as HostClient, async () => {
+      evaluations++;
+      return emitted;
+    });
+    const pathRoot = await mkdtemp(join(tmpdir(), "vosc-translated-"));
+    const path = join(pathRoot, "Translated.vosc-draft");
+    const editable = language === "glsl" ? SOURCE : sourceWithText(SOURCE, HYDRA);
+    const input = language === "glsl" ? SOURCE : sourceWithText(SOURCE, emitted.fragment);
+    try {
+      await workspace.openSource(editable, language);
+      const run = await workspace.run();
+      assert.equal(run.run.phase, "drawn");
+      assert.equal(run.previewReady, true);
+      assert.equal(run.document?.acceptedArtifact?.backend, "webgpu");
+      assert.equal(run.document?.source.digest, editable.digest);
+      assert.equal(run.reflected?.sourceDigest, input.digest);
+      const first = candidateCalls(host).at(-2)!;
+      assert.equal(first.params.backend, "auto");
+      assert.equal(first.params.language, undefined);
+      assert.equal(first.params.sha256, input.digest);
+      assert.equal(first.params.artifactDigest, undefined);
+      assert.throws(() => workspace.captureExport(), { code: "export_unsupported" });
+
+      const draft = run.document!;
+      const broken = "incomplete source\n";
+      workspace.edit({ id: draft.id, generation: draft.generation, editSequence: draft.editSequence + 1, text: broken });
+      await workspace.save(path);
+      const saved = JSON.parse(await readFile(path, "utf8"));
+      assert.equal(saved.version, 3);
+      assert.equal(saved.source.digest, hash(Buffer.from(broken)));
+      assert.equal(saved.accepted.project.source.base64, input.base64);
+      assert.equal(saved.accepted.language, undefined);
+      assert.deepEqual(saved.accepted.rendering, { backend: "webgpu", ...host.translation });
+      if (language === "hydra-js") {
+        assert.equal(saved.accepted.hydra.patch.digest, editable.digest);
+        assert.equal(saved.accepted.hydra.generatedDigest, input.digest);
+        assert.deepEqual(saved.accepted.hydra.spans, emitted.spans);
+      }
+      assert.throws(() => parseDocument({ ...saved, accepted: { ...saved.accepted, rendering: { backend: "webgpu" } } }),
+        { code: "invalid_project" });
+
+      await workspace.open(path);
+      const pinned = host.translation;
+      host.translation = { ...pinned, compilerIdentity: "c".repeat(64) };
+      const failed = await workspace.restore();
+      assert.equal(failed.run.problems[0]?.code, "state_mismatch");
+      assert.equal(host.mutations, 1);
+      host.translation = pinned;
+      host.state.webgpuAuto = false;
+      const unsupported = await workspace.restore();
+      assert.equal(unsupported.run.problems[0]?.code, "translation_unavailable");
+      assert.equal(host.mutations, 1);
+      host.state.webgpuAuto = true;
+      const restored = await workspace.restore();
+      assert.equal(restored.run.phase, "drawn");
+      assert.equal(restored.document?.source.text, broken);
+      assert.equal(restored.previewReady, true);
+      const restore = candidateCalls(host).at(-2)!;
+      assert.deepEqual({ backend: restore.params.backend, artifactDigest: restore.params.artifactDigest,
+        compilerIdentity: restore.params.compilerIdentity }, { backend: "webgpu", ...pinned });
+      assert.equal(restore.params.source, input.base64);
+      assert.equal(evaluations, language === "hydra-js" ? 1 : 0);
+    } finally {
+      await rm(pathRoot, { recursive: true, force: true });
+    }
+  });
+}
+
+test("Legacy drafts keep their bindings and explicitly restore on OpenGL after host negotiation", async () => {
+  const host = new FixtureHost();
+  const workspace = new Workspace(host as unknown as HostClient);
+  const pathRoot = await mkdtemp(join(tmpdir(), "vosc-legacy-rendering-"));
+  const path = join(pathRoot, "Legacy.vosc-draft");
+  try {
+    await workspace.openSource(SOURCE);
+    assert.equal((await workspace.run()).run.phase, "drawn");
+    assert.equal(candidateCalls(host)[0].params.backend, undefined);
+    const slot = (await workspace.configureSlot("Tone")).project!.slots[0].id;
+    const binding = { mode: "range" as const, slot, low: 0.2, high: 0.8 };
+    await workspace.bindComponent("tone", 1, binding);
+    await workspace.save(path);
+    assert.equal(JSON.parse(await readFile(path, "utf8")).version, 2);
+    await workspace.open(path);
+    host.state.webgpuAuto = true;
+    const restored = await workspace.restore();
+    assert.equal(restored.previewReady, true);
+    assert.equal(restored.reflected?.backend, "opengl");
+    assert.equal(restored.project?.slots[0].id, slot);
+    assert.deepEqual(restored.project?.bindings[1].binding, binding);
+    assert.equal(candidateCalls(host).at(-2)?.params.backend, "opengl");
+    assert.doesNotThrow(() => workspace.captureExport());
+
+    host.autoBackend = "opengl";
+    const afterNewRun = await workspace.run();
+    const fallback = candidateCalls(host).at(-2)!;
+    assert.equal(fallback.params.backend, "auto");
+    assert.deepEqual(fallback.params.slots, afterNewRun.project?.slots);
+    assert.equal(afterNewRun.previewReady, true);
+    assert.equal(afterNewRun.reflected?.backend, "opengl");
+    assert.deepEqual(afterNewRun.project?.bindings[1].binding, binding);
+    assert.doesNotThrow(() => workspace.captureExport());
+  } finally {
+    await rm(pathRoot, { recursive: true, force: true });
+  }
+});
+
+test("Editor refuses a translated activation carrying a different artifact digest", async () => {
+  const host = new FixtureHost();
+  host.state.webgpuAuto = true;
+  host.corruptRunReceipt = ({ receipt }) => {
+    (receipt!.result!.scene!.draft_activation as Record<string, unknown>).artifact_digest = "d".repeat(64);
+  };
+  const workspace = new Workspace(host as unknown as HostClient);
+  await workspace.openSource(SOURCE);
+  const run = await workspace.run();
+  assert.equal(run.run.phase, "uncertain");
+  assert.equal(run.previewReady, false);
+  assert.equal(run.document?.acceptedArtifact, null);
+});
+
+test("Translated diagnostics keep original GLSL lines and map emitted Hydra spans", async () => {
+  const host = new FixtureHost();
+  host.state.webgpuAuto = true;
+  const patch = "\n" + HYDRA;
+  const emitted = compilePatch(patch);
+  const span = emitted.spans.find(entry => entry.location?.line === 2)!;
+  const workspace = new Workspace(host as unknown as HostClient, async () => emitted);
+  await workspace.openSource(sourceWithText(SOURCE, patch), "hydra-js");
+  host.compileError = reportedError({ code: "shader_failed", message: "GLSL translation failed.",
+    diagnostics: [{ message: "unresolved identifier", line: span.firstLine }] });
+  const failed = await workspace.run();
+  assert.deepEqual(failed.run.problems[0], { code: "shader_failed", message: "unresolved identifier",
+    generatedLine: span.firstLine, ...span.location });
+});

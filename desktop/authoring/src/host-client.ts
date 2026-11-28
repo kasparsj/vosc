@@ -60,10 +60,14 @@ type Reply =
   { id: string; ok: false; error: { code: string; message: string; diagnostics?: unknown } };
 
 export function reportedError(error: Extract<Reply, { ok: false }>["error"], uncertainId?: string) {
-  const messages = Array.isArray(error.diagnostics) ? error.diagnostics.slice(0, 8).flatMap(item =>
-    item && typeof item.message === "string" ? [item.message] : []) : [];
+  const diagnostics = Array.isArray(error.diagnostics) ? error.diagnostics.slice(0, 8).flatMap(item =>
+    item && typeof item.message === "string" ? [item] : []) : [];
+  const messages = diagnostics.map(item => item.message.slice(0, 4096));
+  const locations = diagnostics.map(item => Number.isSafeInteger(item.line) && item.line > 0 ? {
+    line: item.line, ...(Number.isSafeInteger(item.column) && item.column > 0 ? { column: item.column } : {}),
+  } : undefined);
   return new HostError(error.code, [error.message, ...messages].join("\n").slice(0, 4096), uncertainId,
-    messages.map(message => message.slice(0, 4096)));
+    messages, undefined, locations);
 }
 
 function normalizedFingerprint(value: unknown) {

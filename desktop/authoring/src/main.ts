@@ -221,7 +221,7 @@ function installDraftHandlers() {
   handle("draft:reflect", () => workspace.reflect());
   handle("draft:run", (mode) => workspace.run(mode));
   handle("draft:approve-run", (token) => workspace.approveRun(token));
-  handle("draft:cancel-run", (token) => workspace.cancelRun(token));
+  handle("draft:cancel-run", (token, automaticOnly) => workspace.cancelRun(token, automaticOnly === true));
   handle("draft:use-host", () => workspace.useSelectedHost());
   handle("draft:mapping-discard", (name) => workspace.discardMapping(name));
   handle("draft:mapping-remap", (name, target) => workspace.remapMapping(name, target));

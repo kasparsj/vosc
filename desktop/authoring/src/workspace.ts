@@ -5,10 +5,10 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { constants, type BigIntStats } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
-import { BINDING_LIMIT, CALLBACK_UNIFORM, SLOT_LIMIT, isCallbackValue, type Binding, type ComponentBinding, type ControlSignature, type DocumentEdit, type DocumentView,
-  type DraftControls, type DraftDocument, type DraftLanguage, type HydraProvenance, type DraftProject, type DraftSource, type DraftUniform, type DrawReceipt,
+import { BINDING_LIMIT, CALLBACK_UNIFORM, SLOT_LIMIT, isCallbackValue, isDraftDigest, type AcceptedRendering, type Binding, type ComponentBinding, type ControlSignature, type DocumentEdit, type DocumentView,
+  type DraftBackend, type DraftControls, type DraftDocument, type DraftLanguage, type HydraProvenance, type DraftProject, type DraftSource, type DraftUniform, type DrawReceipt,
   type MappingConflict, type Peer, type PendingMapping, type ReflectedDraft, type RunIdentity, type RunMode,
-  type RunProblem, type RunView, type Slot, type WorkspaceView } from "./contracts";
+  type RunProblem, type RunView, type Slot, type TranslationIdentity, type WorkspaceView } from "./contracts";
 import { editorText, MAX_PROJECT_BYTES, parseBinding, parseDocument, parseProject, source as checkedSource, sourceWithText, titleFor, validUniformName, writeReplay } from "./draft-project";
 import { reportedError, type HostClient, type HostSession } from "./host-client";
 import { HostError, writeAtomically } from "./local-state";
@@ -130,6 +130,7 @@ type Attempt = {
   title: string;
   mode: RunMode;
   restoring: boolean;
+  rendering?: AcceptedRendering;
   language: DraftLanguage;
   hydra?: HydraProvenance;
   context: number;
@@ -143,7 +144,8 @@ type Prepared = RunIdentity & Version & {
   controlDigest: string;
   bindings: WireBindings;
   conflicts: MappingConflict[];
-};
+  backend?: DraftBackend;
+} & Partial<TranslationIdentity>;
 type Commit = { attempt: Attempt; lease: Lease; prepared: Prepared; id: string; terminal: boolean };
 type ControlWrite = {
   id: string;
@@ -207,13 +209,14 @@ function problemEntries(error: HostError, source: string): RunProblem[] {
   const lines = source.split("\n");
   const hasLineDirective = /^\s*#\s*line\b/m.test(source);
   const raw = error.diagnostics.length ? error.diagnostics : [error.message];
-  return raw.flatMap(message => message.split("\n").filter(Boolean).map(text => {
+  return raw.flatMap((message, index) => message.split("\n").filter(Boolean).map(text => {
     const match = hasLineDirective ? null :
       text.match(/^\s*(?:ERROR|WARNING):\s*0:(\d+)(?::(\d+))?:/i) ??
       text.match(/^\s*0\((\d+)\)\s*:/) ??
       text.match(/^\s*(?:Error while parsing WGSL:\s*)?:?(\d+):(\d+)\s+error:/i);
-    const line = Number(match?.[1]);
-    const column = Number(match?.[2]);
+    const structured = hasLineDirective ? undefined : error.diagnosticLocations[index];
+    const line = structured?.line ?? Number(match?.[1]);
+    const column = structured?.column ?? Number(match?.[2]);
     const location = line >= 1 && line <= lines.length ? { line,
       ...(column >= 1 && column <= lines[line - 1].length + 1 ? { column } : {}) } : {};
     return { code: error.code, message: text, ...location };
@@ -304,6 +307,8 @@ export class Workspace {
       destination: document.destination,
       pendingMappings: document.controls.pendingMappings ?? [],
       acceptedArtifact: accepted && {
+        ...(accepted.rendering ? { backend: accepted.rendering.backend } : accepted.language === "wgsl" ?
+          { backend: "webgpu" as const } : {}),
         id: accepted.id, sourceDigest: accepted.project.source.digest, revision: accepted.revision,
         saved: this.savedArtifact === accepted.id,
         ...(accepted.hydra ? { generated: { source: Buffer.from(accepted.project.source.base64, "base64").toString("utf8"),
@@ -412,10 +417,14 @@ export class Workspace {
   private previewMatches() {
     const peer = this.host.peer;
     const ack = this.acknowledged;
+    const accepted = this.document?.accepted;
+    const backend = accepted?.rendering?.backend ?? (accepted?.language === "wgsl" ? "webgpu" : "opengl");
     return Boolean(peer && this.project && this.state && !this.state.needsRestore && ack &&
       this.project.destination.target === peer.target && this.project.destination.fingerprint === peer.fingerprint &&
       this.state.target === peer.target &&
-      (this.document?.accepted?.language === "wgsl" ? this.state.backend === "webgpu" : this.state.backend !== "webgpu") &&
+      (backend === "webgpu" ? this.state.backend === "webgpu" : this.state.backend !== "webgpu") &&
+      this.state.artifactDigest === (accepted?.rendering?.backend === "webgpu" ? accepted.rendering.artifactDigest : undefined) &&
+      this.state.compilerIdentity === (accepted?.rendering?.backend === "webgpu" ? accepted.rendering.compilerIdentity : undefined) &&
       this.state.sourceDigest === this.project.source.digest &&
       this.state.epoch === ack.epoch && this.state.revision === ack.revision && this.state.lease === this.lease?.id &&
       !this.pendingReply && !this.unknownCommit);
@@ -556,7 +565,7 @@ export class Workspace {
 
   private adopt(state: ReflectedDraft, project: DraftProject, pendingMappings?: PendingMapping[],
                 workingOverride?: DraftControls,
-                hydra = this.document?.accepted?.hydra) {
+                run?: { language: DraftLanguage; hydra?: HydraProvenance; rendering?: AcceptedRendering }) {
     const callbackValue = callbackReadback(state);
     if (!state.receipt) throw new HostError("missing_drawn_receipt", "The host did not acknowledge a drawn frame.");
     this.acknowledged = { epoch: state.epoch, revision: state.revision, receipt: state.receipt };
@@ -566,13 +575,16 @@ export class Workspace {
     const signatures = controlSignatures(state.uniforms, project.bindings);
     const { name, origin, digest, base64 } = project.source;
     const acceptedProject = { ...project, source: { name, origin, digest, base64 } };
-    this.document = { ...this.document,
+    const accepted = this.document.accepted;
+    const { language, hydra, rendering } = run ?? accepted ?? {};
+    this.document = { ...this.document, version: rendering ? 3 : 2,
       destination: this.document.destination ?? project.destination,
       controls: workingOverride ?? { slots: project.slots, bindings: project.bindings, signatures,
         ...(pendingMappings?.length || this.document.controls.pendingMappings ?
           { pendingMappings: pendingMappings ?? this.document.controls.pendingMappings } : {}) },
       accepted: { id: randomUUID(), revision: state.revision, project: acceptedProject, signatures,
-        ...(state.backend === "webgpu" ? { language: "wgsl" } : {}), ...(hydra ? { hydra } : {}),
+        ...(language === "wgsl" ? { language } : {}), ...(hydra ? { hydra } : {}),
+        ...(rendering ? { rendering } : {}),
         ...(callbackValue === undefined ? {} : { callbackValue }) } };
     this.notice = null;
     return this.view();
@@ -818,9 +830,10 @@ export class Workspace {
     }
   }
 
-  private cancelledBeforeCommit(attempt: Attempt) {
-    return (attempt.language !== "glsl" && attempt.identity.runSequence <= this.cancelledRun) ||
-      (attempt.language === "wgsl" && !!this.queue && this.queue.identity.runSequence > attempt.identity.runSequence);
+  private cancelledBeforeCommit(attempt: Attempt, prepared?: Prepared) {
+    return attempt.identity.runSequence <= this.cancelledRun ||
+      ((attempt.language === "wgsl" || prepared?.backend === "webgpu") &&
+        !!this.queue && this.queue.identity.runSequence > attempt.identity.runSequence);
   }
 
   private captureRun(mode: RunMode, restoring = false): Attempt {
@@ -840,7 +853,8 @@ export class Workspace {
     return { identity: { documentId: document.id, generation: this.documentGeneration,
       editSequence: this.editSequence, runSequence: ++this.runSequence, sourceDigest: source.digest },
       source, controls, title: artifact?.project.title ?? document.title, mode, restoring,
-      language: artifact?.language ?? document.language, hydra: artifact?.hydra, context: this.context, peer };
+      language: artifact?.language ?? document.language, hydra: artifact?.hydra, rendering: artifact?.rendering,
+      context: this.context, peer };
   }
 
   run(mode: unknown = "manual") {
@@ -958,11 +972,21 @@ export class Workspace {
       const identity = { ...attempt.identity, lease: lease.id };
       const intent = encodeBindings(attempt.controls);
       const { sourceDigest, ...wireAttempt } = identity;
+      const wgsl = attempt.language === "wgsl";
+      const rendering = attempt.rendering;
+      const translation = rendering?.backend === "webgpu" && !wgsl ? rendering : undefined;
+      if (translation && state.webgpuAuto !== true) {
+        throw new HostError("translation_unavailable", "This Render Host cannot restore the accepted translation. Run the source again.");
+      }
+      const backend = state.webgpuAuto !== true ? undefined : attempt.restoring ?
+        rendering?.backend ?? (wgsl ? "webgpu" : "opengl") : wgsl ? undefined : "auto";
       let result: unknown;
       try {
         result = await lease.host.rpc("run.prepare", { ...wireAttempt, source: attempt.source.base64,
           sha256: sourceDigest, slots: attempt.controls.slots, bindings: intent,
-          ...(attempt.language === "wgsl" ? { language: "wgsl" } : {}) }, state, id);
+          ...(wgsl ? { language: "wgsl" } : {}), ...(backend ? { backend } : {}),
+          ...(translation ? { artifactDigest: translation.artifactDigest, compilerIdentity: translation.compilerIdentity } : {}),
+        }, state, id);
       } catch (error) {
         if (!(error instanceof HostError) || !error.uncertainId) throw error;
         const receipt = await this.lookup(lease.host, id);
@@ -971,10 +995,11 @@ export class Workspace {
         result = receipt.result;
       }
       this.requireCurrent(attempt);
-      const candidate = this.preparedResult(result, identity, state, id, intent);
-      if (this.cancelledBeforeCommit(attempt) ||
+      const candidate = this.preparedResult(result, identity, state, id, intent, attempt, backend);
+      if (this.cancelledBeforeCommit(attempt, candidate) ||
           (attempt.language === "hydra-js" && !attempt.restoring && !this.freshHydraRun(attempt))) {
         await lease.host.rpc("run.cancel", { lease: lease.id, token: id }, candidate);
+        if (this.cancelledBeforeCommit(attempt, candidate)) return;
         this.requirePreAdmission(attempt);
       }
       if (candidate.conflicts.length) {
@@ -990,18 +1015,30 @@ export class Workspace {
       await this.commit(attempt, lease, candidate);
     } catch (error) {
       if ((error instanceof HostError && error.code === "run_cancelled") ||
-          (attempt.language === "wgsl" && this.cancelledBeforeCommit(attempt))) return;
+          this.cancelledBeforeCommit(attempt)) return;
       this.failAttempt(attempt, error);
     }
   }
 
   private preparedResult(raw: unknown, identity: RunIdentity, state: ReflectedDraft, token: string,
-                         intent: WireBindings): Prepared {
+                         intent: WireBindings, attempt: Attempt, preference?: "auto" | "opengl" | "webgpu"): Prepared {
     const result = raw as Prepared | null;
     if (!result || !identityMatches(identity, result) || result.target !== state.target || result.epoch !== state.epoch ||
         result.revision !== state.revision || result.token !== token || !/^[a-f0-9]{64}$/.test(result.controlDigest) ||
         !result.bindings || typeof result.bindings !== "object" || Array.isArray(result.bindings) || !Array.isArray(result.conflicts)) {
       throw new HostError("state_mismatch", "The prepared candidate does not match this Run.");
+    }
+    const wgsl = attempt.language === "wgsl";
+    const translated = result.backend === "webgpu" && !wgsl;
+    const requested = attempt.rendering;
+    if ((result.backend !== undefined && (result.backend !== "opengl" && result.backend !== "webgpu" ||
+          (wgsl && result.backend !== "webgpu") || (!preference && translated) ||
+          (preference && preference !== "auto" && preference !== result.backend))) ||
+        (translated ? !isDraftDigest(result.artifactDigest) || !isDraftDigest(result.compilerIdentity) :
+          result.artifactDigest !== undefined || result.compilerIdentity !== undefined) ||
+        (requested?.backend === "webgpu" && !wgsl && (!translated || requested.artifactDigest !== result.artifactDigest ||
+          requested.compilerIdentity !== result.compilerIdentity))) {
+      throw new HostError("state_mismatch", "The prepared backend or translation does not match this Run.");
     }
     const conflicts = (result.conflicts as unknown[]).map(describeConflict);
     const names = new Set(conflicts.map(item => item.name));
@@ -1061,11 +1098,21 @@ export class Workspace {
     const scene = receipt?.result?.scene;
     const layers = scene?.layers as { shader?: { loaded?: boolean; program?: number } }[] | undefined;
     const shader = Array.isArray(layers) ? layers[0]?.shader : undefined;
-    const matchingBackend = attempt.language === "wgsl" ?
+    const webgpu = prepared.backend === "webgpu" || attempt.language === "wgsl";
+    const activation = scene?.draft_activation as Record<string, unknown> | undefined;
+    const matchingBackend = webgpu ?
       state?.backend === "webgpu" && scene?.backend === "webgpu" && receipt?.result?.backend === "webgpu" &&
         receipt.result.first_frame === receipt.frame && scene.draft_device_lost !== true :
       state?.backend !== "webgpu" && shader?.loaded === true && Number.isSafeInteger(shader.program) && shader.program! > 0;
-    if (!matchingBackend || !state || state.target !== prepared.target || state.epoch !== prepared.epoch ||
+    const matchesRendering = (row?: Record<string, unknown>) => row?.backend === prepared.backend &&
+      row?.artifact_digest === prepared.artifactDigest && row?.compiler_identity === prepared.compilerIdentity &&
+      row?.first_frame === receipt?.frame;
+    const matchingNegotiated = !prepared.backend || (state?.backend === prepared.backend && scene?.backend === prepared.backend &&
+      state.artifactDigest === prepared.artifactDigest && state.compilerIdentity === prepared.compilerIdentity &&
+      matchesRendering(receipt?.result) && matchesRendering(activation) && activation?.lease === prepared.lease &&
+      activation.token === prepared.token && activation.commit_id === id && activation.source_digest === prepared.sourceDigest &&
+      activation.control_digest === prepared.controlDigest);
+    if (!matchingBackend || !matchingNegotiated || !state || state.target !== prepared.target || state.epoch !== prepared.epoch ||
         !identityMatches(prepared, state) || state.token !== prepared.token || state.controlDigest !== prepared.controlDigest ||
         state.commitID !== id || receipt?.id !== id || receipt.status !== "rendered" || !scene || state.needsRestore ||
         !Number.isSafeInteger(receipt.frame) || !Number.isSafeInteger(state.revision) || state.revision <= prepared.revision ||
@@ -1088,7 +1135,12 @@ export class Workspace {
     }
     const observed = this.receive(state, true);
     this.unknownCommit = null;
-    this.adopt(observed, project, pending, attempt.restoring ? this.document?.controls : undefined, attempt.hydra);
+    const rendering: AcceptedRendering | undefined = prepared.backend === "opengl" ? { backend: "opengl" } :
+      prepared.backend === "webgpu" ? prepared.artifactDigest && prepared.compilerIdentity ?
+        { backend: "webgpu", artifactDigest: prepared.artifactDigest, compilerIdentity: prepared.compilerIdentity } :
+        { backend: "webgpu" } : attempt.rendering;
+    this.adopt(observed, project, pending, attempt.restoring ? this.document?.controls : undefined,
+      { language: attempt.language, hydra: attempt.hydra, rendering });
     this.startCallback(observed);
     commit.terminal = true;
     if (attempt.mode === "manual" && !attempt.restoring && attempt.language === "glsl") this.runView = { ...this.runView, manualReady: true };
@@ -1196,15 +1248,17 @@ export class Workspace {
     });
   }
 
-  cancelRun(token?: unknown) {
+  cancelRun(token?: unknown, automaticOnly = false) {
     if (this.queue?.mode === "automatic") this.queue = null;
     if (token === undefined) {
-      if (this.document && this.document.language !== "glsl") {
+      if ((!automaticOnly || this.runView.mode === "automatic") &&
+          this.document && (this.document.language !== "glsl" || this.state?.webgpuAuto === true)) {
         if (this.queue?.language === this.document.language) this.queue = null;
         if (this.evaluation || this.runView.phase === "evaluating" || this.runView.phase === "preparing") {
           this.cancelledRun = this.runSequence;
           this.cancelEvaluation();
-          this.runView = { ...EMPTY_RUN, message: "Run cancelled. Previous preview retained." };
+          this.runView = { ...EMPTY_RUN, manualReady: this.runView.manualReady,
+            message: "Run cancelled. Previous preview retained." };
         }
       }
       return Promise.resolve(this.view());
@@ -1519,8 +1573,8 @@ export class Workspace {
   captureExport() {
     const accepted = this.document?.accepted;
     if (!accepted) throw new HostError("no_draft", "There is no accepted native artifact to export.");
-    if (accepted.language === "wgsl") {
-      throw new HostError("export_unsupported", "WGSL drafts can be saved as VOSC drafts. Standalone replay export is unavailable.");
+    if (accepted.language === "wgsl" || accepted.rendering?.backend === "webgpu") {
+      throw new HostError("export_unsupported", "WebGPU previews can be saved as VOSC drafts. Standalone replay export is unavailable.");
     }
     const { callbackValue } = accepted;
     return {

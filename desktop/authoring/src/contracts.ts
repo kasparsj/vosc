@@ -79,12 +79,22 @@ export interface RunIdentity {
   runSequence: number;
   sourceDigest: string;
 }
-export interface ReflectedDraft extends Partial<RunIdentity> {
+export type DraftBackend = "opengl" | "webgpu";
+export type TranslationIdentity = { artifactDigest: string; compilerIdentity: string };
+export type AcceptedRendering = { backend: "opengl" } |
+  ({ backend: "webgpu" } & (TranslationIdentity | { artifactDigest?: never; compilerIdentity?: never }));
+
+export function isDraftDigest(value: unknown): value is string {
+  return typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
+}
+
+export interface ReflectedDraft extends Partial<RunIdentity>, Partial<TranslationIdentity> {
   target: string;
   epoch: string;
   revision: number;
   frame?: number;
-  backend?: "opengl" | "webgpu";
+  backend?: DraftBackend;
+  webgpuAuto?: boolean;
   receipt?: DrawReceipt;
   token?: string;
   controlDigest?: string;
@@ -185,12 +195,13 @@ export interface AcceptedArtifact {
   project: DraftProject;
   signatures: ControlSignature[];
   language?: "wgsl";
+  rendering?: AcceptedRendering;
   hydra?: HydraProvenance;
   callbackValue?: number;
 }
 export interface DraftDocument {
   format: "vosc.authoring.draft";
-  version: 2;
+  version: 2 | 3;
   id: string;
   title: string;
   language: DraftLanguage;
@@ -221,6 +232,7 @@ export interface DocumentView {
     revision: number | null;
     saved: boolean;
     stale: boolean;
+    backend?: DraftBackend;
     generated?: GeneratedSource;
   } | null;
 }
@@ -257,7 +269,7 @@ export interface AuthoringAPI {
   reflect(): Promise<WorkspaceView>;
   runDraft(mode?: RunMode): Promise<WorkspaceView>;
   approveRun(token: string): Promise<WorkspaceView>;
-  cancelRun(token?: string): Promise<WorkspaceView>;
+  cancelRun(token?: string, automaticOnly?: boolean): Promise<WorkspaceView>;
   useSelectedHost(): Promise<WorkspaceView>;
   discardMapping(name: string): Promise<WorkspaceView>;
   remapMapping(name: string, target: string): Promise<WorkspaceView>;

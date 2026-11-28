@@ -22,6 +22,7 @@
 #include <set>
 #include <stdexcept>
 #include <string_view>
+#include <system_error>
 #ifdef VOSC_WEBGPU_M1
 #include <unistd.h>
 #include <iostream>
@@ -784,6 +785,7 @@ void EngineControl::setup() {
 
 void EngineControl::shutdown() {
 #ifdef VOSC_WEBGPU_M1
+    translationJob.cancel();
     draftWebGpuStaging.reset();
     m1Preview.reset();
 #endif
@@ -888,6 +890,23 @@ Json EngineControl::dispatch(const Json& request) {
         return existing->response;
     }
 #ifdef VOSC_WEBGPU_M1
+#ifdef VOSC_RECOVERY_TESTING
+    if (draftPreview && method == "draft_webgpu_test_frame") {
+        keys(params, {"revision"});
+        if (!draftWebGpuActive() || cursor(params["revision"], UINT64_MAX, "revision") != renderedRevision)
+            throw Invalid("stale_revision", "The requested WebGPU revision is not drawing");
+        const auto rgba = m1Preview->readbackFixedFrame();
+        ofPixels pixels;
+        pixels.setFromPixels(rgba.data(), m1Preview->width, m1Preview->height, OF_PIXELS_RGBA);
+        ofBuffer png;
+        if (!ofSaveImage(pixels, png, OF_IMAGE_FORMAT_PNG))
+            throw Invalid("readback_failed", "Could not encode WebGPU test frame");
+        auto response = reply(id, "ok");
+        response["result"] = {{"width", m1Preview->width}, {"height", m1Preview->height},
+            {"frame", draftWebGpuFrame}, {"revision", renderedRevision}, {"data_base64", base64(png)}};
+        return response;
+    }
+#endif
     if (draftPreview && method == "draft_m1_status") {
         keys(params, {});
         auto response = reply(id, "ok");
@@ -1034,7 +1053,12 @@ void EngineControl::validate(const std::string& method, const Json& params) cons
                method == "draft_configure_slot" || method == "draft_bind_uniform") {
         if (!draftPreview) throw Invalid("unknown_method", "draft operations are disabled");
         if (method == "draft_prepare")
-            keys(params, {"source_base64", "source_digest", "lease", "token", "revision", "slots", "bindings"}, {"language"});
+            keys(params, {"source_base64", "source_digest", "lease", "token", "revision", "slots", "bindings"},
+                 {"language", "backend", "artifact_digest", "compiler_identity"
+#if defined(VOSC_WEBGPU_M1) && defined(VOSC_RECOVERY_TESTING)
+                 , "recovery_time"
+#endif
+                 });
         else if (method == "draft_commit")
             keys(params, {"lease", "token", "revision", "control_digest"});
         else if (method == "draft_cancel") keys(params, {"lease", "token"});
@@ -1183,6 +1207,7 @@ void EngineControl::execute(const std::string& id) {
 void EngineControl::discardDraftCandidate(const char* code) {
 #ifdef VOSC_WEBGPU_M1
     if (draftCandidate && !draftCandidate->wgslPrepareId.empty()) {
+        if (translationRequest == draftCandidate->wgslPrepareId) translationJob.cancel();
         if (auto* context = draftWebGpuContext(); context && draftCandidate->wgslStarted)
             context->cancelPreparation();
         auto& entry = receipts.at(draftCandidate->wgslPrepareId);
@@ -1297,99 +1322,92 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
         const auto language = params.contains("language") ? text(params["language"], 4, "language") : "glsl";
         if (language != "glsl" && language != "wgsl")
             throw Invalid("invalid_params", "Expected glsl or wgsl draft source");
-#ifdef VOSC_WEBGPU_M1
-        if (language == "glsl" && draftWebGpuActive())
-            throw Invalid("backend_switch_required", "Close the WebGPU preview window on the Render Host, then Run GLSL or Hydra again");
-        if (language == "wgsl" && (!m1Switch.empty() || (m1Preview && !draftWebGpuActive())))
-            throw Invalid("draft_busy", "An experimental WebGPU preview transaction owns this session");
-#else
-        if (language == "wgsl")
-            throw Invalid("wgsl_unavailable", "Install a Dawn-enabled VOSC renderer on this Render Host to run WGSL drafts");
-#endif
-        discardDraftCandidate();
+        const auto backend = params.contains("backend") ? text(params["backend"], 6, "backend") : "";
+        if (!backend.empty() && backend != "auto" && backend != "opengl" && backend != "webgpu")
+            throw Invalid("invalid_params", "Expected auto, opengl, or webgpu draft backend");
+        if (language == "wgsl" && backend == "opengl")
+            throw Invalid("invalid_params", "WGSL drafts require WebGPU");
+        const bool restoreTranslated = language == "glsl" && backend == "webgpu";
+        if (restoreTranslated != params.contains("artifact_digest") || restoreTranslated != params.contains("compiler_identity"))
+            throw Invalid("invalid_params", "Translated restore requires both the artifact digest and compiler identity");
+        if (restoreTranslated) {
+            draftDigest(params["artifact_digest"]);
+            draftDigest(params["compiler_identity"]);
+        }
+        if (!params["slots"].is_object() || params["slots"].size() > 16 ||
+            !params["bindings"].is_object() || params["bindings"].size() > 128)
+            throw Invalid("invalid_params", "Draft slot or binding capacity exceeded");
+
+        auto source = decodeDraftSource(params["source_base64"]);
         auto candidate = std::make_unique<DraftCandidate>();
         candidate->lease = lease;
         candidate->token = token;
         candidate->sourceDigest = draftDigest(params["source_digest"]);
         candidate->revision = revision;
-        if (!params["slots"].is_object() || params["slots"].size() > 16 ||
-            !params["bindings"].is_object() || params["bindings"].size() > 128)
-            throw Invalid("invalid_params", "Draft slot or binding capacity exceeded");
         candidate->slots = params["slots"];
         candidate->bindings = Json::object();
+        candidate->negotiatedBackend = !backend.empty();
 #ifdef VOSC_WEBGPU_M1
-        if (language == "wgsl") {
+        std::string unsupported;
+        bool translate = false;
+        if (language == "glsl" && (backend == "auto" || restoreTranslated)) {
+            if (!candidate->slots.empty() || !params["bindings"].empty()) {
+                unsupported = "This WebGPU profile does not support existing editable mappings";
+            } else if (translationTools.directory.empty()) {
+                unsupported = "The Render Host does not have the GLSL to WGSL compiler tools";
+            } else {
+                auto profile = webgpu::classifyGlsl(source);
+                if (profile.status == webgpu::GlslProfileResult::Status::Ready) {
+                    translate = true;
+                } else {
+                    const auto detail = profile.diagnostics.empty() ? "Unsupported GLSL source" :
+                        profile.diagnostics.front().message;
+                    if (profile.status == webgpu::GlslProfileResult::Status::Error) {
+                        discardDraftCandidate();
+                        auto errors = Json::array();
+                        for (const auto& diagnostic : profile.diagnostics)
+                            errors.push_back({{"message", diagnostic.message}, {"line", diagnostic.line}});
+                        response = failure(id, "shader_failed", detail, errors);
+                        response["method"] = method;
+                        return true;
+                    }
+                    unsupported = detail;
+                }
+            }
+        }
+        if (language == "wgsl" || translate) {
+            if (!m1Switch.empty() || (m1Preview && !draftWebGpuActive()))
+                throw Invalid("draft_busy", "An experimental WebGPU preview transaction owns this session");
             if (!candidate->slots.empty() || !params["bindings"].empty())
                 throw Invalid("wgsl_controls_unsupported", "WGSL drafts currently support only the renderer uniform block");
+#ifdef VOSC_RECOVERY_TESTING
+            if (params.contains("recovery_time"))
+                candidate->fixedTime = static_cast<float>(number(params["recovery_time"], 0, 60));
+#endif
+            discardDraftCandidate();
             candidate->wgslPrepareId = id;
+            candidate->webGpuSource = std::move(source);
+            candidate->needsTranslation = translate;
             candidate->expiresAt = monotonicSeconds() + 3.;
+#ifdef VOSC_RECOVERY_TESTING
+            if (translate && token == "test-timeout-glsl-translation")
+                candidate->expiresAt = monotonicSeconds();
+#endif
             draftCandidate = std::move(candidate);
             return true;
         }
+        if (restoreTranslated)
+            throw Invalid("wgsl_translation_unavailable", unsupported);
+        if (draftWebGpuActive())
+            throw Invalid("backend_switch_required", unsupported.empty() ?
+                "Close the WebGPU preview window on the Render Host, then Run GLSL or Hydra again" :
+                unsupported + ". Close the WebGPU preview window to use OpenGL.");
+#else
+        if (language == "wgsl" || restoreTranslated)
+            throw Invalid("wgsl_unavailable", "Install a Dawn-enabled VOSC renderer on this Render Host to run WebGPU drafts");
 #endif
-        const auto source = decodeDraftSource(params["source_base64"]);
-        auto conflicts = Json::array();
-        std::set<std::string> slots;
-        for (const auto& [key, value] : candidate->slots.items()) {
-            const auto slot = draftSlot(key);
-            const auto initial = static_cast<float>(number(value, 0, 1));
-            slots.insert(slot);
-            draftConfigureSlot(candidate->inputs, slot, initial);
-        }
-        for (const auto& [name, binding] : params["bindings"].items()) {
-            text(name, 128, "uniform name");
-            keys(binding, {"components"}, {"type"});
-            checkDraftComponents(binding["components"], slots, 0);
-            if (binding.count("type") && !binding["type"].is_null() &&
-                text(binding["type"], 8, "uniform type") != draftUniformType(static_cast<int>(binding["components"].size())))
-                throw Invalid("invalid_params", "Saved uniform type does not match binding arity");
-        }
-        if (!Shader::prepareDirectSource(source, candidate->program.source, true, true)) {
-            response = failure(id, "shader_failed", "shader compile/link failed", diagnostics(logStart, 128)["entries"]);
-            return true;
-        }
-        const auto& uniforms = candidate->program.source.uniforms;
-        const auto callback = uniforms.find(draftCallbackUniform);
-        const bool usesCallback = callback != uniforms.end();
-        if (usesCallback) {
-            if (callback->second.type != GL_FLOAT || callback->second.isArray() ||
-                callback->second.location < 0 || managedUniform(layer, draftCallbackUniform))
-                throw Invalid("invalid_callback_uniform", "u_vosc_callback must be an active non-array float uniform");
-            auto variable = std::make_shared<Variable<float>>();
-            variable->set(std::vector<float>{draftCallbackInitial});
-            candidate->program.variables[draftCallbackUniform] = variable;
-            candidate->program.pool[draftCallbackUniform] = std::move(variable);
-        }
-        for (const auto& [name, binding] : params["bindings"].items()) {
-            const auto found = uniforms.find(name);
-            const bool exists = found != uniforms.end();
-            const int arity = exists && !found->second.isArray() ? uniformComponents(found->second.type) : 0;
-            const auto previousArity = static_cast<int>(binding["components"].size());
-            const auto previousType = draftUniformType(previousArity);
-            const bool managed = managedUniform(layer, name) || (exists && found->second.graphSampler) ||
-                (usesCallback && name == draftCallbackUniform);
-            if (!exists || managed || arity != previousArity) {
-                Json issue = {{"name", name}, {"previous_type", previousType},
-                    {"reason", managed ? "renderer_owned" : !exists ? "inactive" : "retyped"}};
-                if (exists) issue["actual_type"] = draftUniformType(arity);
-                if (exists && arity && !managed) {
-                    std::array<float, 4> values{};
-                    glGetUniformfv(found->second.program, found->second.location, values.data());
-                    issue["default_values"] = std::vector<float>(values.begin(), values.begin() + arity);
-                }
-                conflicts.push_back(std::move(issue));
-                continue;
-            }
-            candidate->bindings[name] = {{"type", previousType}, {"components", binding["components"]}};
-            auto variable = draftBinding(binding["components"], &candidate->inputs);
-            candidate->program.variables[name] = variable;
-            candidate->program.pool[name] = std::move(variable);
-        }
-        candidate->expiresAt = monotonicSeconds() + 30.;
-        response = reply(id, "prepared");
-        response["result"] = {{"token", token}, {"bindings", candidate->bindings}, {"conflicts", conflicts}};
-        draftCandidate = std::move(candidate);
-        return true;
+        discardDraftCandidate();
+        return prepareOpenGlDraft(id, params, source, std::move(candidate), logStart);
     }
 
     if (!draftDraw.id.empty()) throw Invalid("draft_busy", "A draft mutation awaits its first composed frame");
@@ -1407,6 +1425,7 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
 #endif
     auto activation = Json{{"lease", lease}, {"token", token}, {"source_digest", draftCandidate->sourceDigest},
         {"control_digest", controlDigest}, {"commit_id", id}};
+    if (draftCandidate->negotiatedBackend) activation["backend"] = "opengl";
     const bool usesCallback = draftCandidate->program.variables.count(draftCallbackUniform) != 0;
     if (usesCallback) activation["callback_uniform"] = draftCallbackUniform;
     auto applied = reply(id, "applied");
@@ -1441,6 +1460,76 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
     if (activeLease != lease) draftSampleSequence = 0;
     ++revision;
     response = std::move(applied);
+    return true;
+}
+
+bool EngineControl::prepareOpenGlDraft(const std::string& id, const Json& params, const std::string& source,
+                                      std::unique_ptr<DraftCandidate> candidate, uint64_t logStart) {
+    auto& response = receipts.at(id).response;
+    auto& layer = *render().getLayers()[0];
+    const auto& token = candidate->token;
+    auto conflicts = Json::array();
+    std::set<std::string> slots;
+    for (const auto& [key, value] : candidate->slots.items()) {
+        const auto slot = draftSlot(key);
+        const auto initial = static_cast<float>(number(value, 0, 1));
+        slots.insert(slot);
+        draftConfigureSlot(candidate->inputs, slot, initial);
+    }
+    for (const auto& [name, binding] : params["bindings"].items()) {
+        text(name, 128, "uniform name");
+        keys(binding, {"components"}, {"type"});
+        checkDraftComponents(binding["components"], slots, 0);
+        if (binding.count("type") && !binding["type"].is_null() &&
+            text(binding["type"], 8, "uniform type") != draftUniformType(static_cast<int>(binding["components"].size())))
+            throw Invalid("invalid_params", "Saved uniform type does not match binding arity");
+    }
+    if (!Shader::prepareDirectSource(source, candidate->program.source, true, true)) {
+        response = failure(id, "shader_failed", "shader compile/link failed", diagnostics(logStart, 128)["entries"]);
+        return true;
+    }
+    const auto& uniforms = candidate->program.source.uniforms;
+    const auto callback = uniforms.find(draftCallbackUniform);
+    const bool usesCallback = callback != uniforms.end();
+    if (usesCallback) {
+        if (callback->second.type != GL_FLOAT || callback->second.isArray() ||
+            callback->second.location < 0 || managedUniform(layer, draftCallbackUniform))
+            throw Invalid("invalid_callback_uniform", "u_vosc_callback must be an active non-array float uniform");
+        auto variable = std::make_shared<Variable<float>>();
+        variable->set(std::vector<float>{draftCallbackInitial});
+        candidate->program.variables[draftCallbackUniform] = variable;
+        candidate->program.pool[draftCallbackUniform] = std::move(variable);
+    }
+    for (const auto& [name, binding] : params["bindings"].items()) {
+        const auto found = uniforms.find(name);
+        const bool exists = found != uniforms.end();
+        const int arity = exists && !found->second.isArray() ? uniformComponents(found->second.type) : 0;
+        const auto previousArity = static_cast<int>(binding["components"].size());
+        const auto previousType = draftUniformType(previousArity);
+        const bool managed = managedUniform(layer, name) || (exists && found->second.graphSampler) ||
+            (usesCallback && name == draftCallbackUniform);
+        if (!exists || managed || arity != previousArity) {
+            Json issue = {{"name", name}, {"previous_type", previousType},
+                {"reason", managed ? "renderer_owned" : !exists ? "inactive" : "retyped"}};
+            if (exists) issue["actual_type"] = draftUniformType(arity);
+            if (exists && arity && !managed) {
+                std::array<float, 4> values{};
+                glGetUniformfv(found->second.program, found->second.location, values.data());
+                issue["default_values"] = std::vector<float>(values.begin(), values.begin() + arity);
+            }
+            conflicts.push_back(std::move(issue));
+            continue;
+        }
+        candidate->bindings[name] = {{"type", previousType}, {"components", binding["components"]}};
+        auto variable = draftBinding(binding["components"], &candidate->inputs);
+        candidate->program.variables[name] = variable;
+        candidate->program.pool[name] = std::move(variable);
+    }
+    candidate->expiresAt = monotonicSeconds() + 30.;
+    response = reply(id, "prepared");
+    response["result"] = {{"token", token}, {"bindings", candidate->bindings}, {"conflicts", conflicts}};
+    if (candidate->negotiatedBackend) response["result"]["backend"] = "opengl";
+    draftCandidate = std::move(candidate);
     return true;
 }
 
@@ -1511,6 +1600,7 @@ bool EngineControl::settleDraftDraw() {
             entry.response["result"] = {{"scene", scene()}, {"restored_previous", coherent}};
         } else {
             entry.response = reply(draftDraw.id, "rendered");
+            if (draftActivation.contains("backend")) draftActivation["first_frame"] = frame;
             auto result = draftActivation;
             result["scene"] = scene();
             entry.response["result"] = std::move(result);
@@ -2043,8 +2133,11 @@ void EngineControl::update() {
         if (!draftCandidate->wgslPrepareId.empty()) {
             const auto& id = draftCandidate->wgslPrepareId;
             auto& entry = receipts.at(id);
-            if (entry.response["status"] == "queued")
-                entry.response = failure(id, "wgsl_prepare_timeout", "Dawn did not finish preparing the WGSL draft");
+            if (entry.response["status"] == "queued") {
+                entry.response = failure(id, "wgsl_prepare_timeout", draftCandidate->needsTranslation ?
+                    "The shader compilers did not finish translating GLSL" : "Dawn did not finish preparing the WGSL draft");
+                entry.response["method"] = "draft_prepare";
+            }
         }
 #endif
         discardDraftCandidate();
@@ -2113,8 +2206,10 @@ Json EngineControl::capabilities() const {
                         {"trial_ttl_ms_min", 1000}, {"trial_ttl_ms_max", 30000}}},
             {"revision_scope", "successful API controls; external_epoch counts legacy dispatch/input; animation and file-watch reloads are not versioned"}};
     if (draftPreview) {
+        result["features"]["draft_webgpu_auto"] = true;
 #ifdef VOSC_WEBGPU_M1
         result["features"]["draft_wgsl"] = true;
+        result["features"]["draft_webgpu_translation"] = !translationTools.directory.empty();
         result["operations"].push_back("draft_m1_status");
         result["operations"].push_back("draft_m1_switch");
 #endif
@@ -2507,13 +2602,88 @@ webgpu::M1Preview* EngineControl::draftWebGpuContext() const {
     return m1Preview ? m1Preview.get() : draftWebGpuStaging.get();
 }
 
+bool EngineControl::pollDraftTranslation() {
+    auto completed = translationJob.take();
+    const auto completedId = completed ? std::exchange(translationRequest, {}) : std::string();
+    if (!draftCandidate || !draftCandidate->needsTranslation) return true;
+
+    const auto id = draftCandidate->wgslPrepareId;
+    auto& entry = receipts.at(id);
+    const auto& params = entry.request.at("params");
+    if (completedId != id) {
+        if (!translationJob.busy()) {
+            const auto remaining = std::chrono::duration<double>(draftCandidate->expiresAt - monotonicSeconds());
+            const auto deadline = std::chrono::steady_clock::now() +
+                std::chrono::duration_cast<std::chrono::steady_clock::duration>(remaining);
+            try {
+                if (translationJob.start(translationTools, draftCandidate->webGpuSource, deadline))
+                    translationRequest = id;
+            } catch (const std::system_error& error) {
+                entry.response = failure(id, "wgsl_translation_unavailable", error.what());
+                entry.response["method"] = "draft_prepare";
+                discardDraftCandidate();
+            }
+        }
+        return false;
+    }
+
+    auto fail = [&](const char* code, const std::string& detail) {
+        auto diagnostics = Json::array();
+        for (const auto& item : completed->diagnostics)
+            diagnostics.push_back({{"message", item.message}, {"line", item.line}});
+        entry.response = failure(id, code, detail, diagnostics);
+        entry.response["method"] = "draft_prepare";
+        discardDraftCandidate();
+        return false;
+    };
+    using Status = webgpu::GlslTranslationResult::Status;
+    if (draftCandidate->revision != revision || fencedDraftLeases.count(draftCandidate->lease))
+        return fail("stale_candidate", "The draft changed while translating GLSL");
+    if (completed->status == Status::Unavailable && params["backend"] == "auto" && !draftWebGpuActive()) {
+        auto candidate = std::move(draftCandidate);
+        auto source = std::move(candidate->webGpuSource);
+        candidate->wgslPrepareId.clear();
+        candidate->needsTranslation = false;
+        const auto channel = logger();
+        try {
+            prepareOpenGlDraft(id, params, source, std::move(candidate), channel ? channel->latestSequence() : 0);
+        } catch (const Invalid& error) {
+            return fail(error.code.c_str(), error.what());
+        } catch (const std::exception& error) {
+            return fail("execution_failed", error.what());
+        }
+        return false;
+    }
+    if (completed->status != Status::Success) {
+        const auto& issues = completed->diagnostics;
+        const auto detail = issues.empty() ? "GLSL translation failed" : issues.front().message;
+        if (completed->status == Status::Unavailable) return fail("wgsl_translation_unavailable", detail);
+        if (completed->status == Status::TimedOut) return fail("wgsl_prepare_timeout", detail);
+        if (completed->status == Status::Canceled) return fail("stale_candidate", detail);
+        return fail("shader_failed", detail);
+    }
+    if (params.contains("artifact_digest") &&
+        (params["artifact_digest"].get_ref<const std::string&>() != completed->artifactDigest ||
+         params["compiler_identity"].get_ref<const std::string&>() != completed->compilerIdentity))
+        return fail("shader_artifact_mismatch", "The saved WebGPU artifact could not be reproduced. Run the shader again.");
+
+    auto& candidate = *draftCandidate;
+    candidate.webGpuSource = std::move(completed->wgsl);
+    candidate.artifactDigest = std::move(completed->artifactDigest);
+    candidate.compilerIdentity = std::move(completed->compilerIdentity);
+    for (const auto& control : completed->controls) candidate.controls.push_back(control.defaultValue);
+    candidate.needsTranslation = false;
+    return true;
+}
+
 void EngineControl::pollDraftWebGpuPrepare() {
+    if (!pollDraftTranslation()) return;
     auto* context = draftWebGpuContext();
     if (!draftCandidate || draftCandidate->wgslPrepareId.empty()) {
         if (context) context->pollPreparation(); // Drain an abandoned Dawn callback.
         return;
     }
-    const auto& id = draftCandidate->wgslPrepareId;
+    const auto id = draftCandidate->wgslPrepareId;
     auto& entry = receipts.at(id);
     if (entry.response["status"] != "queued") return;
     const auto fail = [&](const char* code, const std::string& detail, const Json& diagnostics = Json::array()) {
@@ -2537,14 +2707,20 @@ void EngineControl::pollDraftWebGpuPrepare() {
         }
         const bool ready = context->pollPreparation();
         if (!draftCandidate->wgslStarted) {
-            const auto source = decodeDraftSource(entry.request["params"]["source_base64"]);
-            draftCandidate->wgslStarted = context->prepare(source);
+            const auto& candidate = *draftCandidate;
+            const char* entryPoint = candidate.artifactDigest.empty() ? "fs_main" : "main";
+            draftCandidate->wgslStarted = context->prepare(candidate.webGpuSource, entryPoint,
+                                                           candidate.controls, candidate.fixedTime);
         } else if (ready) {
             draftCandidate->expiresAt = monotonicSeconds() + 30.;
             entry.response = reply(id, "prepared");
             entry.response["method"] = "draft_prepare";
-            entry.response["result"] = {{"token", draftCandidate->token},
-                {"bindings", Json::object()}, {"conflicts", Json::array()}};
+            auto& result = entry.response["result"] = {{"token", draftCandidate->token},
+                {"bindings", Json::object()}, {"conflicts", Json::array()}, {"backend", "webgpu"}};
+            if (!draftCandidate->artifactDigest.empty()) {
+                result["artifact_digest"] = draftCandidate->artifactDigest;
+                result["compiler_identity"] = draftCandidate->compilerIdentity;
+            }
         }
     } catch (const Invalid& error) {
         fail(error.code.c_str(), error.what());
@@ -2580,6 +2756,11 @@ bool EngineControl::settleDraftWebGpuDraw() {
     auto activation = Json{{"lease", draftCandidate->lease}, {"token", draftCandidate->token},
         {"source_digest", draftCandidate->sourceDigest}, {"control_digest", params["control_digest"]},
         {"commit_id", id}, {"backend", "webgpu"}, {"first_frame", frame}};
+    if (!draftCandidate->artifactDigest.empty()) {
+        activation["artifact_digest"] = draftCandidate->artifactDigest;
+        activation["compiler_identity"] = draftCandidate->compilerIdentity;
+    }
+    if (draftCandidate->fixedTime) activation["fixed_time"] = *draftCandidate->fixedTime;
     bool rejectFrame = false;
 #ifdef VOSC_RECOVERY_TESTING
     rejectFrame = draftCandidate->token == "test-fail-first-draft-draw";

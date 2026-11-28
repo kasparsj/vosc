@@ -24,7 +24,7 @@ const api: AuthoringAPI = {
   reflect: () => ipcRenderer.invoke("draft:reflect"),
   runDraft: (mode = "manual") => ipcRenderer.invoke("draft:run", mode),
   approveRun: token => ipcRenderer.invoke("draft:approve-run", token),
-  cancelRun: token => ipcRenderer.invoke("draft:cancel-run", token),
+  cancelRun: (token, automaticOnly) => ipcRenderer.invoke("draft:cancel-run", token, automaticOnly),
   useSelectedHost: () => ipcRenderer.invoke("draft:use-host"),
   discardMapping: name => ipcRenderer.invoke("draft:mapping-discard", name),
   remapMapping: (name, target) => ipcRenderer.invoke("draft:mapping-remap", name, target),

@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { constants, createReadStream } from "node:fs";
 import { access, chmod, copyFile, cp, mkdir, open, readdir, realpath, rm, stat, writeFile } from "node:fs/promises";
@@ -28,7 +29,7 @@ async function inventory(directory, root) {
 const { values } = parseArgs({ options: {
   output: { type: "string" }, "renderer-bin": { type: "string" },
   "source-revision": { type: "string" }, "sdk-revision": { type: "string" },
-  "runtime-libs": { type: "string" },
+  "runtime-libs": { type: "string" }, "webgpu-tools": { type: "string" },
 } });
 const output = values.output;
 const binary = values["renderer-bin"];
@@ -39,7 +40,9 @@ if (!output || !binary || !isAbsolute(output) || !isAbsolute(binary) ||
 }
 const sourceBin = dirname(binary);
 const runtimeLibraries = values["runtime-libs"];
+const webgpuTools = values["webgpu-tools"];
 if (runtimeLibraries && !isAbsolute(runtimeLibraries)) throw new Error("--runtime-libs must be absolute");
+if (webgpuTools !== undefined && !isAbsolute(webgpuTools)) throw new Error("--webgpu-tools must be absolute");
 const info = await stat(binary);
 if (!info.isFile()) throw new Error("Renderer must be a regular file");
 await access(binary, constants.X_OK);
@@ -69,9 +72,9 @@ for (const asset of [
 
 const outputPath = resolve(output);
 const destination = join(await realpath(dirname(outputPath)), basename(outputPath));
-const inputs = await Promise.all([sourceBin, ...(runtimeLibraries ? [runtimeLibraries] : [])].map(path => realpath(path)));
+const inputs = await Promise.all([sourceBin, runtimeLibraries, webgpuTools].filter(Boolean).map(path => realpath(path)));
 if (inputs.some(input => destination === input || destination.startsWith(input + "/"))) {
-  throw new Error("Choose an output directory outside the renderer and library inputs");
+  throw new Error("Choose an output directory outside the renderer, library, and WebGPU tool inputs");
 }
 await mkdir(destination, { mode: 0o700 });
 try {
@@ -86,6 +89,10 @@ try {
   await writeFile(launcher, '#!/bin/sh\nexec node "$(dirname -- "$0")/host.cjs" "$@"\n', { mode: 0o755 });
   const renderer = join(destination, "renderer");
   await mkdir(renderer);
+  if (webgpuTools) {
+    execFileSync("/usr/bin/python3", [fileURLToPath(new URL("./stage_webgpu_tools.py", import.meta.url)),
+      "stage", webgpuTools, join(renderer, "webgpu-tools")], { stdio: "inherit" });
+  }
   const staged = join(renderer, "vosc");
   await copyFile(binary, staged);
   await chmod(staged, 0o755);

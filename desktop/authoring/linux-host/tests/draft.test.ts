@@ -399,3 +399,98 @@ test("Linux host recovers only a correlated WebGPU first-frame receipt and marks
     await draft.reset();
   }
 });
+
+for (const selected of ["webgpu", "opengl"] as const) {
+  test(`Linux host correlates negotiated ${selected} prepare, commit, and activation`, async t => {
+    const draft = new Draft(target, "/unused");
+    const artifactDigest = "a".repeat(64);
+    const compilerIdentity = "b".repeat(64);
+    const translated = selected === "webgpu";
+    const publicArtifact = translated ? { artifactDigest, compilerIdentity } : {};
+    const nativeArtifact = translated ? { artifact_digest: artifactDigest, compiler_identity: compilerIdentity } : {};
+    let valid = false;
+    let scene: NativeObject = { backend: selected, revision: 7 };
+    let receipt: NativeObject;
+    let activation: NativeObject;
+    const native = {
+      running: true, supportsDraftWebgpuAuto: true, stop: async () => {},
+      query: async () => scene,
+      async mutate(method: string, params: NativeObject, id: string) {
+        if (method === "draft_prepare") {
+          if (id === "restore") {
+            assert.equal(params.backend, selected);
+            assert.equal(params.artifact_digest, translated ? artifactDigest : undefined);
+            assert.equal(params.compiler_identity, translated ? compilerIdentity : undefined);
+          } else {
+            assert.equal(params.backend, "auto");
+            assert.equal(params.artifact_digest, undefined);
+          }
+          assert.equal(params.language, undefined);
+          return { id, result: { token: id, bindings: {}, conflicts: [], backend: selected, ...nativeArtifact } };
+        }
+        assert.equal(method, "draft_commit");
+        const identity = { backend: selected, first_frame: 101, lease, token: params.token, source_digest: intent.sha256,
+          control_digest: params.control_digest, commit_id: id, ...nativeArtifact };
+        activation = { ...identity, first_frame: 102 };
+        scene = { backend: selected, revision: 8, rendered_revision: 8, frame: 101, layers: [], draft_activation: activation };
+        receipt = { id, revision: 8, frame: 101, status: "rendered", result: { scene, ...identity } };
+        return receipt;
+      },
+      async recover() {
+        if (valid) activation.first_frame = 101;
+        return receipt;
+      },
+    };
+    t.mock.method(NativeRenderer, "start", async () => native as unknown as NativeRenderer);
+    try {
+      const cold = await draft.execute(request("health"));
+      assert.equal(cold.webgpuAuto, true);
+      const prepared = await draft.execute(request("run.prepare", cold, { ...intent, slots: [], backend: "auto" }, "auto"));
+      assert.equal(prepared.backend, selected);
+      assert.equal(prepared.artifactDigest, (publicArtifact as NativeObject).artifactDigest);
+      assert.equal(prepared.compilerIdentity, (publicArtifact as NativeObject).compilerIdentity);
+      await assert.rejects(draft.execute(request("run.commit", prepared, { lease, token: prepared.token }, "commit")),
+        { code: "renderer_uncertain" });
+      valid = true;
+      const drawn = await draft.recoverMutation("commit");
+      assert.equal(drawn?.backend, selected);
+      assert.equal(drawn?.artifactDigest, (publicArtifact as NativeObject).artifactDigest);
+      assert.equal(drawn?.compilerIdentity, (publicArtifact as NativeObject).compilerIdentity);
+      assert.equal(drawn?.frame, 101);
+      const reflected = await draft.execute(request("reflect"));
+      assert.equal(reflected.webgpuAuto, true);
+      assert.equal(reflected.artifactDigest, (publicArtifact as NativeObject).artifactDigest);
+      if (translated) {
+        await assert.rejects(draft.execute(request("run.prepare", reflected, { ...intent, slots: [], backend: "webgpu",
+          artifactDigest }, "missing-pin")), { code: "invalid_request" });
+      }
+      await draft.execute(request("run.prepare", reflected, { ...intent, slots: [], backend: selected, ...publicArtifact }, "restore"));
+    } finally {
+      await draft.reset();
+    }
+  });
+}
+
+test("A new Linux host uses legacy GLSL on an older renderer and refuses unpinned fallback", async t => {
+  const draft = new Draft(target, "/unused");
+  const mutate = t.mock.fn(async (_method: string, params: NativeObject) => {
+    assert.equal(Object.hasOwn(params, "backend"), false);
+    return { result: { token: params.token, bindings: {}, conflicts: [] } };
+  });
+  t.mock.method(NativeRenderer, "start", async () => ({
+    running: true, supportsDraftWebgpuAuto: false, mutate, query: async () => ({ revision: 6, backend: "opengl" }),
+    stop: async () => {},
+  } as unknown as NativeRenderer));
+  try {
+    const cold = await draft.execute(request("health"));
+    assert.equal(cold.webgpuAuto, true);
+    await assert.rejects(draft.execute(request("run.prepare", cold, { ...intent, backend: "webgpu",
+      artifactDigest: "a".repeat(64), compilerIdentity: "b".repeat(64) }, "restore")), { code: "translation_unavailable" });
+    assert.equal(mutate.mock.callCount(), 0);
+    const result = await draft.execute(request("run.prepare", cold, { ...intent, backend: "auto" }, "auto"));
+    assert.equal(result.backend, undefined);
+    assert.equal(mutate.mock.callCount(), 1);
+  } finally {
+    await draft.reset();
+  }
+});

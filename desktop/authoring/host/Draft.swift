@@ -16,6 +16,24 @@ final class Draft {
     private var bindings: [String: [WireObject]] = [:]
     private var lastSampleTime: UInt64 = 0
     private var activation: WireObject?
+    private struct Render {
+        let backend: String
+        let artifactDigest: String?
+        let compilerIdentity: String?
+
+        var publicFields: WireObject {
+            var result: WireObject = ["backend": backend]
+            result["artifactDigest"] = artifactDigest
+            result["compilerIdentity"] = compilerIdentity
+            return result
+        }
+
+        func matches(_ row: WireObject) -> Bool {
+            row["backend"] as? String == backend &&
+                (artifactDigest == nil ? row["artifact_digest"] == nil : row["artifact_digest"] as? String == artifactDigest) &&
+                (compilerIdentity == nil ? row["compiler_identity"] == nil : row["compiler_identity"] as? String == compilerIdentity)
+        }
+    }
     private struct Candidate {
         let lease: String
         let token: String
@@ -24,6 +42,7 @@ final class Draft {
         let digest: String
         let controlDigest: String
         let wgsl: Bool
+        let render: Render?
         let slots: [String: WireObject]
         let bindings: [String: [WireObject]]
         let attempt: WireObject
@@ -181,14 +200,36 @@ final class Draft {
         }
     }
 
+    private func digest(_ raw: Any?) -> String? {
+        guard let value = raw as? String, value.utf8.count == 64,
+              value.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }) else { return nil }
+        return value
+    }
+
     private func prepare(_ request: Request) throws -> WireObject {
         try request.require(["source", "sha256", "lease", "documentId", "generation", "editSequence",
-                             "runSequence", "slots", "bindings"], optional: ["language"])
+                             "runSequence", "slots", "bindings"],
+                            optional: ["language", "backend", "artifactDigest", "compilerIdentity"])
         let language = request.params["language"] ?? "glsl"
         guard let language = language as? String, language == "glsl" || language == "wgsl" else {
             throw WireError("invalid_request", "Unsupported fragment language")
         }
         let wgsl = language == "wgsl"
+        var backend: String?
+        if let raw = request.params["backend"] {
+            guard let preference = raw as? String, ["auto", "opengl", "webgpu"].contains(preference),
+                  !wgsl || preference != "opengl" else {
+                throw WireError("invalid_request", "Invalid draft backend")
+            }
+            backend = preference
+        }
+        let restoringTranslation = !wgsl && backend == "webgpu"
+        let artifactDigest = digest(request.params["artifactDigest"])
+        let compilerIdentity = digest(request.params["compilerIdentity"])
+        guard restoringTranslation ? (artifactDigest != nil && compilerIdentity != nil) :
+                (request.params["artifactDigest"] == nil && request.params["compilerIdentity"] == nil) else {
+            throw WireError("invalid_request", "Invalid draft translation digests")
+        }
         guard let lease = request.params["lease"] as? String, UUID(uuidString: lease) != nil, !isFenced(lease),
               let document = request.params["documentId"] as? String, UUID(uuidString: document) != nil,
               let generation = wireInt(request.params["generation"]), generation >= 0,
@@ -216,8 +257,12 @@ final class Draft {
             if wgsl && !child.supportsDraftWgsl {
                 throw WireError("wgsl_unavailable", "Install a Dawn-enabled VOSC renderer on this Render Host to run WGSL drafts")
             }
+            if restoringTranslation && !child.supportsDraftWebgpuAuto {
+                throw WireError("translation_unavailable", "Install the matching VOSC renderer and shader tools to restore this draft")
+            }
+            let preference = child.supportsDraftWebgpuAuto ? backend : nil
             let baseline = try child.query("get_scene")
-            if !wgsl && baseline["backend"] as? String == "webgpu" {
+            if !wgsl && preference != "auto" && preference != "webgpu" && baseline["backend"] as? String == "webgpu" {
                 throw WireError("backend_switch_required", "Close the WebGPU preview window on the Render Host, then Run GLSL or Hydra again")
             }
             if let previous = candidate { try discard(previous) }
@@ -230,11 +275,32 @@ final class Draft {
                 "revision": nativeRevision, "slots": defaults, "bindings": intent,
             ]
             if wgsl { params["language"] = language }
+            params["backend"] = preference
+            if restoringTranslation {
+                params["artifact_digest"] = artifactDigest
+                params["compiler_identity"] = compilerIdentity
+            }
             let receipt = try child.mutate("draft_prepare", params, id: request.id, expecting: "prepared")
             guard let result = receipt["result"] as? WireObject, result["token"] as? String == request.id,
                   let effective = result["bindings"] as? [String: WireObject],
                   let conflicts = result["conflicts"] as? [WireObject] else {
                 throw WireError("renderer_protocol", "Native preparation returned an unmatched token")
+            }
+            var render: Render?
+            if let preference = preference {
+                guard let actual = result["backend"] as? String, ["opengl", "webgpu"].contains(actual),
+                      !wgsl || actual == "webgpu", preference == "auto" || preference == actual else {
+                    throw WireError("renderer_protocol", "Native preparation did not confirm the requested backend")
+                }
+                let translated = actual == "webgpu" && !wgsl
+                let artifact = digest(result["artifact_digest"])
+                let compiler = digest(result["compiler_identity"])
+                guard translated ? (artifact != nil && compiler != nil) :
+                        (result["artifact_digest"] == nil && result["compiler_identity"] == nil),
+                      !restoringTranslation || (artifact == artifactDigest && compiler == compilerIdentity) else {
+                    throw WireError("renderer_protocol", "Native preparation did not confirm the requested artifact")
+                }
+                render = Render(backend: actual, artifactDigest: artifact, compilerIdentity: compiler)
             }
             var applied: [String: [WireObject]] = [:]
             for (name, binding) in effective {
@@ -250,7 +316,7 @@ final class Draft {
                                        "editSequence": edit, "runSequence": run]
             let staged = Candidate(lease: lease, token: request.id, revision: nativeRevision,
                                    deadline: DispatchTime.now().uptimeNanoseconds + 20_000_000_000,
-                                   digest: fragment.digest, controlDigest: digest, wgsl: wgsl, slots: definitions,
+                                   digest: fragment.digest, controlDigest: digest, wgsl: wgsl, render: render, slots: definitions,
                                    bindings: applied, attempt: attempt)
             if isFenced(lease) {
                 try discard(staged)
@@ -260,7 +326,7 @@ final class Draft {
             return attempt.merging([
                 "target": target, "epoch": epoch, "revision": revision, "lease": lease, "token": request.id,
                 "sourceDigest": fragment.digest, "controlDigest": digest, "bindings": effective, "conflicts": conflicts,
-            ]) { old, _ in old }
+            ]) { old, _ in old }.merging(render?.publicFields ?? [:]) { old, _ in old }
         }
     }
 
@@ -344,10 +410,19 @@ final class Draft {
               let scene = result["scene"] as? WireObject, let nativeRevision = wireInt(receipt["revision"]),
               nativeRevision > staged.revision, wireInt(scene["rendered_revision"]) == nativeRevision,
               let drawnFrame = wireInt(receipt["frame"]), wireInt(scene["frame"]) == drawnFrame,
-              !staged.wgsl || (result["backend"] as? String == "webgpu" && scene["backend"] as? String == "webgpu" &&
+              !(staged.wgsl || staged.render?.backend == "webgpu") || (result["backend"] as? String == "webgpu" && scene["backend"] as? String == "webgpu" &&
                 (scene["draft_activation"] as? WireObject)?["backend"] as? String == "webgpu" &&
                 wireInt(result["first_frame"]) == drawnFrame && scene["draft_device_lost"] as? Bool != true) else {
             throw WireError("renderer_protocol", "The native draw did not confirm the prepared draft")
+        }
+        if let render = staged.render {
+            guard let active = scene["draft_activation"] as? WireObject, render.matches(result),
+                  scene["backend"] as? String == render.backend, wireInt(result["first_frame"]) == drawnFrame,
+                  render.matches(active), wireInt(active["first_frame"]) == drawnFrame, active["lease"] as? String == staged.lease,
+                  active["token"] as? String == staged.token, active["source_digest"] as? String == staged.digest,
+                  active["control_digest"] as? String == staged.controlDigest, active["commit_id"] as? String == id else {
+                throw WireError("renderer_protocol", "The native draw did not confirm the prepared backend and artifact")
+            }
         }
         revision = nativeRevision
         slots = staged.slots
@@ -356,6 +431,10 @@ final class Draft {
         needsRestore = false
         activation = staged.attempt.merging(["lease": staged.lease, "token": staged.token,
                                              "controlDigest": staged.controlDigest, "commitID": id]) { old, _ in old }
+        if let artifact = staged.render?.artifactDigest, let compiler = staged.render?.compilerIdentity {
+            activation?["artifactDigest"] = artifact
+            activation?["compilerIdentity"] = compiler
+        }
         lastSampleTime = 0
         return snapshot(scene, receipt: receipt)
     }
@@ -613,7 +692,7 @@ final class Draft {
 
     private func snapshot(_ scene: WireObject, receipt: WireObject? = nil) -> WireObject {
         var result: WireObject = ["role": "draft", "version": wireVersion, "target": target, "epoch": epoch,
-                                  "revision": revision, "uniforms": uniforms(scene),
+                                  "revision": revision, "uniforms": uniforms(scene), "webgpuAuto": true,
                                   "slots": slots.keys.sorted().compactMap { slots[$0] },
                                   "needsRestore": needsRestore || scene["draft_device_lost"] as? Bool == true]
         if let frame = wireInt(scene["frame"]) { result["frame"] = frame }
