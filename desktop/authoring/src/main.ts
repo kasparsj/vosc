@@ -7,6 +7,7 @@ import { Importer } from "./importer";
 import { HostClient } from "./host-client";
 import { CALLBACK_UNIFORM, SOURCE_LIMIT, type FileCommand } from "./contracts";
 import { sourceName, sourceWithText } from "./draft-project";
+import { feedbackExample, feedbackExampleSource } from "./feedback-example";
 import { ElectronHydraEvaluator, HYDRA_SCHEME } from "./hydra-evaluator";
 import { HostError } from "./local-state";
 import { draftFileToken, Workspace } from "./workspace";
@@ -190,13 +191,14 @@ function installImportHandlers() {
     checkGeneration(generation);
     return workspace.openSource(importer.openStaged(batch, item));
   }));
-  handle("library:list", () => importer.listLibrary());
+  handle("library:list", async () => [feedbackExample, ...await importer.listLibrary()]);
   handle("library:open", (id, generation) => navigate(async () => {
     checkGeneration(generation);
-    const source = await importer.openLibrary(id);
+    const example = id === feedbackExample.id;
+    const source = example ? feedbackExampleSource() : await importer.openLibrary(id);
     if (!await mayReplace()) return workspace.view();
     checkGeneration(generation);
-    return workspace.openSource(source);
+    return workspace.openSource(source, example ? "hydra-js" : "glsl");
   }));
   handle("library:preview", (id, generation) => navigate(async () => {
     checkGeneration(generation);

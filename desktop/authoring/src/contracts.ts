@@ -219,7 +219,7 @@ export interface DocumentView {
   } | null;
 }
 export type FileCommand = "new" | "newHydra" | "open" | "save" | "saveAs" | "close" | "quit";
-export interface LibraryItem { id: string; path: string; origin: string }
+export interface LibraryItem { id: string; path: string; origin: string; example?: true }
 
 export interface WorkspaceView {
   run: RunView;

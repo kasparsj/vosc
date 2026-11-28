@@ -9,6 +9,7 @@ import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { createServer, type TLSSocket } from "node:tls";
 import { parseDocument, parseProject, replay, sourceName, sourceWithText, titleFor, writeReplay } from "../src/draft-project";
+import { feedbackExample, feedbackExampleSource } from "../src/feedback-example";
 import { hash, HostError } from "../src/local-state";
 import { readSample } from "../src/osc-samples";
 import { TRIODE_COMPILER_ID } from "vosc-triode-identity";
@@ -965,19 +966,20 @@ test("Hydra emits a guarded previous-frame sample for its single output", () => 
     /Invalid Triode previous-frame source/);
 });
 
-test("Hydra feedback stays cold until manual Run and retains accepted GLSL across offline save, export and Restore", async () => {
+test("Feedback Echo stays cold until manual Run and retains accepted GLSL across offline save, export and Restore", async () => {
   const host = new FixtureHost();
-  host.validatedUniforms = [{ name: "u_hydra_mix", values: [0.5], type: "float", owner: "layer", writable: true }];
+  host.validatedUniforms = [{ name: "u_hydra_trail", values: [0.91], type: "float", owner: "layer", writable: true }];
   let evaluations = 0;
   const evaluate = async (source: string) => { evaluations++; return compilePatch(source); };
   const workspace = new Workspace(host as unknown as HostClient, evaluate);
   await workspace.create();
   await workspace.run();
   assert.equal(workspace.view().run.manualReady, true);
-  await workspace.create("hydra-js");
-  const patch = HYDRA.replace("osc(7, 0, 1.1)", "src(o0)");
-  setSource(workspace, patch);
   const before = candidateCalls(host).length;
+  const example = feedbackExampleSource();
+  const opened = await workspace.openSource(example, "hydra-js");
+  assert.equal(opened.document?.source.name, feedbackExample.path);
+  const patch = opened.document!.source.text;
   await workspace.run("automatic");
   assert.equal(evaluations, 0);
   assert.equal(candidateCalls(host).length, before);
@@ -991,10 +993,10 @@ test("Hydra feedback stays cold until manual Run and retains accepted GLSL acros
   assert.equal(prepare.params.sha256, hash(Buffer.from(String(prepare.params.source), "base64")));
   assert.equal(prepare.params.sha256, generated.digest);
   assert.equal(success.run.attempt?.sourceDigest, hash(patch));
-  await workspace.configureSlot("Mix");
+  await workspace.configureSlot("Trail");
   const slot = workspace.view().project!.slots[0].id;
-  await workspace.bindComponent("u_hydra_mix", 0, { mode: "range", slot, low: 0.15, high: 0.85 });
-  const working = patch.replace("rotate(17)", "rotate(19)");
+  await workspace.bindComponent("u_hydra_trail", 0, { mode: "range", slot, low: 0.15, high: 0.85 });
+  const working = patch.replace("rotate(3)", "rotate(5)");
   setSource(workspace, working);
   const temporary = await mkdtemp(join(tmpdir(), "vosc-hydra-offline-"));
   try {
@@ -1025,7 +1027,7 @@ test("Hydra feedback stays cold until manual Run and retains accepted GLSL acros
     assert(reopened.view().document?.acceptedArtifact?.stale);
     const recipe = await reopened.export(temporary);
     assert.equal(await readFile(join(recipe, "..", "draft.frag"), "utf8"), generated.source);
-    assert.match(await readFile(recipe, "utf8"), /u_hydra_mix/);
+    assert.match(await readFile(recipe, "utf8"), /u_hydra_trail/);
     host.peer = PEER;
     const restored = await reopened.restore();
     assert.equal(restored.run.phase, "drawn");

@@ -82,6 +82,10 @@ one output and constant transform arguments, plus the blend parameter described 
 
 ## Use previous-frame feedback
 
+Open **Feedback Echo** from the Editor Library, then choose **Run** on a paired
+Render Host. The example blends a rotating copy of its previous output into a
+moving oscillator. Edit `trail` in the patch or map its native uniform to OSC.
+
 ```js
 osc(11, 0.18, 0.7).blend(src(o0).rotate(1), 0.94).out(o0);
 ```

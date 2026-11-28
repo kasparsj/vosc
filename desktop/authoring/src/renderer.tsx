@@ -484,7 +484,7 @@ function App() {
         </li>)}
       </ul>
       {!library.length && <p className="muted">No validated sources</p>}
-      {selectedLibraryItem && <button className="quiet" type="button" disabled={!connected || busy}
+      {selectedLibraryItem && !selectedLibraryItem.example && <button className="quiet" type="button" disabled={!connected || busy}
         title={selectedLibraryItem.path} onClick={() => void command(async () =>
           navigate(await api.previewLibrary(selectedLibraryItem.id, generation), generation))}>
         Preview validated source
