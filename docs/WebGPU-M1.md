@@ -51,7 +51,7 @@ Vulkan-capable adapter.
 
 ```bash
 make Release VOSC_PROFILE=minimal VOSC_OPERATOR_UI=0 OF_ROOT="$of_sdk" \
-  VOSC_PROFILE_MAKE='make JOBS=-j6' VOSC_DAWN_SDK="$scratch/dawn" \
+  VOSC_PROFILE_MAKE='make JOBS=-j7' VOSC_DAWN_SDK="$scratch/dawn" \
   | tee "$scratch/experimental-build.log"
 stage=$(sed -n 's/^Building VOSC minimal in //p' "$scratch/experimental-build.log")
 ```
@@ -88,8 +88,8 @@ the original capture again. `frames.json` records the receipts.
 Use the Xcode wrapper with the SDK matching the machine's architecture.
 
 ```bash
-python3 scripts/build_macos_profile.py --configuration Release \
-  --of-root "$of_sdk" --output "$scratch/mac-build" -- \
+python3 scripts/build_macos_profile.py --configuration Debug \
+  --of-root "$of_sdk" --addon-sdk "$addon_sdk" --output "$scratch/mac-build" -- \
   VOSC_WEBGPU_M1=1 "VOSC_DAWN_SDK=$scratch/dawn" \
   VOSC_OPERATOR_UI=0 ARCHS=arm64 CODE_SIGNING_ALLOWED=NO
 ```
@@ -102,8 +102,9 @@ mac_stage="$scratch/mac-smoke"
 app="$mac_stage/vosc.app"
 host="$mac_stage/VOSC Render Host.app/Contents"
 mkdir -p "$host/MacOS"
-ditto "$scratch/mac-build/of-0.12.1/Release/products/vosc.app" "$app"
-python3 scripts/stage_assets.py "$app/Contents/Resources/data" --addon-sdk "$of_sdk"
+ditto "$scratch/mac-build/of-0.12.1/Debug/products/voscDebug.app" "$app"
+ln -s voscDebug "$app/Contents/MacOS/vosc"
+python3 scripts/stage_assets.py "$app/Contents/Resources/data" --addon-sdk "$addon_sdk"
 cp desktop/authoring/tests/webgpu-m1/Info.plist "$host/Info.plist"
 xcrun swiftc -o "$host/MacOS/verify-webgpu-m1" \
   desktop/authoring/host/{Wire,HostIdentity,DraftRenderer}.swift \
@@ -112,9 +113,47 @@ xcrun swiftc -o "$host/MacOS/verify-webgpu-m1" \
   desktop/authoring/tests/fixtures/webgpu/m1-quadrants.wgsl "$scratch/metal-frames.json"
 ```
 
-For a Debug build, stage `voscDebug.app` as `vosc.app`, rename its
-`Contents/MacOS/voscDebug` to `Contents/MacOS/vosc`, and update
-`CFBundleExecutable` to `vosc` in its `Contents/Info.plist`.
+## Hardware results
+
+Both platform checks used the native renderer source from `c329e1a`
+and the pinned Dawn SDK. Every WebGPU capture was 640 × 480 with four
+exact RGBA matches. During each handoff the recorded visibility flags
+changed from OpenGL only to WebGPU only, then back to OpenGL only.
+
+| Platform and driver | Process ID | OpenGL PNG captures | WebGPU frames | OpenGL restore |
+| --- | ---: | --- | --- | --- |
+| Ubuntu 24.04.4, NVIDIA GeForce GTX 1080, Vulkan 580.167.08 | 2214891 | Identical at 12, 21, and 31 | 1 at GL tick 23, later 4 | GL tick 28 |
+| macOS 27.2.1 arm64, Apple M3 Pro, Metal, Xcode Debug | 50298 | Identical at 11, 20, and 27 | 1 at GL tick 22, later 2 | GL tick 25 |
+
+On both platforms the invalid candidate returned a failure receipt and
+OpenGL kept its visible window and resumed drawing the same shader.
+The Linux rejected request took 153 ms round trip over the private socket,
+including transport and polling.
+
+The ordinary GL-only Linux Release build had no `wgpuCreateInstance`
+symbol. It reported `VOSC_SCENE_READY` for Editable Scene at frame 1
+and returned an 80 × 60 PNG at frame 16. The opt-in build also ran that
+scene in OpenGL through its normal launch path.
+
+To reproduce the ordinary launch, choose an unused UDP port in `gl_port`
+and set `gl_socket` to an absolute socket path in a private directory.
+
+```bash
+make Release VOSC_PROFILE=minimal VOSC_OPERATOR_UI=0 OF_ROOT="$of_sdk" \
+  VOSC_PROFILE_MAKE='make JOBS=-j5' | tee "$scratch/gl-build.log"
+gl_stage=$(sed -n 's/^Building VOSC minimal in //p' "$scratch/gl-build.log")
+(
+  cd "$gl_stage/bin"
+  LD_LIBRARY_PATH="$runtime_libs" VOSC_OSC_PORT="$gl_port" VOSC_CONTROL_SOCKET="$gl_socket" \
+    ./vosc --scene "$gl_stage/bin/data/examples/editable-scene/scene.vosc.json" --size 320x240 --fps 30
+)
+```
+
+Request the PNG from a second shell.
+
+```bash
+python3 scripts/control_client.py --socket "$gl_socket" --wait capture_preview '{"max_width":80}'
+```
 
 ## GLSL and Hydra translation probe
 
