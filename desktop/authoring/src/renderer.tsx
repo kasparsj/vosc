@@ -117,7 +117,9 @@ function App() {
   currentScope.current = executionScope;
   const awaitingNative = runsWaiting > 0 || Boolean(run && pendingRun.has(run.phase));
   const hydra = draft?.language === "hydra-js";
-  const autoEnabled = Boolean(!hydra && autoScope && autoScope === executionScope);
+  const wgsl = draft?.language === "wgsl";
+  const fragmentLanguage = wgsl ? "WGSL" : "GLSL";
+  const autoEnabled = Boolean(draft?.language === "glsl" && autoScope && autoScope === executionScope);
   const review = run?.review;
   const showReview = Boolean(review && review.token !== dismissedReview && !dialog && !attempted && !generatedInspection);
   const modal = Boolean(dialog || attempted || generatedInspection || showReview);
@@ -405,6 +407,7 @@ function App() {
       const expects = workspaceRef.current?.documentGeneration ?? 0;
       switch (name) {
         case "new": navigate(await api.newDraft(), expects); break;
+        case "newWgsl": navigate(await api.newDraft("wgsl"), expects); break;
         case "newHydra": navigate(await api.newDraft("hydra-js"), expects); break;
         case "open": navigate(await api.openDraft(), expects); break;
         case "save":
@@ -449,6 +452,7 @@ function App() {
       </button>
       <div id="new-draft-choices" className="new-draft-choices" ref={newDraftChoices} popover="auto" role="group" aria-label="New draft type">
         <button type="button" disabled={busy} onClick={() => fileCommand("new")}>GLSL fragment</button>
+        <button type="button" disabled={busy} onClick={() => fileCommand("newWgsl")}>WGSL fragment</button>
         <button type="button" disabled={busy} onClick={() => fileCommand("newHydra")}>Hydra patch</button>
       </div>
       <button type="button" disabled={busy || !workspace} onClick={() => fileCommand("open")}><Icon name="folder" />Open…</button>
@@ -496,13 +500,13 @@ function App() {
 
     <section className="code-pane" aria-labelledby="source-heading">
       <div className="source-header">
-        <h2 id="source-heading">{hydra ? "Hydra JavaScript" : "GLSL fragment"}</h2>
+        <h2 id="source-heading">{hydra ? "Hydra JavaScript" : `${fragmentLanguage} fragment`}</h2>
         {draft && <span className="muted source-origin" title={draft.source.origin}>{draft.source.origin}</span>}
         {generated && <button type="button" onClick={() => inspectGenerated({ ...generated, label: run?.attempt?.generated ? `Run ${run.attempt.runSequence}` : "Accepted artifact" })}>Generated GLSL</button>}
-        {hydra && (run?.phase === "evaluating" || run?.phase === "preparing") && <button type="button" onClick={() => {
+        {(hydra || wgsl) && (run?.phase === "evaluating" || run?.phase === "preparing") && <button type="button" onClick={() => {
           void api.cancelRun().then(adopt).catch(error => setProblem(message(error)));
         }}>Cancel Run</button>}
-        {draft && !hydra && <button type="button" className="quiet auto-control" aria-pressed={autoEnabled}
+        {draft?.language === "glsl" && <button type="button" className="quiet auto-control" aria-pressed={autoEnabled}
           disabled={!autoEnabled && (!executionScope || !run?.manualReady || run.paused)}
           onClick={() => {
             if (autoEnabled) pauseAutomatic();
@@ -515,7 +519,7 @@ function App() {
       {draft ? <SourceEditor key={draft.generation} source={draft.source.text} language={draft.language} editor={view}
         onChange={edit} onPosition={(line, column) => setPosition({ line, column })} onProblem={setProblem}
         onCompositionEnd={() => { scheduleSync(); scheduleAutomatic(); }} /> :
-        <div className="empty-editor"><p>Create or open a draft, or import a GLSL fragment.</p></div>}
+        <div className="empty-editor"><p>Create or open a draft, open a WGSL file, or import a GLSL fragment.</p></div>}
       <section className="problems" aria-labelledby="problems-heading" tabIndex={0}>
         <h3 id="problems-heading">Problems{(problem || run?.problems.length) ? ` · ${Number(Boolean(problem)) + (run?.problems.length ?? 0)}` : ""}</h3>
         <div className="problem-row">
@@ -528,7 +532,7 @@ function App() {
         </div>
         {!!run?.problems.length && <ul className="native-problems">
           {run.problems.map((item, index) => <li className="problem-row" key={`${run.attempt?.runSequence}-${index}`}>
-            <div><p className="problem-source">{draft?.source.name ?? "GLSL"}{item.line !== undefined ?
+            <div><p className="problem-source">{draft?.source.name ?? fragmentLanguage}{item.line !== undefined ?
               ` · Line ${item.line}${item.column ? `, column ${item.column}` : ""}` : ""}{item.generatedLine !== undefined && ` · Generated line ${item.generatedLine}`}</p>
               <p className="error native-log">{item.message}</p></div>
             {run.attempt && item.line !== undefined && sourceLine(run.attempt.source, item.line, hydra) &&
@@ -547,7 +551,7 @@ function App() {
         <section className="native-target" aria-labelledby="native-title">
           <h2 id="native-title">Native render</h2>
           <p className="native-name">{workspace?.peer?.endpoint.host ?? "No render host connected"}</p>
-          {workspace?.previewReady && <p className="muted">Preview window on render host · Layer 0</p>}
+          {workspace?.previewReady && <p className="muted">Preview window on render host · {workspace.reflected?.backend === "webgpu" ? "WebGPU" : "Layer 0"}</p>}
           {draft?.destination && !peerMatches && <p className="muted">Draft destination: {draft.destination.endpoint.host}</p>}
           {run?.phase === "uncertain" && <button type="button" className="quiet" onClick={() => void command(async () =>
             adopt(await api.reflect()))}>Check native outcome</button>}
@@ -566,15 +570,15 @@ function App() {
       </div>
       <div className="inspector-footer">
         <p className="muted">
-          {accepted ? `Export ${artifactName}${accepted.stale || editing ? " · working draft differs" : ""}${accepted.saved ? "" : " · unsaved artifact"}` :
+          {wgsl ? "Save WGSL as a VOSC draft." : accepted ? `Export ${artifactName}${accepted.stale || editing ? " · working draft differs" : ""}${accepted.saved ? "" : " · unsaved artifact"}` :
             "Run a native preview before exporting a replay."}
         </p>
         <div className="actions">
           <button type="button" disabled={!draft || busy} onClick={() => fileCommand("save")}>Save draft…</button>
-          <button type="button" disabled={!accepted || busy} onClick={() => void command(async () => {
+          {!wgsl && <button type="button" disabled={!accepted || busy} onClick={() => void command(async () => {
             const path = await api.exportReplay();
             if (path) setNotice(`Native replay saved to ${path}`);
-          })}><Icon name="export" />Export replay…</button>
+          })}><Icon name="export" />Export replay…</button>}
         </div>
       </div>
     </aside>
@@ -591,7 +595,7 @@ function App() {
         {dirty && <span>Unsaved changes</span>}
         {notice && <span className="status-notice" title={notice}>{notice}</span>}
       </div>
-      {draft && <div className="position"><span>{hydra ? "JavaScript" : "GLSL"}</span><span>UTF-8</span><span>Ln {position.line}, Col {position.column}</span></div>}
+      {draft && <div className="position"><span>{hydra ? "JavaScript" : fragmentLanguage}</span><span>UTF-8</span><span>Ln {position.line}, Col {position.column}</span></div>}
     </footer>
 
     {showReview && review && <WorkspaceDialog key={review.token} title="Review changed mappings"
@@ -617,7 +621,7 @@ function App() {
       }}>
       <div className="attempted-source">
         <p className="muted">Read-only snapshot · Line {attempted.line}</p>
-        <textarea aria-label={hydra ? "Attempted Hydra source" : "Attempted GLSL source"} readOnly value={attempted.source} spellCheck={false} wrap="off" />
+        <textarea aria-label={hydra ? "Attempted Hydra source" : `Attempted ${fragmentLanguage} source`} readOnly value={attempted.source} spellCheck={false} wrap="off" />
       </div>
     </WorkspaceDialog>}
     {generatedInspection && <WorkspaceDialog title={`Generated GLSL · ${generatedInspection.label}`}

@@ -165,6 +165,10 @@ private:
         std::string lease, token, sourceDigest;
         uint64_t revision = 0;
         double expiresAt = 0;
+#ifdef VOSC_WEBGPU_M1
+        std::string wgslPrepareId;
+        bool wgslStarted = false;
+#endif
     };
     struct DraftDraw {
         std::string id;
@@ -188,10 +192,18 @@ private:
     std::optional<Receipt> draftControlReceipt;
     bool executeDraft(const std::string& id, const std::string& method, const ofJson& params, uint64_t logStart);
     bool settleDraftDraw();
+    void discardDraftCandidate(const char* code = "stale_candidate");
 #ifdef VOSC_WEBGPU_M1
     ofJson m1Status() const;
     void drawM1Preview();
     void completeM1OpenGlHandoff();
+    bool draftWebGpuActive() const;
+    webgpu::M1Preview* draftWebGpuContext() const;
+    void pollDraftWebGpuPrepare();
+    bool settleDraftWebGpuDraw();
+    std::unique_ptr<webgpu::M1Preview> draftWebGpuStaging;
+    std::string draftWebGpuCommit;
+    uint64_t draftWebGpuFrame = 0;
     std::unique_ptr<webgpu::M1Preview> m1Preview;
     std::string m1Switch;
     uint64_t m1OpenGlFrame = 0;

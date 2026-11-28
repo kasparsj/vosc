@@ -43,6 +43,11 @@ void main() {
 }
 `;
 
+const WGSL_TEMPLATE = `@fragment fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
+    return vec4f(uv.x, uv.y, 0.6, 1.0);
+}
+`;
+
 const HYDRA_TEMPLATE = `// Run builds one native shader. Use Inspector to map mix to OSC.
 // rotate() changes the coordinates passed to earlier operations.
 osc(11, 0.18, 0.7)
@@ -205,7 +210,8 @@ function problemEntries(error: HostError, source: string): RunProblem[] {
   return raw.flatMap(message => message.split("\n").filter(Boolean).map(text => {
     const match = hasLineDirective ? null :
       text.match(/^\s*(?:ERROR|WARNING):\s*0:(\d+)(?::(\d+))?:/i) ??
-      text.match(/^\s*0\((\d+)\)\s*:/);
+      text.match(/^\s*0\((\d+)\)\s*:/) ??
+      text.match(/^\s*(?:Error while parsing WGSL:\s*)?:?(\d+):(\d+)\s+error:/i);
     const line = Number(match?.[1]);
     const column = Number(match?.[2]);
     const location = line >= 1 && line <= lines.length ? { line,
@@ -269,7 +275,7 @@ export class Workspace {
 
   private evaluation: AbortController | null = null;
   private hydraPendingEdit = 0;
-  private cancelledHydraRun = 0;
+  private cancelledRun = 0;
 
   constructor(readonly host: HostClient, private readonly evaluateHydra?: HydraEvaluator,
               private readonly evaluateCallback = evaluateSyntheticCallback) {}
@@ -368,10 +374,11 @@ export class Workspace {
   create(language: DraftLanguage = "glsl") {
     return this.perform(async () => {
       const hydra = language === "hydra-js";
+      const wgsl = language === "wgsl";
       this.setDocument(documentFromSource(sourceWithText({
-        name: hydra ? "Untitled.js" : "Untitled.frag",
-        origin: hydra ? "New Hydra patch" : "New GLSL fragment", digest: "", base64: "",
-      }, hydra ? HYDRA_TEMPLATE : GLSL_TEMPLATE), language));
+        name: hydra ? "Untitled.js" : wgsl ? "Untitled.wgsl" : "Untitled.frag",
+        origin: hydra ? "New Hydra patch" : wgsl ? "New WGSL fragment" : "New GLSL fragment", digest: "", base64: "",
+      }, hydra ? HYDRA_TEMPLATE : wgsl ? WGSL_TEMPLATE : GLSL_TEMPLATE), language));
       return this.view();
     });
   }
@@ -408,6 +415,7 @@ export class Workspace {
     return Boolean(peer && this.project && this.state && !this.state.needsRestore && ack &&
       this.project.destination.target === peer.target && this.project.destination.fingerprint === peer.fingerprint &&
       this.state.target === peer.target &&
+      (this.document?.accepted?.language === "wgsl" ? this.state.backend === "webgpu" : this.state.backend !== "webgpu") &&
       this.state.sourceDigest === this.project.source.digest &&
       this.state.epoch === ack.epoch && this.state.revision === ack.revision && this.state.lease === this.lease?.id &&
       !this.pendingReply && !this.unknownCommit);
@@ -563,7 +571,8 @@ export class Workspace {
       controls: workingOverride ?? { slots: project.slots, bindings: project.bindings, signatures,
         ...(pendingMappings?.length || this.document.controls.pendingMappings ?
           { pendingMappings: pendingMappings ?? this.document.controls.pendingMappings } : {}) },
-      accepted: { id: randomUUID(), revision: state.revision, project: acceptedProject, signatures, ...(hydra ? { hydra } : {}),
+      accepted: { id: randomUUID(), revision: state.revision, project: acceptedProject, signatures,
+        ...(state.backend === "webgpu" ? { language: "wgsl" } : {}), ...(hydra ? { hydra } : {}),
         ...(callbackValue === undefined ? {} : { callbackValue }) } };
     this.notice = null;
     return this.view();
@@ -801,13 +810,17 @@ export class Workspace {
 
   private requirePreAdmission(attempt: Attempt) {
     this.requireCurrent(attempt);
-    if (attempt.language !== "hydra-js") return;
-    if (attempt.identity.runSequence <= this.cancelledHydraRun) {
-      throw new HostError("hydra_cancelled", "Run cancelled. Previous preview retained.");
+    if (this.cancelledBeforeCommit(attempt)) {
+      throw new HostError("run_cancelled", "Run cancelled. Previous preview retained.");
     }
-    if (!attempt.restoring && !this.freshHydraRun(attempt)) {
+    if (attempt.language === "hydra-js" && !attempt.restoring && !this.freshHydraRun(attempt)) {
       throw new HostError("hydra_stale", "The Hydra patch changed. Run the current source explicitly.");
     }
+  }
+
+  private cancelledBeforeCommit(attempt: Attempt) {
+    return (attempt.language !== "glsl" && attempt.identity.runSequence <= this.cancelledRun) ||
+      (attempt.language === "wgsl" && !!this.queue && this.queue.identity.runSequence > attempt.identity.runSequence);
   }
 
   private captureRun(mode: RunMode, restoring = false): Attempt {
@@ -827,12 +840,12 @@ export class Workspace {
     return { identity: { documentId: document.id, generation: this.documentGeneration,
       editSequence: this.editSequence, runSequence: ++this.runSequence, sourceDigest: source.digest },
       source, controls, title: artifact?.project.title ?? document.title, mode, restoring,
-      language: document.language, hydra: artifact?.hydra, context: this.context, peer };
+      language: artifact?.language ?? document.language, hydra: artifact?.hydra, context: this.context, peer };
   }
 
   run(mode: unknown = "manual") {
     if (mode !== "manual" && mode !== "automatic") throw new HostError("invalid_request", "Choose a Run mode.");
-    if (mode === "automatic" && (this.document?.language === "hydra-js" || !this.runView.manualReady || this.runView.paused)) return Promise.resolve(this.view());
+    if (mode === "automatic" && (this.document?.language !== "glsl" || !this.runView.manualReady || this.runView.paused)) return Promise.resolve(this.view());
     if (this.runView.phase === "restore_required" && this.project && samePeer(this.host.peer, this.project.destination)) {
       throw new HostError("restore_required", "Restore the last accepted artifact before running here again.");
     }
@@ -914,7 +927,7 @@ export class Workspace {
           if (this.evaluation === job) this.evaluation = null;
         }
       }
-      this.setPhase(attempt, "preparing", "Compiling GLSL on the render host.");
+      this.setPhase(attempt, "preparing", `Compiling ${attempt.language === "wgsl" ? "WGSL" : "GLSL"} on the render host.`);
       await this.observation;
       await this.sampleTask;
       this.requirePreAdmission(attempt);
@@ -948,7 +961,8 @@ export class Workspace {
       let result: unknown;
       try {
         result = await lease.host.rpc("run.prepare", { ...wireAttempt, source: attempt.source.base64,
-          sha256: sourceDigest, slots: attempt.controls.slots, bindings: intent }, state, id);
+          sha256: sourceDigest, slots: attempt.controls.slots, bindings: intent,
+          ...(attempt.language === "wgsl" ? { language: "wgsl" } : {}) }, state, id);
       } catch (error) {
         if (!(error instanceof HostError) || !error.uncertainId) throw error;
         const receipt = await this.lookup(lease.host, id);
@@ -958,8 +972,8 @@ export class Workspace {
       }
       this.requireCurrent(attempt);
       const candidate = this.preparedResult(result, identity, state, id, intent);
-      if (attempt.language === "hydra-js" && (attempt.identity.runSequence <= this.cancelledHydraRun ||
-          (!attempt.restoring && !this.freshHydraRun(attempt)))) {
+      if (this.cancelledBeforeCommit(attempt) ||
+          (attempt.language === "hydra-js" && !attempt.restoring && !this.freshHydraRun(attempt))) {
         await lease.host.rpc("run.cancel", { lease: lease.id, token: id }, candidate);
         this.requirePreAdmission(attempt);
       }
@@ -975,7 +989,8 @@ export class Workspace {
       }
       await this.commit(attempt, lease, candidate);
     } catch (error) {
-      if (error instanceof HostError && error.code === "hydra_cancelled") return;
+      if ((error instanceof HostError && error.code === "run_cancelled") ||
+          (attempt.language === "wgsl" && this.cancelledBeforeCommit(attempt))) return;
       this.failAttempt(attempt, error);
     }
   }
@@ -1046,10 +1061,13 @@ export class Workspace {
     const scene = receipt?.result?.scene;
     const layers = scene?.layers as { shader?: { loaded?: boolean; program?: number } }[] | undefined;
     const shader = Array.isArray(layers) ? layers[0]?.shader : undefined;
-    if (!state || state.target !== prepared.target || state.epoch !== prepared.epoch ||
+    const matchingBackend = attempt.language === "wgsl" ?
+      state?.backend === "webgpu" && scene?.backend === "webgpu" && receipt?.result?.backend === "webgpu" &&
+        receipt.result.first_frame === receipt.frame && scene.draft_device_lost !== true :
+      state?.backend !== "webgpu" && shader?.loaded === true && Number.isSafeInteger(shader.program) && shader.program! > 0;
+    if (!matchingBackend || !state || state.target !== prepared.target || state.epoch !== prepared.epoch ||
         !identityMatches(prepared, state) || state.token !== prepared.token || state.controlDigest !== prepared.controlDigest ||
         state.commitID !== id || receipt?.id !== id || receipt.status !== "rendered" || !scene || state.needsRestore ||
-        !shader?.loaded || !Number.isSafeInteger(shader.program) || !(shader.program! > 0) ||
         !Number.isSafeInteger(receipt.frame) || !Number.isSafeInteger(state.revision) || state.revision <= prepared.revision ||
         receipt.revision !== state.revision || scene.rendered_revision !== state.revision ||
         scene.frame !== receipt.frame || state.frame !== receipt.frame ||
@@ -1074,7 +1092,7 @@ export class Workspace {
     this.startCallback(observed);
     commit.terminal = true;
     if (attempt.mode === "manual" && !attempt.restoring && attempt.language === "glsl") this.runView = { ...this.runView, manualReady: true };
-    this.setPhase(attempt, "drawn", `Native revision ${state.revision} drew frame ${receipt.frame}.`);
+    this.setPhase(attempt, "drawn", `${state.backend === "webgpu" ? "WebGPU" : "Native"} revision ${state.revision} drew frame ${receipt.frame}.`);
   }
 
   private async resolveUnknownCommit(commit: Commit) {
@@ -1181,10 +1199,10 @@ export class Workspace {
   cancelRun(token?: unknown) {
     if (this.queue?.mode === "automatic") this.queue = null;
     if (token === undefined) {
-      if (this.document?.language === "hydra-js") {
-        if (this.queue?.language === "hydra-js") this.queue = null;
+      if (this.document && this.document.language !== "glsl") {
+        if (this.queue?.language === this.document.language) this.queue = null;
         if (this.evaluation || this.runView.phase === "evaluating" || this.runView.phase === "preparing") {
-          this.cancelledHydraRun = this.runSequence;
+          this.cancelledRun = this.runSequence;
           this.cancelEvaluation();
           this.runView = { ...EMPTY_RUN, message: "Run cancelled. Previous preview retained." };
         }
@@ -1501,6 +1519,9 @@ export class Workspace {
   captureExport() {
     const accepted = this.document?.accepted;
     if (!accepted) throw new HostError("no_draft", "There is no accepted native artifact to export.");
+    if (accepted.language === "wgsl") {
+      throw new HostError("export_unsupported", "WGSL drafts can be saved as VOSC drafts. Standalone replay export is unavailable.");
+    }
     const { callbackValue } = accepted;
     return {
       label: accepted.revision === null ? `Artifact ${accepted.id.slice(0, 8)}` : `Revision ${accepted.revision}`,

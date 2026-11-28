@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { basename, join } from "node:path";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { BINDING_LIMIT, CALLBACK_UNIFORM, SLOT_LIMIT, SOURCE_LIMIT, isCallbackValue, type Binding, type DraftProject,
-  type ControlSignature, type HydraProvenance, type DraftDocument, type DraftSource, type PendingMapping, type Peer, type Slot, type SourceProvenance } from "./contracts";
+  isDraftLanguage, type ControlSignature, type HydraProvenance, type DraftDocument, type DraftSource, type PendingMapping, type Peer, type Slot, type SourceProvenance } from "./contracts";
 import { hash, HostError } from "./local-state";
 
 const SLOT_ID = /^s[a-f0-9]{12}$/;
@@ -237,14 +237,15 @@ export function parseDocument(value: unknown): DraftDocument {
     };
   }
   if (!record(value) || value.format !== "vosc.authoring.draft" || value.version !== 2 ||
-      (value.language !== "glsl" && value.language !== "hydra-js") ||
+      !isDraftLanguage(value.language) ||
       typeof value.id !== "string" || !uuidPattern.test(value.id) || !validTitle(value.title) || !record(value.controls)) {
     throw new HostError("invalid_project", "This file does not contain a supported VOSC draft.");
   }
   let accepted: DraftDocument["accepted"] = null;
   if (value.accepted !== null) {
     const artifact = value.accepted;
-    if (!record(artifact) || typeof artifact.id !== "string" || !uuidPattern.test(artifact.id) ||
+    if (!record(artifact) || artifact.language !== (value.language === "wgsl" ? "wgsl" : undefined) ||
+        typeof artifact.id !== "string" || !uuidPattern.test(artifact.id) ||
         (artifact.revision !== null && (typeof artifact.revision !== "number" ||
           !Number.isSafeInteger(artifact.revision) || artifact.revision < 0))) {
       throw new HostError("invalid_project", "The last accepted artifact is invalid.");
@@ -256,6 +257,7 @@ export function parseDocument(value: unknown): DraftDocument {
     }
     accepted = {
       id: artifact.id, revision: artifact.revision, project, signatures: parseSignatures(artifact.signatures),
+      ...(value.language === "wgsl" ? { language: "wgsl" } : {}),
       ...(value.language === "hydra-js" ? { hydra: parseHydra(artifact.hydra, project.source) } : {}),
       ...(artifact.callbackValue === undefined ? {} : { callbackValue: artifact.callbackValue }),
     };
@@ -339,7 +341,7 @@ export async function writeReplay(parent: string, document: DraftProject, callba
 }
 
 export function titleFor(source: DraftSource) {
-  const title = source.name.replace(/\.(frag|fs|fsh|glsl|js)$/i, "").replace(/[\r\n]+/g, " ").trim();
+  const title = source.name.replace(/\.(frag|fs|fsh|glsl|js|wgsl)$/i, "").replace(/[\r\n]+/g, " ").trim();
   return Array.from(title).slice(0, 60).join("").trimEnd() || "VOSC Draft";
 }
 

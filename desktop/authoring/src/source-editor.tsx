@@ -47,14 +47,15 @@ export function SourceEditor({ source, language, editor, onChange, onPosition, o
         extensions: [
           ...(nonce ? [EditorView.cspNonce.of(nonce)] : []),
           EditorView.darkTheme.of(true),
-          lineNumbers(), history(), drawSelection(), language === "hydra-js" ? js : glsl, syntaxHighlighting(highlighting),
+          lineNumbers(), history(), drawSelection(),
+          ...(language === "wgsl" ? [] : [language === "hydra-js" ? js : glsl, syntaxHighlighting(highlighting)]),
           keymap.of([
             { key: "Mod-]", run: indentMore },
             { key: "Mod-[", run: indentLess },
             ...historyKeymap, ...defaultKeymap,
           ]),
           EditorView.contentAttributes.of({
-            "aria-label": language === "hydra-js" ? "Hydra JavaScript source" : "GLSL source", "aria-multiline": "true", spellcheck: "false",
+            "aria-label": language === "hydra-js" ? "Hydra JavaScript source" : language === "wgsl" ? "WGSL source" : "GLSL source", "aria-multiline": "true", spellcheck: "false",
             autocorrect: "off", autocapitalize: "off",
           }),
           EditorState.changeFilter.of(tr => {

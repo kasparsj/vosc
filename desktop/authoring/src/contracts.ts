@@ -84,6 +84,7 @@ export interface ReflectedDraft extends Partial<RunIdentity> {
   epoch: string;
   revision: number;
   frame?: number;
+  backend?: "opengl" | "webgpu";
   receipt?: DrawReceipt;
   token?: string;
   controlDigest?: string;
@@ -167,7 +168,11 @@ export interface DraftControls {
   signatures: ControlSignature[];
   pendingMappings?: PendingMapping[];
 }
-export type DraftLanguage = "glsl" | "hydra-js";
+export type DraftLanguage = "glsl" | "hydra-js" | "wgsl";
+
+export function isDraftLanguage(value: unknown): value is DraftLanguage {
+  return value === "glsl" || value === "hydra-js" || value === "wgsl";
+}
 export type HydraProvenance = ({ version: 1; emitterVersion: 1 } |
   { version: 2; emitterVersion: 2; compilerId: string }) & {
   patch: DraftSource;
@@ -179,6 +184,7 @@ export interface AcceptedArtifact {
   revision: number | null;
   project: DraftProject;
   signatures: ControlSignature[];
+  language?: "wgsl";
   hydra?: HydraProvenance;
   callbackValue?: number;
 }
@@ -218,7 +224,7 @@ export interface DocumentView {
     generated?: GeneratedSource;
   } | null;
 }
-export type FileCommand = "new" | "newHydra" | "open" | "save" | "saveAs" | "close" | "quit";
+export type FileCommand = "new" | "newHydra" | "newWgsl" | "open" | "save" | "saveAs" | "close" | "quit";
 export interface LibraryItem { id: string; path: string; origin: string; example?: true }
 
 export interface WorkspaceView {

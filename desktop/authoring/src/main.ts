@@ -5,7 +5,7 @@ import { open, readFile } from "node:fs/promises";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { Importer } from "./importer";
 import { HostClient } from "./host-client";
-import { CALLBACK_UNIFORM, SOURCE_LIMIT, type FileCommand } from "./contracts";
+import { CALLBACK_UNIFORM, SOURCE_LIMIT, isDraftLanguage, type FileCommand } from "./contracts";
 import { sourceName, sourceWithText } from "./draft-project";
 import { feedbackExample, feedbackExampleSource } from "./feedback-example";
 import { ElectronHydraEvaluator, HYDRA_SCHEME } from "./hydra-evaluator";
@@ -149,6 +149,7 @@ function installMenu() {
   const file: MenuItemConstructorOptions = { label: "File", submenu: [
     { label: "New", submenu: [
       { label: "GLSL Fragment", accelerator: "CommandOrControl+N", click: () => fileCommand("new") },
+      { label: "WGSL Fragment", click: () => fileCommand("newWgsl") },
       { label: "Hydra Patch", click: () => fileCommand("newHydra") },
     ] },
     { label: "Open Draft…", accelerator: "CommandOrControl+O", click: () => fileCommand("open") },
@@ -240,7 +241,7 @@ function installDraftHandlers() {
   handle("draft:edit", (edit) => workspace.edit(edit));
   handle("draft:save", (saveAs) => navigate(() => saveDocument(saveAs === true)));
   handle("draft:new", (language) => navigate(async () => {
-    if (language !== "glsl" && language !== "hydra-js") throw new HostError("invalid_request", "Choose a draft language.");
+    if (!isDraftLanguage(language)) throw new HostError("invalid_request", "Choose a draft language.");
     return await mayReplace() ? workspace.create(language) : workspace.view();
   }));
   handle("draft:open", () => navigate(async () => {
@@ -248,27 +249,30 @@ function installDraftHandlers() {
     const generation = workspace.documentContext().generation;
     const result = await dialog.showOpenDialog(window, {
       title: "Open VOSC Draft", properties: ["openFile"],
-      filters: [{ name: "VOSC Draft or Hydra JavaScript", extensions: ["vosc-draft", "js"] }],
+      filters: [{ name: "VOSC Draft, WGSL or Hydra JavaScript", extensions: ["vosc-draft", "wgsl", "js"] }],
     });
     checkGeneration(generation);
     if (result.canceled) return workspace.view();
     const path = resolve(result.filePaths[0]);
-    if (extname(path).toLowerCase() !== ".js") return workspace.open(path, mayReplace);
+    const extension = extname(path).toLowerCase();
+    if (extension !== ".js" && extension !== ".wgsl") return workspace.open(path, mayReplace);
+    const language = extension === ".wgsl" ? "wgsl" : "hydra-js";
     const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
-    let patch;
+    let source;
     try {
-      if (!(await file.stat()).isFile()) throw new HostError("invalid_source", "Choose a regular JavaScript file.");
+      if (!(await file.stat()).isFile()) throw new HostError("invalid_source", "Choose a regular shader or patch file.");
       const bytes = Buffer.alloc(SOURCE_LIMIT + 1);
       const { bytesRead } = await file.read(bytes, 0, bytes.length);
-      if (bytesRead > SOURCE_LIMIT) throw new HostError("invalid_source", "Hydra source exceeds 128 KiB.");
-      patch = sourceWithText({ name: sourceName(path), origin: "Local Hydra patch", digest: "", base64: "" },
+      if (bytesRead > SOURCE_LIMIT) throw new HostError("invalid_source", "Source exceeds 128 KiB.");
+      source = sourceWithText({ name: sourceName(path), origin: language === "wgsl" ? "Local WGSL fragment" : "Local Hydra patch",
+        digest: "", base64: "" },
         new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes.subarray(0, bytesRead)));
     } finally {
       await file.close();
     }
     if (!await mayReplace()) return workspace.view();
     checkGeneration(generation);
-    return workspace.openSource(patch, "hydra-js");
+    return workspace.openSource(source, language);
   }));
   handle("draft:close", (quit) => navigate(async () => {
     if (!await mayReplace()) return false;
