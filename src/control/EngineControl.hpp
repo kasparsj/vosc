@@ -10,6 +10,9 @@
 #include <deque>
 #include <map>
 #include <optional>
+#ifdef VOSC_WEBGPU_M1
+#include "../webgpu/M1Preview.hpp"
+#endif
 
 class ShaderPingPongTex;
 class CommandSystem;
@@ -185,6 +188,15 @@ private:
     std::optional<Receipt> draftControlReceipt;
     bool executeDraft(const std::string& id, const std::string& method, const ofJson& params, uint64_t logStart);
     bool settleDraftDraw();
+#ifdef VOSC_WEBGPU_M1
+    ofJson m1Status() const;
+    void drawM1Preview();
+    void completeM1OpenGlHandoff();
+    std::unique_ptr<webgpu::M1Preview> m1Preview;
+    std::string m1Switch;
+    uint64_t m1OpenGlFrame = 0;
+    bool m1OpenGlStaged = false;
+#endif
     void observeSelfFeedbackDraw();
     ofJson selfFeedbackDraw;
     std::unique_ptr<Trial> trial;

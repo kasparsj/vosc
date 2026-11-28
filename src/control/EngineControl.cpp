@@ -22,6 +22,10 @@
 #include <set>
 #include <stdexcept>
 #include <string_view>
+#ifdef VOSC_WEBGPU_M1
+#include <unistd.h>
+#include <iostream>
+#endif
 
 namespace control {
 namespace {
@@ -84,12 +88,17 @@ std::shared_ptr<Logger> logger() {
     return std::dynamic_pointer_cast<Logger>(ofGetLoggerChannel());
 }
 
-std::pair<int, int> nativeFramebufferSize() {
+GLFWwindow* nativeGlWindow() {
     auto* window = dynamic_cast<ofAppGLFWWindow*>(ofGetWindowPtr());
-    if (!window || !window->getGLFWWindow()) return {-1, -1};
+    return window ? window->getGLFWWindow() : nullptr;
+}
+
+std::pair<int, int> nativeFramebufferSize() {
+    auto* window = nativeGlWindow();
+    if (!window) return {-1, -1};
     int width = -1;
     int height = -1;
-    glfwGetFramebufferSize(window->getGLFWWindow(), &width, &height);
+    glfwGetFramebufferSize(window, &width, &height);
     return {width, height};
 }
 
@@ -773,6 +782,9 @@ void EngineControl::setup() {
 }
 
 void EngineControl::shutdown() {
+#ifdef VOSC_WEBGPU_M1
+    m1Preview.reset();
+#endif
     if (trial && trial->feedbackBaseline) interruptTrial();
     if (trial) {
         if (trial->layer < render().getLayers().size() && render().getLayers()[trial->layer]) {
@@ -870,6 +882,36 @@ Json EngineControl::dispatch(const Json& request) {
         if (existing->request != request) throw Invalid("id_conflict", "retained ID has different content");
         return existing->response;
     }
+#ifdef VOSC_WEBGPU_M1
+    if (draftPreview && method == "draft_m1_status") {
+        keys(params, {});
+        auto response = reply(id, "ok");
+        response["result"] = m1Status();
+        return response;
+    }
+    if (draftPreview && method == "draft_m1_switch") {
+        keys(params, {"backend"}, {"source"});
+        auto backend = text(params["backend"], 6, "backend");
+        if (backend == "webgpu") {
+            if (!params.contains("source")) throw Invalid("invalid_params", "WebGPU requires WGSL source");
+            text(params["source"], 128 * 1024, "source");
+        } else if (backend != "opengl" || params.contains("source")) {
+            throw Invalid("invalid_params", "Expected webgpu with source or opengl");
+        }
+        if (trial || !m1Switch.empty() || !draftDraw.id.empty() || !queuedDraftCommit.empty())
+            throw Invalid("draft_busy", "A preview transaction is pending");
+        if (bool(m1Preview) == (backend == "webgpu"))
+            throw Invalid("invalid_params", "Requested backend is already active");
+        if (pendingCount() >= 16 || !makeReceiptSpace())
+            throw Invalid("queue_full", "pending request or receipt capacity reached");
+        auto accepted = reply(id, "queued");
+        accepted["method"] = method;
+        receipts.emplace(id, Receipt{request, accepted, ofGetElapsedTimef(), {}});
+        receiptOrder.push_back(id);
+        m1Switch = id;
+        return accepted;
+    }
+#endif
     const bool isQuery = method == "get_capabilities" || method == "get_scene" ||
         method == "get_performance" || method == "get_diagnostics" || method == "get_request" ||
         method == "export_scene";
@@ -1907,6 +1949,9 @@ Json EngineControl::recoveryTestInspectPrograms(const std::vector<unsigned>& pro
 
 void EngineControl::update() {
     if (!server.isRunning()) return;
+#ifdef VOSC_WEBGPU_M1
+    if (m1OpenGlStaged) completeM1OpenGlHandoff();
+#endif
     telemetry.refreshGpuResults();
     updateTelemetry.refreshGpuResults();
     evaluateTrial();
@@ -1972,6 +2017,10 @@ Json EngineControl::capabilities() const {
                         {"trial_ttl_ms_min", 1000}, {"trial_ttl_ms_max", 30000}}},
             {"revision_scope", "successful API controls; external_epoch counts legacy dispatch/input; animation and file-watch reloads are not versioned"}};
     if (draftPreview) {
+#ifdef VOSC_WEBGPU_M1
+        result["operations"].push_back("draft_m1_status");
+        result["operations"].push_back("draft_m1_switch");
+#endif
         for (auto method : {"draft_prepare", "draft_commit", "draft_cancel", "draft_fence", "draft_sample",
                             "draft_callback", "draft_configure_slot", "draft_bind_uniform"})
             result["operations"].push_back(method);
@@ -2309,9 +2358,83 @@ void EngineControl::capture(const std::string& id) {
     }
 }
 
+#ifdef VOSC_WEBGPU_M1
+Json EngineControl::m1Status() const {
+    const auto* glAdapter = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+    auto* window = nativeGlWindow();
+    Json result = {{"pid", ::getpid()}, {"active", m1Preview ? "webgpu" : "opengl"},
+        {"backend", m1Preview ? m1Preview->backend : "OpenGL"},
+        {"adapter", m1Preview ? m1Preview->adapter : (glAdapter ? glAdapter : "")},
+        {"opengl_frame", m1OpenGlFrame}, {"webgpu_frames", m1Preview ? m1Preview->frames : 0},
+        {"opengl_visible", window && glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE},
+        {"webgpu_visible", m1Preview && m1Preview->visible()}};
+    return result;
+}
+
+void EngineControl::completeM1OpenGlHandoff() {
+    const auto id = std::exchange(m1Switch, {});
+    m1OpenGlStaged = false;
+    auto* window = nativeGlWindow();
+    if (!window) {
+        receipts.at(id).response = failure(id, "m1_switch_failed", "OpenGL window is unavailable");
+        return;
+    }
+    // The previous normal OF frame has returned and swapped by this update.
+    glfwShowWindow(window);
+    m1Preview.reset();
+    auto& response = receipts.at(id).response;
+    response = reply(id, "rendered");
+    response["result"] = m1Status();
+    std::cout << "VOSC_WEBGPU_M1 " << response["result"].dump() << std::endl;
+}
+
+void EngineControl::drawM1Preview() {
+    m1OpenGlFrame = frame;
+    if (!m1Switch.empty()) {
+        auto& receipt = receipts.at(m1Switch);
+        const auto& params = receipt.request.at("params");
+        if (params.at("backend") == "opengl") {
+            m1OpenGlStaged = true;
+            return;
+        }
+        const auto id = std::exchange(m1Switch, {});
+        try {
+            auto* window = nativeGlWindow();
+            if (!window) throw std::runtime_error("OpenGL window is unavailable");
+            auto candidate = std::make_unique<webgpu::M1Preview>(window, params.at("source").get<std::string>());
+            glfwHideWindow(window);
+            m1Preview = std::move(candidate);
+            receipt.response = reply(id, "rendered");
+            auto& result = receipt.response["result"] = m1Status();
+            result["capture_width"] = m1Preview->width;
+            result["capture_height"] = m1Preview->height;
+            auto& pixels = result["pixels"] = Json::array();
+            for (const auto& pixel : m1Preview->pixels)
+                pixels.push_back({{"x", pixel.x}, {"y", pixel.y}, {"rgba", pixel.rgba}});
+            std::cout << "VOSC_WEBGPU_M1 " << result.dump() << std::endl;
+        } catch (const std::exception& error) {
+            receipt.response = failure(id, "m1_switch_failed", error.what());
+            receipt.response["result"] = m1Status();
+            std::cerr << "VOSC_WEBGPU_M1 candidate failed: " << error.what() << std::endl;
+        }
+    } else if (m1Preview) {
+        try {
+            m1Preview->draw();
+        } catch (const std::exception& error) {
+            if (auto* window = nativeGlWindow()) glfwShowWindow(window);
+            m1Preview.reset();
+            std::cerr << "VOSC_WEBGPU_M1 preview stopped: " << error.what() << std::endl;
+        }
+    }
+}
+#endif
+
 void EngineControl::afterDraw() {
     if (!server.isRunning()) return;
     ++frame;
+#ifdef VOSC_WEBGPU_M1
+    if (draftPreview) drawM1Preview();
+#endif
     renderedRevision = revision;
     observeSelfFeedbackDraw();
     const bool coherentDraft = settleDraftDraw();

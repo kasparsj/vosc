@@ -47,6 +47,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--make", default="make")
     parser.add_argument("--of-root", required=True, type=Path)
+    parser.add_argument("--dawn-sdk", type=Path, help="Enable WebGPU M1 with an extracted Dawn SDK")
     parser.add_argument("--stage-only", action="store_true",
                         help="Prepare a fresh project and runtime data without invoking Make")
     args = parser.parse_args()
@@ -74,10 +75,12 @@ def main():
     stage = Path(tempfile.mkdtemp(prefix="minimal-", dir=parent))
     stage_legacy_addons(sdk, stage, addons)
     (stage / "addons.make").write_text("\n".join(addons) + "\n")
+    shutil.copyfile(ROOT / "scripts/webgpu_m1.mk", stage / "webgpu_m1.mk")
     (stage / "Makefile").write_text(
         "APPNAME = vosc\n"
         "PROJECT_ROOT = .\n"
         "override PROJECT_CFLAGS += -DVOSC_MINIMAL_BUILD=1 -DVOSC_OPERATOR_UI=0 -DOFXEXPR_NOGUI\n"
+        "include webgpu_m1.mk\n"
         "include $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk\n"
     )
     source = ROOT / "src"
@@ -92,7 +95,10 @@ def main():
         print(f"Staged VOSC minimal in {stage}")
         return 0
     print(f"Building VOSC minimal in {stage}", flush=True)
-    result = subprocess.run([*shlex.split(args.make), f"OF_ROOT={sdk}", "Release"], cwd=stage)
+    command = [*shlex.split(args.make), f"OF_ROOT={sdk}"]
+    if args.dawn_sdk:
+        command.append(f"VOSC_DAWN_SDK={args.dawn_sdk.resolve()}")
+    result = subprocess.run([*command, "Release"], cwd=stage)
     if result.returncode:
         return result.returncode
     binary = stage / "bin/vosc"

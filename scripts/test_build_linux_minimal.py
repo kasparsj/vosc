@@ -141,7 +141,7 @@ def main():
         project = work / "project"
         for relative in ("Makefile", "config.make", "addons.make", "scripts/build_linux_minimal.py",
                          "scripts/addon_compat.py", "scripts/stage_linux_render_addons.py",
-                         "scripts/stage_assets.py", "src/main.cpp"):
+                         "scripts/stage_assets.py", "scripts/webgpu_m1.mk", "src/main.cpp"):
             target = project / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, target)
@@ -212,7 +212,7 @@ def main():
         rules.write_text(
             "Release:\n"
             "\t@test -f $(PROJECT_ROOT)/src/main.cpp\n"
-            "\t@test '$(PROJECT_CFLAGS)' = '-DVOSC_MINIMAL_BUILD=1 -DVOSC_OPERATOR_UI=0 -DOFXEXPR_NOGUI'\n"
+            "\t@printf '%s\\n' '$(strip $(PROJECT_CFLAGS))' '$(strip $(PROJECT_LDFLAGS))' > bin/build-inputs\n"
             "\t@touch bin/vosc\n"
         )
         commands = work / "commands"
@@ -238,6 +238,9 @@ def main():
         result = run(build)
         assert result.returncode == 0, result
         stage, = (project / ".vosc-linux").iterdir()
+        assert (stage / "bin/build-inputs").read_text().splitlines() == [
+            "-DVOSC_MINIMAL_BUILD=1 -DVOSC_OPERATOR_UI=0 -DOFXEXPR_NOGUI", "",
+        ]
         patched = {"ofxExpr", "ofxMidi", "ofxPostProcessing", "ofxShadertoy"}
         assert set((stage / "addons.make").read_text().split()) == (retained - patched) | {f"addons/{name}" for name in patched}
         staged_midi = stage / "addons/ofxMidi/addon_config.mk"
@@ -265,6 +268,19 @@ def main():
         assert not (stage_only / "bin/vosc").exists()
         assert (stage_only / "bin/data/shaders/direct.frag").is_file()
         verify_example_stage(project / "examples", stage_only / "bin/data/examples")
+        dawn = work / "dawn"
+        (dawn / "lib64").mkdir(parents=True)
+        missing_dawn = run([*build, f"VOSC_DAWN_SDK={dawn}"])
+        assert missing_dawn.returncode and "Dawn archive missing" in missing_dawn.stderr, missing_dawn
+        archive = dawn / "lib64/libwebgpu_dawn.a"
+        archive.touch()
+        experimental = run([*build, f"VOSC_DAWN_SDK={dawn}"])
+        assert experimental.returncode == 0, experimental
+        output = next(line for line in experimental.stdout.splitlines() if line.startswith("Building VOSC minimal in "))
+        experimental_stage = Path(output.removeprefix("Building VOSC minimal in "))
+        flags, libraries = (experimental_stage / "bin/build-inputs").read_text().splitlines()
+        assert f"-DVOSC_WEBGPU_M1=1 -I{dawn}/include" in flags
+        assert libraries == f"{archive} -ldl -lrt"
         verify_desktop_selection(project, sdk, rules, run)
     print("PASS Linux minimal staging and desktop operator UI input selection with a fixture SDK")
 
