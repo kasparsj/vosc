@@ -82,9 +82,9 @@ function parseRequest(value: Record<string, unknown>): WireRequest {
   return { id, method, version, params, target, epoch, revision: revision as number | undefined };
 }
 
-export function requireFields(request: WireRequest, keys: string[]) {
+export function requireFields(request: WireRequest, keys: string[], optional: string[] = []) {
   const actual = Object.keys(request.params);
-  if (actual.length !== keys.length || actual.some(key => !keys.includes(key))) {
+  if (keys.some(key => !actual.includes(key)) || actual.some(key => !keys.includes(key) && !optional.includes(key))) {
     throw new WireError("invalid_request", `Unexpected or missing fields for ${request.method}`);
   }
 }

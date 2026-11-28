@@ -784,6 +784,7 @@ void EngineControl::setup() {
 
 void EngineControl::shutdown() {
 #ifdef VOSC_WEBGPU_M1
+    draftWebGpuStaging.reset();
     m1Preview.reset();
 #endif
     if (trial && trial->feedbackBaseline) interruptTrial();
@@ -850,6 +851,9 @@ size_t EngineControl::pendingCount() const {
 }
 
 bool EngineControl::isPinned(const std::string& id) const {
+#ifdef VOSC_WEBGPU_M1
+    if (draftCandidate && draftCandidate->wgslPrepareId == id) return true;
+#endif
     return (trial && (trial->id == id || trial->actionId == id)) || draftDraw.id == id;
 }
 
@@ -899,7 +903,8 @@ Json EngineControl::dispatch(const Json& request) {
         } else if (backend != "opengl" || params.contains("source")) {
             throw Invalid("invalid_params", "Expected webgpu with source or opengl");
         }
-        if (trial || !m1Switch.empty() || !draftDraw.id.empty() || !queuedDraftCommit.empty())
+        if (trial || draftWebGpuActive() || (draftCandidate && !draftCandidate->wgslPrepareId.empty()) ||
+            !m1Switch.empty() || !draftDraw.id.empty() || !queuedDraftCommit.empty())
             throw Invalid("draft_busy", "A preview transaction is pending");
         if (bool(m1Preview) == (backend == "webgpu"))
             throw Invalid("invalid_params", "Requested backend is already active");
@@ -909,6 +914,7 @@ Json EngineControl::dispatch(const Json& request) {
         accepted["method"] = method;
         receipts.emplace(id, Receipt{request, accepted, ofGetElapsedTimef(), {}});
         receiptOrder.push_back(id);
+        draftWebGpuStaging.reset();
         m1Switch = id;
         return accepted;
     }
@@ -928,6 +934,10 @@ Json EngineControl::dispatch(const Json& request) {
         result["result"] = scene();
     } else if (method == "get_performance") {
         keys(params, {});
+#ifdef VOSC_WEBGPU_M1
+        if (draftWebGpuActive())
+            throw Invalid("wgsl_operation_unsupported", "Performance telemetry is unavailable on the WGSL preview");
+#endif
         result["result"] = performance();
     } else if (method == "get_diagnostics") {
         keys(params, {}, {"after", "limit"});
@@ -942,6 +952,10 @@ Json EngineControl::dispatch(const Json& request) {
         result["result"] = found->response;
     } else if (method == "export_scene") {
         keys(params, {});
+#ifdef VOSC_WEBGPU_M1
+        if (draftWebGpuActive())
+            throw Invalid("export_unsupported", "Standalone replay export is unavailable for WGSL drafts");
+#endif
         if (trial && trial->feedbackBaseline)
             throw Invalid("trial_busy", "feedback trial must settle before export");
         result["result"] = {{"recipe", exportRecipe(render(), runtime(), commands(),
@@ -975,6 +989,11 @@ Json EngineControl::dispatch(const Json& request) {
 }
 
 void EngineControl::validate(const std::string& method, const Json& params) const {
+#ifdef VOSC_WEBGPU_M1
+    if (draftWebGpuActive() && method != "draft_prepare" && method != "draft_commit" &&
+        method != "draft_cancel" && method != "draft_fence")
+        throw Invalid("wgsl_operation_unsupported", "This operation is unavailable on the WGSL preview");
+#endif
     if (method == "configure_layers") {
         keys(params, {"count", "layout"}, {"timing"});
         integer(params["count"], 0, 32, "count");
@@ -1015,7 +1034,7 @@ void EngineControl::validate(const std::string& method, const Json& params) cons
                method == "draft_configure_slot" || method == "draft_bind_uniform") {
         if (!draftPreview) throw Invalid("unknown_method", "draft operations are disabled");
         if (method == "draft_prepare")
-            keys(params, {"source_base64", "source_digest", "lease", "token", "revision", "slots", "bindings"});
+            keys(params, {"source_base64", "source_digest", "lease", "token", "revision", "slots", "bindings"}, {"language"});
         else if (method == "draft_commit")
             keys(params, {"lease", "token", "revision", "control_digest"});
         else if (method == "draft_cancel") keys(params, {"lease", "token"});
@@ -1139,7 +1158,7 @@ void EngineControl::execute(const std::string& id) {
                 setNumericBinding(layer, property, {value});
             }
         }
-        draftCandidate.reset();
+        discardDraftCandidate();
         ++revision;
         ++feedbackConfigurationEpoch;
         entry.response = reply(id, "applied");
@@ -1161,6 +1180,23 @@ void EngineControl::execute(const std::string& id) {
     if (method == "draft_commit") draftCommitReceipt = entry;
 }
 
+void EngineControl::discardDraftCandidate(const char* code) {
+#ifdef VOSC_WEBGPU_M1
+    if (draftCandidate && !draftCandidate->wgslPrepareId.empty()) {
+        if (auto* context = draftWebGpuContext(); context && draftCandidate->wgslStarted)
+            context->cancelPreparation();
+        auto& entry = receipts.at(draftCandidate->wgslPrepareId);
+        if (entry.response["status"] == "queued") {
+            entry.response = failure(draftCandidate->wgslPrepareId, code, "The WGSL preparation was cancelled or superseded");
+            entry.response["method"] = "draft_prepare";
+        }
+    }
+#else
+    (void)code;
+#endif
+    draftCandidate.reset();
+}
+
 bool EngineControl::executeDraft(const std::string& id, const std::string& method,
                                  const Json& params, uint64_t logStart) {
     if (method != "draft_prepare" && method != "draft_commit" && method != "draft_cancel" &&
@@ -1172,7 +1208,7 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
         if (fencedDraftLeases.size() >= 4096 && !fencedDraftLeases.count(lease))
             throw Invalid("lease_capacity", "The private renderer has exhausted its lease capacity");
         fencedDraftLeases.insert(lease);
-        if (draftCandidate && draftCandidate->lease == lease) draftCandidate.reset();
+        if (draftCandidate && draftCandidate->lease == lease) discardDraftCandidate("stale_lease");
         response = reply(id, "ok");
         response["result"] = {{"lease", lease}};
         return true;
@@ -1181,7 +1217,7 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
     if (method == "draft_cancel") {
         const auto token = text(params["token"], 64, "token");
         if (draftCandidate && draftCandidate->lease == lease && draftCandidate->token == token)
-            draftCandidate.reset();
+            discardDraftCandidate();
         response = reply(id, "ok");
         response["result"] = {{"lease", lease}, {"token", token}};
         return true;
@@ -1220,7 +1256,7 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
             VariablePool::getPool(&layer.shader)[name] = binding;
             layer.shader.vars[name] = std::move(binding);
         }
-        draftCandidate.reset();
+        discardDraftCandidate();
         draftDraw = std::move(pending);
         ++revision;
         response = reply(id, "applied");
@@ -1258,18 +1294,40 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
 
     const auto token = text(params["token"], 64, "token");
     if (method == "draft_prepare") {
-        draftCandidate.reset();
+        const auto language = params.contains("language") ? text(params["language"], 4, "language") : "glsl";
+        if (language != "glsl" && language != "wgsl")
+            throw Invalid("invalid_params", "Expected glsl or wgsl draft source");
+#ifdef VOSC_WEBGPU_M1
+        if (language == "glsl" && draftWebGpuActive())
+            throw Invalid("backend_switch_required", "Close the WebGPU preview window on the Render Host, then Run GLSL or Hydra again");
+        if (language == "wgsl" && (!m1Switch.empty() || (m1Preview && !draftWebGpuActive())))
+            throw Invalid("draft_busy", "An experimental WebGPU preview transaction owns this session");
+#else
+        if (language == "wgsl")
+            throw Invalid("wgsl_unavailable", "Install a Dawn-enabled VOSC renderer on this Render Host to run WGSL drafts");
+#endif
+        discardDraftCandidate();
         auto candidate = std::make_unique<DraftCandidate>();
         candidate->lease = lease;
         candidate->token = token;
         candidate->sourceDigest = draftDigest(params["source_digest"]);
         candidate->revision = revision;
-        const auto source = decodeDraftSource(params["source_base64"]);
         if (!params["slots"].is_object() || params["slots"].size() > 16 ||
             !params["bindings"].is_object() || params["bindings"].size() > 128)
             throw Invalid("invalid_params", "Draft slot or binding capacity exceeded");
         candidate->slots = params["slots"];
         candidate->bindings = Json::object();
+#ifdef VOSC_WEBGPU_M1
+        if (language == "wgsl") {
+            if (!candidate->slots.empty() || !params["bindings"].empty())
+                throw Invalid("wgsl_controls_unsupported", "WGSL drafts currently support only the renderer uniform block");
+            candidate->wgslPrepareId = id;
+            candidate->expiresAt = monotonicSeconds() + 3.;
+            draftCandidate = std::move(candidate);
+            return true;
+        }
+#endif
+        const auto source = decodeDraftSource(params["source_base64"]);
         auto conflicts = Json::array();
         std::set<std::string> slots;
         for (const auto& [key, value] : candidate->slots.items()) {
@@ -1339,6 +1397,14 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
         draftCandidate->token != token || monotonicSeconds() >= draftCandidate->expiresAt)
         throw Invalid("stale_candidate", "The prepared draft expired or its context changed");
     const auto controlDigest = draftDigest(params["control_digest"]);
+#ifdef VOSC_WEBGPU_M1
+    if (!draftCandidate->wgslPrepareId.empty()) {
+        if (receipts.at(draftCandidate->wgslPrepareId).response["status"] != "prepared")
+            throw Invalid("stale_candidate", "WGSL preparation has not completed");
+        draftWebGpuCommit = id;
+        return true;
+    }
+#endif
     auto activation = Json{{"lease", lease}, {"token", token}, {"source_digest", draftCandidate->sourceDigest},
         {"control_digest", controlDigest}, {"commit_id", id}};
     const bool usesCallback = draftCandidate->program.variables.count(draftCallbackUniform) != 0;
@@ -1972,8 +2038,21 @@ void EngineControl::update() {
     telemetry.refreshGpuResults();
     updateTelemetry.refreshGpuResults();
     evaluateTrial();
-    if (draftCandidate && monotonicSeconds() >= draftCandidate->expiresAt) draftCandidate.reset();
+    if (draftCandidate && monotonicSeconds() >= draftCandidate->expiresAt) {
+#ifdef VOSC_WEBGPU_M1
+        if (!draftCandidate->wgslPrepareId.empty()) {
+            const auto& id = draftCandidate->wgslPrepareId;
+            auto& entry = receipts.at(id);
+            if (entry.response["status"] == "queued")
+                entry.response = failure(id, "wgsl_prepare_timeout", "Dawn did not finish preparing the WGSL draft");
+        }
+#endif
+        discardDraftCandidate();
+    }
     server.update([this](const std::string& line) { return handle(line); }, ofGetElapsedTimef());
+#ifdef VOSC_WEBGPU_M1
+    pollDraftWebGpuPrepare();
+#endif
     if (!queuedDraftCommit.empty()) {
         const auto commit = std::exchange(queuedDraftCommit, {});
         execute(commit);
@@ -2035,6 +2114,7 @@ Json EngineControl::capabilities() const {
             {"revision_scope", "successful API controls; external_epoch counts legacy dispatch/input; animation and file-watch reloads are not versioned"}};
     if (draftPreview) {
 #ifdef VOSC_WEBGPU_M1
+        result["features"]["draft_wgsl"] = true;
         result["operations"].push_back("draft_m1_status");
         result["operations"].push_back("draft_m1_switch");
 #endif
@@ -2149,11 +2229,17 @@ Json EngineControl::performance() const {
 }
 
 Json EngineControl::scene() const {
+#ifdef VOSC_WEBGPU_M1
+    const bool wgsl = draftWebGpuActive();
+#else
+    constexpr bool wgsl = false;
+#endif
     size_t feedbackCount = 0;
-    for (const auto& layer : render().getLayers()) for (const auto& binding : layer->shader.getTextures())
+    if (!wgsl) for (const auto& layer : render().getLayers()) for (const auto& binding : layer->shader.getTextures())
         if (binding.second && dynamic_cast<ShaderPingPongTex*>(binding.second->tex.get())) ++feedbackCount;
     Json layers = Json::array();
     for (const auto& layer : render().getLayers()) {
+        if (wgsl) break;
         const auto& shader = layer->shader;
         Json uniforms = Json::object(), textures = Json::object();
         auto gpuValues = shader.getUniformValues(draftPreview);
@@ -2231,14 +2317,23 @@ Json EngineControl::scene() const {
             {"onset_gate", commands().isGateEnabled()}, {"legacy_pending", commands().pendingCount()},
             {"width", ofGetWidth()}, {"height", ofGetHeight()}, {"fps", ofGetFrameRate()}};
     if (draftPreview) {
+        result["backend"] = wgsl ? "webgpu" : "opengl";
         result["draft_activation"] = draftActivation;
         result["draft_sample_sequence"] = draftSampleSequence;
         auto slots = Json::object();
-        for (const auto& [name, input] : runtime().inputs.all()) slots[name] = input->get();
+        if (!wgsl) for (const auto& [name, input] : runtime().inputs.all()) slots[name] = input->get();
         result["draft_slots"] = std::move(slots);
     }
-    if (!selfFeedbackDraw.is_null()) result["self_feedback"] = selfFeedbackDraw;
-    if (!graphDraw.is_null()) result["graph_draw"] = graphDraw;
+#ifdef VOSC_WEBGPU_M1
+    if (wgsl) {
+        result["frame"] = draftWebGpuFrame;
+        result["width"] = m1Preview->width;
+        result["height"] = m1Preview->height;
+        if (m1Preview->deviceLost() || m1Preview->shouldClose()) result["draft_device_lost"] = true;
+    }
+#endif
+    if (!wgsl && !selfFeedbackDraw.is_null()) result["self_feedback"] = selfFeedbackDraw;
+    if (!wgsl && !graphDraw.is_null()) result["graph_draw"] = graphDraw;
     return result;
 }
 
@@ -2404,6 +2499,138 @@ void EngineControl::capture(const std::string& id) {
 }
 
 #ifdef VOSC_WEBGPU_M1
+bool EngineControl::draftWebGpuActive() const {
+    return draftActivation.is_object() && draftActivation.value("backend", std::string()) == "webgpu";
+}
+
+webgpu::M1Preview* EngineControl::draftWebGpuContext() const {
+    return m1Preview ? m1Preview.get() : draftWebGpuStaging.get();
+}
+
+void EngineControl::pollDraftWebGpuPrepare() {
+    auto* context = draftWebGpuContext();
+    if (!draftCandidate || draftCandidate->wgslPrepareId.empty()) {
+        if (context) context->pollPreparation(); // Drain an abandoned Dawn callback.
+        return;
+    }
+    const auto& id = draftCandidate->wgslPrepareId;
+    auto& entry = receipts.at(id);
+    if (entry.response["status"] != "queued") return;
+    const auto fail = [&](const char* code, const std::string& detail, const Json& diagnostics = Json::array()) {
+        entry.response = failure(id, code, detail, diagnostics);
+        entry.response["method"] = "draft_prepare";
+        discardDraftCandidate();
+    };
+    try {
+        if (!context) {
+            auto* window = nativeGlWindow();
+            if (!window) throw std::runtime_error("OpenGL preview window is unavailable");
+            draftWebGpuStaging = std::make_unique<webgpu::M1Preview>(window);
+            context = draftWebGpuStaging.get();
+        }
+        if (context->deviceLost()) {
+            if (draftWebGpuActive()) {
+                fail("draft_state_lost", "The WebGPU device was lost. Start a fresh preview session");
+                return;
+            }
+            throw std::runtime_error("The WebGPU device was lost during preparation");
+        }
+        const bool ready = context->pollPreparation();
+        if (!draftCandidate->wgslStarted) {
+            const auto source = decodeDraftSource(entry.request["params"]["source_base64"]);
+            draftCandidate->wgslStarted = context->prepare(source);
+        } else if (ready) {
+            draftCandidate->expiresAt = monotonicSeconds() + 30.;
+            entry.response = reply(id, "prepared");
+            entry.response["method"] = "draft_prepare";
+            entry.response["result"] = {{"token", draftCandidate->token},
+                {"bindings", Json::object()}, {"conflicts", Json::array()}};
+        }
+    } catch (const Invalid& error) {
+        fail(error.code.c_str(), error.what());
+    } catch (const std::exception& error) {
+        if (draftWebGpuActive() && context->deviceLost()) {
+            fail("draft_state_lost", "The WebGPU device was lost. Start a fresh preview session");
+        } else if (context && context->hasDevice() && !context->deviceLost()) {
+            const std::string detail = error.what();
+            fail("shader_failed", detail, Json::array({{{"message", detail.substr(0, 2048)}}}));
+        } else {
+            fail("wgsl_unavailable", std::string("WebGPU is unavailable. Check the Render Host's Vulkan or Metal adapter. ") + error.what());
+            draftWebGpuStaging.reset();
+        }
+    }
+}
+
+bool EngineControl::settleDraftWebGpuDraw() {
+    if (draftWebGpuCommit.empty()) return false;
+    const auto id = std::exchange(draftWebGpuCommit, {});
+    auto& entry = receipts.at(id);
+    const auto& params = entry.request["params"];
+    auto* context = draftWebGpuContext();
+    if (!context || !draftCandidate || draftCandidate->wgslPrepareId.empty() ||
+        draftCandidate->lease != params["lease"].get_ref<const std::string&>() ||
+        draftCandidate->token != params["token"].get_ref<const std::string&>() ||
+        fencedDraftLeases.count(draftCandidate->lease) || revision != draftCandidate->revision ||
+        monotonicSeconds() >= draftCandidate->expiresAt) {
+        entry.response = failure(id, "stale_candidate", "The prepared WGSL draft no longer owns this preview");
+        entry.response["method"] = "draft_commit";
+        draftCommitReceipt = entry;
+        return false;
+    }
+    auto activation = Json{{"lease", draftCandidate->lease}, {"token", draftCandidate->token},
+        {"source_digest", draftCandidate->sourceDigest}, {"control_digest", params["control_digest"]},
+        {"commit_id", id}, {"backend", "webgpu"}, {"first_frame", frame}};
+    bool rejectFrame = false;
+#ifdef VOSC_RECOVERY_TESTING
+    rejectFrame = draftCandidate->token == "test-fail-first-draft-draw";
+#endif
+    try {
+        context->presentPrepared(rejectFrame);
+    } catch (const std::exception& error) {
+        discardDraftCandidate();
+        const bool priorWebGpu = draftWebGpuActive();
+        bool restored = !priorWebGpu;
+        if (priorWebGpu && !context->deviceLost() && !context->shouldClose()) {
+            try {
+                context->draw();
+                draftWebGpuFrame = frame;
+                restored = true;
+            } catch (const std::exception& rollbackError) {
+                ofLogWarning("control") << rollbackError.what();
+            }
+        }
+        const bool lost = context->deviceLost() || context->shouldClose();
+        entry.response = failure(id, priorWebGpu && lost ? "draft_state_lost" : "draft_rolled_back", error.what());
+        if (draftWebGpuStaging && lost) draftWebGpuStaging.reset();
+        entry.response["result"] = {{"scene", scene()}, {"restored_previous", restored}};
+        entry.response["method"] = "draft_commit";
+        draftCommitReceipt = entry;
+        return priorWebGpu && !lost;
+    }
+    if (draftWebGpuStaging) {
+        if (auto* window = nativeGlWindow()) glfwHideWindow(window);
+        m1Preview = std::move(draftWebGpuStaging);
+    }
+    draftCandidate.reset();
+    draftActivation = std::move(activation);
+    draftSampleSequence = 0;
+    draftWebGpuFrame = frame;
+    renderedRevision = ++revision;
+    entry.response = reply(id, "rendered");
+    auto result = draftActivation;
+    const auto& preview = *m1Preview;
+    result["capture_width"] = preview.width;
+    result["capture_height"] = preview.height;
+    result["pixels"] = Json::array();
+    for (const auto& pixel : preview.pixels)
+        result["pixels"].push_back({{"x", pixel.x}, {"y", pixel.y}, {"rgba", pixel.rgba}});
+    result["scene"] = scene();
+    entry.response["result"] = std::move(result);
+    entry.response["method"] = "draft_commit";
+    draftCommitReceipt = entry;
+    return true;
+}
+
 Json EngineControl::m1Status() const {
     const auto* glAdapter = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
     auto* window = nativeGlWindow();
@@ -2411,6 +2638,7 @@ Json EngineControl::m1Status() const {
         {"backend", m1Preview ? m1Preview->backend : "OpenGL"},
         {"adapter", m1Preview ? m1Preview->adapter : (glAdapter ? glAdapter : "")},
         {"opengl_frame", m1OpenGlFrame}, {"webgpu_frames", m1Preview ? m1Preview->frames : 0},
+        {"webgpu_context", m1Preview ? m1Preview->contextId : 0},
         {"opengl_visible", window && glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE},
         {"webgpu_visible", m1Preview && m1Preview->visible()}};
     return result;
@@ -2435,6 +2663,20 @@ void EngineControl::completeM1OpenGlHandoff() {
 
 void EngineControl::drawM1Preview() {
     m1OpenGlFrame = frame;
+    if (settleDraftWebGpuDraw()) return;
+    if (draftWebGpuActive()) {
+        if (m1Preview->deviceLost() || m1Preview->shouldClose()) {
+            if (auto* window = nativeGlWindow()) glfwSetWindowShouldClose(window, GLFW_TRUE);
+            return;
+        }
+        try {
+            m1Preview->draw();
+            draftWebGpuFrame = frame;
+        } catch (const std::exception& error) {
+            ofLogWarning("control") << error.what();
+        }
+        return;
+    }
     if (!m1Switch.empty()) {
         auto& receipt = receipts.at(m1Switch);
         const auto& params = receipt.request.at("params");
@@ -2479,6 +2721,14 @@ void EngineControl::afterDraw() {
     ++frame;
 #ifdef VOSC_WEBGPU_M1
     if (draftPreview) drawM1Preview();
+    if (draftWebGpuActive()) {
+        while (!captures.empty()) {
+            const auto id = captures.front();
+            captures.pop_front();
+            receipts.at(id).response = failure(id, "wgsl_operation_unsupported", "GL preview capture is unavailable on the WGSL preview");
+        }
+        return;
+    }
 #endif
     renderedRevision = revision;
 #ifdef VOSC_RECOVERY_TESTING

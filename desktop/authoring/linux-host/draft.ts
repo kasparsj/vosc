@@ -14,6 +14,7 @@ type Candidate = {
   deadline: number;
   sourceDigest: string;
   controlDigest: string;
+  wgsl: boolean;
   slots: Map<string, Slot>;
   bindings: Map<string, Component[]>;
   attempt: Attempt;
@@ -62,7 +63,7 @@ function slotDefinition(raw: unknown): Slot {
   return { id, label, default: initial };
 }
 
-function fragment(request: WireRequest) {
+function fragment(request: WireRequest, wgsl = false) {
   const { source: encoded, sha256: claimed } = request.params;
   const invalid = () => new WireError("invalid_source", "Expected bounded UTF-8 fragment bytes with matching SHA-256");
   if (typeof encoded !== "string" || encoded.length > 4 * Math.ceil(sourceLimit / 3)) throw invalid();
@@ -73,7 +74,7 @@ function fragment(request: WireRequest) {
   try { source = decoder.decode(bytes); } catch { throw invalid(); }
   const horizontalWhitespace = "[\\t\\p{Zs}]";
   const dependencies = new RegExp(`^${horizontalWhitespace}*#${horizontalWhitespace}*(?:include|pragma${horizontalWhitespace}+include)\\b`, "imu");
-  if (dependencies.test(source) || /\\\r?\n/.test(source)) {
+  if (!wgsl && (dependencies.test(source) || /\\\r?\n/.test(source))) {
     throw new WireError("unsupported_dependency", "File includes and continued source directives are unsupported");
   }
   return { base64: encoded, digest: claimed as string };
@@ -321,7 +322,10 @@ export class Draft {
 
   private async prepare(request: WireRequest): Promise<Row> {
     requireFields(request, ["source", "sha256", "lease", "documentId", "generation", "editSequence",
-      "runSequence", "slots", "bindings"]);
+      "runSequence", "slots", "bindings"], ["language"]);
+    const { language = "glsl" } = request.params;
+    if (language !== "glsl" && language !== "wgsl") throw new WireError("invalid_request", "Unsupported fragment language");
+    const wgsl = language === "wgsl";
     const { lease, documentId, generation, editSequence, runSequence, slots: requestedSlots, bindings } = request.params;
     const intent = object(bindings);
     if (!uuid(lease) || this.fenced.has(lease) || !uuid(documentId) ||
@@ -336,13 +340,22 @@ export class Draft {
       if (slots.has(definition.id)) throw new WireError("invalid_slot", "Duplicate slot identity");
       slots.set(definition.id, definition);
     }
-    const source = fragment(request);
-    if (this.candidate) await this.discard(this.candidate);
+    if (wgsl && (slots.size || Object.keys(intent).length)) {
+      throw new WireError("wgsl_controls_unsupported", "WGSL drafts currently support only the renderer uniform block");
+    }
+    const source = fragment(request, wgsl);
     await this.stopValidator();
     this.expected(request);
     const child = this.renderer ? this.currentRenderer() : await this.startNative(request.epoch!, false);
+    if (wgsl && !child.supportsDraftWgsl) {
+      throw new WireError("wgsl_unavailable", "Install a Dawn-enabled VOSC renderer on this Render Host to run WGSL drafts");
+    }
     const baseline = await child.query("get_scene");
     this.assertRenderer(child);
+    if (!wgsl && baseline.backend === "webgpu") {
+      throw new WireError("backend_switch_required", "Close the WebGPU preview window on the Render Host, then Run GLSL or Hydra again");
+    }
+    if (this.candidate) await this.discard(this.candidate);
     if (this.fenced.has(lease)) throw new WireError("stale_lease", "The draft lease was fenced");
     if (!integer(baseline.revision)) {
       throw new WireError("renderer_protocol", "Native configuration revision is missing");
@@ -350,7 +363,7 @@ export class Draft {
     const receipt = await child.mutate("draft_prepare", {
       source_base64: source.base64, source_digest: source.digest, lease, token: request.id,
       revision: baseline.revision, slots: Object.fromEntries([...slots].map(([id, slot]) => [id, slot.default])),
-      bindings: intent,
+      bindings: intent, ...(wgsl ? { language } : {}),
     }, request.id, "prepared");
     this.assertRenderer(child);
     const result = object(receipt.result);
@@ -374,7 +387,7 @@ export class Draft {
     const controlDigest = sha256(sortedJSON({ slots: sortedSlots, bindings: effective }));
     const attempt = { documentId, generation, editSequence, runSequence };
     const staged = { lease, token: request.id, nativeRevision: baseline.revision, deadline: performance.now() + 20_000,
-      sourceDigest: source.digest, controlDigest, slots, bindings: applied, attempt };
+      sourceDigest: source.digest, controlDigest, wgsl, slots, bindings: applied, attempt };
     if (this.fenced.has(lease)) {
       await this.discard(staged);
       throw new WireError("stale_lease", "The draft lease was fenced");
@@ -446,7 +459,10 @@ export class Draft {
       const message = "The native draw did not confirm the prepared draft";
       const { result, scene, revision } = drawnScene(receipt, staged.nativeRevision, message);
       if (result.lease !== staged.lease || result.token !== staged.token || result.source_digest !== staged.sourceDigest ||
-          result.control_digest !== staged.controlDigest || result.commit_id !== id) {
+          result.control_digest !== staged.controlDigest || result.commit_id !== id ||
+          (staged.wgsl && (result.backend !== "webgpu" || scene.backend !== "webgpu" ||
+            object(scene.draft_activation)?.backend !== "webgpu" || result.first_frame !== receipt.frame ||
+            scene.draft_device_lost === true))) {
         throw new WireError("renderer_protocol", message);
       }
       this.revision = revision;
@@ -640,9 +656,10 @@ export class Draft {
     return {
       role: "draft", version: wireVersion, target: this.target, epoch: this.epoch, revision: this.revision,
       uniforms: uniforms(scene), slots: [...this.slots.keys()].sort().map(id => this.slots.get(id)!),
-      needsRestore: !this.activation,
+      needsRestore: !this.activation || scene.draft_device_lost === true,
       ...(object(scene.draft_activation)?.callback_uniform === callbackUniform ? { callbackUniform } : {}),
       ...(integer(scene.frame) ? { frame: scene.frame } : {}),
+      ...(scene.backend === "webgpu" || scene.backend === "opengl" ? { backend: scene.backend } : {}),
       ...(samples ? { samples } : {}),
       ...(receipt ? { receipt } : {}),
       ...this.activation,

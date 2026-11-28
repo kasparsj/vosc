@@ -12,7 +12,7 @@ struct Fragment {
     let base64: String
     let digest: String
 
-    init(_ request: Request) throws {
+    init(_ request: Request, wgsl: Bool = false) throws {
         guard let encoded = request.params["source"] as? String,
               encoded.utf8.count <= 4 * ((sourceLimit + 2) / 3),
               let bytes = Data(base64Encoded: encoded), !bytes.isEmpty, bytes.count <= sourceLimit,
@@ -20,9 +20,9 @@ struct Fragment {
               let claimed = request.params["sha256"] as? String, claimed == sha256Hex(bytes) else {
             throw WireError("invalid_source", "Expected bounded UTF-8 fragment bytes with matching SHA-256")
         }
-        guard source.range(of: #"(?im)^\h*#\h*(?:include|pragma\h+include)\b"#,
-                           options: .regularExpression) == nil,
-              source.range(of: #"\\\r?\n"#, options: .regularExpression) == nil else {
+        guard wgsl || (source.range(of: #"(?im)^\h*#\h*(?:include|pragma\h+include)\b"#,
+                           options: .regularExpression) == nil &&
+              source.range(of: #"\\\r?\n"#, options: .regularExpression) == nil) else {
             throw WireError("unsupported_dependency", "File includes and continued source directives are unsupported")
         }
         base64 = encoded
@@ -32,6 +32,7 @@ struct Fragment {
 
 final class DraftRenderer {
     let process: Process
+    private(set) var supportsDraftWgsl = false
     private let root: URL
     private let controlPath: String
     private let logPath: URL
@@ -102,6 +103,7 @@ final class DraftRenderer {
                     throw WireError("renderer_capabilities", "Install the matching VOSC renderer to run draft transactions")
                 }
             }
+            supportsDraftWgsl = (capabilities["features"] as? WireObject)?["draft_wgsl"] as? Bool == true
             _ = try mutate("configure_layers", ["count": 1, "layout": "stack"])
         } catch {
             stop()
@@ -132,7 +134,8 @@ final class DraftRenderer {
 
     func mutate(_ method: String, _ params: WireObject, id: String = UUID().uuidString,
                 expecting status: String = "rendered") throws -> WireObject {
-        let until = deadline()
+        let until = method == "draft_prepare" && params["language"] as? String == "wgsl" ?
+            DispatchTime.now().uptimeNanoseconds + 4_500_000_000 : deadline()
         let response = try exchange(method, params, id: id, deadline: until)
         return try settle(response, id: id, expecting: status, until: until)
     }

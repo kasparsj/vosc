@@ -116,6 +116,7 @@ class FixtureHost {
   onCommit?: () => Promise<void>;
   onCallback?: (drawn: ReflectedDraft) => Promise<ReflectedDraft>;
   afterCommit?: () => Promise<void>;
+  corruptRunReceipt?: (state: ReflectedDraft) => void;
   unreachablePorts = new Set<number>();
   sessionRequests: { method: string; port: number; recovery: boolean }[] = [];
 
@@ -200,20 +201,24 @@ class FixtureHost {
       const staged = prepared.params;
       const revision = this.state.revision + 1;
       const frame = revision * 2;
-      const uniforms = structuredClone(this.validatedUniforms);
+      const backend = staged.language === "wgsl" ? "webgpu" : undefined;
+      const uniforms = backend ? [] : structuredClone(this.validatedUniforms);
       for (const uniform of uniforms) {
         const binding = (prepared.bindings[uniform.name] as { components: { fixed?: number }[] } | undefined);
         binding?.components.forEach(({ fixed }, i) => { if (fixed !== undefined) uniform.values[i] = Math.fround(fixed); });
       }
-      this.state = { ...this.state, revision, frame, needsRestore: false, sourceDigest: String(staged.sha256), uniforms,
+      this.state = { ...this.state, revision, frame, backend, needsRestore: false, sourceDigest: String(staged.sha256), uniforms,
         callbackUniform: uniforms.some(uniform => uniform.name === CALLBACK_UNIFORM) ? CALLBACK_UNIFORM : undefined,
         lease: String(staged.lease), token: prepared.id, commitID: id, controlDigest: SOURCE.digest,
         runSequence: Number(staged.runSequence), editSequence: Number(staged.editSequence), generation: Number(staged.generation),
         documentId: String(staged.documentId), slots: staged.slots as ReflectedDraft["slots"],
         receipt: { id: id!, revision, frame, status: "rendered", external_epoch: 0, result: {
           lease: staged.lease, token: prepared.id, source_digest: staged.sha256, control_digest: SOURCE.digest, commit_id: id,
-          scene: { rendered_revision: revision, frame, layers: [{ shader: { loaded: true, program: revision } }] },
+          ...(backend ? { backend, first_frame: frame } : {}),
+          scene: { rendered_revision: revision, frame, backend,
+            layers: backend ? [] : [{ shader: { loaded: true, program: revision } }] },
         } } };
+      this.corruptRunReceipt?.(this.state);
       const result = structuredClone(this.state);
       await this.afterCommit?.();
       if (this.commitReply === "lost") {
@@ -1281,3 +1286,113 @@ test("Hydra cancellation after evaluation prevents admission after native reflec
   assert.equal((await workspace.run()).run.phase, "drawn");
   assert(host.requested.some(request => request.method === "run.fence" && request.params.lease === "prior-native-lease"));
 });
+
+test("WGSL Run and Restore send accepted bytes explicitly as WGSL and save working edits separately", async () => {
+  const host = new FixtureHost();
+  const workspace = new Workspace(host as unknown as HostClient);
+  const savedAt = await mkdtemp(join(tmpdir(), "vosc-wgsl-"));
+  const path = join(savedAt, "WebGPU.vosc-draft");
+  const imported = Buffer.from("// Imported shader ░\r\n@fragment fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {\r\n    return vec4f(uv, 0., 1.);\r\n}\r\n");
+  const source = { name: "WebGPU.wgsl", origin: "Local WGSL", base64: imported.toString("base64"), digest: hash(imported) };
+  try {
+    const starter = (await workspace.create("wgsl")).document!;
+    assert.equal(starter.source.name, "Untitled.wgsl");
+    assert.match(starter.source.text, /@fragment fn fs_main/);
+    await workspace.openSource(source, "wgsl");
+    const accepted = await workspace.run();
+    assert.equal(accepted.run.phase, "drawn");
+    assert.equal(accepted.reflected?.backend, "webgpu");
+    assert.equal(accepted.previewReady, true);
+    assert.equal(accepted.reflected?.receipt?.result?.first_frame, accepted.reflected?.receipt?.frame);
+    const initialPrepare = candidateCalls(host).at(-2)!;
+    assert.equal(initialPrepare.params.language, "wgsl");
+    assert.equal(initialPrepare.params.source, source.base64);
+    assert.equal(initialPrepare.params.sha256, source.digest);
+    assert.throws(() => workspace.captureExport(), { code: "export_unsupported" });
+
+    const draft = accepted.document!;
+    const broken = draft.source.text.replace("vec4f(uv, 0., 1.)", "missing()");
+    workspace.edit({ id: draft.id, generation: draft.generation, editSequence: draft.editSequence + 1, text: broken });
+    host.compileError = new HostError("shader_failed", "WGSL pipeline creation failed", undefined, [":3:12 error: unresolved call target 'missing'"]);
+    const failed = await workspace.run();
+    assert.equal(failed.run.phase, "failed");
+    assert.equal(failed.run.problems[0]?.line, 3);
+    assert.equal(failed.document?.acceptedArtifact?.sourceDigest, source.digest);
+    assert.equal(failed.previewReady, true);
+    await workspace.save(path);
+    const saved = JSON.parse(await readFile(path, "utf8"));
+    assert.equal(saved.language, "wgsl");
+    assert.equal(saved.accepted.language, "wgsl");
+    assert.equal(saved.accepted.project.source.base64, source.base64);
+    assert.equal(saved.source.digest, hash(Buffer.from(broken)));
+    assert.throws(() => parseDocument({ ...saved, language: "glsl" }), { code: "invalid_project" });
+    assert.throws(() => parseDocument({ ...saved, accepted: { ...saved.accepted, language: undefined } }), { code: "invalid_project" });
+
+    const reopened = await workspace.open(path);
+    assert.equal(reopened.document?.source.text, broken);
+    assert.equal(reopened.document?.language, "wgsl");
+    assert.equal(reopened.document?.acceptedArtifact?.sourceDigest, source.digest);
+    host.compileError = null;
+    const restored = await workspace.restore();
+    assert.equal(restored.run.phase, "drawn");
+    assert.equal(restored.document?.source.text, broken);
+    assert.equal(restored.reflected?.sourceDigest, source.digest);
+    const restorePrepare = candidateCalls(host).at(-2)!;
+    assert.equal(restorePrepare.params.language, "wgsl");
+    assert.equal(restorePrepare.params.source, source.base64);
+
+    host.state.needsRestore = true;
+    assert.equal((await workspace.reflect()).previewReady, false);
+  } finally {
+    await rm(savedAt, { recursive: true, force: true });
+  }
+});
+
+for (const malformed of ["backend", "first_frame"] as const) {
+  test(`WGSL Run refuses an unmatched ${malformed} receipt`, async () => {
+    const host = new FixtureHost();
+    const workspace = new Workspace(host as unknown as HostClient);
+    host.corruptRunReceipt = ({ receipt }) => {
+      const result = receipt!.result!;
+      if (malformed === "backend") result.backend = "opengl";
+      else result.first_frame = Number(result.first_frame) + 1;
+    };
+    await workspace.create("wgsl");
+    const run = await workspace.run();
+    assert.equal(run.run.phase, "uncertain");
+    assert.equal(run.document?.acceptedArtifact, null);
+    assert.equal(run.previewReady, false);
+  });
+}
+
+for (const action of ["cancel", "supersede"] as const) {
+  test(`A WGSL prepare cannot commit after the Editor chooses to ${action} it`, async () => {
+    const host = new FixtureHost();
+    const workspace = new Workspace(host as unknown as HostClient);
+    const entered = Promise.withResolvers<void>();
+    const finish = Promise.withResolvers<void>();
+    host.onValidate = async () => {
+      entered.resolve();
+      await finish.promise;
+    };
+    const draft = (await workspace.create("wgsl")).document!;
+    const first = workspace.run();
+    await entered.promise;
+    host.onValidate = undefined;
+    const latest = "// replacement\n" + draft.source.text;
+    if (action === "cancel") await workspace.cancelRun();
+    else {
+      workspace.edit({ id: draft.id, generation: draft.generation, editSequence: draft.editSequence + 1, text: latest });
+      await workspace.run();
+    }
+    finish.resolve();
+    await first;
+    if (action === "supersede") await waitForCallback(() => workspace.view().run.phase === "drawn");
+    const writes = host.requested.filter(item => ["run.prepare", "run.cancel", "run.commit"].includes(item.method));
+    assert.deepEqual(writes.map(item => item.method), action === "cancel" ?
+      ["run.prepare", "run.cancel"] : ["run.prepare", "run.cancel", "run.prepare", "run.commit"]);
+    assert.equal(writes[1].params.token, writes[0].id);
+    assert.equal(workspace.view().document?.acceptedArtifact?.sourceDigest,
+      action === "cancel" ? undefined : hash(Buffer.from(latest)));
+  });
+}

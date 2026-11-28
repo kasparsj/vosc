@@ -330,3 +330,72 @@ for (const stopFails of [false, true]) {
     }
   });
 }
+
+const wgslBytes = Buffer.from("// shader bytes\r\n@fragment fn fs_main() -> @location(0) vec4f { return vec4f(1.0); }\r\n");
+const wgslIntent = { ...intent, language: "wgsl", slots: [], source: wgslBytes.toString("base64"),
+  sha256: createHash("sha256").update(wgslBytes).digest("hex") };
+
+test("Dawn-free host rejects WGSL before draft_prepare", async t => {
+  const draft = new Draft(target, "/unused");
+  const mutate = t.mock.fn();
+  const stop = async () => {};
+  t.mock.method(NativeRenderer, "start", async () =>
+    ({ running: true, supportsDraftWgsl: false, mutate, stop } as unknown as NativeRenderer));
+  try {
+    const cold = await draft.execute(request("health"));
+    await assert.rejects(draft.execute(request("run.prepare", cold, wgslIntent)), { code: "wgsl_unavailable" });
+    assert.equal(mutate.mock.callCount(), 0);
+  } finally {
+    await draft.reset();
+  }
+});
+
+test("Linux host recovers only a correlated WebGPU first-frame receipt and marks device loss", async t => {
+  const draft = new Draft(target, "/unused");
+  let scene: NativeObject = { revision: 7 };
+  let receipt: NativeObject;
+  let valid = false;
+  const native = {
+    running: true, supportsDraftWgsl: true, stop: async () => {},
+    query: async () => scene,
+    async mutate(method: string, params: NativeObject, id: string) {
+      if (method === "draft_prepare") {
+        assert.deepEqual(params, { source_base64: wgslIntent.source, source_digest: wgslIntent.sha256, language: "wgsl",
+          lease, token: id, revision: 7, slots: {}, bindings: {} });
+        return { id, result: { token: id, bindings: {}, conflicts: [] } };
+      }
+      assert.equal(method, "draft_commit");
+      scene = { backend: "webgpu", revision: 8, rendered_revision: 8, frame: 101, layers: [],
+        draft_activation: { lease, backend: "webgpu" } };
+      receipt = { id, revision: 8, frame: 101, status: "rendered", result: {
+        scene, backend: "opengl", first_frame: 102, lease, token: params.token,
+        source_digest: wgslIntent.sha256, control_digest: params.control_digest, commit_id: id,
+      } };
+      return receipt;
+    },
+    async recover() {
+      if (valid) Object.assign(receipt.result as NativeObject, { backend: "webgpu", first_frame: 101 });
+      return receipt;
+    },
+  };
+  t.mock.method(NativeRenderer, "start", async () => native as unknown as NativeRenderer);
+  try {
+    const cold = await draft.execute(request("reflect"));
+    const prepared = await draft.execute(request("run.prepare", cold, wgslIntent, "wgsl-prepare"));
+    await assert.rejects(draft.execute(request("run.commit", prepared, { lease, token: prepared.token }, "wgsl-commit")),
+      { code: "renderer_uncertain" });
+    valid = true;
+    const recovered = await draft.recoverMutation("wgsl-commit");
+    assert.equal(recovered?.backend, "webgpu");
+    assert.equal(recovered?.sourceDigest, wgslIntent.sha256);
+    assert.equal(recovered?.frame, 101);
+    assert.equal(recovered?.revision, 8);
+    assert.deepEqual(recovered?.uniforms, []);
+    assert.equal(recovered?.needsRestore, false);
+    scene = { ...scene, draft_device_lost: true };
+    const lost = await draft.execute(request("reflect"));
+    assert.equal(lost.needsRestore, true);
+  } finally {
+    await draft.reset();
+  }
+});

@@ -23,6 +23,7 @@ final class Draft {
         let deadline: UInt64
         let digest: String
         let controlDigest: String
+        let wgsl: Bool
         let slots: [String: WireObject]
         let bindings: [String: [WireObject]]
         let attempt: WireObject
@@ -182,7 +183,12 @@ final class Draft {
 
     private func prepare(_ request: Request) throws -> WireObject {
         try request.require(["source", "sha256", "lease", "documentId", "generation", "editSequence",
-                             "runSequence", "slots", "bindings"])
+                             "runSequence", "slots", "bindings"], optional: ["language"])
+        let language = request.params["language"] ?? "glsl"
+        guard let language = language as? String, language == "glsl" || language == "wgsl" else {
+            throw WireError("invalid_request", "Unsupported fragment language")
+        }
+        let wgsl = language == "wgsl"
         guard let lease = request.params["lease"] as? String, UUID(uuidString: lease) != nil, !isFenced(lease),
               let document = request.params["documentId"] as? String, UUID(uuidString: document) != nil,
               let generation = wireInt(request.params["generation"]), generation >= 0,
@@ -200,19 +206,31 @@ final class Draft {
             definitions[id] = definition
             defaults[id] = definition["default"]
         }
-        let fragment = try Fragment(request)
-        if let previous = candidate { try discard(previous) }
+        if wgsl && (!requestedSlots.isEmpty || !intent.isEmpty) {
+            throw WireError("wgsl_controls_unsupported", "WGSL drafts currently support only the renderer uniform block")
+        }
+        let fragment = try Fragment(request, wgsl: wgsl)
         stopValidator()
         return try withRenderer(start: true) { child in
             guard !isFenced(lease) else { throw WireError("stale_lease", "The draft lease was fenced") }
+            if wgsl && !child.supportsDraftWgsl {
+                throw WireError("wgsl_unavailable", "Install a Dawn-enabled VOSC renderer on this Render Host to run WGSL drafts")
+            }
             let baseline = try child.query("get_scene")
+            if !wgsl && baseline["backend"] as? String == "webgpu" {
+                throw WireError("backend_switch_required", "Close the WebGPU preview window on the Render Host, then Run GLSL or Hydra again")
+            }
+            if let previous = candidate { try discard(previous) }
+            guard !isFenced(lease) else { throw WireError("stale_lease", "The draft lease was fenced") }
             guard let nativeRevision = wireInt(baseline["revision"]) else {
                 throw WireError("renderer_protocol", "Native configuration revision is missing")
             }
-            let receipt = try child.mutate("draft_prepare", [
+            var params: WireObject = [
                 "source_base64": fragment.base64, "source_digest": fragment.digest, "lease": lease, "token": request.id,
                 "revision": nativeRevision, "slots": defaults, "bindings": intent,
-            ], id: request.id, expecting: "prepared")
+            ]
+            if wgsl { params["language"] = language }
+            let receipt = try child.mutate("draft_prepare", params, id: request.id, expecting: "prepared")
             guard let result = receipt["result"] as? WireObject, result["token"] as? String == request.id,
                   let effective = result["bindings"] as? [String: WireObject],
                   let conflicts = result["conflicts"] as? [WireObject] else {
@@ -232,7 +250,7 @@ final class Draft {
                                        "editSequence": edit, "runSequence": run]
             let staged = Candidate(lease: lease, token: request.id, revision: nativeRevision,
                                    deadline: DispatchTime.now().uptimeNanoseconds + 20_000_000_000,
-                                   digest: fragment.digest, controlDigest: digest, slots: definitions,
+                                   digest: fragment.digest, controlDigest: digest, wgsl: wgsl, slots: definitions,
                                    bindings: applied, attempt: attempt)
             if isFenced(lease) {
                 try discard(staged)
@@ -325,7 +343,10 @@ final class Draft {
               result["control_digest"] as? String == staged.controlDigest, result["commit_id"] as? String == id,
               let scene = result["scene"] as? WireObject, let nativeRevision = wireInt(receipt["revision"]),
               nativeRevision > staged.revision, wireInt(scene["rendered_revision"]) == nativeRevision,
-              wireInt(scene["frame"]) == wireInt(receipt["frame"]) else {
+              let drawnFrame = wireInt(receipt["frame"]), wireInt(scene["frame"]) == drawnFrame,
+              !staged.wgsl || (result["backend"] as? String == "webgpu" && scene["backend"] as? String == "webgpu" &&
+                (scene["draft_activation"] as? WireObject)?["backend"] as? String == "webgpu" &&
+                wireInt(result["first_frame"]) == drawnFrame && scene["draft_device_lost"] as? Bool != true) else {
             throw WireError("renderer_protocol", "The native draw did not confirm the prepared draft")
         }
         revision = nativeRevision
@@ -593,8 +614,10 @@ final class Draft {
     private func snapshot(_ scene: WireObject, receipt: WireObject? = nil) -> WireObject {
         var result: WireObject = ["role": "draft", "version": wireVersion, "target": target, "epoch": epoch,
                                   "revision": revision, "uniforms": uniforms(scene),
-                                  "slots": slots.keys.sorted().compactMap { slots[$0] }, "needsRestore": needsRestore]
+                                  "slots": slots.keys.sorted().compactMap { slots[$0] },
+                                  "needsRestore": needsRestore || scene["draft_device_lost"] as? Bool == true]
         if let frame = wireInt(scene["frame"]) { result["frame"] = frame }
+        if let backend = scene["backend"] as? String { result["backend"] = backend }
         if let samples = scene["draft_slots"] as? WireObject { result["samples"] = samples }
         if let receipt = receipt { result["receipt"] = receipt }
         if ownsCallback(scene) { result["callbackUniform"] = callbackUniform }

@@ -120,6 +120,7 @@ export function DraftPane({ workspace, onWorkspace, onControl }: {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");
   const draft = workspace?.project;
+  const wgsl = workspace?.document?.language === "wgsl";
   const reflected = workspace?.reflected;
   const ready = Boolean(workspace?.previewReady);
   const pending = workspace?.document?.pendingMappings ?? [];
@@ -162,7 +163,7 @@ export function DraftPane({ workspace, onWorkspace, onControl }: {
       <div><dt>Frame</dt><dd>{reflected.frame ?? reflected.receipt?.frame ?? "Unavailable"}</dd></div>
       <div><dt>Drawn receipt</dt><dd>{workspace?.drawnReceipt?.id ?? "Unavailable"}</dd></div>
     </dl></details>}
-    {draft && <section className="feature-section" aria-labelledby="slots-heading">
+    {draft && !wgsl && <section className="feature-section" aria-labelledby="slots-heading">
       <h3 id="slots-heading">OSC slots</h3>
       <form className="form-fields" onSubmit={event => {
         event.preventDefault();
@@ -183,7 +184,7 @@ export function DraftPane({ workspace, onWorkspace, onControl }: {
           onClick={() => void act(async () => onWorkspace(await api.startSamples()))}>Enable OSC input</button>}
       </div>}
     </section>}
-    {draft && <section className="feature-section" aria-labelledby="uniforms-heading">
+    {draft && !wgsl && <section className="feature-section" aria-labelledby="uniforms-heading">
       <h3 id="uniforms-heading">Shader controls</h3>
       {callback && <div>
         <p><code>{CALLBACK_UNIFORM}</code> · {callback.active ? "Editor callback" : "Last confirmed"} · {callback.value.toFixed(4)}</p>

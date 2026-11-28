@@ -68,8 +68,9 @@ struct Request {
         self.bytes = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
     }
 
-    func require(_ keys: Set<String>) throws {
-        guard Set(params.keys) == keys else {
+    func require(_ keys: Set<String>, optional: Set<String> = []) throws {
+        let actual = Set(params.keys)
+        guard keys.isSubset(of: actual), actual.isSubset(of: keys.union(optional)) else {
             throw WireError("invalid_request", "Unexpected or missing fields for \(method)")
         }
     }

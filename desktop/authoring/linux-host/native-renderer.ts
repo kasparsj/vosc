@@ -65,6 +65,9 @@ async function logTail(path: string) {
 }
 
 export class NativeRenderer {
+  private draftWgsl = false;
+  get supportsDraftWgsl() { return this.draftWgsl; }
+
   private exited = false;
   private ready = false;
   private closing?: Promise<void>;
@@ -162,6 +165,7 @@ export class NativeRenderer {
           !Array.isArray(operations) || !required.every(method => operations.includes(method))) {
         throw new WireError("renderer_capabilities", "Installed VOSC cannot handle private draft operations");
       }
+      renderer.draftWgsl = object(capabilities.features) && capabilities.features.draft_wgsl === true;
       await renderer.mutate("configure_layers", { count: 1, layout: "stack" });
       if (!renderer.running) throw new WireError("renderer_startup", "Private renderer exited during startup");
       renderer.ready = true;
@@ -212,7 +216,7 @@ export class NativeRenderer {
   }
 
   async mutate(method: string, params: NativeObject, id: string = randomUUID(), expecting = "rendered") {
-    const until = performance.now() + exchangeMs;
+    const until = performance.now() + (method === "draft_prepare" && params.language === "wgsl" ? 4500 : exchangeMs);
     return this.settle(await this.exchange(method, params, id, until), id, expecting, until);
   }
 
