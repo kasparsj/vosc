@@ -19,16 +19,16 @@ await build({
 });
 await build({
   absWorkingDir: cwd,
-  entryPoints: ["src/renderer.tsx"],
+  entryPoints: { renderer: "src/renderer.tsx", "hydra-worker": "src/hydra-worker.ts" },
   bundle: true,
-  outfile: fileURLToPath(new URL("renderer.js", output)),
+  outdir: fileURLToPath(output),
   platform: "browser",
   target: "es2023",
   define: { "process.env.NODE_ENV": '"production"' },
   jsx: "automatic",
   minify: true,
 });
-for (const file of ["index.html", "styles.css"]) {
+for (const file of ["index.html", "styles.css", "hydra-bootstrap.js"]) {
   await cp(new URL(`../src/${file}`, import.meta.url), new URL(file, output));
 }
 await cp(new URL("../src/icons/", import.meta.url), new URL("icons/", output), { recursive: true });

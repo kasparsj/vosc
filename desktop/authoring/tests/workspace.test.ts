@@ -8,9 +8,11 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { createServer, type TLSSocket } from "node:tls";
-import { parseProject, replay, sourceName, titleFor, writeReplay } from "../src/draft-project";
+import { parseDocument, parseProject, replay, sourceName, sourceWithText, titleFor, writeReplay } from "../src/draft-project";
 import { hash, HostError } from "../src/local-state";
 import { readSample } from "../src/osc-samples";
+import { compileHydra } from "../src/hydra-compiler";
+import { evaluateHydraPatch } from "../src/hydra-patch";
 import { Workspace } from "../src/workspace";
 import { HostClient } from "../src/host-client";
 import { Importer } from "../src/importer";
@@ -756,4 +758,189 @@ test("a definitive typed-control renderer loss clears the live preview immediate
   assert.equal(lost.run.phase, "restore_required");
   assert.equal(lost.document?.acceptedArtifact?.id, drawn.document?.acceptedArtifact?.id);
   assert.deepEqual(lost.project?.slots, []);
+});
+
+const HYDRA = 'osc(11, 0, 0.7).blend(osc(7, 0, 1.1), param("mix", 0.5)).rotate(17).out();';
+const compilePatch = (text: string) => compileHydra(evaluateHydraPatch(text), text);
+const candidateCalls = (host: FixtureHost) =>
+  host.requested.filter(({ method }) => method === "run.prepare" || method === "run.commit");
+
+test("Hydra compiler maps helper operations, sorts reachable uniforms and bounds the graph", async () => {
+  const animated = await readFile("tests/fixtures/hydra/animated.js", "utf8");
+  const result = compilePatch(animated);
+  assert.deepEqual(result, compilePatch(animated));
+  assert.match(result.fragment, /^#version 330\nuniform float time;\nuniform vec2 resolution;\nuniform float u_hydra_mix = 0.5;/);
+  assert.match(result.fragment, /hydra_8\(gl_FragCoord.xy \/ resolution\)/);
+  assert.deepEqual(result.spans.slice(0, 3).map(item => item.location),
+    [{ line: 2, column: 14 }, { line: 4, column: 17 }, { line: 4, column: 17 }]);
+  assert.doesNotMatch(compilePatch('param("unused", 0.4); osc().out();').fragment, /u_hydra_unused/);
+  assert.throws(() => compilePatch('param("x", 0.4); param("x", 0.5); osc().out();'), /Conflicting/);
+  assert.throws(() => compilePatch("osc().out(0);"), /out expects 0/);
+  assert.throws(() => compilePatch("osc().out(); osc().out();"), /exactly one/);
+  assert.throws(() => compilePatch("osc(() => 4).out();"), /osc frequency/);
+  assert.throws(() => compilePatch("osc(-1).out();"), /osc frequency/);
+  assert.throws(() => compilePatch("osc().blend(osc(), 2).out();"), /blend amount/);
+  assert.throws(() => compilePatch("let x = osc(); for(let i = 0; i < 32; i++) x = x.rotate(); x.out();"), /depth 32/);
+  assert.throws(() => compilePatch("let x = osc(); for(let i = 0; i < 7; i++) x = x.blend(x); x.out();"), /128 operations/);
+  assert.throws(() => compilePatch("for(let i = 0; i < 17; i++) param('x' + i, 0); osc().out();"), /16 parameters/);
+  const graph = evaluateHydraPatch(HYDRA);
+  assert.throws(() => compileHydra({ ...graph, output: { op: "raw", location: null } }, HYDRA), /Unsupported/);
+});
+
+test("Hydra stays cold until manual Run and retains separate accepted bytes across offline save and Restore", async () => {
+  const host = new FixtureHost();
+  host.validatedUniforms = [{ name: "u_hydra_mix", values: [0.5], type: "float", owner: "layer", writable: true }];
+  let evaluations = 0;
+  const evaluate = async (source: string) => { evaluations++; return compilePatch(source); };
+  const workspace = new Workspace(host as unknown as HostClient, evaluate);
+  await workspace.create();
+  await workspace.run();
+  assert.equal(workspace.view().run.manualReady, true);
+  await workspace.create("hydra-js");
+  setSource(workspace, HYDRA);
+  const before = candidateCalls(host).length;
+  await workspace.run("automatic");
+  assert.equal(evaluations, 0);
+  assert.equal(candidateCalls(host).length, before);
+  const success = await workspace.run();
+  assert.equal(success.run.phase, "drawn");
+  assert.equal(success.run.manualReady, false);
+  assert.equal(evaluations, 1);
+  const generated = success.run.attempt!.generated!;
+  const prepare = candidateCalls(host).at(-2)!;
+  assert.equal(prepare.params.sha256, hash(Buffer.from(String(prepare.params.source), "base64")));
+  assert.equal(prepare.params.sha256, generated.digest);
+  assert.equal(success.run.attempt?.sourceDigest, hash(HYDRA));
+  await workspace.configureSlot("Mix");
+  const slot = workspace.view().project!.slots[0].id;
+  await workspace.bindComponent("u_hydra_mix", 0, { mode: "range", slot, low: 0.15, high: 0.85 });
+  const working = HYDRA.replace("rotate(17)", "rotate(19)");
+  setSource(workspace, working);
+  const temporary = await mkdtemp(join(tmpdir(), "vosc-hydra-offline-"));
+  try {
+    const path = join(temporary, "hydra.vosc-draft");
+    await workspace.save(path);
+    const saved = JSON.parse(await readFile(path, "utf8"));
+    assert.equal(saved.accepted.hydra.patch.digest, hash(HYDRA));
+    assert.equal(saved.accepted.hydra.generatedDigest, generated.digest);
+    assert.throws(() => parseDocument({ ...saved, accepted: { ...saved.accepted,
+      hydra: { ...saved.accepted.hydra, generatedDigest: hash("different") } } }), /provenance/);
+    const invalid = structuredClone(saved);
+    invalid.accepted.hydra.spans[0].lastLine = 99999;
+    assert.throws(() => parseDocument(invalid), /provenance/);
+    invalid.accepted.hydra.spans = saved.accepted.hydra.spans;
+    invalid.accepted.hydra.patch.digest = hash("corrupt patch");
+    assert.throws(() => parseDocument(invalid), /digest/);
+
+    host.peer = null;
+    const reopened = new Workspace(host as unknown as HostClient, evaluate);
+    await reopened.open(path);
+    assert.equal(reopened.view().document?.source.text, working);
+    assert(reopened.view().document?.acceptedArtifact?.stale);
+    const recipe = await reopened.export(temporary);
+    assert.equal(await readFile(join(recipe, "..", "draft.frag"), "utf8"), generated.source);
+    assert.match(await readFile(recipe, "utf8"), /u_hydra_mix/);
+    host.peer = PEER;
+    const restored = await reopened.restore();
+    assert.equal(restored.run.phase, "drawn");
+    assert.equal(restored.document?.source.text, working);
+    assert.equal(restored.document?.acceptedArtifact?.generated?.digest, generated.digest);
+    assert(restored.document?.acceptedArtifact?.stale);
+    assert.equal(evaluations, 1);
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
+  }
+});
+
+test("Hydra late evaluations cannot prepare after editing, superseding, switching, closing or cancellation", async () => {
+  const replacement = HYDRA.replace("rotate(17)", "rotate(19)");
+  for (const trigger of ["edit", "unflushed edit", "supersede", "destination", "close", "cancel", "crash"]) {
+    const host = new FixtureHost();
+    const dispatch = Promise.withResolvers<AbortSignal>();
+    const gate = Promise.withResolvers<ReturnType<typeof compilePatch>>();
+    let count = 0;
+    const workspace = new Workspace(host as unknown as HostClient, async (text, signal) => {
+      if (++count !== 1) return compilePatch(text);
+      dispatch.resolve(signal);
+      return gate.promise;
+    });
+    await workspace.openSource(sourceWithText(SOURCE, HYDRA), "hydra-js");
+    const pending = workspace.run();
+    const signal = await dispatch.promise;
+    if (trigger === "edit") setSource(workspace, replacement);
+    if (trigger === "unflushed edit") {
+      const { id, generation, editSequence } = workspace.view().document!;
+      assert(workspace.invalidateHydraEdit({ id, generation, editSequence: editSequence + 1 }));
+    }
+    if (trigger === "supersede") await workspace.run();
+    if (trigger === "destination") await workspace.disconnect();
+    if (trigger === "close") workspace.clear();
+    if (trigger === "cancel") await workspace.cancelRun();
+    if (trigger === "crash") {
+      gate.reject(new HostError("hydra_crash", "Renderer exited"));
+    } else {
+      assert(signal.aborted, trigger);
+      gate.resolve(compilePatch(HYDRA));
+    }
+    await pending;
+    if (trigger === "supersede") {
+      for (let i = 0; i < 20 && workspace.view().run.phase !== "drawn"; i++) await delay(0);
+      assert.deepEqual(candidateCalls(host).map(({ method }) => method), ["run.prepare", "run.commit"]);
+      assert.equal(candidateCalls(host)[0].params.runSequence, 2);
+    } else {
+      assert.equal(candidateCalls(host).length, 0, trigger);
+      assert.equal(workspace.view().document?.acceptedArtifact ?? null, null);
+    }
+  }
+});
+
+test("Hydra native diagnostics refer to immutable generated bytes, and edited mapping review stays cold", async () => {
+  const host = new FixtureHost();
+  host.validatedUniforms = [{ name: "u_hydra_mix", values: [0.5], type: "float", owner: "layer", writable: true }];
+  let evaluations = 0;
+  const workspace = new Workspace(host as unknown as HostClient, async source => { evaluations++; return compilePatch(source); });
+  await workspace.openSource(sourceWithText(SOURCE, HYDRA), "hydra-js");
+  await workspace.run();
+  await workspace.bindComponent("u_hydra_mix", 0, { mode: "fixed", value: 0.4 });
+  const accepted = workspace.view().document?.acceptedArtifact?.id;
+  host.compileError = new HostError("compile_error", "Failed", undefined, ["0(8) : invalid type", "unknown driver record"]);
+  const failed = await workspace.run();
+  setSource(workspace, "osc().out();");
+  assert.deepEqual(failed.run.problems.map(({ generatedLine, line, message }) => [generatedLine, line, message]),
+    [[8, 1, "0(8) : invalid type"], [undefined, undefined, "unknown driver record"]]);
+  assert.equal(failed.run.attempt?.source, HYDRA);
+  assert.equal(workspace.view().document?.acceptedArtifact?.id, accepted);
+  host.compileError = null;
+  host.conflicts = [{ name: "u_hydra_mix", reason: "inactive" }];
+  const review = await workspace.run();
+  assert.equal(review.run.phase, "mapping_review");
+  setSource(workspace, HYDRA);
+  await workspace.approveRun(review.run.review!.token);
+  assert.equal(host.requested.at(-1)?.method, "run.cancel");
+  assert.equal(evaluations, 3);
+  assert.equal(workspace.view().document?.acceptedArtifact?.id, accepted);
+});
+
+test("Hydra cancellation after evaluation prevents admission after native reflection", async () => {
+  const host = new FixtureHost();
+  host.state.lease = "prior-native-lease";
+  const entered = Promise.withResolvers<void>();
+  const release = Promise.withResolvers<void>();
+  host.onReflect = async state => {
+    entered.resolve();
+    await release.promise;
+    return state;
+  };
+  const workspace = new Workspace(host as unknown as HostClient, async text => compilePatch(text));
+  await workspace.openSource(sourceWithText(SOURCE, HYDRA), "hydra-js");
+  const pending = workspace.run();
+  await entered.promise;
+  assert.equal(workspace.view().run.phase, "preparing");
+  await workspace.cancelRun();
+  release.resolve();
+  await pending;
+  assert.equal(candidateCalls(host).length, 0);
+  assert.equal(workspace.view().run.phase, "idle");
+  assert.equal((await workspace.run()).run.phase, "drawn");
+  assert(host.requested.some(request => request.method === "run.fence" && request.params.lease === "prior-native-lease"));
 });

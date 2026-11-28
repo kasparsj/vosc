@@ -1,3 +1,5 @@
+import type { HydraSpan } from "./hydra-compiler";
+
 export const SOURCE_LIMIT = 128 * 1024;
 export const SLOT_LIMIT = 16;
 export const BINDING_LIMIT = 1_000_000;
@@ -141,12 +143,13 @@ export interface MappingConflict {
   message: string;
 }
 export type RunMode = "manual" | "automatic";
-export interface RunProblem extends Diagnostic { line?: number; column?: number }
+export interface RunProblem extends Diagnostic { line?: number; column?: number; generatedLine?: number }
+export type GeneratedSource = { source: string; digest: string };
 export interface RunView {
-  phase: "idle" | "preparing" | "mapping_review" | "committing" | "reconciling" | "uncertain" | "failed" | "drawn" | "restore_required";
+  phase: "idle" | "evaluating" | "preparing" | "mapping_review" | "committing" | "reconciling" | "uncertain" | "failed" | "drawn" | "restore_required";
   mode: RunMode | null;
   message: string | null;
-  attempt: { source: string; sourceDigest: string; editSequence: number; runSequence: number } | null;
+  attempt: { source: string; sourceDigest: string; editSequence: number; runSequence: number; generated?: GeneratedSource } | null;
   problems: RunProblem[];
   review: { token: string; conflicts: MappingConflict[] } | null;
   manualReady: boolean;
@@ -158,18 +161,27 @@ export interface DraftControls {
   signatures: ControlSignature[];
   pendingMappings?: PendingMapping[];
 }
+export type DraftLanguage = "glsl" | "hydra-js";
+export interface HydraProvenance {
+  version: 1;
+  emitterVersion: number;
+  patch: DraftSource;
+  generatedDigest: string;
+  spans: HydraSpan[];
+}
 export interface AcceptedArtifact {
   id: string;
   revision: number | null;
   project: DraftProject;
   signatures: ControlSignature[];
+  hydra?: HydraProvenance;
 }
 export interface DraftDocument {
   format: "vosc.authoring.draft";
   version: 2;
   id: string;
   title: string;
-  language: "glsl";
+  language: DraftLanguage;
   source: DraftSource;
   destination: Peer | null;
   controls: DraftControls;
@@ -186,7 +198,7 @@ export interface DocumentView {
   generation: number;
   editSequence: number;
   title: string;
-  language: "glsl";
+  language: DraftLanguage;
   source: { name: string; digest: string; origin: string; text: string };
   dirty: boolean;
   destination: Peer | null;
@@ -197,9 +209,10 @@ export interface DocumentView {
     revision: number | null;
     saved: boolean;
     stale: boolean;
+    generated?: GeneratedSource;
   } | null;
 }
-export type FileCommand = "new" | "open" | "save" | "saveAs" | "close" | "quit";
+export type FileCommand = "new" | "newHydra" | "open" | "save" | "saveAs" | "close" | "quit";
 export interface LibraryItem { id: string; path: string; origin: string }
 
 export interface WorkspaceView {
@@ -239,8 +252,9 @@ export interface AuthoringAPI {
   bindComponent(name: string, component: number, binding: Binding): Promise<WorkspaceView>;
   startSamples(): Promise<WorkspaceView>;
   stopSamples(): Promise<WorkspaceView>;
+  invalidateHydraEdit(edit: Omit<DocumentEdit, "text">): boolean;
   editDraft(edit: DocumentEdit): Promise<DocumentView>;
-  newDraft(): Promise<WorkspaceView>;
+  newDraft(language?: DraftLanguage): Promise<WorkspaceView>;
   saveDraft(saveAs?: boolean): Promise<string | null>;
   onFileCommand(listener: (command: FileCommand) => void): () => void;
   closeDraftWindow(quit?: boolean): Promise<boolean>;

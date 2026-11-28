@@ -54,16 +54,16 @@ function layout() {
   return matchMedia("(width >= 1200px)").matches ? "wide" : "standard";
 }
 
-function sourceLine(source: string, number: number) {
+function sourceLine(source: string, number: number, hydra = false) {
   if (!Number.isInteger(number) || number < 1) return null;
-  const lines = source.split("\n");
+  const lines = source.split(hydra ? /[\n\u2028\u2029]/ : "\n");
   if (number > lines.length) return null;
   let start = 0;
   for (let i = 0; i < number - 1; i++) start += lines[i].length + 1;
   return { start, end: start + lines[number - 1].length };
 }
 
-const pendingRun = new Set(["preparing", "committing", "reconciling"]);
+const pendingRun = new Set(["evaluating", "preparing", "committing", "reconciling"]);
 
 function App() {
   const api = window.voscAuthoring;
@@ -85,6 +85,7 @@ function App() {
   const [reviewBusy, setReviewBusy] = useState(false);
   const [dismissedReview, setDismissedReview] = useState<string | null>(null);
   const [attempted, setAttempted] = useState<{ source: string; line: number; sequence: number } | null>(null);
+  const [generatedInspection, inspectGenerated] = useState<{ source: string; digest: string; label: string } | null>(null);
   const [autoScope, setAutoScope] = useState<string | null>(null);
   const autoScopeRef = useRef<string | null>(null);
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -114,10 +115,11 @@ function App() {
   const currentScope = useRef(executionScope);
   currentScope.current = executionScope;
   const awaitingNative = runsWaiting > 0 || Boolean(run && pendingRun.has(run.phase));
-  const autoEnabled = Boolean(autoScope && autoScope === executionScope);
+  const hydra = draft?.language === "hydra-js";
+  const autoEnabled = Boolean(!hydra && autoScope && autoScope === executionScope);
   const review = run?.review;
-  const showReview = Boolean(review && review.token !== dismissedReview && !dialog && !attempted);
-  const modal = Boolean(dialog || attempted || showReview);
+  const showReview = Boolean(review && review.token !== dismissedReview && !dialog && !attempted && !generatedInspection);
+  const modal = Boolean(dialog || attempted || generatedInspection || showReview);
   const modalRef = useRef(modal);
   modalRef.current = modal;
   const canRun = Boolean(draft && executionScope && !busy && !modal && run &&
@@ -125,6 +127,7 @@ function App() {
       workspace?.project?.destination.target !== peer?.target ||
       workspace?.project?.destination.fingerprint !== peer?.fingerprint));
   const accepted = draft?.acceptedArtifact;
+  const generated = run?.attempt?.generated ?? accepted?.generated;
   const artifactName = accepted && (accepted.revision === null ? `artifact ${accepted.id.slice(0, 12)}` : `revision ${accepted.revision}`);
   const dirty = Boolean(draft?.dirty || editing);
   const libraryVisible = size === "wide" || drawer === "library";
@@ -158,11 +161,12 @@ function App() {
   function jumpToNative(line: number) {
     const attempt = run?.attempt;
     const editor = view.current;
-    if (!attempt || !sourceLine(attempt.source, line)) return;
+    if (!attempt) return;
+    const range = sourceLine(attempt.source, line, hydra);
+    if (!range) return;
     if (editor && draft?.source.digest === attempt.sourceDigest &&
-        editor.state.doc.toString() === attempt.source && line <= editor.state.doc.lines) {
-      const range = editor.state.doc.line(line);
-      editor.dispatch({ selection: { anchor: range.from, head: range.to }, scrollIntoView: true });
+        editor.state.doc.toString() === attempt.source) {
+      editor.dispatch({ selection: { anchor: range.start, head: range.end }, scrollIntoView: true });
       editor.focus();
     } else {
       setAttempted({ line, source: attempt.source, sequence: attempt.runSequence });
@@ -282,9 +286,12 @@ function App() {
   function edit(text: string) {
     if (!draft) return;
     editSequence.current = Math.max(editSequence.current, draft.editSequence) + 1;
-    pending.current = { id: draft.id, generation: draft.generation, editSequence: editSequence.current, text };
+    const identity = { id: draft.id, generation: draft.generation, editSequence: editSequence.current };
+    // Invalidate before the normal debounced text write, including during IME composition.
+    const invalidated = !hydra || api.invalidateHydraEdit(identity);
+    pending.current = { ...identity, text };
     setEditing(true);
-    setProblem("");
+    setProblem(invalidated ? "" : "The draft changed before this edit could be synchronized.");
     scheduleSync();
     scheduleAutomatic();
   }
@@ -396,6 +403,7 @@ function App() {
       const expects = workspaceRef.current?.documentGeneration ?? 0;
       switch (name) {
         case "new": navigate(await api.newDraft(), expects); break;
+        case "newHydra": navigate(await api.newDraft("hydra-js"), expects); break;
         case "open": navigate(await api.openDraft(), expects); break;
         case "save":
         case "saveAs":
@@ -435,6 +443,7 @@ function App() {
     <h1 className="accessible-only">VOSC Editor</h1>
     <header className="command-bar" aria-label="Workspace commands">
       <button ref={newButton} type="button" disabled={busy || !workspace} onClick={() => fileCommand("new")}><Icon name="plus" />New</button>
+      <button type="button" disabled={busy || !workspace} onClick={() => fileCommand("newHydra")}>New Hydra</button>
       <button type="button" disabled={busy || !workspace} onClick={() => fileCommand("open")}><Icon name="folder" />Open…</button>
       <button type="button" disabled={busy || !workspace}
         onClick={() => setDialog({ type: "import", generation })}>Import…</button>
@@ -484,9 +493,13 @@ function App() {
 
     <section className="code-pane" aria-labelledby="source-heading">
       <div className="source-header">
-        <h2 id="source-heading">GLSL fragment</h2>
+        <h2 id="source-heading">{hydra ? "Hydra JavaScript" : "GLSL fragment"}</h2>
         {draft && <span className="muted source-origin" title={draft.source.origin}>{draft.source.origin}</span>}
-        {draft && <button type="button" className="quiet auto-control" aria-pressed={autoEnabled}
+        {generated && <button type="button" onClick={() => inspectGenerated({ ...generated, label: run?.attempt?.generated ? `Run ${run.attempt.runSequence}` : "Accepted artifact" })}>Generated GLSL</button>}
+        {hydra && (run?.phase === "evaluating" || run?.phase === "preparing") && <button type="button" onClick={() => {
+          void api.cancelRun().then(adopt).catch(error => setProblem(message(error)));
+        }}>Cancel Run</button>}
+        {draft && !hydra && <button type="button" className="quiet auto-control" aria-pressed={autoEnabled}
           disabled={!autoEnabled && (!executionScope || !run?.manualReady || run.paused)}
           onClick={() => {
             if (autoEnabled) pauseAutomatic();
@@ -496,10 +509,10 @@ function App() {
             }
           }}>{autoEnabled ? "Pause auto-run" : "Auto-run off"}</button>}
       </div>
-      {draft ? <SourceEditor key={draft.generation} source={draft.source.text} editor={view}
+      {draft ? <SourceEditor key={draft.generation} source={draft.source.text} language={draft.language} editor={view}
         onChange={edit} onPosition={(line, column) => setPosition({ line, column })} onProblem={setProblem}
         onCompositionEnd={() => { scheduleSync(); scheduleAutomatic(); }} /> :
-        <div className="empty-editor"><p>Create, open, or import a GLSL draft.</p></div>}
+        <div className="empty-editor"><p>Create or open a draft, or import a GLSL fragment.</p></div>}
       <section className="problems" aria-labelledby="problems-heading" tabIndex={0}>
         <h3 id="problems-heading">Problems{(problem || run?.problems.length) ? ` · ${Number(Boolean(problem)) + (run?.problems.length ?? 0)}` : ""}</h3>
         <div className="problem-row">
@@ -513,9 +526,9 @@ function App() {
         {!!run?.problems.length && <ul className="native-problems">
           {run.problems.map((item, index) => <li className="problem-row" key={`${run.attempt?.runSequence}-${index}`}>
             <div><p className="problem-source">{draft?.source.name ?? "GLSL"}{item.line !== undefined ?
-              ` · Line ${item.line}${item.column ? `, column ${item.column}` : ""}` : " · Native log"}</p>
+              ` · Line ${item.line}${item.column ? `, column ${item.column}` : ""}` : ""}{item.generatedLine !== undefined && ` · Generated line ${item.generatedLine}`}</p>
               <p className="error native-log">{item.message}</p></div>
-            {run.attempt && item.line !== undefined && sourceLine(run.attempt.source, item.line) &&
+            {run.attempt && item.line !== undefined && sourceLine(run.attempt.source, item.line, hydra) &&
               <button type="button" onClick={() => jumpToNative(item.line!)}>Jump to line</button>}
           </li>)}
         </ul>}
@@ -575,7 +588,7 @@ function App() {
         {dirty && <span>Unsaved changes</span>}
         {notice && <span className="status-notice" title={notice}>{notice}</span>}
       </div>
-      {draft && <div className="position"><span>GLSL</span><span>UTF-8</span><span>Ln {position.line}, Col {position.column}</span></div>}
+      {draft && <div className="position"><span>{hydra ? "JavaScript" : "GLSL"}</span><span>UTF-8</span><span>Ln {position.line}, Col {position.column}</span></div>}
     </footer>
 
     {showReview && review && <WorkspaceDialog key={review.token} title="Review changed mappings"
@@ -593,7 +606,7 @@ function App() {
     {attempted && <WorkspaceDialog key={attempted.sequence} title={`Attempted source · Run ${attempted.sequence}`}
       close={() => setAttempted(null)} focusFallback={focusSource} initialFocus={dialogNode => {
         const text = dialogNode.querySelector("textarea");
-        const range = sourceLine(attempted.source, attempted.line);
+        const range = sourceLine(attempted.source, attempted.line, hydra);
         if (!text || !range) return;
         text.focus();
         text.setSelectionRange(range.start, range.end);
@@ -601,7 +614,17 @@ function App() {
       }}>
       <div className="attempted-source">
         <p className="muted">Read-only snapshot · Line {attempted.line}</p>
-        <textarea aria-label="Attempted GLSL source" readOnly value={attempted.source} spellCheck={false} wrap="off" />
+        <textarea aria-label={hydra ? "Attempted Hydra source" : "Attempted GLSL source"} readOnly value={attempted.source} spellCheck={false} wrap="off" />
+      </div>
+    </WorkspaceDialog>}
+    {generatedInspection && <WorkspaceDialog title={`Generated GLSL · ${generatedInspection.label}`}
+      close={() => inspectGenerated(null)} focusFallback={focusSource}>
+      <div className="attempted-source">
+        <p className="muted">SHA-256 {generatedInspection.digest}</p>
+        <pre className="generated-source" tabIndex={0} aria-label="Generated GLSL"><code>
+          {generatedInspection.source.split("\n").map((line, index, lines) => <span key={index}
+            data-line={index + 1}>{line}{index < lines.length - 1 && "\n"}</span>)}
+        </code></pre>
       </div>
     </WorkspaceDialog>}
     {dialog && <WorkspaceDialog title={dialog.type === "import" ? "Import GLSL" : "Render Host"} close={closeDialog} focusFallback={focusSource}>

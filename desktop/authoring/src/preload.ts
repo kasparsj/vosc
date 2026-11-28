@@ -32,8 +32,9 @@ const api: AuthoringAPI = {
   bindComponent: (name, component, binding) => ipcRenderer.invoke("draft:binding", name, component, binding),
   startSamples: () => ipcRenderer.invoke("draft:sample-start"),
   stopSamples: () => ipcRenderer.invoke("draft:sample-stop"),
+  invalidateHydraEdit: edit => ipcRenderer.sendSync("draft:invalidate-hydra-edit", edit) === true,
   editDraft: edit => ipcRenderer.invoke("draft:edit", edit),
-  newDraft: () => ipcRenderer.invoke("draft:new"),
+  newDraft: (language = "glsl") => ipcRenderer.invoke("draft:new", language),
   saveDraft: (saveAs = false) => ipcRenderer.invoke("draft:save", saveAs),
   onFileCommand: listener => {
     const forward = (_event: Electron.IpcRendererEvent, command: FileCommand) => listener(command);

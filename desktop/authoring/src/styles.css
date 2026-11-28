@@ -299,3 +299,17 @@ pre { max-height: 15rem; overflow: auto; padding: .85rem; background: var(--surf
   .run-command { min-width: auto; }
   .run-command kbd { display: none; }
 }
+
+.generated-source {
+  max-block-size: 55vh;
+  overflow: auto;
+  tab-size: 4;
+}
+
+.generated-source span::before {
+  display: inline-block;
+  min-width: 5ch;
+  color: var(--muted);
+  content: attr(data-line);
+  user-select: none;
+}

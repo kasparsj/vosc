@@ -1,8 +1,9 @@
+import { HYDRA_EMITTER_VERSION, HYDRA_EXCHANGE_LIMIT, HYDRA_OPERATION_LIMIT, validHydraLocation } from "./hydra-compiler";
 import { randomUUID } from "node:crypto";
 import { basename, join } from "node:path";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { BINDING_LIMIT, SLOT_LIMIT, SOURCE_LIMIT, type Binding, type DraftProject,
-  type ControlSignature, type DraftDocument, type DraftSource, type PendingMapping, type Peer, type Slot, type SourceProvenance } from "./contracts";
+  type ControlSignature, type HydraProvenance, type DraftDocument, type DraftSource, type PendingMapping, type Peer, type Slot, type SourceProvenance } from "./contracts";
 import { hash, HostError } from "./local-state";
 
 const SLOT_ID = /^s[a-f0-9]{12}$/;
@@ -198,6 +199,29 @@ export function parseProject(value: unknown): DraftProject {
     destination: parseDestination(value.destination), source: source(value.source), ...parseControls(value) };
 }
 
+function parseHydra(value: unknown, generated: DraftSource): HydraProvenance {
+  const invalid = () => new HostError("invalid_project", "The accepted Hydra provenance is invalid.");
+  if (!record(value) || value.version !== 1 || value.emitterVersion !== HYDRA_EMITTER_VERSION ||
+      value.generatedDigest !== generated.digest || !Array.isArray(value.spans) ||
+      value.spans.length === 0 || value.spans.length > HYDRA_OPERATION_LIMIT ||
+      Buffer.byteLength(JSON.stringify(value.spans)) > HYDRA_EXCHANGE_LIMIT) throw invalid();
+
+  const patch = source(value.patch);
+  const lines = editorText(patch).split(/[\n\u2028\u2029]/);
+  const glslLines = editorText(generated).split("\n").length;
+  let previous = 0;
+  const spans = value.spans.map((span: unknown) => {
+    if (!record(span) || typeof span.firstLine !== "number" || !Number.isInteger(span.firstLine) ||
+        typeof span.lastLine !== "number" || !Number.isInteger(span.lastLine) ||
+        span.firstLine <= previous || span.lastLine < span.firstLine || span.lastLine > glslLines ||
+        (span.location !== null && !validHydraLocation(span.location, lines))) throw invalid();
+    previous = span.lastLine;
+    return { firstLine: span.firstLine, lastLine: span.lastLine,
+      location: span.location && { line: span.location.line, column: span.location.column } };
+  });
+  return { version: 1, emitterVersion: value.emitterVersion, patch, generatedDigest: generated.digest, spans };
+}
+
 export function parseDocument(value: unknown): DraftDocument {
   if (record(value) && value.version === 1) {
     const project = parseProject(value);
@@ -208,7 +232,8 @@ export function parseDocument(value: unknown): DraftDocument {
       accepted: { id: randomUUID(), revision: null, project, signatures: [] },
     };
   }
-  if (!record(value) || value.format !== "vosc.authoring.draft" || value.version !== 2 || value.language !== "glsl" ||
+  if (!record(value) || value.format !== "vosc.authoring.draft" || value.version !== 2 ||
+      (value.language !== "glsl" && value.language !== "hydra-js") ||
       typeof value.id !== "string" || !uuidPattern.test(value.id) || !validTitle(value.title) || !record(value.controls)) {
     throw new HostError("invalid_project", "This file does not contain a supported VOSC draft.");
   }
@@ -220,9 +245,10 @@ export function parseDocument(value: unknown): DraftDocument {
           !Number.isSafeInteger(artifact.revision) || artifact.revision < 0))) {
       throw new HostError("invalid_project", "The last accepted artifact is invalid.");
     }
+    const project = parseProject(artifact.project);
     accepted = {
-      id: artifact.id, revision: artifact.revision,
-      project: parseProject(artifact.project), signatures: parseSignatures(artifact.signatures),
+      id: artifact.id, revision: artifact.revision, project, signatures: parseSignatures(artifact.signatures),
+      ...(value.language === "hydra-js" ? { hydra: parseHydra(artifact.hydra, project.source) } : {}),
     };
   }
   const controls = parseControls(value.controls);
@@ -298,7 +324,7 @@ export async function writeReplay(parent: string, document: DraftProject) {
 }
 
 export function titleFor(source: DraftSource) {
-  const title = source.name.replace(/\.(frag|fs|fsh|glsl)$/i, "").replace(/[\r\n]+/g, " ").trim();
+  const title = source.name.replace(/\.(frag|fs|fsh|glsl|js)$/i, "").replace(/[\r\n]+/g, " ").trim();
   return Array.from(title).slice(0, 60).join("").trimEnd() || "VOSC Draft";
 }
 

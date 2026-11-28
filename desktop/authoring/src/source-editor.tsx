@@ -4,8 +4,9 @@ import { EditorView, drawSelection, keymap, lineNumbers } from "@codemirror/view
 import { defaultKeymap, history, historyKeymap, indentLess, indentMore } from "@codemirror/commands";
 import { HighlightStyle, StreamLanguage, syntaxHighlighting } from "@codemirror/language";
 import { shader } from "@codemirror/legacy-modes/mode/clike";
+import { javascript } from "@codemirror/legacy-modes/mode/javascript";
 import { tags } from "@lezer/highlight";
-import { SOURCE_LIMIT } from "./contracts";
+import { SOURCE_LIMIT, type DraftLanguage } from "./contracts";
 
 const highlighting = HighlightStyle.define([
   { tag: [tags.keyword, tags.typeName], color: "#c9adf3" },
@@ -15,6 +16,7 @@ const highlighting = HighlightStyle.define([
   { tag: [tags.processingInstruction, tags.definition(tags.variableName)], color: "#a1c9f4" },
 ]);
 const glsl = StreamLanguage.define(shader);
+const js = StreamLanguage.define(javascript);
 const encoder = new TextEncoder();
 
 export interface SourceLocation {
@@ -23,8 +25,9 @@ export interface SourceLocation {
   column: number;
 }
 
-export function SourceEditor({ source, editor, onChange, onPosition, onProblem, onCompositionEnd }: {
+export function SourceEditor({ source, language, editor, onChange, onPosition, onProblem, onCompositionEnd }: {
   source: string;
+  language: DraftLanguage;
   editor: RefObject<EditorView | null>;
   onChange: (text: string) => void;
   onPosition: (line: number, column: number) => void;
@@ -44,14 +47,14 @@ export function SourceEditor({ source, editor, onChange, onPosition, onProblem, 
         extensions: [
           ...(nonce ? [EditorView.cspNonce.of(nonce)] : []),
           EditorView.darkTheme.of(true),
-          lineNumbers(), history(), drawSelection(), glsl, syntaxHighlighting(highlighting),
+          lineNumbers(), history(), drawSelection(), language === "hydra-js" ? js : glsl, syntaxHighlighting(highlighting),
           keymap.of([
             { key: "Mod-]", run: indentMore },
             { key: "Mod-[", run: indentLess },
             ...historyKeymap, ...defaultKeymap,
           ]),
           EditorView.contentAttributes.of({
-            "aria-label": "GLSL source", "aria-multiline": "true", spellcheck: "false",
+            "aria-label": language === "hydra-js" ? "Hydra JavaScript source" : "GLSL source", "aria-multiline": "true", spellcheck: "false",
             autocorrect: "off", autocapitalize: "off",
           }),
           EditorState.changeFilter.of(tr => {
@@ -108,7 +111,7 @@ export function SourceEditor({ source, editor, onChange, onPosition, onProblem, 
       if (editor.current === view) editor.current = null;
       view.destroy();
     };
-  }, [editor]);
+  }, [editor, language]);
 
   return <div ref={parent} className="source-editor" />;
 }

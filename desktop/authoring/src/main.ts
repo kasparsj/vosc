@@ -1,11 +1,13 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, session, type IpcMainInvokeEvent, type MenuItemConstructorOptions } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, session, type IpcMainEvent, type IpcMainInvokeEvent, type MenuItemConstructorOptions } from "electron";
 import { randomBytes } from "node:crypto";
-import { mkdirSync, readFileSync } from "node:fs";
-import { readFile } from "node:fs/promises";
-import { basename, dirname, join, resolve } from "node:path";
+import { constants, mkdirSync, readFileSync } from "node:fs";
+import { open, readFile } from "node:fs/promises";
+import { basename, dirname, extname, join, resolve } from "node:path";
 import { Importer } from "./importer";
 import { HostClient } from "./host-client";
-import type { FileCommand } from "./contracts";
+import { SOURCE_LIMIT, type FileCommand } from "./contracts";
+import { sourceName, sourceWithText } from "./draft-project";
+import { ElectronHydraEvaluator, HYDRA_SCHEME } from "./hydra-evaluator";
 import { HostError } from "./local-state";
 import { draftFileToken, Workspace } from "./workspace";
 
@@ -35,16 +37,19 @@ const dataRoot = app.getPath("userData");
 const importer = new Importer(process.resourcesPath, join(dataRoot, "library"),
   fixture);
 const host = new HostClient(dataRoot, join(dirname(process.execPath), "vosc-browse"));
-const workspace = new Workspace(host);
+const workspace = new Workspace(host, new ElectronHydraEvaluator().evaluate);
 let window: BrowserWindow | null = null;
 let filePicker = false;
 let navigating = false;
 let allowClose = false;
 let closing = false;
 
-protocol.registerSchemesAsPrivileged([{ scheme: SCHEME, privileges: { standard: true, secure: true } }]);
+protocol.registerSchemesAsPrivileged([
+  { scheme: SCHEME, privileges: { standard: true, secure: true } },
+  { scheme: HYDRA_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
+]);
 
-function trusted(event: IpcMainInvokeEvent) {
+function trusted(event: IpcMainInvokeEvent | IpcMainEvent) {
   if (!window || event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame ||
       event.senderFrame.url !== APP_URL) {
     throw new Error("Request came from an unauthorized frame.");
@@ -140,6 +145,7 @@ async function mayReplace() {
 function installMenu() {
   const file: MenuItemConstructorOptions = { label: "File", submenu: [
     { label: "New Draft", accelerator: "CommandOrControl+N", click: () => fileCommand("new") },
+    { label: "New Hydra Draft", click: () => fileCommand("newHydra") },
     { label: "Open Draft…", accelerator: "CommandOrControl+O", click: () => fileCommand("open") },
     { label: "Save Draft", accelerator: "CommandOrControl+S", click: () => fileCommand("save") },
     { label: "Save Draft As…", accelerator: "CommandOrControl+Shift+S", click: () => fileCommand("saveAs") },
@@ -217,21 +223,50 @@ function installDraftHandlers() {
   handle("draft:sample-start", () => workspace.startSamples());
   handle("draft:sample-stop", () => workspace.stopSamples());
   handle("draft:restore", () => workspace.restore());
+  ipcMain.on("draft:invalidate-hydra-edit", (event, edit: unknown) => {
+    try {
+      trusted(event);
+      event.returnValue = workspace.invalidateHydraEdit(edit);
+    } catch {
+      event.returnValue = false;
+    }
+  });
   handle("draft:edit", (edit) => workspace.edit(edit));
   handle("draft:save", (saveAs) => navigate(() => saveDocument(saveAs === true)));
-  handle("draft:new", () => navigate(async () => await mayReplace() ? workspace.create() : workspace.view()));
+  handle("draft:new", (language) => navigate(async () => {
+    if (language !== "glsl" && language !== "hydra-js") throw new HostError("invalid_request", "Choose a draft language.");
+    return await mayReplace() ? workspace.create(language) : workspace.view();
+  }));
   handle("draft:open", () => navigate(async () => {
     if (!window) return workspace.view();
     const generation = workspace.documentContext().generation;
     const result = await dialog.showOpenDialog(window, {
       title: "Open VOSC Draft", properties: ["openFile"],
-      filters: [{ name: "VOSC Draft", extensions: ["vosc-draft"] }],
+      filters: [{ name: "VOSC Draft or Hydra JavaScript", extensions: ["vosc-draft", "js"] }],
     });
     checkGeneration(generation);
-    return result.canceled ? workspace.view() : workspace.open(resolve(result.filePaths[0]), mayReplace);
+    if (result.canceled) return workspace.view();
+    const path = resolve(result.filePaths[0]);
+    if (extname(path).toLowerCase() !== ".js") return workspace.open(path, mayReplace);
+    const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    let patch;
+    try {
+      if (!(await file.stat()).isFile()) throw new HostError("invalid_source", "Choose a regular JavaScript file.");
+      const bytes = Buffer.alloc(SOURCE_LIMIT + 1);
+      const { bytesRead } = await file.read(bytes, 0, bytes.length);
+      if (bytesRead > SOURCE_LIMIT) throw new HostError("invalid_source", "Hydra source exceeds 128 KiB.");
+      patch = sourceWithText({ name: sourceName(path), origin: "Local Hydra patch", digest: "", base64: "" },
+        new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes.subarray(0, bytesRead)));
+    } finally {
+      await file.close();
+    }
+    if (!await mayReplace()) return workspace.view();
+    checkGeneration(generation);
+    return workspace.openSource(patch, "hydra-js");
   }));
   handle("draft:close", (quit) => navigate(async () => {
     if (!await mayReplace()) return false;
+    void workspace.cancelRun();
     const target = window;
     const { generation, editSequence } = workspace.documentContext();
     closing = true;

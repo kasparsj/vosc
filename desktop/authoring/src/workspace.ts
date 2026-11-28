@@ -1,9 +1,11 @@
+import { HYDRA_EMITTER_VERSION } from "./hydra-compiler";
+import type { HydraEvaluator } from "./hydra-evaluator";
 import { randomBytes, randomUUID } from "node:crypto";
 import { constants, type BigIntStats } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { BINDING_LIMIT, SLOT_LIMIT, type Binding, type ComponentBinding, type ControlSignature, type DocumentEdit, type DocumentView,
-  type DraftControls, type DraftDocument, type DraftProject, type DraftSource, type DraftUniform, type DrawReceipt,
+  type DraftControls, type DraftDocument, type DraftLanguage, type HydraProvenance, type DraftProject, type DraftSource, type DraftUniform, type DrawReceipt,
   type MappingConflict, type Peer, type PendingMapping, type ReflectedDraft, type RunIdentity, type RunMode,
   type RunProblem, type RunView, type Slot, type WorkspaceView } from "./contracts";
 import { editorText, MAX_PROJECT_BYTES, parseBinding, parseDocument, parseProject, source as checkedSource, sourceWithText, titleFor, validUniformName, writeReplay } from "./draft-project";
@@ -26,6 +28,14 @@ out vec4 fragColor;
 void main() {
     fragColor = vec4(0.2, 0.45, 0.6, 1.0);
 }
+`;
+
+const HYDRA_TEMPLATE = `// Run builds one native shader. Use Inspector to map mix to OSC.
+// rotate() changes the coordinates passed to earlier operations.
+osc(11, 0.18, 0.7)
+  .blend(osc(7, -0.12, 1.1).rotate(-31), param("mix", 0.5))
+  .rotate(17)
+  .out();
 `;
 
 function fileToken(stat: BigIntStats): string {
@@ -72,9 +82,9 @@ function workingIdentity(document: DraftDocument) {
   return JSON.stringify([document.title, document.source.digest, document.destination, document.controls]);
 }
 
-function documentFromSource(source: DraftSource): DraftDocument {
+function documentFromSource(source: DraftSource, language: DraftLanguage = "glsl"): DraftDocument {
   return { format: "vosc.authoring.draft", version: 2, id: randomUUID(), title: titleFor(source),
-    language: "glsl", source: checkedSource(source), destination: null,
+    language, source: checkedSource(source), destination: null,
     controls: { slots: [], bindings: [], signatures: [] }, accepted: null };
 }
 
@@ -102,6 +112,8 @@ type Attempt = {
   title: string;
   mode: RunMode;
   restoring: boolean;
+  language: DraftLanguage;
+  hydra?: HydraProvenance;
   context: number;
   peer: Peer;
 };
@@ -240,7 +252,18 @@ export class Workspace {
   private sampleTask: Promise<void> | null = null;
   private samples = new SampleRelay((slot, value) => this.relaySample(slot, value));
 
-  constructor(readonly host: HostClient) {}
+  private evaluation: AbortController | null = null;
+  private hydraPendingEdit = 0;
+  private cancelledHydraRun = 0;
+
+  constructor(readonly host: HostClient, private readonly evaluateHydra?: HydraEvaluator) {}
+
+  private cancelEvaluation() {
+    if (this.evaluation || this.runView.phase === "evaluating") {
+      this.evaluation?.abort();
+      this.runView = EMPTY_RUN;
+    }
+  }
 
   private get project() { return this.document?.accepted?.project ?? null; }
 
@@ -261,7 +284,10 @@ export class Workspace {
       acceptedArtifact: accepted && {
         id: accepted.id, sourceDigest: accepted.project.source.digest, revision: accepted.revision,
         saved: this.savedArtifact === accepted.id,
-        stale: source.digest !== accepted.project.source.digest || !!document.controls.pendingMappings?.length ||
+        ...(accepted.hydra ? { generated: { source: Buffer.from(accepted.project.source.base64, "base64").toString("utf8"),
+          digest: accepted.project.source.digest } } : {}),
+        stale: source.digest !== (accepted.hydra?.patch.digest ?? accepted.project.source.digest) ||
+          !samePeer(document.destination, accepted.project.destination) || !!document.controls.pendingMappings?.length ||
           JSON.stringify(document.controls.bindings) !== JSON.stringify(accepted.project.bindings) ||
           JSON.stringify(document.controls.slots) !== JSON.stringify(accepted.project.slots),
       },
@@ -283,6 +309,7 @@ export class Workspace {
     this.document = document;
     this.documentGeneration += 1;
     this.editSequence = 0;
+    this.hydraPendingEdit = 0;
     this.originalSource = document?.source ?? null;
     this.savedSource = path ? this.originalSource : null;
     this.savedWorking = document && workingIdentity(document);
@@ -293,6 +320,16 @@ export class Workspace {
     this.pendingReply = null;
     this.samples.stop();
     this.notice = document?.accepted ? "Draft opened. Restore it on its paired host for native preview." : null;
+  }
+
+  invalidateHydraEdit(value: unknown) {
+    const edit = value as Partial<DocumentEdit> | null;
+    if (!edit || this.document?.language !== "hydra-js" || edit.id !== this.document.id ||
+        edit.generation !== this.documentGeneration || typeof edit.editSequence !== "number" ||
+        !Number.isSafeInteger(edit.editSequence) || edit.editSequence <= this.editSequence) return false;
+    this.hydraPendingEdit = Math.max(this.hydraPendingEdit, edit.editSequence);
+    this.cancelEvaluation();
+    return true;
   }
 
   edit(value: unknown): DocumentView {
@@ -308,21 +345,24 @@ export class Workspace {
       .find(source => source && editorText(source) === text);
     this.document = { ...current, source: retained ?? sourceWithText(current.source, text) };
     this.editSequence = edit.editSequence;
+    this.cancelEvaluation();
     return this.documentView()!;
   }
 
-  create() {
+  create(language: DraftLanguage = "glsl") {
     return this.perform(async () => {
+      const hydra = language === "hydra-js";
       this.setDocument(documentFromSource(sourceWithText({
-        name: "Untitled.frag", origin: "New GLSL fragment", digest: "", base64: "",
-      }, GLSL_TEMPLATE)));
+        name: hydra ? "Untitled.js" : "Untitled.frag",
+        origin: hydra ? "New Hydra patch" : "New GLSL fragment", digest: "", base64: "",
+      }, hydra ? HYDRA_TEMPLATE : GLSL_TEMPLATE), language));
       return this.view();
     });
   }
 
-  openSource(source: DraftSource) {
+  openSource(source: DraftSource, language: DraftLanguage = "glsl") {
     return this.perform(async () => {
-      this.setDocument(documentFromSource(source));
+      this.setDocument(documentFromSource(source, language));
       return this.view();
     });
   }
@@ -487,7 +527,8 @@ export class Workspace {
   }
 
   private adopt(state: ReflectedDraft, project: DraftProject, pendingMappings?: PendingMapping[],
-                workingOverride?: DraftControls) {
+                workingOverride?: DraftControls,
+                hydra = this.document?.accepted?.hydra) {
     if (!state.receipt) throw new HostError("missing_drawn_receipt", "The host did not acknowledge a drawn frame.");
     this.acknowledged = { epoch: state.epoch, revision: state.revision, receipt: state.receipt };
     this.lastObservation = { revision: state.revision, time: Date.now() };
@@ -501,7 +542,7 @@ export class Workspace {
       controls: workingOverride ?? { slots: project.slots, bindings: project.bindings, signatures,
         ...(pendingMappings?.length || this.document.controls.pendingMappings ?
           { pendingMappings: pendingMappings ?? this.document.controls.pendingMappings } : {}) },
-      accepted: { id: randomUUID(), revision: state.revision, project: acceptedProject, signatures } };
+      accepted: { id: randomUUID(), revision: state.revision, project: acceptedProject, signatures, ...(hydra ? { hydra } : {}) } };
     this.notice = null;
     return this.view();
   }
@@ -610,6 +651,7 @@ export class Workspace {
   }
 
   private dropRun() {
+    this.cancelEvaluation();
     this.context += 1;
     this.queue = null;
     this.prepared = null;
@@ -714,8 +756,10 @@ export class Workspace {
                    problems: RunProblem[] = [], review: RunView["review"] = null) {
     if (!this.current(attempt)) return;
     this.runView = { ...this.runView, phase, message, mode: attempt.mode, problems, review,
-      attempt: { source: editorText(attempt.source), sourceDigest: attempt.source.digest,
-        editSequence: attempt.identity.editSequence, runSequence: attempt.identity.runSequence },
+      attempt: { source: editorText(attempt.hydra?.patch ?? attempt.source),
+        sourceDigest: attempt.hydra?.patch.digest ?? attempt.source.digest,
+        editSequence: attempt.identity.editSequence, runSequence: attempt.identity.runSequence,
+        ...(attempt.hydra ? { generated: { source: Buffer.from(attempt.source.base64, "base64").toString("utf8"), digest: attempt.source.digest } } : {}) },
       paused: ["mapping_review", "reconciling", "uncertain", "restore_required"].includes(phase),
     };
   }
@@ -724,10 +768,28 @@ export class Workspace {
     if (!this.current(attempt)) throw new HostError("stale_document", "The preview context changed.");
   }
 
+  private freshHydraRun(attempt: Attempt) {
+    return this.current(attempt) && attempt.identity.editSequence === this.editSequence &&
+      attempt.identity.editSequence >= this.hydraPendingEdit && attempt.identity.runSequence === this.runSequence &&
+      attempt.peer.endpoint.host === this.host.peer?.endpoint.host &&
+      attempt.peer.endpoint.port === this.host.peer?.endpoint.port;
+  }
+
+  private requirePreAdmission(attempt: Attempt) {
+    this.requireCurrent(attempt);
+    if (attempt.language !== "hydra-js") return;
+    if (attempt.identity.runSequence <= this.cancelledHydraRun) {
+      throw new HostError("hydra_cancelled", "Run cancelled. Previous preview retained.");
+    }
+    if (!attempt.restoring && !this.freshHydraRun(attempt)) {
+      throw new HostError("hydra_stale", "The Hydra patch changed. Run the current source explicitly.");
+    }
+  }
+
   private captureRun(mode: RunMode, restoring = false): Attempt {
     const document = this.document;
     const peer = this.host.peer;
-    if (!document || !peer) throw new HostError("host_unavailable", "Open a GLSL draft and connect to a paired render host.");
+    if (!document || !peer) throw new HostError("host_unavailable", "Open a draft and connect to a paired render host.");
     if (document.destination && !samePeer(document.destination, peer)) {
       throw new HostError("wrong_host", "Choose Use this host before running on a new destination.");
     }
@@ -740,16 +802,19 @@ export class Workspace {
       signatures: artifact.signatures } : document.controls;
     return { identity: { documentId: document.id, generation: this.documentGeneration,
       editSequence: this.editSequence, runSequence: ++this.runSequence, sourceDigest: source.digest },
-      source, controls, title: artifact?.project.title ?? document.title, mode, restoring, context: this.context, peer };
+      source, controls, title: artifact?.project.title ?? document.title, mode, restoring,
+      language: document.language, hydra: artifact?.hydra, context: this.context, peer };
   }
 
   run(mode: unknown = "manual") {
     if (mode !== "manual" && mode !== "automatic") throw new HostError("invalid_request", "Choose a Run mode.");
-    if (mode === "automatic" && (!this.runView.manualReady || this.runView.paused)) return Promise.resolve(this.view());
+    if (mode === "automatic" && (this.document?.language === "hydra-js" || !this.runView.manualReady || this.runView.paused)) return Promise.resolve(this.view());
     if (this.runView.phase === "restore_required" && this.project && samePeer(this.host.peer, this.project.destination)) {
       throw new HostError("restore_required", "Restore the last accepted artifact before running here again.");
     }
-    return this.submit(this.captureRun(mode));
+    const attempt = this.captureRun(mode);
+    if (attempt.language === "hydra-js") this.cancelEvaluation();
+    return this.submit(attempt);
   }
 
   private submit(attempt: Attempt) {
@@ -801,20 +866,42 @@ export class Workspace {
   }
 
   private async prepareAndMaybeCommit(attempt: Attempt) {
-    this.setPhase(attempt, "preparing", "Compiling GLSL on the render host.");
     try {
+      this.requirePreAdmission(attempt);
+      if (!attempt.source.base64) throw new HostError("empty_source", "Enter source before running.");
+      if (attempt.language === "hydra-js" && !attempt.restoring) {
+        if (!this.evaluateHydra) throw new HostError("hydra_unavailable", "The isolated Hydra evaluator is unavailable.");
+        const job = new AbortController();
+        this.evaluation = job;
+        this.setPhase(attempt, "evaluating", "Evaluating the Hydra patch.");
+        try {
+          const patch = attempt.source;
+          const patchText = new TextDecoder().decode(Buffer.from(patch.base64, "base64"));
+          const { fragment, spans } = await this.evaluateHydra(patchText, job.signal);
+          if (job.signal.aborted || !this.freshHydraRun(attempt)) return;
+          const source = sourceWithText({ name: "Generated Hydra GLSL", origin: patch.name, digest: "", base64: "" }, fragment);
+          attempt = { ...attempt, source, identity: { ...attempt.identity, sourceDigest: source.digest },
+            hydra: { version: 1, emitterVersion: HYDRA_EMITTER_VERSION, patch, generatedDigest: source.digest, spans } };
+        } catch (error) {
+          if (job.signal.aborted || !this.freshHydraRun(attempt)) return;
+          throw error;
+        } finally {
+          if (this.evaluation === job) this.evaluation = null;
+        }
+      }
+      this.setPhase(attempt, "preparing", "Compiling GLSL on the render host.");
       await this.observation;
       await this.sampleTask;
-      this.requireCurrent(attempt);
-      if (!attempt.source.base64) throw new HostError("empty_source", "Enter GLSL before running.");
+      this.requirePreAdmission(attempt);
       await this.cancelPrepared();
+      this.requirePreAdmission(attempt);
       if (!await this.settleFence(attempt)) return;
       if (this.current(attempt)) this.retiringAttempt = null;
-      this.requireCurrent(attempt);
+      this.requirePreAdmission(attempt);
       const previousLease = this.lease;
-      const lease = this.lease ??= { id: randomUUID(), host: this.host.session(), version: null, sampleSequence: 0 };
+      const lease = previousLease ?? { id: randomUUID(), host: this.host.session(), version: null, sampleSequence: 0 };
       const raw = await lease.host.rpc("reflect", {});
-      this.requireCurrent(attempt);
+      this.requirePreAdmission(attempt);
       const state = this.receive(raw);
       if (lease.version && lease.version.epoch !== state.epoch) {
         this.lease = null;
@@ -825,9 +912,10 @@ export class Workspace {
       lease.version = state;
       if (!previousLease && attempt.mode === "manual" && state.lease && state.lease !== lease.id) {
         const fenced = await this.fence({ id: state.lease, host: lease.host, version: state, sampleSequence: 0 });
-        this.requireCurrent(attempt);
+        this.requirePreAdmission(attempt);
         if (!fenced) throw new HostError("lease_owned", "Another controller may own the prior preview lease.");
       }
+      this.lease = lease;
       const id = randomUUID();
       const identity = { ...attempt.identity, lease: lease.id };
       const intent = encodeBindings(attempt.controls);
@@ -845,6 +933,11 @@ export class Workspace {
       }
       this.requireCurrent(attempt);
       const candidate = this.preparedResult(result, identity, state, id, intent);
+      if (attempt.language === "hydra-js" && (attempt.identity.runSequence <= this.cancelledHydraRun ||
+          (!attempt.restoring && !this.freshHydraRun(attempt)))) {
+        await lease.host.rpc("run.cancel", { lease: lease.id, token: id }, candidate);
+        this.requirePreAdmission(attempt);
+      }
       if (candidate.conflicts.length) {
         if (attempt.restoring) {
           await lease.host.rpc("run.cancel", { lease: lease.id, token: id }, candidate);
@@ -857,6 +950,7 @@ export class Workspace {
       }
       await this.commit(attempt, lease, candidate);
     } catch (error) {
+      if (error instanceof HostError && error.code === "hydra_cancelled") return;
       this.failAttempt(attempt, error);
     }
   }
@@ -951,9 +1045,9 @@ export class Workspace {
     }
     const observed = this.receive(state, true);
     this.unknownCommit = null;
-    this.adopt(observed, project, pending, attempt.restoring ? this.document?.controls : undefined);
+    this.adopt(observed, project, pending, attempt.restoring ? this.document?.controls : undefined, attempt.hydra);
     commit.terminal = true;
-    if (attempt.mode === "manual" && !attempt.restoring) this.runView = { ...this.runView, manualReady: true };
+    if (attempt.mode === "manual" && !attempt.restoring && attempt.language === "glsl") this.runView = { ...this.runView, manualReady: true };
     this.setPhase(attempt, "drawn", `Native revision ${state.revision} drew frame ${receipt.frame}.`);
   }
 
@@ -1014,7 +1108,15 @@ export class Workspace {
       this.samples.stop();
       this.runView = { ...this.runView, manualReady: false };
     }
-    this.setPhase(attempt, phase, failure.message.split("\n")[0], problemEntries(failure, editorText(attempt.source)));
+    let problems = problemEntries(failure, editorText(attempt.source));
+    if (attempt.hydra) {
+      problems = problems.map(({ line, column: _column, ...problem }) => {
+        const span = line === undefined ? undefined :
+          attempt.hydra?.spans.find(entry => line >= entry.firstLine && line <= entry.lastLine);
+        return { ...problem, ...(line === undefined ? {} : { generatedLine: line }), ...span?.location };
+      });
+    }
+    this.setPhase(attempt, phase, failure.message.split("\n")[0], problems);
   }
 
   private async cancelPrepared() {
@@ -1036,9 +1138,12 @@ export class Workspace {
         if (this.prepared !== staged) return;
         this.prepared = null;
         this.requireCurrent(staged.attempt);
-        if (staged.attempt.identity.editSequence !== this.editSequence) {
+        if (staged.attempt.identity.editSequence !== this.editSequence ||
+            (staged.attempt.hydra && !this.freshHydraRun(staged.attempt))) {
           await staged.lease.host.rpc("run.cancel", { lease: staged.lease.id, token }, staged.candidate);
-          await this.prepareAndMaybeCommit(this.captureRun("manual"));
+          if (staged.attempt.hydra) {
+            this.setPhase(staged.attempt, "idle", "The Hydra patch changed. Run the current source explicitly.");
+          } else await this.prepareAndMaybeCommit(this.captureRun("manual"));
           return;
         }
         await this.commit(staged.attempt, staged.lease, staged.candidate);
@@ -1048,7 +1153,17 @@ export class Workspace {
 
   cancelRun(token?: unknown) {
     if (this.queue?.mode === "automatic") this.queue = null;
-    if (token === undefined) return Promise.resolve(this.view());
+    if (token === undefined) {
+      if (this.document?.language === "hydra-js") {
+        if (this.queue?.language === "hydra-js") this.queue = null;
+        if (this.evaluation || this.runView.phase === "evaluating" || this.runView.phase === "preparing") {
+          this.cancelledHydraRun = this.runSequence;
+          this.cancelEvaluation();
+          this.runView = { ...EMPTY_RUN, message: "Run cancelled. Previous preview retained." };
+        }
+      }
+      return Promise.resolve(this.view());
+    }
     const staged = this.prepared;
     if (staged?.candidate.token !== token || this.flight || this.busy || this.pendingReply || this.unknownCommit) {
       throw new HostError("stale_candidate", "The prepared mapping review is no longer available.");
@@ -1067,7 +1182,7 @@ export class Workspace {
     if (!samePeer(document.destination, peer)) {
       this.dropRun();
       this.document = { ...document, destination: peer };
-      this.notice = "Destination selected. Run GLSL when ready.";
+      this.notice = "Destination selected. Run when ready.";
     }
     return this.view();
   }
@@ -1281,7 +1396,9 @@ export class Workspace {
   }
 
   restore() {
-    return this.submit(this.captureRun("manual", true));
+    const attempt = this.captureRun("manual", true);
+    this.cancelEvaluation();
+    return this.submit(attempt);
   }
 
   captureExport() {
