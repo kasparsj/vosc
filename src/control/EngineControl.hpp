@@ -11,6 +11,7 @@
 #include <map>
 #include <optional>
 #ifdef VOSC_WEBGPU_M1
+#include "../webgpu/GlslTranslation.hpp"
 #include "../webgpu/M1Preview.hpp"
 #endif
 
@@ -165,8 +166,12 @@ private:
         std::string lease, token, sourceDigest;
         uint64_t revision = 0;
         double expiresAt = 0;
+        bool negotiatedBackend = false;
 #ifdef VOSC_WEBGPU_M1
-        std::string wgslPrepareId;
+        std::string wgslPrepareId, webGpuSource, artifactDigest, compilerIdentity;
+        std::vector<webgpu::M1Preview::ControlLane> controls;
+        std::optional<float> fixedTime;
+        bool needsTranslation = false;
         bool wgslStarted = false;
 #endif
     };
@@ -191,6 +196,8 @@ private:
     std::optional<Receipt> draftCommitReceipt;
     std::optional<Receipt> draftControlReceipt;
     bool executeDraft(const std::string& id, const std::string& method, const ofJson& params, uint64_t logStart);
+    bool prepareOpenGlDraft(const std::string& id, const ofJson& params, const std::string& source,
+                            std::unique_ptr<DraftCandidate> candidate, uint64_t logStart);
     bool settleDraftDraw();
     void discardDraftCandidate(const char* code = "stale_candidate");
 #ifdef VOSC_WEBGPU_M1
@@ -199,7 +206,11 @@ private:
     void completeM1OpenGlHandoff();
     bool draftWebGpuActive() const;
     webgpu::M1Preview* draftWebGpuContext() const;
+    bool pollDraftTranslation();
     void pollDraftWebGpuPrepare();
+    webgpu::GlslTranslationTools translationTools = webgpu::GlslTranslationTools::fromEnvironment();
+    webgpu::GlslTranslationJob translationJob;
+    std::string translationRequest;
     bool settleDraftWebGpuDraw();
     std::unique_ptr<webgpu::M1Preview> draftWebGpuStaging;
     std::string draftWebGpuCommit;

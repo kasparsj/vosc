@@ -16,6 +16,8 @@ import tarfile
 import tempfile
 from urllib.request import urlretrieve
 
+import stage_webgpu_tools
+
 
 DESKTOP = Path(__file__).resolve().parents[1]
 ROOT = DESKTOP.parents[1]
@@ -187,7 +189,7 @@ def stage_controller(output, electron_dist, python_archive, manifest, fixture=No
     return target, python
 
 
-def stage_host(output, version, renderer_app):
+def stage_host(output, version, renderer_app, webgpu_tools=None):
     target = output / "VOSC Render Host.app"
     binary = target / "Contents/MacOS/VOSC Render Host"
     binary.parent.mkdir(parents=True)
@@ -199,7 +201,13 @@ def stage_host(output, version, renderer_app):
     # Preserve ordinary VOSC as a separate bundle beside the optional companion.
     run(["codesign", "--verify", "--deep", "--strict", renderer_app])
     renderer = output / renderer_app.name
-    shutil.copytree(renderer_app, renderer, symlinks=True)
+
+    def ignore_staged_tools(directory, names):
+        if Path(directory) == renderer_app / "Contents/Resources" and "webgpu-tools" in names:
+            return ("webgpu-tools",)
+        return ()
+
+    shutil.copytree(renderer_app, renderer, symlinks=True, ignore=ignore_staged_tools)
     for binary in sorted(path for path in renderer.rglob("*") if mach_o(path)):
         arches = run(["lipo", "-archs", binary], capture=True).strip().split()
         if arches != ["arm64"]:
@@ -207,10 +215,12 @@ def stage_host(output, version, renderer_app):
             run(["lipo", binary, "-thin", "arm64", "-output", thin])
             thin.chmod(binary.stat().st_mode & 0o777)
             thin.replace(binary)
+    if webgpu_tools is not None:
+        stage_webgpu_tools.stage_tools(webgpu_tools, renderer / "Contents/Resources/webgpu-tools", "macos-arm64")
     return target, renderer
 
 
-def sign(artifact, identity, entitlements=None):
+def sign(artifact, identity, entitlements=None, webgpu_tools=None):
     def inner(path, grants=None):
         options = ["--entitlements", grants] if grants else []
         run(["codesign", "--force", "--sign", identity, "--options", "runtime",
@@ -229,8 +239,13 @@ def sign(artifact, identity, entitlements=None):
             inner(container / "Versions/A")
         else:
             inner(container, entitlements if container.suffix == ".app" else None)
+    if webgpu_tools is not None:
+        # Seal the manifest with hashes of the signed compiler executables.
+        stage_webgpu_tools.write_manifest(webgpu_tools)
     inner(artifact, entitlements)
     run(["codesign", "--verify", "--deep", "--strict", artifact])
+    if webgpu_tools is not None:
+        stage_webgpu_tools.probe(webgpu_tools)
     return [str(path.relative_to(artifact)) for path in codes]
 
 
@@ -253,6 +268,7 @@ def main():
     parser.add_argument("--python-archive", type=Path, help="Reuse the exact checksum-pinned arm64 Python archive")
     parser.add_argument("--electron-archive", type=Path, help="Reuse the exact checksum-pinned Electron archive")
     parser.add_argument("--vosc-app", required=True, type=Path, help="Signed renderer app to stage beside the companion")
+    parser.add_argument("--webgpu-tools", type=Path, help="Verified compiler tools to stage in the renderer app")
     parser.add_argument("--shadertoy-fixture", type=Path, help="Build a distinct signed fixture controller")
     args = parser.parse_args()
     if platform.system() != "Darwin" or platform.machine() != "arm64":
@@ -283,12 +299,15 @@ def main():
         run(["/usr/bin/ditto", "-x", "-k", electron_archive.resolve(), electron_dist])
         controller, python = stage_controller(output / "controller", electron_dist, archive.resolve(), manifest,
                                               args.shadertoy_fixture)
-        host, renderer = stage_host(output / "render-host", manifest["version"], args.vosc_app.resolve(strict=True))
+        host, renderer = stage_host(output / "render-host", manifest["version"], args.vosc_app.resolve(strict=True),
+                                    args.webgpu_tools)
         entitlements = temporary / "controller.plist"
         entitlements.write_bytes(plistlib.dumps(JIT))
         artifacts = {}
         for app, grants in ((controller, entitlements), (host, None), (renderer, None)):
-            artifacts[app.name] = {"path": str(app), "arm64_mach_o": sign(app, args.identity, grants), **inventory(app)}
+            tools = renderer / "Contents/Resources/webgpu-tools" if app == renderer and args.webgpu_tools else None
+            artifacts[app.name] = {"path": str(app), "arm64_mach_o": sign(app, args.identity, grants, tools),
+                                   **inventory(app)}
 
     versions = json.loads(run([executable(controller), "-p", "JSON.stringify(process.versions)"],
                               capture=True, env={"ELECTRON_RUN_AS_NODE": "1", "PATH": "/usr/bin:/bin"}))

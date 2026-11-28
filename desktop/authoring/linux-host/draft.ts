@@ -7,6 +7,7 @@ type Slot = { id: string; label: string; default: number };
 type Component = { fixed: number } | { slot: string; low: number; high: number };
 type Uniform = { name: string; owner: "layer"; writable: boolean; type: string; values: number[]; binding?: string };
 type Attempt = { documentId: string; generation: number; editSequence: number; runSequence: number };
+type Render = { backend: "opengl" | "webgpu"; artifactDigest?: string; compilerIdentity?: string };
 type Candidate = {
   lease: string;
   token: string;
@@ -15,6 +16,7 @@ type Candidate = {
   sourceDigest: string;
   controlDigest: string;
   wgsl: boolean;
+  render?: Render;
   slots: Map<string, Slot>;
   bindings: Map<string, Component[]>;
   attempt: Attempt;
@@ -47,6 +49,15 @@ function integer(value: unknown): value is number {
 
 function uuid(value: unknown): value is string {
   return typeof value === "string" && /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(value);
+}
+
+function digest(value: unknown): value is string {
+  return typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
+}
+
+function matchesRender(row: Row, render: Render) {
+  return row.backend === render.backend && row.artifact_digest === render.artifactDigest &&
+    row.compiler_identity === render.compilerIdentity;
 }
 
 function slotID(value: unknown): value is string {
@@ -133,7 +144,7 @@ export class Draft {
   private validationIdle?: ReturnType<typeof setTimeout>;
   private epoch = randomUUID();
   private revision = 0;
-  private activation?: Attempt & { lease: string; token: string; controlDigest: string; commitID: string; sourceDigest: string };
+  private activation?: Attempt & Partial<Omit<Render, "backend">> & { lease: string; token: string; controlDigest: string; commitID: string; sourceDigest: string };
   private slots = new Map<string, Slot>();
   private bindings = new Map<string, Component[]>();
   private fenced = new Set<string>();
@@ -322,10 +333,17 @@ export class Draft {
 
   private async prepare(request: WireRequest): Promise<Row> {
     requireFields(request, ["source", "sha256", "lease", "documentId", "generation", "editSequence",
-      "runSequence", "slots", "bindings"], ["language"]);
-    const { language = "glsl" } = request.params;
+      "runSequence", "slots", "bindings"], ["language", "backend", "artifactDigest", "compilerIdentity"]);
+    const { language = "glsl", backend, artifactDigest, compilerIdentity } = request.params;
     if (language !== "glsl" && language !== "wgsl") throw new WireError("invalid_request", "Unsupported fragment language");
     const wgsl = language === "wgsl";
+    const restoringTranslation = !wgsl && backend === "webgpu";
+    if ((backend !== undefined && backend !== "opengl" && backend !== "webgpu" && backend !== "auto") ||
+        (wgsl && backend === "opengl") ||
+        (restoringTranslation ? !digest(artifactDigest) || !digest(compilerIdentity) :
+          artifactDigest !== undefined || compilerIdentity !== undefined)) {
+      throw new WireError("invalid_request", "Invalid draft backend or translation digests");
+    }
     const { lease, documentId, generation, editSequence, runSequence, slots: requestedSlots, bindings } = request.params;
     const intent = object(bindings);
     if (!uuid(lease) || this.fenced.has(lease) || !uuid(documentId) ||
@@ -350,9 +368,13 @@ export class Draft {
     if (wgsl && !child.supportsDraftWgsl) {
       throw new WireError("wgsl_unavailable", "Install a Dawn-enabled VOSC renderer on this Render Host to run WGSL drafts");
     }
+    if (restoringTranslation && !child.supportsDraftWebgpuAuto) {
+      throw new WireError("translation_unavailable", "Install the matching VOSC renderer and shader tools to restore this draft");
+    }
+    const preference = child.supportsDraftWebgpuAuto ? backend : undefined;
     const baseline = await child.query("get_scene");
     this.assertRenderer(child);
-    if (!wgsl && baseline.backend === "webgpu") {
+    if (!wgsl && preference !== "auto" && preference !== "webgpu" && baseline.backend === "webgpu") {
       throw new WireError("backend_switch_required", "Close the WebGPU preview window on the Render Host, then Run GLSL or Hydra again");
     }
     if (this.candidate) await this.discard(this.candidate);
@@ -363,7 +385,8 @@ export class Draft {
     const receipt = await child.mutate("draft_prepare", {
       source_base64: source.base64, source_digest: source.digest, lease, token: request.id,
       revision: baseline.revision, slots: Object.fromEntries([...slots].map(([id, slot]) => [id, slot.default])),
-      bindings: intent, ...(wgsl ? { language } : {}),
+      bindings: intent, ...(wgsl ? { language } : {}), ...(preference ? { backend: preference } : {}),
+      ...(restoringTranslation ? { artifact_digest: artifactDigest, compiler_identity: compilerIdentity } : {}),
     }, request.id, "prepared");
     this.assertRenderer(child);
     const result = object(receipt.result);
@@ -371,6 +394,18 @@ export class Draft {
     if (result?.token !== request.id || !effective || !Array.isArray(result.conflicts) ||
         !result.conflicts.every(object)) {
       throw new WireError("renderer_protocol", "Native preparation returned an unmatched token");
+    }
+    let render: Render | undefined;
+    if (preference !== undefined) {
+      const { backend: actual, artifact_digest: artifact, compiler_identity: compiler } = result;
+      const translated = actual === "webgpu" && !wgsl;
+      if ((actual !== "opengl" && actual !== "webgpu") || (wgsl && actual !== "webgpu") ||
+          (preference !== "auto" && preference !== actual) ||
+          (translated ? !digest(artifact) || !digest(compiler) : artifact !== undefined || compiler !== undefined) ||
+          (restoringTranslation && (artifact !== artifactDigest || compiler !== compilerIdentity))) {
+        throw new WireError("renderer_protocol", "Native preparation did not confirm the requested backend and artifact");
+      }
+      render = { backend: actual, ...(translated ? { artifactDigest: artifact as string, compilerIdentity: compiler as string } : {}) };
     }
     const applied = new Map<string, Component[]>();
     for (const [name, binding] of Object.entries(effective)) {
@@ -387,14 +422,14 @@ export class Draft {
     const controlDigest = sha256(sortedJSON({ slots: sortedSlots, bindings: effective }));
     const attempt = { documentId, generation, editSequence, runSequence };
     const staged = { lease, token: request.id, nativeRevision: baseline.revision, deadline: performance.now() + 20_000,
-      sourceDigest: source.digest, controlDigest, wgsl, slots, bindings: applied, attempt };
+      sourceDigest: source.digest, controlDigest, wgsl, render, slots, bindings: applied, attempt };
     if (this.fenced.has(lease)) {
       await this.discard(staged);
       throw new WireError("stale_lease", "The draft lease was fenced");
     }
     this.candidate = staged;
     return { ...attempt, target: this.target, epoch: this.epoch, revision: this.revision, lease, token: request.id,
-      sourceDigest: source.digest, controlDigest, bindings: effective, conflicts: result.conflicts };
+      sourceDigest: source.digest, controlDigest, bindings: effective, conflicts: result.conflicts, ...render };
   }
 
   private async commit(request: WireRequest): Promise<Row> {
@@ -458,9 +493,15 @@ export class Draft {
       const staged = mutation.candidate;
       const message = "The native draw did not confirm the prepared draft";
       const { result, scene, revision } = drawnScene(receipt, staged.nativeRevision, message);
+      const activation = object(scene.draft_activation);
       if (result.lease !== staged.lease || result.token !== staged.token || result.source_digest !== staged.sourceDigest ||
           result.control_digest !== staged.controlDigest || result.commit_id !== id ||
-          (staged.wgsl && (result.backend !== "webgpu" || scene.backend !== "webgpu" ||
+          (staged.render && (!matchesRender(result, staged.render) || scene.backend !== staged.render.backend ||
+            result.first_frame !== receipt.frame || !activation || !matchesRender(activation, staged.render) ||
+            activation.first_frame !== receipt.frame || activation.lease !== staged.lease || activation.token !== staged.token ||
+            activation.source_digest !== staged.sourceDigest || activation.control_digest !== staged.controlDigest ||
+            activation.commit_id !== id)) ||
+          ((staged.wgsl || staged.render?.backend === "webgpu") && (result.backend !== "webgpu" || scene.backend !== "webgpu" ||
             object(scene.draft_activation)?.backend !== "webgpu" || result.first_frame !== receipt.frame ||
             scene.draft_device_lost === true))) {
         throw new WireError("renderer_protocol", message);
@@ -469,7 +510,9 @@ export class Draft {
       this.slots = staged.slots;
       this.bindings = staged.bindings;
       this.activation = { ...staged.attempt, lease: staged.lease, token: staged.token,
-        controlDigest: staged.controlDigest, commitID: id, sourceDigest: staged.sourceDigest };
+        controlDigest: staged.controlDigest, commitID: id, sourceDigest: staged.sourceDigest,
+        ...(staged.render?.artifactDigest ? { artifactDigest: staged.render.artifactDigest,
+          compilerIdentity: staged.render.compilerIdentity } : {}) };
       this.lastSampleTime = -Infinity;
       return this.snapshot(scene, receipt);
     }
@@ -655,6 +698,7 @@ export class Draft {
     const samples = object(scene.draft_slots);
     return {
       role: "draft", version: wireVersion, target: this.target, epoch: this.epoch, revision: this.revision,
+      webgpuAuto: true,
       uniforms: uniforms(scene), slots: [...this.slots.keys()].sort().map(id => this.slots.get(id)!),
       needsRestore: !this.activation || scene.draft_device_lost === true,
       ...(object(scene.draft_activation)?.callback_uniform === callbackUniform ? { callbackUniform } : {}),

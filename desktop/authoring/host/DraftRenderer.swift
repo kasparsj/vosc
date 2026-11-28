@@ -1,3 +1,4 @@
+import CoreFoundation
 import Darwin
 import Foundation
 
@@ -33,6 +34,7 @@ struct Fragment {
 final class DraftRenderer {
     let process: Process
     private(set) var supportsDraftWgsl = false
+    private(set) var supportsDraftWebgpuAuto = false
     private let root: URL
     private let controlPath: String
     private let logPath: URL
@@ -76,6 +78,8 @@ final class DraftRenderer {
         process.currentDirectoryURL = root
         var env = ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("VOSC_") }
         env["VOSC_CONTROL_SOCKET"] = controlPath
+        env["VOSC_DRAFT_SHADER_TOOLS"] = bundle.appendingPathComponent("Contents/Resources/webgpu-tools",
+                                                                     isDirectory: true).path
         process.environment = env
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = log
@@ -103,7 +107,11 @@ final class DraftRenderer {
                     throw WireError("renderer_capabilities", "Install the matching VOSC renderer to run draft transactions")
                 }
             }
-            supportsDraftWgsl = (capabilities["features"] as? WireObject)?["draft_wgsl"] as? Bool == true
+            let features = capabilities["features"] as? WireObject
+            supportsDraftWgsl = features?["draft_wgsl"] as? Bool == true
+            if let auto = features?["draft_webgpu_auto"] as? NSNumber {
+                supportsDraftWebgpuAuto = CFGetTypeID(auto) == CFBooleanGetTypeID() && auto.boolValue
+            }
             _ = try mutate("configure_layers", ["count": 1, "layout": "stack"])
         } catch {
             stop()
@@ -134,7 +142,10 @@ final class DraftRenderer {
 
     func mutate(_ method: String, _ params: WireObject, id: String = UUID().uuidString,
                 expecting status: String = "rendered") throws -> WireObject {
-        let until = method == "draft_prepare" && params["language"] as? String == "wgsl" ?
+        let backend = params["backend"] as? String
+        let webgpuPrepare = method == "draft_prepare" &&
+            (params["language"] as? String == "wgsl" || backend == "auto" || backend == "webgpu")
+        let until = webgpuPrepare ?
             DispatchTime.now().uptimeNanoseconds + 4_500_000_000 : deadline()
         let response = try exchange(method, params, id: id, deadline: until)
         return try settle(response, id: id, expecting: status, until: until)

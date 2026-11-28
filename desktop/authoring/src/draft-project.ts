@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { basename, join } from "node:path";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { BINDING_LIMIT, CALLBACK_UNIFORM, SLOT_LIMIT, SOURCE_LIMIT, isCallbackValue, type Binding, type DraftProject,
-  isDraftLanguage, type ControlSignature, type HydraProvenance, type DraftDocument, type DraftSource, type PendingMapping, type Peer, type Slot, type SourceProvenance } from "./contracts";
+  isDraftDigest, isDraftLanguage, type AcceptedRendering, type ControlSignature, type HydraProvenance, type DraftDocument, type DraftSource, type PendingMapping, type Peer, type Slot, type SourceProvenance } from "./contracts";
 import { hash, HostError } from "./local-state";
 
 const SLOT_ID = /^s[a-f0-9]{12}$/;
@@ -236,7 +236,7 @@ export function parseDocument(value: unknown): DraftDocument {
       accepted: { id: randomUUID(), revision: null, project, signatures: [] },
     };
   }
-  if (!record(value) || value.format !== "vosc.authoring.draft" || value.version !== 2 ||
+  if (!record(value) || value.format !== "vosc.authoring.draft" || (value.version !== 2 && value.version !== 3) ||
       !isDraftLanguage(value.language) ||
       typeof value.id !== "string" || !uuidPattern.test(value.id) || !validTitle(value.title) || !record(value.controls)) {
     throw new HostError("invalid_project", "This file does not contain a supported VOSC draft.");
@@ -251,6 +251,25 @@ export function parseDocument(value: unknown): DraftDocument {
       throw new HostError("invalid_project", "The last accepted artifact is invalid.");
     }
     const project = parseProject(artifact.project);
+    let rendering: AcceptedRendering | undefined;
+    if (value.version === 3) {
+      const rendered = artifact.rendering;
+      const translated = record(rendered) && rendered.backend === "webgpu" && value.language !== "wgsl";
+      if (!record(rendered) || (rendered.backend !== "opengl" && rendered.backend !== "webgpu") ||
+          (value.language === "wgsl" && rendered.backend !== "webgpu") ||
+          (translated ? !isDraftDigest(rendered.artifactDigest) || !isDraftDigest(rendered.compilerIdentity) :
+            rendered.artifactDigest !== undefined || rendered.compilerIdentity !== undefined) ||
+          (rendered.backend === "webgpu" && (project.slots.length > 0 || project.bindings.length > 0 ||
+            artifact.callbackValue !== undefined))) {
+        throw new HostError("invalid_project", "The accepted draft contains invalid backend metadata.");
+      }
+      rendering = translated ? { backend: "webgpu", artifactDigest: rendered.artifactDigest as string,
+        compilerIdentity: rendered.compilerIdentity as string } : rendered.backend === "opengl" ?
+        { backend: "opengl" } : { backend: "webgpu" };
+    } else if (artifact.rendering !== undefined) {
+      throw new HostError("invalid_project", "The accepted backend metadata requires a newer draft format.");
+    }
+
     if (artifact.callbackValue !== undefined && (!isCallbackValue(artifact.callbackValue) ||
         project.bindings.some(item => item.name === CALLBACK_UNIFORM))) {
       throw new HostError("invalid_project", "The accepted callback snapshot is invalid.");
@@ -258,6 +277,7 @@ export function parseDocument(value: unknown): DraftDocument {
     accepted = {
       id: artifact.id, revision: artifact.revision, project, signatures: parseSignatures(artifact.signatures),
       ...(value.language === "wgsl" ? { language: "wgsl" } : {}),
+      ...(rendering ? { rendering } : {}),
       ...(value.language === "hydra-js" ? { hydra: parseHydra(artifact.hydra, project.source) } : {}),
       ...(artifact.callbackValue === undefined ? {} : { callbackValue: artifact.callbackValue }),
     };

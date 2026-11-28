@@ -5,5 +5,5 @@ ifeq ($(wildcard $(VOSC_DAWN_ARCHIVE)),)
 $(error WebGPU M1 Dawn archive missing: $(VOSC_DAWN_ARCHIVE))
 endif
 override PROJECT_CFLAGS += -DVOSC_WEBGPU_M1=1 -I$(VOSC_DAWN_SDK)/include
-override PROJECT_LDFLAGS += $(VOSC_DAWN_ARCHIVE) -ldl -lrt
+override PROJECT_LDFLAGS += $(VOSC_DAWN_ARCHIVE) -lcrypto -ldl -lrt
 endif

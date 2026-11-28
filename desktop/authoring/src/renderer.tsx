@@ -130,6 +130,7 @@ function App() {
       workspace?.project?.destination.target !== peer?.target ||
       workspace?.project?.destination.fingerprint !== peer?.fingerprint));
   const accepted = draft?.acceptedArtifact;
+  const webgpuArtifact = accepted?.backend === "webgpu";
   const generated = run?.attempt?.generated ?? accepted?.generated;
   const artifactName = accepted && (accepted.revision === null ? `artifact ${accepted.id.slice(0, 12)}` : `revision ${accepted.revision}`);
   const dirty = Boolean(draft?.dirty || editing);
@@ -309,7 +310,7 @@ function App() {
     if (!autoScopeRef.current) return;
     autoScopeRef.current = null;
     setAutoScope(null);
-    void api.cancelRun().catch(error => setProblem(message(error)));
+    void api.cancelRun(undefined, true).catch(error => setProblem(message(error)));
   }
 
   useEffect(() => {
@@ -503,7 +504,7 @@ function App() {
         <h2 id="source-heading">{hydra ? "Hydra JavaScript" : `${fragmentLanguage} fragment`}</h2>
         {draft && <span className="muted source-origin" title={draft.source.origin}>{draft.source.origin}</span>}
         {generated && <button type="button" onClick={() => inspectGenerated({ ...generated, label: run?.attempt?.generated ? `Run ${run.attempt.runSequence}` : "Accepted artifact" })}>Generated GLSL</button>}
-        {(hydra || wgsl) && (run?.phase === "evaluating" || run?.phase === "preparing") && <button type="button" onClick={() => {
+        {(hydra || wgsl || workspace?.reflected?.webgpuAuto === true) && (run?.phase === "evaluating" || run?.phase === "preparing") && <button type="button" onClick={() => {
           void api.cancelRun().then(adopt).catch(error => setProblem(message(error)));
         }}>Cancel Run</button>}
         {draft?.language === "glsl" && <button type="button" className="quiet auto-control" aria-pressed={autoEnabled}
@@ -570,12 +571,12 @@ function App() {
       </div>
       <div className="inspector-footer">
         <p className="muted">
-          {wgsl ? "Save WGSL as a VOSC draft." : accepted ? `Export ${artifactName}${accepted.stale || editing ? " · working draft differs" : ""}${accepted.saved ? "" : " · unsaved artifact"}` :
+          {webgpuArtifact || wgsl ? "Save the WebGPU preview as a VOSC draft." : accepted ? `Export ${artifactName}${accepted.stale || editing ? " · working draft differs" : ""}${accepted.saved ? "" : " · unsaved artifact"}` :
             "Run a native preview before exporting a replay."}
         </p>
         <div className="actions">
           <button type="button" disabled={!draft || busy} onClick={() => fileCommand("save")}>Save draft…</button>
-          {!wgsl && <button type="button" disabled={!accepted || busy} onClick={() => void command(async () => {
+          {!wgsl && !webgpuArtifact && <button type="button" disabled={!accepted || busy} onClick={() => void command(async () => {
             const path = await api.exportReplay();
             if (path) setNotice(`Native replay saved to ${path}`);
           })}><Icon name="export" />Export replay…</button>}

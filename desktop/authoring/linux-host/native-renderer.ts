@@ -67,6 +67,8 @@ async function logTail(path: string) {
 export class NativeRenderer {
   private draftWgsl = false;
   get supportsDraftWgsl() { return this.draftWgsl; }
+  private draftWebgpuAuto = false;
+  get supportsDraftWebgpuAuto() { return this.draftWebgpuAuto; }
 
   private exited = false;
   private ready = false;
@@ -118,6 +120,7 @@ export class NativeRenderer {
       }
       env.LD_LIBRARY_PATH = join(options.installDirectory, "runtime-libs");
       env.VOSC_CONTROL_SOCKET = controlPath;
+      env.VOSC_DRAFT_SHADER_TOOLS = join(options.installDirectory, "renderer", "webgpu-tools");
       const args = ["--draft-data-root", data, "--size", options.validation ? "160x120" : "640x480", "--fps", "30"];
       if (!options.validation) args.push("--draft-preview");
 
@@ -166,6 +169,7 @@ export class NativeRenderer {
         throw new WireError("renderer_capabilities", "Installed VOSC cannot handle private draft operations");
       }
       renderer.draftWgsl = object(capabilities.features) && capabilities.features.draft_wgsl === true;
+      renderer.draftWebgpuAuto = object(capabilities.features) && capabilities.features.draft_webgpu_auto === true;
       await renderer.mutate("configure_layers", { count: 1, layout: "stack" });
       if (!renderer.running) throw new WireError("renderer_startup", "Private renderer exited during startup");
       renderer.ready = true;
@@ -216,7 +220,9 @@ export class NativeRenderer {
   }
 
   async mutate(method: string, params: NativeObject, id: string = randomUUID(), expecting = "rendered") {
-    const until = performance.now() + (method === "draft_prepare" && params.language === "wgsl" ? 4500 : exchangeMs);
+    const webgpuPrepare = method === "draft_prepare" &&
+      (params.language === "wgsl" || params.backend === "auto" || params.backend === "webgpu");
+    const until = performance.now() + (webgpuPrepare ? 4500 : exchangeMs);
     return this.settle(await this.exchange(method, params, id, until), id, expecting, until);
   }
 

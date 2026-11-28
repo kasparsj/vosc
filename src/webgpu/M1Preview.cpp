@@ -123,8 +123,17 @@ struct M1Preview::State {
     wgpu::Texture image;
     wgpu::Queue queue;
     wgpu::Buffer uniformBuffer;
-    wgpu::BindGroup uniforms;
-    wgpu::PipelineLayout layout;
+    struct Bindings {
+        wgpu::BindGroup group;
+        wgpu::PipelineLayout layout;
+        std::optional<float> fixedTime;
+    };
+    Bindings frameBindings;
+    Bindings activeBindings;
+    Bindings candidateBindings;
+    std::vector<ControlLane> candidateControls;
+    std::string entryPoint;
+    std::optional<float> candidateTime;
     wgpu::ShaderModule vertex;
     Preparation phase = Preparation::idle;
     bool abandoned = false;
@@ -135,8 +144,10 @@ struct M1Preview::State {
     std::shared_ptr<Creation<wgpu::RenderPipeline>> compiled;
 
     void configure(uint32_t& width, uint32_t& height);
+    Bindings makeBindings(const std::vector<ControlLane>& controls);
     void compile();
-    void render(wgpu::CommandEncoder encoder, const wgpu::RenderPipeline& program, const wgpu::Texture& target);
+    void render(wgpu::CommandEncoder encoder, const wgpu::RenderPipeline& program,
+                const Bindings& bindings, const wgpu::Texture& target);
     void gpuDone(Clock::time_point deadline);
     void checkValidation(Clock::time_point deadline);
     void copyToSurface(const wgpu::Texture& target, const Clock::time_point* deadline);
@@ -159,10 +170,14 @@ M1Preview::M1Preview(GLFWwindow* outgoing) : state(std::make_unique<State>(outgo
 #endif
 }
 
-bool M1Preview::prepare(const std::string& fragment) {
+bool M1Preview::prepare(const std::string& fragment, std::string entryPoint,
+                        const std::vector<ControlLane>& controls, std::optional<float> fixedTime) {
     auto& gpu = *state;
     if (gpu.phase != State::Preparation::idle) return false;
     gpu.source = fragment;
+    gpu.entryPoint = std::move(entryPoint);
+    gpu.candidateControls = controls;
+    gpu.candidateTime = fixedTime;
     if (gpu.device) {
         gpu.compile();
     } else {
@@ -191,6 +206,7 @@ bool M1Preview::pollPreparation() {
         gpu.selected.reset();
         gpu.opened.reset();
         gpu.compiled.reset();
+        gpu.candidateBindings = {};
         return false;
     }
     if (phase == Phase::adapter) {
@@ -226,6 +242,7 @@ bool M1Preview::pollPreparation() {
     } else {
         if (!gpu.compiled->handle) {
             auto result = std::move(gpu.compiled);
+            gpu.candidateBindings = {};
             throw std::runtime_error("WGSL pipeline creation failed" +
                 (result->detail.empty() ? std::string() : ": " + result->detail));
         }
@@ -237,8 +254,10 @@ bool M1Preview::pollPreparation() {
 void M1Preview::cancelPreparation() {
     auto& gpu = *state;
     gpu.source.clear();
+    gpu.candidateControls.clear();
     if (gpu.phase == State::Preparation::ready) {
         gpu.compiled.reset();
+        gpu.candidateBindings = {};
         gpu.phase = State::Preparation::idle;
     } else if (gpu.phase != State::Preparation::idle) {
         // Keep one pending Dawn operation until its callback can be drained.
@@ -275,30 +294,7 @@ void M1Preview::State::configure(uint32_t& width, uint32_t& height) {
     bufferDescriptor.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
     uniformBuffer = device.CreateBuffer(&bufferDescriptor);
 
-    wgpu::BindGroupLayoutEntry uniformEntry;
-    uniformEntry.binding = 0;
-    uniformEntry.visibility = wgpu::ShaderStage::Fragment;
-    uniformEntry.buffer.type = wgpu::BufferBindingType::Uniform;
-    uniformEntry.buffer.minBindingSize = rendererUniformBytes;
-    wgpu::BindGroupLayoutDescriptor groupLayoutDescriptor;
-    groupLayoutDescriptor.entryCount = 1;
-    groupLayoutDescriptor.entries = &uniformEntry;
-    const auto groupLayout = device.CreateBindGroupLayout(&groupLayoutDescriptor);
-
-    wgpu::BindGroupEntry uniformBinding;
-    uniformBinding.binding = 0;
-    uniformBinding.buffer = uniformBuffer;
-    uniformBinding.size = rendererUniformBytes;
-    wgpu::BindGroupDescriptor uniformsDescriptor;
-    uniformsDescriptor.layout = groupLayout;
-    uniformsDescriptor.entryCount = 1;
-    uniformsDescriptor.entries = &uniformBinding;
-    uniforms = device.CreateBindGroup(&uniformsDescriptor);
-
-    wgpu::PipelineLayoutDescriptor layoutDescriptor;
-    layoutDescriptor.bindGroupLayoutCount = 1;
-    layoutDescriptor.bindGroupLayouts = &groupLayout;
-    layout = device.CreatePipelineLayout(&layoutDescriptor);
+    frameBindings = makeBindings({});
     vertex = shaderModule(device, vertexSource);
 
     wgpu::SurfaceConfiguration configuration;
@@ -311,16 +307,59 @@ void M1Preview::State::configure(uint32_t& width, uint32_t& height) {
     surface.Configure(&configuration);
 }
 
+M1Preview::State::Bindings M1Preview::State::makeBindings(const std::vector<ControlLane>& controls) {
+    std::array<wgpu::BindGroupLayoutEntry, 2> entries{};
+    std::array<wgpu::BindGroupEntry, 2> resources{};
+    entries[0].binding = 0;
+    entries[0].visibility = wgpu::ShaderStage::Fragment;
+    entries[0].buffer.type = wgpu::BufferBindingType::Uniform;
+    entries[0].buffer.minBindingSize = rendererUniformBytes;
+    resources[0].binding = 0;
+    resources[0].buffer = uniformBuffer;
+    resources[0].size = rendererUniformBytes;
+    if (!controls.empty()) {
+        static_assert(sizeof(ControlLane) == 16);
+        wgpu::BufferDescriptor descriptor;
+        descriptor.size = controls.size() * sizeof(ControlLane);
+        descriptor.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform;
+        auto controlBuffer = device.CreateBuffer(&descriptor);
+        queue.WriteBuffer(controlBuffer, 0, controls.data(), descriptor.size);
+        entries[1].binding = 1;
+        entries[1].visibility = wgpu::ShaderStage::Fragment;
+        entries[1].buffer.type = wgpu::BufferBindingType::Uniform;
+        entries[1].buffer.minBindingSize = descriptor.size;
+        resources[1].binding = 1;
+        resources[1].buffer = std::move(controlBuffer);
+        resources[1].size = descriptor.size;
+    }
+    const size_t count = controls.empty() ? 1 : 2;
+    wgpu::BindGroupLayoutDescriptor groupLayoutDescriptor;
+    groupLayoutDescriptor.entryCount = count;
+    groupLayoutDescriptor.entries = entries.data();
+    const auto groupLayout = device.CreateBindGroupLayout(&groupLayoutDescriptor);
+    wgpu::BindGroupDescriptor bindDescriptor;
+    bindDescriptor.layout = groupLayout;
+    bindDescriptor.entryCount = count;
+    bindDescriptor.entries = resources.data();
+    wgpu::PipelineLayoutDescriptor layoutDescriptor;
+    layoutDescriptor.bindGroupLayoutCount = 1;
+    layoutDescriptor.bindGroupLayouts = &groupLayout;
+    return {device.CreateBindGroup(&bindDescriptor), device.CreatePipelineLayout(&layoutDescriptor), {}};
+}
+
 void M1Preview::State::compile() {
+    candidateBindings = candidateControls.empty() ? frameBindings : makeBindings(candidateControls);
+    candidateBindings.fixedTime = candidateTime;
+    candidateControls.clear();
     wgpu::ColorTargetState target;
     target.format = format;
     wgpu::FragmentState fragment;
     fragment.module = shaderModule(device, source);
-    fragment.entryPoint = "fs_main";
+    fragment.entryPoint = std::string_view(entryPoint);
     fragment.targetCount = 1;
     fragment.targets = &target;
     wgpu::RenderPipelineDescriptor descriptor;
-    descriptor.layout = layout;
+    descriptor.layout = candidateBindings.layout;
     descriptor.vertex.module = vertex;
     descriptor.vertex.entryPoint = "vs_main";
     descriptor.fragment = &fragment;
@@ -377,7 +416,7 @@ void M1Preview::presentPrepared(bool rejectFrame) {
         readbackDescriptor.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead;
         auto readback = gpu.device.CreateBuffer(&readbackDescriptor);
         auto encoder = gpu.device.CreateCommandEncoder();
-        gpu.render(encoder, gpu.compiled->handle, candidateImage);
+        gpu.render(encoder, gpu.compiled->handle, gpu.candidateBindings, candidateImage);
         const wgpu::Extent3D onePixel{1, 1, 1};
         for (size_t i = 0; i < candidatePixels.size(); ++i) {
             wgpu::TexelCopyTextureInfo from;
@@ -420,6 +459,7 @@ void M1Preview::presentPrepared(bool rejectFrame) {
     if (!frames) glfwShowWindow(gpu.window.get());
 #endif
     gpu.pipeline = std::move(gpu.compiled->handle);
+    gpu.activeBindings = std::move(gpu.candidateBindings);
     gpu.compiled.reset();
     gpu.phase = State::Preparation::idle;
     gpu.image = std::move(candidateImage);
@@ -453,9 +493,9 @@ void M1Preview::State::checkValidation(Clock::time_point deadline) {
 }
 
 void M1Preview::State::render(wgpu::CommandEncoder encoder, const wgpu::RenderPipeline& program,
-                              const wgpu::Texture& target) {
+                              const Bindings& bindings, const wgpu::Texture& target) {
     const std::array<float, 4> values{static_cast<float>(target.GetWidth()), static_cast<float>(target.GetHeight()),
-        std::chrono::duration<float>(Clock::now() - started).count(), 0.f};
+        bindings.fixedTime.value_or(std::chrono::duration<float>(Clock::now() - started).count()), 0.f};
     static_assert(sizeof(values) == rendererUniformBytes);
     queue.WriteBuffer(uniformBuffer, 0, values.data(), sizeof(values));
     wgpu::RenderPassColorAttachment color;
@@ -467,7 +507,7 @@ void M1Preview::State::render(wgpu::CommandEncoder encoder, const wgpu::RenderPi
     passDescriptor.colorAttachments = &color;
     auto pass = encoder.BeginRenderPass(&passDescriptor);
     pass.SetPipeline(program);
-    pass.SetBindGroup(0, uniforms);
+    pass.SetBindGroup(0, bindings.group);
     pass.Draw(3);
     pass.End();
 }
@@ -481,7 +521,7 @@ void M1Preview::State::copyToSurface(const wgpu::Texture& target, const Clock::t
                                  std::to_string(static_cast<int>(current.status)) + ")");
     if (deadline) device.PushErrorScope(wgpu::ErrorFilter::Validation);
     auto encoder = device.CreateCommandEncoder();
-    if (!deadline) render(encoder, pipeline, target);
+    if (!deadline) render(encoder, pipeline, activeBindings, target);
     wgpu::TexelCopyTextureInfo from;
     from.texture = target;
     wgpu::TexelCopyTextureInfo to;
@@ -504,6 +544,46 @@ void M1Preview::draw() {
     state->copyToSurface(state->image, nullptr);
     ++frames;
 }
+
+#ifdef VOSC_RECOVERY_TESTING
+std::vector<uint8_t> M1Preview::readbackFixedFrame() const {
+    const auto& gpu = *state;
+    if (!gpu.activeBindings.fixedTime || !gpu.image || uint64_t(width) * height > 1024 * 1024)
+        throw std::runtime_error("A bounded fixed-time WebGPU frame is required");
+    const uint32_t rowBytes = width * 4;
+    const uint32_t stride = (rowBytes + bytesPerRow - 1) & ~(bytesPerRow - 1);
+    wgpu::BufferDescriptor bufferDescriptor;
+    bufferDescriptor.size = static_cast<uint64_t>(stride) * height;
+    bufferDescriptor.usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead;
+    auto buffer = gpu.device.CreateBuffer(&bufferDescriptor);
+    auto encoder = gpu.device.CreateCommandEncoder();
+    wgpu::TexelCopyTextureInfo from;
+    from.texture = gpu.image;
+    wgpu::TexelCopyBufferInfo to;
+    to.buffer = buffer;
+    to.layout.bytesPerRow = stride;
+    const wgpu::Extent3D size{width, height, 1};
+    encoder.CopyTextureToBuffer(&from, &to, &size);
+    auto commands = encoder.Finish();
+    gpu.queue.Submit(1, &commands);
+    auto mapped = std::make_shared<bool>(false);
+    auto map = buffer.MapAsync(wgpu::MapMode::Read, 0, bufferDescriptor.size, waitOnly,
+        [mapped](wgpu::MapAsyncStatus status, wgpu::StringView) { *mapped = status == wgpu::MapAsyncStatus::Success; });
+    wait(gpu.instance, map, Clock::now() + frameTimeout, "WebGPU frame capture");
+    if (!*mapped) throw std::runtime_error("Could not map the WebGPU frame");
+    std::vector<uint8_t> rgba(static_cast<size_t>(rowBytes) * height);
+    for (uint32_t y = 0; y < height; ++y) {
+        if (buffer.ReadMappedRange(static_cast<size_t>(stride) * y, rgba.data() + static_cast<size_t>(rowBytes) * y,
+                                   rowBytes) != wgpu::Status::Success)
+            throw std::runtime_error("Could not read a WebGPU frame row");
+    }
+    buffer.Unmap();
+    if (gpu.format == wgpu::TextureFormat::BGRA8Unorm)
+        for (size_t offset = 0; offset < rgba.size(); offset += 4)
+            std::swap(rgba[offset], rgba[offset + 2]);
+    return rgba;
+}
+#endif
 
 bool M1Preview::shouldClose() const { return glfwWindowShouldClose(state->window.get()); }
 

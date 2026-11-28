@@ -39,6 +39,7 @@ test("stage an internal host bundle without modifying the renderer inputs", { ti
     execFileSync(process.execPath, args, { timeout: 5000 });
     const manifest = JSON.parse(await readFile(join(output, "manifest.json"), "utf8"));
     assert.equal(manifest.platform, "linux-x64");
+    await assert.rejects(stat(join(output, "renderer/webgpu-tools")), { code: "ENOENT" });
     const digest = createHash("sha256").update(await readFile(binary)).digest("hex");
     assert.equal(manifest.files.find(item => item.path === "renderer/vosc").sha256, digest);
     assert.equal((await stat(output)).mode & 0o777, 0o700);
@@ -64,6 +65,17 @@ test("stage an internal host bundle without modifying the renderer inputs", { ti
       /vosc-render-host pair approve/);
 
     if (process.platform !== "linux" || process.arch !== "x64") return;
+    const badTools = join(root, "webgpu-tools");
+    await mkdir(badTools);
+    await writeFile(join(badTools, "manifest.json"), "{}");
+    for (const tool of ["glslang", "tint"]) await writeFile(join(badTools, tool), tool);
+    const toolsOutput = output + "-tools";
+    const badStage = spawnSync(process.execPath, [stage, "--output", toolsOutput, ...args.slice(3),
+      "--webgpu-tools", badTools], { encoding: "utf8", timeout: 5000 });
+    assert.equal(badStage.status, 1);
+    assert.match(badStage.stderr, /WebGPU tools manifest must identify the pinned tools/);
+    await assert.rejects(stat(toolsOutput), { code: "ENOENT" });
+
     const reservePort = async () => {
       const server = createServer().listen(0, "127.0.0.1");
       await once(server, "listening");

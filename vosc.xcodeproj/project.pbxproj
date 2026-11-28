@@ -160,6 +160,7 @@
 		2A9B67A870E5B82AABA8DAE0 /* CommandRouter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7094275A3A9A13020C8F1E4A /* CommandRouter.cpp */; };
 		F15A63E3641690C65BCAA906 /* ResourceRegistry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 488356C753F24907382D94C2 /* ResourceRegistry.cpp */; };
 		790C55E0D370677873BBAFF1 /* Button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AD47A323265005F721937F9F /* Button.cpp */; };
+		A7321E4F98524AA3B03BE30E /* GlslTranslation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7321E4F98524AA3B03BE30F /* GlslTranslation.cpp */; };
 		A7321E4F98524AA3B03BE30A /* M1Preview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7321E4F98524AA3B03BE30B /* M1Preview.cpp */; };
 		A7321E4F98524AA3B03BE30C /* WebGPUM1Surface.mm in Sources */ = {isa = PBXBuildFile; fileRef = A7321E4F98524AA3B03BE30D /* WebGPUM1Surface.mm */; };
 		6D3ACB993857C8DD55398569 /* EngineControl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6E88769ED5B5F5E9C20D256A /* EngineControl.cpp */; };
@@ -841,6 +842,7 @@
 		7094275A3A9A13020C8F1E4A /* CommandRouter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CommandRouter.cpp; path = src/osc/CommandRouter.cpp; sourceTree = SOURCE_ROOT; };
 		488356C753F24907382D94C2 /* ResourceRegistry.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = src/ResourceRegistry.cpp; sourceTree = SOURCE_ROOT; };
 		AD47A323265005F721937F9F /* Button.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Button.cpp; path = src/ui/Button.cpp; sourceTree = SOURCE_ROOT; };
+		A7321E4F98524AA3B03BE30F /* GlslTranslation.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = GlslTranslation.cpp; path = src/webgpu/GlslTranslation.cpp; sourceTree = SOURCE_ROOT; };
 		A7321E4F98524AA3B03BE30B /* M1Preview.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = M1Preview.cpp; path = src/webgpu/M1Preview.cpp; sourceTree = SOURCE_ROOT; };
 		A7321E4F98524AA3B03BE30D /* WebGPUM1Surface.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = WebGPUM1Surface.mm; path = src/macos/WebGPUM1Surface.mm; sourceTree = SOURCE_ROOT; };
 		6E88769ED5B5F5E9C20D256A /* EngineControl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = EngineControl.cpp; path = src/control/EngineControl.cpp; sourceTree = SOURCE_ROOT; };
@@ -2289,6 +2291,7 @@
 		CF8B7B2D54B1A38EE764C8EF /* control */ = {
 			isa = PBXGroup;
 			children = (
+				A7321E4F98524AA3B03BE30F /* GlslTranslation.cpp */,
 				A7321E4F98524AA3B03BE30B /* M1Preview.cpp */,
 				A7321E4F98524AA3B03BE30D /* WebGPUM1Surface.mm */,
 				6E88769ED5B5F5E9C20D256A /* EngineControl.cpp */,
@@ -2459,6 +2462,7 @@
 			files = (
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				B01915FEBA95E83A13B492BF /* LocalControlServer.cpp in Sources */,
+				A7321E4F98524AA3B03BE30E /* GlslTranslation.cpp in Sources */,
 				A7321E4F98524AA3B03BE30A /* M1Preview.cpp in Sources */,
 				A7321E4F98524AA3B03BE30C /* WebGPUM1Surface.mm in Sources */,
 				6D3ACB993857C8DD55398569 /* EngineControl.cpp in Sources */,

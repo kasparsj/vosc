@@ -57,7 +57,7 @@ const server = net.createServer(connection => {
         reply({ result: {
           preview, pid: process.pid, root: process.cwd(), args: process.argv.slice(2),
           osc: process.env.VOSC_OSC_PORT ?? null, preload: process.env.LD_PRELOAD ?? null,
-          library: process.env.LD_LIBRARY_PATH, calls,
+          library: process.env.LD_LIBRARY_PATH, shaderTools: process.env.VOSC_DRAFT_SHADER_TOOLS, calls,
         } });
         break;
       case "wrong-id":
@@ -104,6 +104,8 @@ test("private native startup, exact receipt recovery and owned cleanup", async (
   const installDirectory = await installation();
   const priorPort = process.env.VOSC_OSC_PORT;
   process.env.VOSC_OSC_PORT = "1337";
+  const priorTools = process.env.VOSC_DRAFT_SHADER_TOOLS;
+  process.env.VOSC_DRAFT_SHADER_TOOLS = "/untrusted/tools";
   let renderer: NativeRenderer | undefined;
   let runtime: string | undefined;
   try {
@@ -120,6 +122,7 @@ test("private native startup, exact receipt recovery and owned cleanup", async (
     assert.equal(state.preload, null);
     assert.equal(state.osc, null);
     assert.equal(state.library, join(installDirectory, "runtime-libs"));
+    assert.equal(state.shaderTools, join(installDirectory, "renderer", "webgpu-tools"));
     const receipt = await renderer.mutate("draft_commit", {}, "exact");
     assert.equal(receipt.id, "exact");
     assert.equal(receipt.status, "rendered");
@@ -136,6 +139,8 @@ test("private native startup, exact receipt recovery and owned cleanup", async (
   } finally {
     if (priorPort === undefined) delete process.env.VOSC_OSC_PORT;
     else process.env.VOSC_OSC_PORT = priorPort;
+    if (priorTools === undefined) delete process.env.VOSC_DRAFT_SHADER_TOOLS;
+    else process.env.VOSC_DRAFT_SHADER_TOOLS = priorTools;
     await renderer?.stop();
     await rm(installDirectory, { recursive: true, force: true });
   }

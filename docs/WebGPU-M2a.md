@@ -11,9 +11,10 @@ a working shader, the draft also keeps the last accepted source. Use
 **Restore preview** to run that accepted source when you reopen the draft.
 Standalone replay export is only available for GLSL and Hydra drafts.
 
-To run GLSL or Hydra after running WGSL, close the WebGPU preview window
-on the Render Host and then press **Run** for the GLSL or Hydra draft.
-Closing the preview ends its private renderer session.
+The [optional GLSL and Hydra compiler package](WebGPU-M2b.md) lets
+supported shaders use the same WebGPU preview as WGSL. With a WGSL-only
+host, close the WebGPU preview window before running GLSL or Hydra.
+Closing the window ends the private renderer session.
 
 ## Shader interface
 
