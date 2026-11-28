@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 
 scripts = Path(__file__).resolve().parents[1] / "scripts"
@@ -18,7 +18,7 @@ harness = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(harness)
 
 
-def renderer(process, binary, socket, log, stream):
+def renderer(process, binary, socket, log, stream, *, linux_identity=None):
     owned = object.__new__(harness.OwnedRenderer)
     owned.process = process
     owned.binary = binary
@@ -27,6 +27,7 @@ def renderer(process, binary, socket, log, stream):
     owned.stream = stream
     owned.runtime = log.parent / "runtime"
     owned.owner = {"sanitizers_expected": []}
+    owned.linux_identity = linux_identity
     return owned
 
 
@@ -119,61 +120,97 @@ class OwnedCleanupTests(unittest.TestCase):
                 self.assertEqual(evidence["cleanup"], receipt)
 
     def test_hung_owned_process_is_killed_and_reaped(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            binary, log = root / "owned", root / "renderer.log"
-            binary.write_bytes(b"owned")
-            log.write_text("")
-            process = Mock(pid=123, returncode=-9)
-            process.poll.return_value = None
-            process.wait.side_effect = [subprocess.TimeoutExpired("owned", 8), -9]
-            stream = io.BytesIO()
-            owned = renderer(process, binary, Mock(exists=lambda: False), log, stream)
-            with patch.object(harness.subprocess, "check_output", return_value=str(binary) + "\n"), \
-                    patch.object(harness.os, "kill") as send, \
-                    self.assertRaises(harness.RendererCleanupError) as raised:
-                owned.stop()
-            send.assert_called_once_with(123, signal.SIGTERM)
-            process.kill.assert_called_once_with()
-            self.assertEqual(process.wait.call_count, 2)
-            self.assertTrue(raised.exception.receipt["forced_kill"])
-            self.assertIn("forced kill", str(raised.exception))
-            self.assertTrue(stream.closed)
+        for platform in ("linux", "darwin"):
+            with self.subTest(platform=platform), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                binary, log = root / "owned", root / "renderer.log"
+                log.write_text("")
+                identity = {"executable": str(binary), "start_ticks": 100}
+                process = Mock(pid=123, returncode=-signal.SIGKILL)
+                process.poll.return_value = None
+                process.wait.side_effect = [subprocess.TimeoutExpired("owned", 8), -signal.SIGKILL]
+                stream = io.BytesIO()
+                owned = renderer(process, binary, Mock(exists=lambda: False), log, stream,
+                                 linux_identity=identity if platform == "linux" else None)
+                cleanup = Mock()
+                cleanup.attach_mock(process.send_signal, "send_signal")
+                cleanup.attach_mock(process.wait, "wait")
+                with (
+                    patch.object(owned, "read_linux_identity", return_value=identity.copy()),
+                    patch.object(harness.subprocess, "check_output", return_value=str(binary) + "\n") as ps,
+                    patch.object(harness.os, "kill", cleanup.kill),
+                    self.assertRaises(harness.RendererCleanupError) as raised,
+                ):
+                    owned.stop()
+
+                if platform == "linux":
+                    ps.assert_not_called()
+                    term = call.send_signal(signal.SIGTERM)
+                else:
+                    ps.assert_called_once_with(["ps", "-p", "123", "-o", "comm="], text=True)
+                    term = call.kill(123, signal.SIGTERM)
+                self.assertEqual(cleanup.mock_calls, [
+                    term, call.wait(timeout=8), call.send_signal(signal.SIGKILL), call.wait(timeout=8),
+                ])
+                self.assertEqual(raised.exception.receipt["identity"], str(binary))
+                self.assertEqual(raised.exception.receipt["return_code"], -signal.SIGKILL)
+                self.assertTrue(raised.exception.receipt["forced_kill"])
+                self.assertIn("forced kill", str(raised.exception))
+                self.assertTrue(stream.closed)
 
     def test_identity_mismatch_never_signals_process(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            binary, log = root / "owned", root / "renderer.log"
-            binary.write_bytes(b"owned")
-            log.write_text("")
-            process, stream = Mock(pid=123), io.BytesIO()
-            process.poll.return_value = None
-            owned = renderer(process, binary, Mock(), log, stream)
-            with patch.object(harness.subprocess, "check_output", return_value="/someone/else\n"), \
-                    patch.object(harness.os, "kill") as send:
-                with self.assertRaisesRegex(harness.RendererCleanupError, "unexpected process identity") as raised:
+        cases = (
+            ("linux executable", {"executable": "/someone/else"}),
+            ("linux start ticks", {"start_ticks": 101}),
+            ("darwin executable", None),
+        )
+        for scenario, changed_identity in cases:
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                binary, log = root / "owned", root / "renderer.log"
+                log.write_text("")
+                identity = {"executable": str(binary), "start_ticks": 100}
+                process, stream = Mock(pid=123, returncode=None), io.BytesIO()
+                process.poll.return_value = None
+                owned = renderer(process, binary, Mock(exists=lambda: False), log, stream,
+                                 linux_identity=identity if changed_identity is not None else None)
+                message = ("unexpected renderer PID 123" if changed_identity is not None
+                           else "unexpected process identity")
+                with (
+                    patch.object(owned, "read_linux_identity", return_value={**identity, **(changed_identity or {})}),
+                    patch.object(harness.subprocess, "check_output", return_value="/someone/else\n"),
+                    patch.object(harness.os, "kill") as kill,
+                    self.assertRaisesRegex(harness.RendererCleanupError, message) as raised,
+                ):
                     owned.stop()
-            self.assertEqual(raised.exception.receipt["pid"], 123)
-            send.assert_not_called()
-            process.kill.assert_not_called()
-            self.assertTrue(stream.closed)
+
+                self.assertEqual(raised.exception.receipt["pid"], 123)
+                kill.assert_not_called()
+                process.send_signal.assert_not_called()
+                process.terminate.assert_not_called()
+                process.kill.assert_not_called()
+                process.wait.assert_not_called()
+                self.assertTrue(stream.closed)
 
     def test_log_closes_even_if_reaping_fails(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             binary, log = root / "owned", root / "renderer.log"
-            binary.write_bytes(b"owned")
             log.write_text("")
-            process, stream = Mock(pid=123), io.BytesIO()
+            identity = {"executable": str(binary), "start_ticks": 100}
+            process, stream = Mock(pid=123, returncode=None), io.BytesIO()
             process.poll.return_value = None
             process.wait.side_effect = subprocess.TimeoutExpired("owned", 8)
-            owned = renderer(process, binary, Mock(), log, stream)
-            with patch.object(harness.subprocess, "check_output", return_value=str(binary) + "\n"), \
-                    patch.object(harness.os, "kill"):
-                with self.assertRaises(harness.RendererCleanupError) as raised:
-                    owned.stop()
-            process.kill.assert_called_once_with()
-            self.assertIn("TimeoutExpired", str(raised.exception))
+            owned = renderer(process, binary, Mock(exists=lambda: False), log, stream, linux_identity=identity)
+            with (
+                patch.object(owned, "read_linux_identity", return_value=identity.copy()),
+                patch.object(harness.os, "kill"),
+                self.assertRaisesRegex(harness.RendererCleanupError, "TimeoutExpired"),
+            ):
+                owned.stop()
+
+            self.assertEqual(process.send_signal.call_args_list, [call(signal.SIGTERM), call(signal.SIGKILL)])
+            self.assertEqual(process.wait.call_args_list, [call(timeout=8), call(timeout=8)])
             self.assertTrue(stream.closed)
 
     def test_stop_rejects_nonzero_exit_and_retained_socket(self):
