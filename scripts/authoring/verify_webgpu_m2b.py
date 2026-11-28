@@ -117,6 +117,27 @@ def verify(client, hydra_path, evidence, fallback):
         print("PASS package without verified tools routes GLSL to OpenGL and still runs native WGSL")
         return
 
+    callback = (FIXTURES / "callback.frag").read_bytes()
+    callback_context, prepared = prepare(callback)
+    assert prepared["status"] == "prepared" and prepared["result"]["backend"] == "opengl", prepared
+    callback_draw = commit(callback_context)
+    activation = callback_draw["result"]
+    assert callback_draw["status"] == "rendered" and activation["backend"] == "opengl", callback_draw
+    assert activation["callback_uniform"] == "u_vosc_callback", callback_draw
+    sampled = mutate("draft_callback", {"lease": callback_context["lease"], "revision": callback_draw["revision"],
+                                       "sequence": 1, "value": 0.5})
+    assert sampled["status"] == "rendered", sampled
+    uniform = sampled["result"]["scene"]["layers"][0]["shader"]["uniforms"]["u_vosc_callback"]
+    assert float(uniform["rendered_value"]) == 0.5, uniform
+
+    layer_alpha = b"#version 330\nuniform float alpha;\nout vec4 fragColor;\nvoid main() { fragColor = vec4(alpha); }\n"
+    alpha_context, prepared = prepare(layer_alpha)
+    assert prepared["status"] == "prepared" and prepared["result"]["backend"] == "opengl", prepared
+    alpha_draw = commit(alpha_context)
+    assert alpha_draw["status"] == "rendered" and alpha_draw["result"]["backend"] == "opengl", alpha_draw
+    alpha = alpha_draw["result"]["scene"]["layers"][0]["shader"]["uniforms"]["alpha"]
+    assert float(alpha["rendered_value"]) == 1.0, alpha
+
     hydra = hydra_path.read_bytes()
     hydra_ref = (WGSL / "m2b-hydra-reference.wgsl").read_bytes()
     first = run(glow_ref, "wgsl")
@@ -147,6 +168,20 @@ def verify(client, hydra_path, evidence, fallback):
         changed = capture(name, run(negative, "wgsl"))
         assert max(compare(glow_expected, changed)[:3]) > 2
 
+    integer_defaults = b"""#version 330
+uniform highp float signedHex = 0xffffffff;
+uniform mediump float unsignedHex = 0xffffffffu;
+uniform lowp float negatedUnsigned = -1u;
+out vec4 fragColor;
+void main() {
+    fragColor = vec4(signedHex < 0.0 ? 1.0 : 0.0,
+                     unsignedHex > 0.0 ? 1.0 : 0.0,
+                     negatedUnsigned > 0.0 ? 1.0 : 0.0, 1.0);
+}
+"""
+    defaults_draw = run(integer_defaults)
+    assert [pixel["rgba"] for pixel in defaults_draw["result"]["pixels"]] == [[255, 255, 255, 255]] * 4
+
     encoded = json.loads((FIXTURES / "hydra/legacy-m4.vosc-draft").read_text())
     legacy = base64.b64decode(encoded["accepted"]["project"]["source"]["base64"], validate=True)
     legacy_drawn = run(legacy)
@@ -163,6 +198,8 @@ def verify(client, hydra_path, evidence, fallback):
     for params, expected in (
         ({"source": invalid}, "shader_failed"),
         ({"source": unsupported}, "backend_switch_required"),
+        ({"source": callback}, "backend_switch_required"),
+        ({"source": layer_alpha}, "backend_switch_required"),
         ({"source": glow, "backend": "webgpu", "artifact": {**saved, "artifact_digest": "0" * 64}},
          "shader_artifact_mismatch"),
         ({"source": glow, "backend": "webgpu", "artifact": {**saved, "compiler_identity": "0" * 64}},

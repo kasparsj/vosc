@@ -16,6 +16,7 @@
 #include <cmath>
 #include <csignal>
 #include <cstdio>
+#include <cstdint>
 #include <cstdlib>
 #include <fcntl.h>
 #include <fstream>
@@ -117,10 +118,10 @@ std::size_t arity(std::string_view type) {
 }
 
 bool rendererUniform(std::string_view name) {
-    // Keep these renderer-owned names in sync with Shader::isRendererUniform.
-    constexpr std::string_view names[] = {"u_vosc_previous", "u_vosc_current", "random", "numLights", "lights",
-        "offset", "layer", "globalColor", "usingTexture", "usingColors", "projectionMatrix", "modelViewMatrix",
-        "modelViewProjectionMatrix", "textureMatrix"};
+    // Include the Editor callback and the renderer-owned names in Shader::isRendererUniform.
+    constexpr std::string_view names[] = {"u_vosc_callback", "u_vosc_previous", "u_vosc_current", "random",
+        "numLights", "lights", "offset", "layer", "globalColor", "usingTexture", "usingColors", "projectionMatrix",
+        "modelViewMatrix", "modelViewProjectionMatrix", "textureMatrix"};
     return std::find(std::begin(names), std::end(names), name) != std::end(names);
 }
 
@@ -141,23 +142,27 @@ bool otherUniformType(std::string_view type) {
     return std::find(std::begin(types), std::end(types), type) != std::end(types);
 }
 
-bool numericLiteral(std::string_view value, float& result) {
+bool numericLiteral(std::string_view value, bool negative, float& result) {
     if (value.empty() || !(digit(value.front()) || value.front() == '.')) return false;
     const bool hex = value.starts_with("0x") || value.starts_with("0X");
     if (hex || value.find_first_of(".eEfF") == value.npos) {
-        if (value.back() == 'u' || value.back() == 'U') value.remove_suffix(1);
+        const bool isUnsigned = value.back() == 'u' || value.back() == 'U';
+        if (isUnsigned) value.remove_suffix(1);
         const int base = hex ? 16 : (value.size() > 1 && value.front() == '0' ? 8 : 10);
         if (hex) value.remove_prefix(2);
-        unsigned int integer = 0;
-        const auto read = std::from_chars(value.data(), value.data() + value.size(), integer, base);
+        std::uint32_t bits = 0;
+        const auto read = std::from_chars(value.data(), value.data() + value.size(), bits, base);
         if (read.ec != std::errc{} || read.ptr != value.data() + value.size()) return false;
-        result = static_cast<float>(integer);
+        if (negative) bits = std::uint32_t{0} - bits;
+        result = isUnsigned ? static_cast<float>(bits) : static_cast<float>(static_cast<std::int32_t>(bits));
         return true;
     }
     if (value.back() == 'f' || value.back() == 'F') value.remove_suffix(1);
     std::istringstream input{std::string(value)};
     input.imbue(std::locale::classic());
-    return (input >> result) && input.eof() && std::isfinite(result);
+    if (!(input >> result) || !input.eof() || !std::isfinite(result)) return false;
+    if (negative) result = -result;
+    return true;
 }
 
 struct Edit {
@@ -191,8 +196,7 @@ std::optional<GlslProfileResult> Profile::initializer(std::size_t& index, std::s
     auto literal = [&](float& value) {
         const auto sign = at(index);
         if (sign == "+" || sign == "-") ++index;
-        if (!numericLiteral(at(index), value)) return false;
-        if (sign == "-") value = -value;
+        if (!numericLiteral(at(index), sign == "-", value)) return false;
         ++index;
         return true;
     };
@@ -231,6 +235,8 @@ std::optional<GlslProfileResult> Profile::initializer(std::size_t& index, std::s
 std::optional<GlslProfileResult> Profile::uniform(std::size_t& index) {
     const auto begin = index++;
     const auto line = tokens[begin].line;
+    const auto precision = at(index);
+    if (precision == "highp" || precision == "mediump" || precision == "lowp") ++index;
     const auto type = at(index++);
     if (type.empty() || !letter(type.front()))
         return profileFailure(ProfileStatus::Error, "Expected a uniform type", line);

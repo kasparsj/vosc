@@ -1358,7 +1358,11 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
             } else {
                 auto profile = webgpu::classifyGlsl(source);
                 if (profile.status == webgpu::GlslProfileResult::Status::Ready) {
-                    translate = true;
+                    const auto managed = std::find_if(profile.controls.begin(), profile.controls.end(),
+                        [&](const auto& control) { return managedUniform(layer, control.name); });
+                    translate = managed == profile.controls.end();
+                    if (!translate)
+                        unsupported = "Renderer-owned uniform '" + managed->name + "' is outside the WebGPU profile";
                 } else {
                     const auto detail = profile.diagnostics.empty() ? "Unsupported GLSL source" :
                         profile.diagnostics.front().message;

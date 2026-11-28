@@ -525,8 +525,11 @@ export class Workspace {
       const raw = await this.host.rpc("reflect", {});
       if (!accept()) return;
       const next = this.receive(raw);
-      if (this.lease?.version && next.epoch !== this.lease.version.epoch) {
+      const lease = this.lease;
+      if (lease?.version && next.epoch !== lease.version.epoch) {
+        const canRun = this.canRunAfterRestart(next, lease);
         this.requireRestoreAfterRestart();
+        if (canRun) this.offerRunAfterRestart();
       }
       if (this.project && !this.previewMatches()) {
         this.notice ??= next.needsRestore ? "The host needs this draft to be restored." :
@@ -941,7 +944,8 @@ export class Workspace {
           if (this.evaluation === job) this.evaluation = null;
         }
       }
-      this.setPhase(attempt, "preparing", `Compiling ${attempt.language === "wgsl" ? "WGSL" : "GLSL"} on the render host.`);
+      const compiling = `Compiling ${attempt.language === "wgsl" ? "WGSL" : "GLSL"} on the render host.`;
+      this.setPhase(attempt, "preparing", compiling);
       await this.observation;
       await this.sampleTask;
       this.requirePreAdmission(attempt);
@@ -950,8 +954,7 @@ export class Workspace {
       if (!await this.settleFence(attempt)) return;
       if (this.current(attempt)) this.retiringAttempt = null;
       this.requirePreAdmission(attempt);
-      const previousLease = this.lease;
-      const lease = previousLease ?? { id: randomUUID(), host: this.host.session(), version: null, sampleSequence: 0 };
+      let lease = this.lease ?? { id: randomUUID(), host: this.host.session(), version: null, sampleSequence: 0 };
       const raw = await lease.host.rpc("reflect", {});
       this.requirePreAdmission(attempt);
       const state = this.receive(raw);
@@ -959,14 +962,22 @@ export class Workspace {
         this.lease = null;
         this.acknowledged = null;
         this.samples.stop();
-        throw new HostError("stale_epoch", "The renderer restarted. Restore the accepted artifact first.");
+        if (!this.canRunAfterRestart(state, lease)) {
+          throw new HostError("stale_epoch", "The renderer restarted. Restore the accepted artifact first.");
+        }
+        this.stopCallback();
+        if (this.queue?.mode === "automatic") this.queue = null;
+        this.offerRunAfterRestart();
+        if (attempt.mode === "automatic") return;
+        this.setPhase(attempt, "preparing", compiling);
+        lease = { id: randomUUID(), host: lease.host, version: null, sampleSequence: 0 };
       }
-      lease.version = state;
-      if (!previousLease && attempt.mode === "manual" && state.lease && state.lease !== lease.id) {
+      if (!lease.version && attempt.mode === "manual" && state.lease && state.lease !== lease.id) {
         const fenced = await this.fence({ id: state.lease, host: lease.host, version: state, sampleSequence: 0 });
         this.requirePreAdmission(attempt);
         if (!fenced) throw new HostError("lease_owned", "Another controller may own the prior preview lease.");
       }
+      lease.version = state;
       this.lease = lease;
       const id = randomUUID();
       const identity = { ...attempt.identity, lease: lease.id };
@@ -1185,6 +1196,21 @@ export class Workspace {
     return state?.target === prior.target && typeof state.epoch === "string" && state.epoch.length > 0 &&
       state.epoch !== prior.epoch && Number.isSafeInteger(state.revision) && state.revision >= 0 &&
       typeof state.needsRestore === "boolean" && Array.isArray(state.uniforms) && Array.isArray(state.slots);
+  }
+
+  private canRunAfterRestart(state: ReflectedDraft, lease: Lease) {
+    const accepted = this.document?.accepted;
+    const peer = lease.host.peer;
+    return !this.unknownCommit && !this.pendingReply && state.needsRestore && !state.lease && !!accepted &&
+      (accepted.rendering?.backend === "webgpu" || accepted.language === "wgsl") &&
+      samePeer(this.host.peer, peer) && samePeer(accepted.project.destination, peer) &&
+      !!lease.version && this.changedEpoch(state, { target: peer.target, epoch: lease.version.epoch });
+  }
+
+  private offerRunAfterRestart() {
+    const message = "The renderer restarted. Run the working draft or restore the last accepted preview.";
+    this.runView = { ...EMPTY_RUN, paused: true, message };
+    this.notice = message;
   }
 
   private requireRestoreAfterRestart() {

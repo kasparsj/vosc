@@ -54,6 +54,23 @@ class WebGPUToolPackagingTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "outside the Ubuntu x86-64 runtime"):
                 tools.check_binary(binary, "linux-x64")
 
+    def test_mac_repackaging_stages_only_the_selected_tools(self):
+        app = self.root / "vosc.app"
+        previous = app / "Contents/Resources/webgpu-tools"
+        previous.mkdir(parents=True)
+        (previous / "old-compiler").touch()
+
+        with patch.object(package_macos, "run"), patch.object(tools, "stage_tools") as stage:
+            _, plain = package_macos.stage_host(self.root / "plain", "1", app)
+            self.assertFalse((plain / "Contents/Resources/webgpu-tools").exists())
+            stage.assert_not_called()
+            _, bundled = package_macos.stage_host(self.root / "bundled", "1", app, self.input)
+            destination = bundled / "Contents/Resources/webgpu-tools"
+            self.assertFalse(destination.exists())
+            stage.assert_called_once_with(self.input, destination, "macos-arm64")
+
+        self.assertTrue((previous / "old-compiler").is_file())
+
     def test_signed_tool_hashes_are_written_before_sealing_the_app(self):
         app = self.root / "vosc.app"
         packaged = app / "Contents/Resources/webgpu-tools"

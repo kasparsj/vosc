@@ -1500,6 +1500,82 @@ for (const language of ["glsl", "hydra-js"] as const) {
   });
 }
 
+for (const [detection, language] of [["reflect", "glsl"], ["manual Run", "hydra-js"], ["automatic Run", "glsl"]] as const) {
+  test(`Translated ${language} can switch to OpenGL after ${detection} detects a renderer restart`, async () => {
+    const host = new FixtureHost();
+    host.state.webgpuAuto = true;
+    const workspace = new Workspace(host as unknown as HostClient, async text => compilePatch(text));
+    await workspace.openSource(language === "glsl" ? SOURCE : sourceWithText(SOURCE, HYDRA), language);
+    const initial = await workspace.run();
+    assert.equal(initial.document?.acceptedArtifact?.backend, "webgpu");
+    assert.ok(initial.drawnReceipt);
+
+    const edited = setSource(workspace, language === "glsl" ? "#version 330\n// outside the translation profile" :
+      'osc(5).blend(osc(2), param("mix", 0.4)).out();');
+    host.compileError = new HostError("backend_switch_required", "Close the WebGPU preview window to use OpenGL.");
+    const blocked = await workspace.run();
+    assert.equal(blocked.run.problems[0]?.code, "backend_switch_required");
+    assert.deepEqual(blocked.drawnReceipt, initial.drawnReceipt);
+    const accepted = blocked.document?.acceptedArtifact;
+
+    host.state = { target: PEER.target, epoch: "epoch-b", revision: 0, needsRestore: true,
+      uniforms: [], slots: [], webgpuAuto: true };
+    host.autoBackend = "opengl";
+    host.compileError = new HostError("shader_failed", "The OpenGL candidate failed to compile.");
+    const requestsBeforeRestart = candidateCalls(host).length;
+    if (detection !== "manual Run") {
+      const waiting = await (detection === "reflect" ? workspace.reflect() : workspace.run("automatic"));
+      assert.equal(waiting.run.phase, "idle");
+      assert.equal(waiting.run.manualReady, false);
+      assert.equal(waiting.previewReady, false);
+      assert.equal(waiting.drawnReceipt, null);
+      assert.deepEqual(waiting.document?.acceptedArtifact, accepted);
+      await workspace.run("automatic");
+      assert.equal(candidateCalls(host).length, requestsBeforeRestart);
+    }
+
+    const failed = await workspace.run();
+    assert.equal(failed.run.problems[0]?.code, "shader_failed");
+    assert.deepEqual(failed.document?.acceptedArtifact, accepted);
+    assert.equal(failed.document?.source.digest, edited.source.digest);
+    assert.equal(failed.drawnReceipt, null);
+    assert.equal(host.mutations, 1);
+    const prepare = candidateCalls(host).at(-1)!;
+    assert.equal(prepare.method, "run.prepare");
+    assert.equal(prepare.params.backend, "auto");
+    assert.notEqual(prepare.params.lease, initial.reflected?.lease);
+
+    host.compileError = null;
+    const replacement = await workspace.run();
+    assert.equal(replacement.run.phase, "drawn");
+    assert.equal(replacement.previewReady, true);
+    assert.equal(replacement.reflected?.epoch, "epoch-b");
+    assert.equal(replacement.document?.acceptedArtifact?.backend, "opengl");
+    assert.notEqual(replacement.document?.acceptedArtifact?.id, accepted?.id);
+    assert.notEqual(replacement.drawnReceipt?.id, initial.drawnReceipt.id);
+    assert.equal(replacement.reflected?.sourceDigest, language === "glsl" ? edited.source.digest :
+      hash(Buffer.from(compilePatch(edited.source.text).fragment)));
+    assert.equal(host.mutations, 2);
+  });
+}
+
+test("An accepted legacy OpenGL draft still requires Restore after a renderer restart", async () => {
+  const host = new FixtureHost();
+  const workspace = new Workspace(host as unknown as HostClient);
+  await workspace.openSource(SOURCE);
+  const initial = await workspace.run();
+  setSource(workspace, "// working edit\n" + SOURCE_BYTES.toString());
+  host.state = { target: PEER.target, epoch: "epoch-b", revision: 0, needsRestore: true, uniforms: [], slots: [] };
+
+  assert.equal((await workspace.reflect()).run.phase, "restore_required");
+  assert.throws(() => workspace.run(), { code: "restore_required" });
+  assert.equal(host.mutations, 1);
+  const restored = await workspace.restore();
+  assert.equal(restored.previewReady, true);
+  assert.equal(restored.reflected?.sourceDigest, initial.reflected?.sourceDigest);
+  assert.equal(restored.document?.acceptedArtifact?.stale, true);
+});
+
 test("Legacy drafts keep their bindings and explicitly restore on OpenGL after host negotiation", async () => {
   const host = new FixtureHost();
   const workspace = new Workspace(host as unknown as HostClient);

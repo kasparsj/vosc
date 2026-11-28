@@ -201,7 +201,13 @@ def stage_host(output, version, renderer_app, webgpu_tools=None):
     # Preserve ordinary VOSC as a separate bundle beside the optional companion.
     run(["codesign", "--verify", "--deep", "--strict", renderer_app])
     renderer = output / renderer_app.name
-    shutil.copytree(renderer_app, renderer, symlinks=True)
+
+    def ignore_staged_tools(directory, names):
+        if Path(directory) == renderer_app / "Contents/Resources" and "webgpu-tools" in names:
+            return ("webgpu-tools",)
+        return ()
+
+    shutil.copytree(renderer_app, renderer, symlinks=True, ignore=ignore_staged_tools)
     for binary in sorted(path for path in renderer.rglob("*") if mach_o(path)):
         arches = run(["lipo", "-archs", binary], capture=True).strip().split()
         if arches != ["arm64"]:

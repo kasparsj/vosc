@@ -45,6 +45,11 @@ void main() {
 
 const std::string Prefix = "#version 330\nout vec4 color;\n";
 const std::string Draw = "void main() { color = vec4(1.0); }\n";
+const std::string IntegerDefaults = Prefix +
+    "uniform highp float signedHex = 0xffffffff;\n"
+    "uniform mediump float unsignedHex = 0xffffffffu;\n"
+    "uniform lowp float negatedUnsigned = -1u;\n"
+    "void main() { color = vec4(signedHex, unsignedHex, negatedUnsigned, 1.0); }\n";
 
 std::string read(const fs::path& path) {
     std::ifstream file(path, std::ios::binary);
@@ -87,8 +92,15 @@ void testProfile() {
     assert(adapted.adaptedSource.find("#line 1 0\n") != std::string::npos);
     assert(webgpu::classifyGlsl(Prefix + Draw).status == ProfileStatus::Ready);
 
+    const auto integerDefaults = webgpu::classifyGlsl(IntegerDefaults);
+    assert(integerDefaults.status == ProfileStatus::Ready && integerDefaults.controls.size() == 3);
+    assert(integerDefaults.controls[0].defaultValue[0] == -1.0f);
+    assert(integerDefaults.controls[1].defaultValue[0] == 4294967296.0f);
+    assert(integerDefaults.controls[2].defaultValue[0] == 4294967296.0f);
+
     for (const auto* feature : {"uniform sampler2D previous;", "uniform float values[2];", "uniform mat3 rotation;",
-                                "uniform float offset;", "#define extra 1\n", "in vec2 uv;", "out vec4 second;"}) {
+                                "uniform float offset;", "uniform float u_vosc_callback;", "#define extra 1\n",
+                                "in vec2 uv;", "out vec4 second;"}) {
         const auto unsupported = webgpu::classifyGlsl(Prefix + feature + Draw);
         assert(unsupported.status == ProfileStatus::Unsupported);
         assert(unsupported.diagnostics.front().line == 3);
@@ -122,6 +134,7 @@ void testCompilers(const fs::path& toolPackage, const fs::path& fixtureDirectory
     assert(setenv("VOSC_DRAFT_SHADER_TOOLS", toolPackage.c_str(), 1) == 0);
     assert(GlslTranslationTools::fromEnvironment().directory == toolPackage);
 
+    requireSuccess(run(toolPackage, IntegerDefaults));
     const auto result = run(toolPackage, Shader);
     requireSuccess(result);
     assert(result.controls.size() == 4);

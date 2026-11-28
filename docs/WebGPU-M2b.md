@@ -25,8 +25,9 @@ support scalar and vector numeric defaults. VOSC fills omitted defaults with
 zero. Each uniform uses a 16-byte lane in the second uniform buffer.
 [Native WGSL interface](WebGPU-M2a.md#shader-interface)
 
-Textures, feedback, extra passes, and existing editable mappings use the
-OpenGL path. The WebGPU Inspector shows the accepted backend and frame.
+Textures, feedback, extra passes, Editor callbacks, layer-owned uniforms,
+and existing editable mappings use the OpenGL path. The WebGPU Inspector
+shows the accepted backend and frame.
 Editing WebGPU uniform values and OSC mappings follows in M2b.2.
 
 ## Package the compiler tools
@@ -97,7 +98,8 @@ The emitter uses the Editor's staged pinned Triode build. The verifier
 requires Pillow. It records the device and process, rendered revisions,
 PNG readbacks, and rejection receipts. It compares interior pixels at
 0.25 s and checks the coordinate and uniform defaults with two deliberately
-different reference shaders.
+different reference shaders. The standalone compiler tests use the
+`nlohmann-json3-dev` headers on Ubuntu.
 
 ## Hardware results
 
