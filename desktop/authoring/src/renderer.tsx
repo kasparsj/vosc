@@ -93,6 +93,7 @@ function App() {
   const focusAfterNavigation = useRef<number | null>(null);
   const activeLocation = location?.document === view.current?.state.doc ? location : undefined;
   const newButton = useRef<HTMLButtonElement>(null);
+  const newDraftChoices = useRef<HTMLDivElement>(null);
   const libraryButton = useRef<HTMLButtonElement>(null);
   const inspectorButton = useRef<HTMLButtonElement>(null);
   const commandRunning = useRef(false);
@@ -180,7 +181,7 @@ function App() {
 
   async function discover() {
     try { setDiscovery(await api.discover()); }
-    catch { setDiscovery({ peers: [], error: "Bonjour discovery is unavailable." }); }
+    catch { setDiscovery({ peers: [], error: "Render host discovery is unavailable." }); }
   }
 
   useEffect(() => {
@@ -399,6 +400,7 @@ function App() {
 
   function fileCommand(name: FileCommand) {
     if (modalRef.current && name !== "quit" && name !== "close") return;
+    if (newDraftChoices.current?.matches(":popover-open")) newDraftChoices.current.hidePopover();
     void command(async () => {
       const expects = workspaceRef.current?.documentGeneration ?? 0;
       switch (name) {
@@ -442,8 +444,13 @@ function App() {
   return <main className={`editor-workspace layout-${size} ${libraryVisible ? "with-library" : ""} ${inspectorVisible ? "with-inspector" : ""}`}>
     <h1 className="accessible-only">VOSC Editor</h1>
     <header className="command-bar" aria-label="Workspace commands">
-      <button ref={newButton} type="button" disabled={busy || !workspace} onClick={() => fileCommand("new")}><Icon name="plus" />New</button>
-      <button type="button" disabled={busy || !workspace} onClick={() => fileCommand("newHydra")}>New Hydra</button>
+      <button ref={newButton} type="button" disabled={busy || !workspace} popoverTarget="new-draft-choices">
+        <Icon name="plus" />New<Icon name="down" />
+      </button>
+      <div id="new-draft-choices" className="new-draft-choices" ref={newDraftChoices} popover="auto" role="group" aria-label="New draft type">
+        <button type="button" disabled={busy} onClick={() => fileCommand("new")}>GLSL fragment</button>
+        <button type="button" disabled={busy} onClick={() => fileCommand("newHydra")}>Hydra patch</button>
+      </div>
       <button type="button" disabled={busy || !workspace} onClick={() => fileCommand("open")}><Icon name="folder" />Open…</button>
       <button type="button" disabled={busy || !workspace}
         onClick={() => setDialog({ type: "import", generation })}>Import…</button>
@@ -463,11 +470,7 @@ function App() {
         onClick={() => toggleDrawer("library")}>Library</button>
     </div>}
     <aside id="workspace-library" className="library-sidebar" aria-label="Library" hidden={!libraryVisible}>
-      <div className="library-heading">
-        <h2>Workspace</h2>
-        <button type="button" className="quiet icon-button" aria-label="New draft" disabled={busy || !workspace}
-          onClick={() => fileCommand("new")}><Icon name="plus" /></button>
-      </div>
+      <h2 className="library-heading">Workspace</h2>
       {draft ? <div className="active-source" title={draft.source.name}>
         <Icon name="code" /><span>{draft.source.name}</span>{dirty && <span className="unsaved-dot" aria-label="Unsaved changes" />}
       </div> : <p className="muted">No draft open</p>}

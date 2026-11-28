@@ -22,9 +22,9 @@ Install `controller/VOSC Editor.app` in Applications on the controller Mac. On t
 ## Pair a render host
 
 1. On the render Mac, open VOSC Render Host and enable the draft service. Keep its host fingerprint and port visible.
-2. In VOSC Editor, choose **Render Host**. Inspect a discovered host or enter its address and displayed port. Compare the entire displayed host fingerprint against the companion window and enter that fingerprint in the controller.
+2. In VOSC Editor, choose **Render Host**. Select a discovered host or enter its address and displayed port. Compare the entire displayed host fingerprint against the companion window and enter that fingerprint in the controller.
 3. Enter a controller name and request pairing. Compare the entire controller fingerprint displayed on both machines. Approve the matching request in VOSC Render Host.
-4. To reconnect an approved identity, inspect the current endpoint and choose **Connect paired host**. A changed host certificate needs explicit pairing again.
+4. To reconnect, select the paired host from the discovered list. For a manual address, inspect it and choose **Connect paired host**. A changed host certificate needs explicit pairing again.
 
 ## Import and preview
 
@@ -58,6 +58,19 @@ The relay accepts individual sample messages for configured slot IDs. The select
 
 **Export replay** uses the named accepted revision and creates a new folder containing `scene.vosc.json` and `draft.frag`. Keep those files together and open the scene in a separate VOSC renderer with `vosc --scene "/path/to/scene.vosc.json"`. Runtime OSC samples stay external to the saved files.
 
+## Run the Linux development Editor
+
+From `desktop/authoring`, use the installed npm dependencies in a desktop
+session with a keyring and a working Electron sandbox.
+
+```sh
+npm run build
+./node_modules/.bin/electron build/app
+```
+
+Open **Render Host** to see renderers on this computer and the local network.
+Select a host to pair. A host you've already paired connects when selected.
+
 ## Stage an internal Ubuntu Render Host
 
 Use the x86-64 Ubuntu graphics session and a staged Linux minimal Release build
@@ -83,8 +96,9 @@ node scripts/stage_linux_host.mjs \
 ```
 
 In the Ubuntu graphics session, use a disposable profile with a short absolute
-path, an explicit LAN IPv4 address and two available user ports. Select that
-address's LAN interface to advertise the service via Avahi. Set `DISPLAY` and
+path and two available user ports. For testing on one machine, bind to
+`127.0.0.1`. The host appears as **This computer** in a Linux Editor running
+under the same user with the same private `XDG_RUNTIME_DIR`. Set `DISPLAY` and
 `XAUTHORITY` to the current X11 display and the path to its session
 authorization file. Run the host under a transient user service so the same
 cgroup owns the host and its private children, including if the host process
@@ -96,14 +110,21 @@ systemd-run --user --wait --pty --collect --service-type=exec \
   --unit=vosc-m3-test --property=KillMode=control-group --property=TimeoutStopSec=20s \
   --setenv="PATH=$PATH" --setenv="DISPLAY=$DISPLAY" --setenv="XAUTHORITY=$XAUTHORITY" \
   "$HOME/vosc-host-test/vosc-render-host" serve \
-  --state-dir "$VOSC_TEST_PROFILE" --bind "$LAN_IPV4" \
-  --bootstrap-port 47491 --rpc-port 47492 --interface "$LAN_INTERFACE"
+  --state-dir "$VOSC_TEST_PROFILE" --bind 127.0.0.1 \
+  --bootstrap-port 47491 --rpc-port 47492
 ```
+
+For discovery from another machine, use `--bind "$LAN_IPV4"` and add
+`--interface "$LAN_INTERFACE"`. The Ubuntu host advertises through Avahi on
+that interface. The Linux Editor build uses `/usr/bin/python3` and the system
+Avahi client libraries to look for compatible hosts. LAN browsing needs a
+running Avahi daemon. The same-user listing works without it.
 
 The readiness record contains the target ID, host fingerprint and both ports.
 The renderer starts on demand when an approved Editor requests a preview or
 shader validation.
-In the signed Editor, compare the full host fingerprint and request pairing.
+In the Editor, choose **Render Host**, select the host and compare the full host
+fingerprint before requesting pairing.
 From another Ubuntu terminal, list the pending requests. Compare the complete
 Editor fingerprint before approving or denying its specific request.
 
@@ -119,6 +140,5 @@ host="$HOME/vosc-host-test/vosc-render-host"
 Use one decision per request. Stop the test service with
 `systemctl --user stop vosc-m3-test.service` from another terminal. Restart
 using the same profile to retain the host identity and approved peers. To
-exercise manual address, restart with `--no-discovery` in place of
-`--interface "$LAN_INTERFACE"` and enter the bind address and bootstrap port
-in Editor.
+exercise manual address, restart with `--no-discovery` and omit `--interface`.
+Enter the bind address and bootstrap port in the Editor.

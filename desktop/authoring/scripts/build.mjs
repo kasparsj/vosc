@@ -32,6 +32,9 @@ for (const file of ["index.html", "styles.css", "hydra-bootstrap.js"]) {
   await cp(new URL(`../src/${file}`, import.meta.url), new URL(file, output));
 }
 await cp(new URL("../src/icons/", import.meta.url), new URL("icons/", output), { recursive: true });
+if (process.platform === "linux") {
+  await cp(new URL("../discovery/avahi_browse.py", import.meta.url), new URL("avahi_browse.py", output));
+}
 await writeFile(new URL("package.json", output), JSON.stringify({
   name: metadata.name,
   productName: metadata.productName,

@@ -3,6 +3,7 @@ import { chmodSync, closeSync, constants, fstatSync, lstatSync, mkdirSync, openS
 import { createConnection, createServer, isIPv4, type Server, type Socket } from "node:net";
 import { isAbsolute, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { publishLocalHost } from "../src/local-discovery";
 import { publishDiscovery, type Discovery } from "./discovery";
 import { Draft } from "./draft";
 import { DraftService } from "./draft-service";
@@ -10,7 +11,7 @@ import { startTransport, WireError } from "./transport";
 
 const tokens = process.argv.slice(2);
 const usage = `Usage:
-  vosc-render-host serve --state-dir DIR --bind IPv4 --bootstrap-port PORT --rpc-port PORT (--interface NAME | --no-discovery)
+  vosc-render-host serve --state-dir DIR --bind IPv4 --bootstrap-port PORT --rpc-port PORT [--interface NAME | --no-discovery]
   vosc-render-host pair list --state-dir DIR
   vosc-render-host pair approve|deny REQUEST FINGERPRINT --state-dir DIR
   vosc-render-host peer revoke FINGERPRINT --state-dir DIR`;
@@ -115,8 +116,8 @@ async function serve(stateDirectory: string, values: {
   const bootstrapPort = port(values["bootstrap-port"]);
   const rpcPort = port(values["rpc-port"]);
   if (bootstrapPort === rpcPort) throw new Error("Bootstrap and RPC ports must be different");
-  if (Boolean(values.interface) === Boolean(values["no-discovery"])) {
-    throw new Error("Select one of --interface and --no-discovery");
+  if (values.interface && values["no-discovery"]) {
+    throw new Error("Select at most one of --interface and --no-discovery");
   }
 
   const lock = lockDirectory(stateDirectory);
@@ -127,6 +128,7 @@ async function serve(stateDirectory: string, values: {
   let draft: DraftService | undefined;
   let admin: Server | undefined;
   let discovery: Discovery | undefined;
+  let localDiscovery: Discovery | undefined;
   const stop = new AbortController();
   const onSignal = () => stop.abort();
   function dispatch<T>(operation: (service: DraftService) => Promise<T>): Promise<T> {
@@ -184,6 +186,13 @@ async function serve(stateDirectory: string, values: {
         },
       });
     }
+    if (!stop.signal.aborted && !values["no-discovery"]) {
+      try {
+        localDiscovery = await publishLocalHost(transport.target, { host: bind, port: transport.bootstrapPort });
+      } catch (error) {
+        process.stderr.write(`Could not list this host locally: ${message(error)}\n`);
+      }
+    }
     if (!stop.signal.aborted) {
       process.stdout.write(JSON.stringify({
         event: "ready", target: transport.target, fingerprint: transport.fingerprint,
@@ -198,6 +207,7 @@ async function serve(stateDirectory: string, values: {
     try {
       for (const socket of sessions) socket.destroy();
       const closed = await Promise.allSettled([
+        localDiscovery?.close(),
         discovery?.close(),
         host?.close(),
         admin?.listening ? new Promise<void>(resolve => admin?.close(() => resolve())) : undefined,

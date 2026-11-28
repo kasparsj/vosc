@@ -7,7 +7,8 @@ import { connect, type PeerCertificate } from "node:tls";
 import { promisify } from "node:util";
 import { safeStorage } from "electron";
 import { hash, HostError, writeAtomically } from "./local-state";
-import type { Discovery, Endpoint, PairingRequest, Peer, PeerCandidate } from "./contracts";
+import { browseLocalHosts } from "./local-discovery";
+import type { DiscoveredPeer, Discovery, Endpoint, PairingRequest, Peer, PeerCandidate } from "./contracts";
 
 const PROTOCOL_VERSION = 1;
 const RPC_DEADLINE = 12_000;
@@ -197,11 +198,24 @@ export class HostClient {
   }
 
   browse(): Promise<Discovery> {
-    this.discovery ??= promisify(execFile)(this.browseExecutable, { timeout: 7500, maxBuffer: 32768 })
-      .then(({ stdout }) => JSON.parse(stdout) as Discovery)
-      .catch((): Discovery => ({ peers: [], error: "Bonjour discovery is unavailable." }))
-      .finally(() => { this.discovery = undefined; });
+    this.discovery ??= this.discover().finally(() => { this.discovery = undefined; });
     return this.discovery;
+  }
+
+  private async discover(): Promise<Discovery> {
+    const linux = process.platform === "linux";
+    const executable = linux ? "/usr/bin/python3" : this.browseExecutable;
+    const args = linux ? ["-I", "-B", this.browseExecutable] : [];
+    const network = promisify(execFile)(executable, args, { timeout: 7500, maxBuffer: 32768 })
+      .then(({ stdout }) => JSON.parse(stdout) as Discovery)
+      .catch((): Discovery => ({ peers: [], error: linux ? "LAN discovery is unavailable." : "Bonjour discovery is unavailable." }));
+    const [report, local] = await Promise.all([network, linux ? browseLocalHosts() : []]);
+    const peers = new Map<string, DiscoveredPeer>();
+    for (const peer of [...local, ...report.peers]) {
+      const target = peer.target.toLowerCase();
+      if (!peers.has(target)) peers.set(target, peer);
+    }
+    return { peers: [...peers.values()], error: report.error ?? null };
   }
 
   async inspect(addressValue: unknown, expectedTarget?: unknown): Promise<PeerCandidate> {
@@ -213,11 +227,12 @@ export class HostClient {
     const leaf = await leafAt(address);
     if (inspection !== this.inspection) throw new HostError("host_changed", "A different render host is being inspected.");
     const fingerprint = hash(leaf);
-    this.candidate = {
-      endpoint: address, leaf, fingerprint,
-      expectedTarget: typeof expectedTarget === "string" && expectedTarget.length <= 100 ? expectedTarget : undefined,
-    };
-    return { endpoint: address, fingerprint };
+    const target = typeof expectedTarget === "string" && expectedTarget.length <= 100 ? expectedTarget : undefined;
+    const paired = target !== undefined && (await this.trustedHosts())
+      .some(peer => peer.target === target && peer.fingerprint === fingerprint);
+    if (inspection !== this.inspection) throw new HostError("host_changed", "A different render host is being inspected.");
+    this.candidate = { endpoint: address, leaf, fingerprint, expectedTarget: target };
+    return { endpoint: address, fingerprint, paired };
   }
 
   async beginPair(expectedFingerprint: unknown, displayName: unknown): Promise<PairingRequest> {
@@ -396,7 +411,9 @@ export class HostClient {
 
   private async loadIdentity(): Promise<ClientIdentity> {
     if (!safeStorage.isEncryptionAvailable()) {
-      throw new HostError("keychain_unavailable", "Unlock the macOS Keychain to access the controller identity.");
+      throw new HostError("keychain_unavailable", process.platform === "linux"
+        ? "Unlock your desktop keyring to access the controller identity."
+        : "Unlock the macOS Keychain to access the controller identity.");
     }
     const path = join(this.data, "controller-identity");
     try {
@@ -406,11 +423,15 @@ export class HostClient {
         throw new HostError("keychain_unavailable", "The controller identity could not be read from protected storage.");
       }
     }
+    // Linux OpenSSL can write both PEM blocks directly to the inherited stdout.
+    const output = process.platform === "linux" ? ["-config", "/dev/null"]
+      : ["-keyout", "/dev/stdout", "-out", "/dev/stdout"];
     const { stdout } = await promisify(execFile)("/usr/bin/openssl", [
       "req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:P-256",
       "-pkeyopt", "ec_param_enc:named_curve", "-nodes",
-      "-days", "365", "-subj", "/CN=VOSC Authoring Controller", "-keyout", "/dev/stdout", "-out", "/dev/stdout",
-    ], { timeout: 5000, maxBuffer: 16384, env: { PATH: "/usr/bin:/bin" } });
+      "-days", "365", "-subj", "/CN=VOSC Authoring Controller", ...output,
+    ], { timeout: 5000, maxBuffer: 16384, env: { PATH: "/usr/bin:/bin" } })
+      .catch(() => { throw new HostError("identity_failed", "Could not create the controller identity."); });
     const key = stdout.match(PEM)?.[0];
     const cert = stdout.match(CERT)?.[0];
     if (!key || !cert) throw new HostError("identity_failed", "Could not create the controller identity.");

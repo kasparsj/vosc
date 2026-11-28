@@ -126,6 +126,20 @@ pre { max-height: 15rem; overflow: auto; padding: .85rem; background: var(--surf
   align-items: center;
 }
 .command-bar button { min-height: 34px; padding-block: .3rem; font-size: .84rem; }
+.new-draft-choices {
+  position-anchor: auto;
+  inset: auto;
+  top: calc(anchor(bottom) + .35rem);
+  left: anchor(left);
+  margin: 0;
+  padding: .3rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--pane);
+}
+.new-draft-choices button { display: block; width: 100%; text-align: start; border-color: transparent; background: transparent; }
+.new-draft-choices button:hover:not(:disabled) { background: var(--field); }
+.new-draft-choices button:focus-visible { outline-offset: -2px; }
 .destination { margin-left: auto; border-color: transparent; overflow-wrap: anywhere; max-width: 45%; }
 .status-dot, .unsaved-dot { display: inline-block; width: 7px; height: 7px; flex: none; border-radius: 50%; background: #778495; }
 .status-dot.online { background: #a4e5bc; }
@@ -143,7 +157,7 @@ pre { max-height: 15rem; overflow: auto; padding: .85rem; background: var(--surf
 .layout-standard .command-bar, .layout-compact .command-bar { padding-right: 12rem; }
 .library-sidebar, .inspector-sidebar { min-width: 0; min-height: 0; }
 .library-sidebar { grid-area: library; display: flex; flex-flow: column; background: var(--side); border-right: 1px solid var(--line); padding: .75rem .55rem; }
-.library-heading { display: flex; align-items: center; justify-content: space-between; padding-inline: .45rem 0; }
+.library-heading { margin-inline: .45rem; }
 .library-sidebar h2, .source-header h2, .native-target h2, .problems h3 {
   font-size: .72rem;
   letter-spacing: .035em;

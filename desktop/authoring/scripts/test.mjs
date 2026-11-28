@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const cwd = fileURLToPath(new URL("../", import.meta.url));
 const entryPoints = ["workspace", "documents", "editor-imports"];
+if (process.platform === "linux") entryPoints.push("local-discovery");
 const outputDirectory = "build/tests";
 await build({
   absWorkingDir: cwd,

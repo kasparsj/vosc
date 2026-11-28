@@ -36,7 +36,9 @@ if (!app.commandLine.hasSwitch("user-data-dir")) {
 const dataRoot = app.getPath("userData");
 const importer = new Importer(process.resourcesPath, join(dataRoot, "library"),
   fixture);
-const host = new HostClient(dataRoot, join(dirname(process.execPath), "vosc-browse"));
+const discoveryHelper = process.platform === "linux" ? join(__dirname, "avahi_browse.py")
+  : join(dirname(process.execPath), "vosc-browse");
+const host = new HostClient(dataRoot, discoveryHelper);
 const workspace = new Workspace(host, new ElectronHydraEvaluator().evaluate);
 let window: BrowserWindow | null = null;
 let filePicker = false;
@@ -144,8 +146,10 @@ async function mayReplace() {
 
 function installMenu() {
   const file: MenuItemConstructorOptions = { label: "File", submenu: [
-    { label: "New Draft", accelerator: "CommandOrControl+N", click: () => fileCommand("new") },
-    { label: "New Hydra Draft", click: () => fileCommand("newHydra") },
+    { label: "New", submenu: [
+      { label: "GLSL Fragment", accelerator: "CommandOrControl+N", click: () => fileCommand("new") },
+      { label: "Hydra Patch", click: () => fileCommand("newHydra") },
+    ] },
     { label: "Open Draft…", accelerator: "CommandOrControl+O", click: () => fileCommand("open") },
     { label: "Save Draft", accelerator: "CommandOrControl+S", click: () => fileCommand("save") },
     { label: "Save Draft As…", accelerator: "CommandOrControl+Shift+S", click: () => fileCommand("saveAs") },

@@ -47,7 +47,7 @@ export interface Endpoint { host: string; port: number }
 export interface Peer { endpoint: Endpoint; target: string; fingerprint: string }
 export interface DiscoveredPeer { endpoint: Endpoint; target: string; name: string }
 export interface Discovery { peers: DiscoveredPeer[]; error: string | null }
-export interface PeerCandidate { endpoint: Endpoint; fingerprint: string }
+export interface PeerCandidate { endpoint: Endpoint; fingerprint: string; paired: boolean }
 export interface PairingRequest { request: string; fingerprint: string; expiresAt: number }
 export interface DrawReceipt {
   id: string;

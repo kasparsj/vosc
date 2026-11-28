@@ -44,13 +44,18 @@ export function HostPane({ discovery, refresh, workspace, onWorkspace, onUseSele
     setPending(null);
     setFingerprint("");
     void act(async () => {
-      setCandidate(await api.inspectHost(selected?.endpoint ?? { host, port: Number(port) }, selected?.target ?? null));
+      const inspected = await api.inspectHost(selected?.endpoint ?? { host, port: Number(port) }, selected?.target ?? null);
+      if (inspected.paired) onWorkspace(await api.connectPaired(""));
+      else setCandidate(inspected);
     });
   }
 
   async function check() {
     const result = await api.checkPairing();
-    if (result.workspace) onWorkspace(result.workspace);
+    if (result.workspace) {
+      onWorkspace(result.workspace);
+      setCandidate(null);
+    }
     if (result.state !== "pending") setPending(null);
     if (result.state === "denied") setProblem("The render host declined this pairing request.");
     if (result.state === "expired") setProblem("The pairing request expired. Start a new request.");
@@ -75,13 +80,15 @@ export function HostPane({ discovery, refresh, workspace, onWorkspace, onUseSele
     </div>}
     <section className="feature-section" aria-labelledby="discover-heading">
       <h3 id="discover-heading">Discovered hosts</h3>
-      {discovery?.error && <p role="alert" className="error">{discovery.error}</p>}
+      {discovery?.error && (discovery.peers.length
+        ? <p role="status" className="muted">{discovery.error}</p>
+        : <p role="alert" className="error">{discovery.error}</p>)}
       {discovery === null && <p role="status">Looking for render hosts…</p>}
       {discovery && !discovery.error && discovery.peers.length === 0 &&
-        <p className="muted">No render hosts found on this network.</p>}
+        <p className="muted">No render hosts found.</p>}
       {discovery?.peers.map(peer => <div className="form-strip" key={peer.target}>
         <div><strong>{peer.name}</strong><p className="muted">{peer.endpoint.host}:{peer.endpoint.port}</p></div>
-        <button type="button" disabled={busy} onClick={() => inspect(undefined, peer)}>Inspect host</button>
+        <button type="button" disabled={busy} onClick={() => inspect(undefined, peer)}>Select host</button>
       </div>)}
     </section>
     <section className="feature-section" aria-labelledby="manual-heading">

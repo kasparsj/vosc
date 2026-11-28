@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { once } from "node:events";
-import { chmod, copyFile, mkdir, mkdtemp, readFile, realpath, rm, stat, unlink, writeFile } from "node:fs/promises";
+import { chmod, copyFile, mkdir, mkdtemp, readdir, readFile, realpath, rm, stat, unlink, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -73,9 +73,12 @@ test("stage an internal host bundle without modifying the renderer inputs", { ti
     const [bootstrap, rpc] = reserved.map(server => String(server.address().port));
 
     const state = join(root, "state");
+    const runtime = join(root, "runtime");
+    const registry = join(runtime, "vosc-hosts");
+    await mkdir(runtime, { mode: 0o700 });
     const entry = join(output, "host.cjs");
     const serve = [entry, "serve", "--state-dir", state, "--bind", "127.0.0.1",
-      "--bootstrap-port", bootstrap, "--rpc-port", rpc, "--no-discovery"];
+      "--bootstrap-port", bootstrap, "--rpc-port", rpc];
     const release = server => new Promise(resolve => server.close(resolve));
     try {
       await release(reserved[0]);
@@ -92,8 +95,10 @@ test("stage an internal host bundle without modifying the renderer inputs", { ti
       await release(reserved[1]);
     }
 
-    const start = async () => {
-      const child = spawn(process.execPath, serve, { stdio: ["ignore", "pipe", "pipe"] });
+    const start = async (...flags) => {
+      const child = spawn(process.execPath, [...serve, ...flags], {
+        env: { ...process.env, XDG_RUNTIME_DIR: runtime }, stdio: ["ignore", "pipe", "pipe"],
+      });
       let output = "";
       let diagnostics = "";
       child.stderr.setEncoding("utf8").on("data", text => { diagnostics += text; });
@@ -108,10 +113,11 @@ test("stage an internal host bundle without modifying the renderer inputs", { ti
       return { child, ready, exited };
     };
 
-    const first = await start();
+    const first = await start("--no-discovery");
     try {
       assert.equal(first.ready.event, "ready");
       assert.equal(first.ready.discovery, false);
+      await assert.rejects(stat(registry), { code: "ENOENT" });
       assert.equal((await stat(join(state, "admin.sock"))).mode & 0o777, 0o600);
       assert.deepEqual(JSON.parse(execFileSync(process.execPath, [entry, "pair", "list", "--state-dir", state], { timeout: 5000 })),
         []);
@@ -126,10 +132,14 @@ test("stage an internal host bundle without modifying the renderer inputs", { ti
     try {
       assert.equal(restarted.ready.target, first.ready.target);
       assert.equal(restarted.ready.fingerprint, first.ready.fingerprint);
+      const advertisements = await readdir(registry, { withFileTypes: true });
+      assert.equal(advertisements.length, 1);
+      assert.ok(advertisements[0].isSocket());
     } finally {
       restarted.child.kill("SIGTERM");
       await restarted.exited;
     }
+    assert.deepEqual(await readdir(registry), []);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
