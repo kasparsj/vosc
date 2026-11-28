@@ -888,7 +888,7 @@ test("Hydra compiler maps helper operations, sorts reachable uniforms and bounds
   assert(result.spans.some(span => span.location?.line === 2));
   assert.doesNotMatch(compilePatch('param("unused", 0.4); osc().out();').fragment, /u_hydra_unused/);
   assert.throws(() => compilePatch('param("x", 0.4); param("x", 0.5); osc().out();'), /Conflicting/);
-  assert.throws(() => compilePatch("osc().out(0);"), /argument-free out/);
+  assert.throws(() => compilePatch("osc().out(0);"), /out\(\) or out\(o0\)/);
   assert.throws(() => compilePatch("osc().out(); osc().out();"), /exactly one/);
   assert.throws(() => compilePatch("osc(() => 4).out();"), /osc frequency/);
   assert.throws(() => compilePatch("osc(-1).out();"), /osc frequency/);
@@ -933,7 +933,39 @@ test("Hydra compiler maps helper operations, sorts reachable uniforms and bounds
   assert.throws(() => compileHydra({ ...program, functions: badFunctions }, HYDRA), /Invalid Triode shader function inputs/);
 });
 
-test("Hydra stays cold until manual Run and retains separate accepted bytes across offline save and Restore", async () => {
+test("Hydra emits a guarded previous-frame sample for its single output", () => {
+  const direct = compilePatch("\nsrc(o0).out(o0);");
+  assert.deepEqual(direct, compilePatch("\nsrc(o0).out();"));
+  assert.match(direct.fragment, /^#version 330\n#ifndef VOSC_SELF_FEEDBACK\n#error VOSC self-feedback requires a matching renderer\n#endif\nuniform sampler2D u_vosc_previous;/);
+  assert.match(direct.fragment, /return texture\(u_vosc_previous, st\);/);
+  assert.match(direct.fragment, /hydraColor = voscPrevious\(st\);/);
+  assert.equal(direct.spans.length, 2);
+  for (const span of direct.spans) assert.equal(span.location?.line, 2);
+
+  const blended = compilePatch("osc().blend(src(o0).rotate(12), 0.25).blend(src(o0), 0.5).out(o0);");
+  assert.match(blended.fragment, /blend\(blend\(osc\(.+voscPrevious\(rotate\(st, 12\.0, 0\.0\)\), 0\.25\), voscPrevious\(st\), 0\.5\)/);
+  assert.equal(blended.fragment.match(/uniform sampler2D/g)?.length, 1);
+  assert.equal(blended.fragment.match(/vec4 voscPrevious\(/g)?.length, 1);
+  assert.doesNotMatch(compilePatch("src(o0); osc().out(o0);").fragment, /VOSC_SELF_FEEDBACK/);
+
+  for (const patch of ["src().out();", "src(o0, o0).out();", "src({}).out();", "src('camera').out();"]) {
+    assert.throws(() => compilePatch(patch), /only src\(o0\)/);
+  }
+  assert.throws(() => compilePatch("src(o0).out({});"), /exactly one output/);
+  assert.throws(() => compilePatch("src(o0).out(o0); osc().out();"), /exactly one output/);
+  assert.throws(() => compilePatch(
+    'setFunction({name:"voscPrevious",type:"color",inputs:[],glsl:"return _c0;"}); src(o0).out();'), /uniquely named/);
+  assert.throws(() => compilePatch('setFunction({name:"tint",type:"color",inputs:[],' +
+    'glsl:"return texture(u_vosc_previous, _c0.xy);"}); src(o0).tint().out();'), /unsupported custom color dependency/i);
+
+  const patch = "src(o0).out();";
+  const program = evaluateHydraPatch(patch);
+  assert.throws(() => compileHydra({ ...program, feedback: null }, patch), /Invalid Triode/);
+  assert.throws(() => compileHydra({ ...program, feedback: { location: null, source: "untrusted" } }, patch),
+    /Invalid Triode previous-frame source/);
+});
+
+test("Hydra feedback stays cold until manual Run and retains accepted GLSL across offline save, export and Restore", async () => {
   const host = new FixtureHost();
   host.validatedUniforms = [{ name: "u_hydra_mix", values: [0.5], type: "float", owner: "layer", writable: true }];
   let evaluations = 0;
@@ -943,7 +975,8 @@ test("Hydra stays cold until manual Run and retains separate accepted bytes acro
   await workspace.run();
   assert.equal(workspace.view().run.manualReady, true);
   await workspace.create("hydra-js");
-  setSource(workspace, HYDRA);
+  const patch = HYDRA.replace("osc(7, 0, 1.1)", "src(o0)");
+  setSource(workspace, patch);
   const before = candidateCalls(host).length;
   await workspace.run("automatic");
   assert.equal(evaluations, 0);
@@ -953,21 +986,22 @@ test("Hydra stays cold until manual Run and retains separate accepted bytes acro
   assert.equal(success.run.manualReady, false);
   assert.equal(evaluations, 1);
   const generated = success.run.attempt!.generated!;
+  assert.match(generated.source, /uniform sampler2D u_vosc_previous;/);
   const prepare = candidateCalls(host).at(-2)!;
   assert.equal(prepare.params.sha256, hash(Buffer.from(String(prepare.params.source), "base64")));
   assert.equal(prepare.params.sha256, generated.digest);
-  assert.equal(success.run.attempt?.sourceDigest, hash(HYDRA));
+  assert.equal(success.run.attempt?.sourceDigest, hash(patch));
   await workspace.configureSlot("Mix");
   const slot = workspace.view().project!.slots[0].id;
   await workspace.bindComponent("u_hydra_mix", 0, { mode: "range", slot, low: 0.15, high: 0.85 });
-  const working = HYDRA.replace("rotate(17)", "rotate(19)");
+  const working = patch.replace("rotate(17)", "rotate(19)");
   setSource(workspace, working);
   const temporary = await mkdtemp(join(tmpdir(), "vosc-hydra-offline-"));
   try {
     const path = join(temporary, "hydra.vosc-draft");
     await workspace.save(path);
     const saved = JSON.parse(await readFile(path, "utf8"));
-    assert.equal(saved.accepted.hydra.patch.digest, hash(HYDRA));
+    assert.equal(saved.accepted.hydra.patch.digest, hash(patch));
     assert.equal(saved.accepted.hydra.generatedDigest, generated.digest);
     assert.equal(saved.accepted.hydra.version, 2);
     assert.equal(saved.accepted.hydra.compilerId, TRIODE_COMPILER_ID);

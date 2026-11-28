@@ -172,7 +172,6 @@ private:
         GLuint expectedProgram = 0;
         std::map<std::string, float> expectedSlots;
         std::vector<std::string> expectedBindings;
-        bool restoring = false;
     };
     bool draftPreview = false;
     bool draftValidation = false;
@@ -185,7 +184,9 @@ private:
     std::optional<Receipt> draftCommitReceipt;
     std::optional<Receipt> draftControlReceipt;
     bool executeDraft(const std::string& id, const std::string& method, const ofJson& params, uint64_t logStart);
-    void settleDraftDraw();
+    bool settleDraftDraw();
+    void observeSelfFeedbackDraw();
+    ofJson selfFeedbackDraw;
     std::unique_ptr<Trial> trial;
 #ifdef VOSC_RECOVERY_TESTING
     std::optional<double> recoveryTestPreviousDrawStart;

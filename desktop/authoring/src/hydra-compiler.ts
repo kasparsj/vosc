@@ -55,6 +55,8 @@ const builtinSignatures: Record<string, string> = Object.assign(Object.create(nu
   modulate: "vec2 _st, vec4 _c0, float amount",
 });
 const coordinateFunctions = new Set<string>(["rotate", "rotateDeg", "rotateRad", "modulate"]);
+const previousFrameName = "voscPrevious";
+const previousFrameSampler = "u_vosc_previous";
 const customName = /^[A-Za-z][A-Za-z_0-9]{0,63}$/;
 const glslTypes = new Set(["bool", "int", "uint", "float", ...["b", "i", "u", ""].flatMap(prefix =>
   [2, 3, 4].map(size => `${prefix}vec${size}`)), "mat2", "mat3", "mat4"]);
@@ -94,6 +96,7 @@ const reserved = new Set([
   ...TRI_BUILTINS, ...glslKeywords, ...intrinsics, ...Object.getOwnPropertyNames(Object.prototype),
   "setFunction", "param", "parameter", "then", "main", "time", "resolution", "st", "hydraColor",
   "src", "prev", "noise", "shape", "gradient", "solid", "render", "camera", "s0", "o0",
+  previousFrameName, previousFrameSampler,
 ]);
 
 export function validCustomName(name: unknown): name is string {
@@ -143,12 +146,26 @@ export function validateColorBody(source: string, inputs: readonly string[]) {
 
 export function compileHydra(program: unknown, source: string) {
   const sourceLines = source.split(/\r\n|[\n\r\u2028\u2029]/);
-  if (!record(program) || !Array.isArray(program.functions) || !program.functions.length ||
-      program.functions.length > HYDRA_OPERATION_LIMIT || !Array.isArray(program.uniforms) ||
+  if (!record(program) || !Array.isArray(program.functions) ||
+      !Array.isArray(program.uniforms) ||
       program.uniforms.length > HYDRA_PARAMETER_LIMIT || typeof program.colorExpression !== "string") {
     throw new Error("Invalid Triode single-pass compiler result.");
   }
-  const lines = ["#version 330", "uniform float time;", "uniform vec2 resolution;"];
+  const feedback = program.feedback;
+  if (feedback !== null && (!record(feedback) || Object.keys(feedback).length !== 1 ||
+      (feedback.location !== null && !validHydraLocation(feedback.location, sourceLines)))) {
+    throw new Error("Invalid Triode previous-frame source.");
+  }
+  const functionCount = program.functions.length + Number(feedback !== null);
+  if (!functionCount || functionCount > HYDRA_OPERATION_LIMIT) {
+    throw new Error("Invalid Triode single-pass compiler result.");
+  }
+  const lines = ["#version 330"];
+  if (feedback) {
+    lines.push("#ifndef VOSC_SELF_FEEDBACK", "#error VOSC self-feedback requires a matching renderer",
+      "#endif", `uniform sampler2D ${previousFrameSampler};`);
+  }
+  lines.push("uniform float time;", "uniform vec2 resolution;");
   const allowed = new Set(["st", "clamp"]);
   let previous = "";
   for (const uniform of program.uniforms) {
@@ -160,6 +177,13 @@ export function compileHydra(program: unknown, source: string) {
   }
   lines.push("out vec4 hydraColor;", "");
   const spans: HydraSpan[] = [];
+  if (feedback) {
+    allowed.add(previousFrameName);
+    const firstLine = lines.length + 1;
+    lines.push(`vec4 ${previousFrameName}(vec2 st) {`, `    return texture(${previousFrameSampler}, st);`, "}");
+    spans.push({ firstLine, lastLine: lines.length, location: feedback.location as HydraLocation | null });
+    lines.push("");
+  }
   for (const fn of program.functions) {
     if (!record(fn) || typeof fn.name !== "string" || allowed.has(fn.name) ||
         (!TRI_BUILTINS.some(name => name === fn.name) && !validCustomName(fn.name)) || typeof fn.source !== "string" ||
@@ -188,8 +212,12 @@ export function compileHydra(program: unknown, source: string) {
     lines.push("");
   }
   const expression = program.colorExpression;
-  if (!expression || !/^[\w.(),+\- ]+$/.test(expression) || tokens(expression).some(token =>
-    /^[A-Za-z_]/.test(token) && !allowed.has(token))) throw new Error("Invalid Triode shader expression.");
+  if (!expression || !/^[\w.(),+\- ]+$/.test(expression)) throw new Error("Invalid Triode shader expression.");
+  const expressionTokens = tokens(expression);
+  if (expressionTokens.some(token => /^[A-Za-z_]/.test(token) && !allowed.has(token)) ||
+      expressionTokens.includes(previousFrameName) !== (feedback !== null)) {
+    throw new Error("Invalid Triode shader expression.");
+  }
   if (program.location !== null && !validHydraLocation(program.location, sourceLines)) {
     throw new Error("Invalid Triode expression location.");
   }

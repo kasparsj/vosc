@@ -62,12 +62,13 @@ shader separately. Restore and standalone export use that accepted shader.
 | Operation | Arguments and behavior |
 | --- | --- |
 | `osc(frequency, sync, offset)` | Defaults to `60, 0.1, 0`. Frequency must be positive. |
+| `src(o0)` | Samples the previous rendered frame of the same output. |
 | `.rotate(angle, speed)`, `.rotateDeg(angle, speed)` | Angle in degrees and speed in radians per second. Defaults to `10, 0`. |
 | `.rotateRad(angle, speed)` | Angle in radians and speed in radians per second. Defaults to `0.174533, 0`. |
 | `.blend(source, amount)` | Defaults to `0.5`. A `param(id, default)` handle exposes the blend amount to native OSC mapping. |
 | `.modulate(source, amount)` | Displaces source coordinates using another chain. Defaults to `0.1`. |
 | `setFunction(definition)` | Registers a patch-local color transform with finite scalar inputs and a GLSL color body. |
-| `.out()` | Ends the patch with one implicit output. |
+| `.out()`, `.out(o0)` | Ends the patch and writes its single output. |
 
 ```js
 osc(11, 0.18, 0.7)
@@ -76,8 +77,37 @@ osc(11, 0.18, 0.7)
   .out();
 ```
 
-JavaScript helpers and loops can build a chain during Run. Per-frame JavaScript
-callbacks, feedback, multiple outputs and media belong to later milestones.
+JavaScript helpers and loops can build a chain during Run. The patch surface supports
+one output and constant transform arguments, plus the blend parameter described above.
+
+## Use previous-frame feedback
+
+```js
+osc(11, 0.18, 0.7).blend(src(o0).rotate(1), 0.94).out(o0);
+```
+
+The native renderer uses a pair of 640×480 RGBA8 textures with linear sampling and
+edge clamping. The first draw samples transparent black. Each following draw samples
+the previous output in normalized coordinates with a bottom-left origin. Window
+resizing scales the preview and retains the history.
+
+Every successful **Run** and **Restore preview** starts with empty history. If Run
+fails, the active patch and its accumulated history continue drawing. Control
+adjustments preserve history. **Export replay** saves the accepted shader and its
+controls. Standalone replay needs a renderer with self-feedback support and starts
+from transparent black on every launch.
+
+A GLSL draft can also sample `u_vosc_previous`. Put this guard immediately after
+`#version 330` and use the sampler in the fragment. A matching renderer enables the
+guarded shader during native draft preparation or standalone replay.
+Declare one `out vec4` at location and index zero and omit additional preprocessor directives.
+
+```glsl
+#ifndef VOSC_SELF_FEEDBACK
+#error VOSC self-feedback requires a matching renderer
+#endif
+uniform sampler2D u_vosc_previous;
+```
 
 ## Map OSC input
 

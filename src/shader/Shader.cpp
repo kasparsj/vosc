@@ -16,6 +16,7 @@
 #include <limits>
 #include <stdexcept>
 #include <set>
+#include <string_view>
 #include "../Camera.hpp"
 #include "../utils.h"
 
@@ -43,6 +44,72 @@ map<string, ofxAutoReloadedShader> loadShaderCache() {
 }
 
 namespace {
+
+constexpr char previousFrameUniform[] = "u_vosc_previous";
+constexpr std::string_view selfFeedbackGuard = "#ifndef VOSC_SELF_FEEDBACK";
+
+std::optional<size_t> consumeLine(const string& source, size_t offset, std::string_view expected) {
+    const auto end = source.find('\n', offset);
+    if (end == string::npos) return {};
+    auto line = std::string_view(source).substr(offset, end - offset);
+    if (!line.empty() && line.back() == '\r') line.remove_suffix(1);
+    if (line != expected) return {};
+    return end + 1;
+}
+
+std::string_view takeShaderToken(std::string_view& body) {
+    while (!body.empty()) {
+        const auto start = body.find_first_not_of(" \t\r\n\v\f");
+        if (start == std::string_view::npos) return {};
+        body.remove_prefix(start);
+        if (body.substr(0, 2) == "//") {
+            const auto end = body.find('\n');
+            if (end == std::string_view::npos) return {};
+            body.remove_prefix(end + 1);
+        } else if (body.substr(0, 2) == "/*") {
+            const auto end = body.find("*/", 2);
+            if (end == std::string_view::npos) return {};
+            body.remove_prefix(end + 2);
+        } else {
+            const auto end = body.find_first_not_of(
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789");
+            const auto length = end == 0 ? 1 : std::min(end, body.size());
+            const auto token = body.substr(0, length);
+            body.remove_prefix(length);
+            return token;
+        }
+    }
+    return {};
+}
+
+std::string_view selfFeedbackOutput(std::string_view body) {
+    // Line splicing could otherwise turn separately scanned tokens into a declaration.
+    if (body.find('\\') != std::string_view::npos) return {};
+    int braces = 0;
+    int parentheses = 0;
+    std::string_view output;
+    for (auto token = takeShaderToken(body); !token.empty(); token = takeShaderToken(body)) {
+        if (token == "#" || token == "gl_FragColor" || token == "gl_FragData") return {};
+        if (token == "{") ++braces;
+        else if (token == "}") --braces;
+        else if (token == "(") ++parentheses;
+        else if (token == ")") --parentheses;
+        else if (token == "out" && braces == 0 && parentheses == 0) {
+            if (!output.empty() || takeShaderToken(body) != "vec4") return {};
+            output = takeShaderToken(body);
+            if (output.empty() || takeShaderToken(body) != ";") return {};
+        }
+    }
+    return output;
+}
+
+bool isSampler(GLenum type) {
+    return (type >= GL_SAMPLER_1D && type <= GL_SAMPLER_2D_RECT_SHADOW) ||
+           (type >= GL_SAMPLER_1D_ARRAY && type <= GL_SAMPLER_CUBE_SHADOW) ||
+           (type >= GL_INT_SAMPLER_1D && type <= GL_UNSIGNED_INT_SAMPLER_BUFFER) ||
+           (type >= GL_SAMPLER_2D_MULTISAMPLE && type <= GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY) ||
+           (type >= GL_SAMPLER_CUBE_MAP_ARRAY && type <= GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY);
+}
 
 bool hasCompiledStage(const ofShader& shader, GLenum type) {
     const GLuint shaderId = shader.getShader(type);
@@ -194,6 +261,7 @@ void Shader::setShaderWatchEnabled(bool enabled) {
             return;
         }
         shader = std::move(candidate);
+        selfFeedback.reset();
         clearUniforms();
     });
 }
@@ -262,10 +330,11 @@ bool Shader::load(string path) {
     return success;
 }
 
-bool Shader::loadFromSource(const string& source) {
+bool Shader::loadFromSource(const string& source, bool allowSelfFeedback) {
     PreparedDirectSource prepared;
-    if (!prepareDirectSource(source, prepared)) return false;
+    if (!prepareDirectSource(source, prepared, allowSelfFeedback)) return false;
     shader = std::move(prepared.program);
+    selfFeedback = std::move(prepared.selfFeedback);
     shadertoy.reset();
     shaderPath = "source";
     directSource = prepared.source;
@@ -277,21 +346,85 @@ bool Shader::loadFromSource(const string& source) {
     return true;
 }
 
-bool Shader::prepareDirectSource(const string& source, PreparedDirectSource& prepared) {
+bool Shader::prepareDirectSource(const string& source, PreparedDirectSource& prepared,
+                                 bool allowSelfFeedback) {
+    auto guardStart = consumeLine(source, 0, "#version 330");
+    if (!guardStart) guardStart = consumeLine(source, 0, "#version 330 core");
+    std::optional<size_t> bodyStart;
+    if (guardStart) {
+        if (const auto errorStart = consumeLine(source, *guardStart, selfFeedbackGuard)) {
+            if (const auto endStart = consumeLine(source, *errorStart, "#error VOSC self-feedback requires a matching renderer"))
+                bodyStart = consumeLine(source, *endStart, "#endif");
+        }
+    }
+    const bool guarded = bodyStart.has_value();
+    string feedbackOutput;
+    if (guarded && allowSelfFeedback) {
+        feedbackOutput = selfFeedbackOutput(std::string_view(source).substr(*bodyStart));
+        if (feedbackOutput.empty()) {
+            ofLogError("Shader") << "Self-feedback requires one explicit vec4 output and no extra directives";
+            return false;
+        }
+    }
     ofShaderSettings settings;
     settings.shaderFiles[GL_VERTEX_SHADER] = "shaders/passthru.vert";
-    settings.shaderSources[GL_FRAGMENT_SHADER] = source;
+    auto& fragment = settings.shaderSources[GL_FRAGMENT_SHADER];
+    fragment = source;
+    if (guarded && allowSelfFeedback) {
+        // Preserve generated line locations for compiler diagnostics.
+        fragment.replace(*guardStart, selfFeedbackGuard.size(), "#if 0");
+    }
     shared_ptr<ofShader> candidate = make_shared<ofShader>();
     if (!candidate->setup(settings) || !isValidShaderProgram(*candidate)) {
         return false;
     }
-    prepared.program = std::move(candidate);
-    prepared.source = source;
-    prepared.uniforms = reflectUniforms(prepared.program->getProgram());
+    auto uniforms = reflectUniforms(candidate->getProgram());
+    const auto previous = uniforms.find(previousFrameUniform);
+    std::unique_ptr<SelfFeedback> history;
+    if (guarded && allowSelfFeedback) {
+        if (glGetFragDataLocation(candidate->getProgram(), feedbackOutput.c_str()) != 0 ||
+            glGetFragDataIndex(candidate->getProgram(), feedbackOutput.c_str()) != 0) {
+            ofLogError("Shader") << "Self-feedback requires one explicit vec4 output at location and index zero";
+            return false;
+        }
+        if (previous == uniforms.end() || previous->second.type != GL_SAMPLER_2D ||
+            previous->second.isArray() || previous->second.location < 0 ||
+            std::any_of(uniforms.begin(), uniforms.end(), [&](const auto& uniform) {
+                return uniform.first != previousFrameUniform && isSampler(uniform.second.type);
+            })) {
+            ofLogError("Shader") << "Self-feedback requires one active scalar sampler2D u_vosc_previous";
+            return false;
+        }
+        ofFboSettings settings;
+        settings.width = selfFeedbackWidth;
+        settings.height = selfFeedbackHeight;
+        settings.numColorbuffers = 1;
+        settings.useDepth = false;
+        settings.useStencil = false;
+        settings.numSamples = 0;
+        settings.internalformat = GL_RGBA8;
+        settings.textureTarget = GL_TEXTURE_2D;
+        settings.wrapModeHorizontal = settings.wrapModeVertical = GL_CLAMP_TO_EDGE;
+        settings.minFilter = settings.maxFilter = GL_LINEAR;
+        history = std::make_unique<SelfFeedback>();
+        history->buffers.allocate(settings, ofColor(0, 0, 0, 0));
+        if (!history->buffers.isAllocated() || glGetError() != GL_NO_ERROR) {
+            ofLogError("Shader") << "Could not initialize self-feedback framebuffer pair";
+            return false;
+        }
+    } else if (previous != uniforms.end()) {
+        ofLogError("Shader") << "u_vosc_previous requires the VOSC self-feedback guard";
+        return false;
+    }
+    prepared = {std::move(candidate), source, std::move(uniforms), std::move(history)};
     return true;
 }
 
 bool Shader::snapshotDirectSource(DirectSourceState& state, string& reason) const {
+    if (hasSelfFeedback()) {
+        reason = "self-feedback shaders are outside protected trial scope";
+        return false;
+    }
     if (!isShaderLoaded() || shadertoy || fileWatch) {
         reason = "baseline shader must be a loaded direct-source program";
         return false;
@@ -341,6 +474,7 @@ void Shader::installDirectSource(PreparedDirectSource&& prepared,
                                  const map<string, vector<float>>& bindings) {
     auto& pool = VariablePool::getPool(this);
     shader = std::move(prepared.program);
+    selfFeedback = std::move(prepared.selfFeedback);
     shadertoy.reset();
     shaderPath = "source";
     directSource = prepared.source;
@@ -360,6 +494,7 @@ void Shader::installDirectSource(PreparedDirectSource&& prepared,
 void Shader::swapDraftProgram(DraftProgram& draft) {
     auto& bindings = VariablePool::getPool(this);
     shader.swap(draft.source.program);
+    selfFeedback.swap(draft.source.selfFeedback);
     shaderPath.swap(draft.path);
     directSource.swap(draft.source.source);
     uniforms.swap(draft.source.uniforms);
@@ -372,6 +507,7 @@ bool Shader::restoreDirectSource(const DirectSourceState& state) {
     if (!state.program || !state.program->isLoaded()) return false;
     auto& pool = VariablePool::getPool(this);
     shader = state.program;
+    selfFeedback.reset();
     shadertoy.reset();
     shaderPath = state.path;
     directSource = state.source;
@@ -435,6 +571,7 @@ bool Shader::loadShadertoy(const string& shadertoyId) {
 
         shadertoy = candidate;
         shader.reset();
+        selfFeedback.reset();
         shaderPath = "shadertoy/" + shadertoyId + ".frag";
         directSource.clear();
         fileWatch.reset();
@@ -510,6 +647,7 @@ bool Shader::loadNativeStages(const ShaderPaths& paths) {
         !isValidShaderProgram(*candidate, !paths.geomPath.empty()))
         return false;
     shader = std::move(candidate);
+    selfFeedback.reset();
     shadertoy.reset();
     shaderPath = ofFilePath::getFileName(paths.fragPath);
     directSource.clear();
@@ -528,6 +666,7 @@ bool Shader::loadFromFileAndWatch(const string& path) {
     const bool exportableStages = paths.geomPath.empty() && paths.vertPath == "shaders/passthru.vert";
     ofBuffer retained = exportableStages ? ofBufferFromFile(paths.fragPath, true) : ofBuffer();
     shader = std::move(candidate);
+    selfFeedback.reset();
     shadertoy.reset();
     shaderPath = ofFilePath::getFileName(paths.fragPath);
     directSource = retained.size() > 0 && retained.size() <= 128 * 1024 ? retained.getText() : "";
@@ -871,7 +1010,7 @@ void Shader::oscCommand(const string& command, const ofxOscMessage& m) {
 }
 
 bool Shader::isRendererUniform(const string& name) {
-    return name == "time" || name == "resolution" || name == "random" ||
+    return name == previousFrameUniform || name == "time" || name == "resolution" || name == "random" ||
            name == "numLights" || name == "lights" || name == "offset" || name == "layer" ||
            name == "globalColor" || name == "usingTexture" || name == "usingColors" ||
            name == "projectionMatrix" || name == "modelViewMatrix" ||
@@ -879,7 +1018,8 @@ bool Shader::isRendererUniform(const string& name) {
 }
 
 const char* Shader::sceneUniformError(const Uniforms& uniforms, const string& name) {
-    if (name == "layer" || name == "offset" || name == "numLights") return "renderer-owned shader uniform";
+    if (name == previousFrameUniform || name == "layer" || name == "offset" || name == "numLights")
+        return "renderer-owned shader uniform";
     const auto found = uniforms.find(name);
     if (found == uniforms.end()) return "shader binding is absent from the active program";
     const auto& info = found->second;
@@ -943,6 +1083,54 @@ void Shader::begin(TexData& data, int delay, const Camera* camera) {
             setLights(shadertoy);
         }
     }
+}
+
+void Shader::drawSelfFeedback(TexData& data, const glm::vec3& pos, const glm::vec2& size, int layer) {
+    auto& history = *selfFeedback;
+    auto& buffers = history.buffers;
+    ofPushStyle();
+    ofSetColor(255);
+    ofFill();
+    ofSetRectMode(OF_RECTMODE_CORNER);
+    const bool depth = glIsEnabled(GL_DEPTH_TEST);
+    ofDisableDepthTest();
+    bool updated = false;
+    if (!drewSelfFeedbackThisFrame()) {
+        const bool dither = glIsEnabled(GL_DITHER);
+        glDisable(GL_DITHER);
+        buffers.dest().begin();
+        ofDisableBlendMode();
+        ofClear(0, 0, 0, 0);
+        begin(data);
+        setUniform2f("resolution", selfFeedbackWidth, selfFeedbackHeight);
+        setUniform2f("offset", 0, 0);
+        setUniform1i("layer", layer);
+        setUniformTexture(previousFrameUniform, buffers.source().getTexture());
+        ofDrawRectangle(0, 0, selfFeedbackWidth, selfFeedbackHeight);
+        end();
+        buffers.dest().end();
+        if (dither) glEnable(GL_DITHER);
+        if (glGetError() == GL_NO_ERROR) {
+            buffers.swap();
+            updated = true;
+        } else {
+            ofLogError("Shader") << "Self-feedback framebuffer draw failed";
+        }
+    }
+    // Present GL's bottom-up rows in the same orientation as a direct layer draw.
+    buffers.source().getTexture().drawSubsection(pos.x, pos.y, size.x, size.y,
+        0, selfFeedbackHeight, selfFeedbackWidth, -selfFeedbackHeight);
+    if (updated) {
+        if (glGetError() == GL_NO_ERROR) {
+            ++history.step;
+            history.drawFrame = uint64_t(ofGetFrameNum());
+        } else {
+            buffers.swap();
+            ofLogError("Shader") << "Self-feedback presentation failed";
+        }
+    }
+    if (depth) ofEnableDepthTest();
+    ofPopStyle();
 }
 
 void Shader::end() {
@@ -1406,6 +1594,7 @@ void Shader::unload() {
         shader.reset();
     }
     shadertoy.reset();
+    selfFeedback.reset();
     clearUniforms();
 }
 

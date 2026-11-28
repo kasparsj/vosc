@@ -10,10 +10,12 @@ declare module "vosc-triode-compiler" {
   }
   export function compileSinglePass(build: (api: {
     osc(...args: number[]): Chain;
+    previousFrame(): Chain;
     setFunction(definition: ColorTransform): void;
     parameter(id: string, value: number): object;
   }) => void): {
     colorExpression: string;
+    readsPreviousFrame: boolean;
     functions: { name: string; source: string }[];
     uniforms: { name: string; type: "float"; value: number }[];
   };

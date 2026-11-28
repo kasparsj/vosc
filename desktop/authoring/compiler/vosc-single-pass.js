@@ -6,9 +6,10 @@ import { processGlsl, typeLookup, wrapGlslBody } from './types.js'
 const expressionLimit = 64 * 1024
 const identifier = /^[a-zA-Z][a-zA-Z_0-9]*$/
 const parameterId = /^[a-z][a-z0-9_]{0,31}$/
+const previousFrameName = 'voscPrevious'
 const reserved = new Set([
   ...Object.getOwnPropertyNames(Object.prototype), 'parameter', 'setFunction', 'out', 'then',
-  'time', 'resolution', 'main', 'st',
+  'time', 'resolution', 'main', 'st', previousFrameName,
 ])
 
 function floatLiteral(value) {
@@ -69,14 +70,21 @@ export function compileSinglePass(build) {
   }
 
   const oscillator = register(compileTransform(transforms.osc))
+  // The Editor emitter supplies the fixed sampling body at the worker boundary.
+  const feedback = { name: previousFrameName, glslName: previousFrameName, type: 'src', inputs: [] }
   for (const definition of Object.values(transforms)) {
     if (definition.type !== 'src') register(compileTransform(definition))
   }
 
-  function osc(...args) {
+  function source(transform, userArgs) {
     const chain = new Chain()
-    chains.set(chain, [{ name: oscillator.name, transform: oscillator, userArgs: args }])
+    chains.set(chain, [{ name: transform.name, transform, userArgs }])
     return chain
+  }
+  const osc = (...args) => source(oscillator, args)
+  function previousFrame(...args) {
+    if (args.length) throw new Error('Previous frame takes no arguments.')
+    return source(feedback, [])
   }
 
   function setFunction({ name, type, inputs, glsl }) {
@@ -136,13 +144,15 @@ export function compileSinglePass(build) {
     },
   }
 
-  const result = build(Object.freeze({ osc, setFunction, parameter }))
+  const result = build(Object.freeze({ osc, previousFrame, setFunction, parameter }))
   if (result?.then) throw new Error('Single-pass evaluation must be synchronous.')
   if (!output || invalidOutput) throw new Error('Expected exactly one argument-free out().')
   const shader = generateGlsl({ transforms: output }, context)
   return {
     colorExpression: shader.fragColor,
-    functions: shader.glslFunctions.map(({ name, transform }) => ({ name, source: transform.glsl })),
+    readsPreviousFrame: shader.glslFunctions.some(({ transform }) => transform === feedback),
+    functions: shader.glslFunctions.filter(({ transform }) => transform !== feedback)
+      .map(({ name, transform }) => ({ name, source: transform.glsl })),
     uniforms: Array.from(used.values()).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
   }
 }

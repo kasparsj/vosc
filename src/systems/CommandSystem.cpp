@@ -817,13 +817,28 @@ CommandSystem::ScenePrograms CommandSystem::prepareStartupScene(const scene::Fil
         if (!scene::assetMatches(command))
             throw std::runtime_error(scene::commandContext(i, command.message) +
                                      ": asset changed since preflight: " + command.asset.string());
-        if (command.message.getArgAsString(2) == "/shader" || command.feedback) {
-            if (!Shader::prepareDirectSource(command.assetBytes, programs[i]))
+        const bool layerShader = command.message.getArgAsString(2) == "/shader";
+        if (layerShader || command.feedback) {
+            if (!Shader::prepareDirectSource(command.assetBytes, programs[i], layerShader))
                 throw std::runtime_error(scene::commandContext(i, command.message) +
                                          ": shader compilation or linking failed: " + command.asset.string());
         }
     }
     validateStartupScene(file, &programs);
+    if (std::any_of(programs.begin(), programs.end(), [](const auto& item) { return bool(item.second.selfFeedback); })) {
+        const auto& reset = file.commands.front().message;
+        if (file.width != Shader::selfFeedbackWidth || file.height != Shader::selfFeedbackHeight ||
+            file.onsetGate != 0 || programs.size() != 1 ||
+            reset.getArgAsInt32(3) != 1 || reset.getArgAsString(4) != "stack" ||
+            std::any_of(file.commands.begin() + 1, file.commands.end(), [](const auto& command) {
+                const auto address = command.message.getArgAsString(2);
+                return address != "/shader" && address != "/shader/var" &&
+                    address != "/input/set" &&
+                    (address != "/input" || command.message.getArgAsInt32(5) != 0);
+            })) {
+            throw std::runtime_error("Self-feedback replay requires a single 640x480 Editor layer and numeric controls");
+        }
+    }
     return programs;
 }
 
@@ -1557,6 +1572,9 @@ void CommandSystem::afterComposedDraw() {
         if (!std::isfinite(size.x) || !std::isfinite(size.y) || !std::isfinite(size.z) ||
             size.x <= 0 || size.x > maxLayerWidth || size.y <= 0 || size.y > maxLayerHeight || size.z != 0) {
             failSceneReplay("layer size expression did not settle to a valid 2D size"); return;
+        }
+        if (layer->shader.hasSelfFeedback() && !layer->shader.drewSelfFeedbackThisFrame()) {
+            failSceneReplay("self-feedback first draw did not settle"); return;
         }
         for (const auto& binding : layer->shader.getTextures()) {
             const auto& texture = binding.second;

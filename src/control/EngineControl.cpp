@@ -596,6 +596,8 @@ Json exportRecipe(RenderSystem& render, const RuntimeContext& runtime, const Com
             if (sharedGeom || (layer.geom && layer.geom->isLoaded() && !layer.geom->isCanonicalQuad()))
                 throw Invalid("scene_unsupported", "layer geometry is not the canonical quad");
             const std::string fragmentName = "assets/layer-" + std::to_string(index) + ".frag";
+            if (layer.shader.hasSelfFeedback())
+                throw Invalid("scene_unsupported", "self-feedback requires Editor standalone replay export");
             if (!layer.shader.getBuffers().empty()) throw Invalid("scene_unsupported", "shader buffers are unsupported");
             if (layer.shader.isLoaded() && !layer.shader.isShaderLoaded())
                 throw Invalid("scene_unsupported", "Shadertoy shaders are outside editable recipe scope");
@@ -903,7 +905,7 @@ Json EngineControl::dispatch(const Json& request) {
             ofGetWidth(), ofGetHeight(), commands().onsetGateValue())}};
     } else {
         validate(method, params);
-        if (draftPreview && !draftDraw.id.empty() && method != "draft_fence" && method != "capture_preview")
+        if (!draftDraw.id.empty() && method != "draft_fence" && method != "capture_preview")
             throw Invalid("draft_busy", "A draft mutation is awaiting its first composed frame");
         bool waits = method == "capture_preview" || params.value("timing", std::string("immediate")) == "onset";
         if (pendingCount() >= 16 || !makeReceiptSpace())
@@ -1023,6 +1025,10 @@ void EngineControl::execute(const std::string& id) {
     try {
         if (!ResourceRegistry::hasCurrent())
             throw ResourceRegistry::Inactive("engine operation requires an active ResourceRegistry");
+        // An onset-queued mutation can reach execution after another request
+        // has claimed the pending draw during this update.
+        if (!draftDraw.id.empty() && method != "draft_fence")
+            throw Invalid("draft_busy", "A draft mutation is awaiting its first composed frame");
         validate(method, params); // Targets/types may have changed while this request waited.
         if (executeDraft(id, method, params, logStart)) return;
         if (method == "trial_shader") {
@@ -1068,10 +1074,14 @@ void EngineControl::execute(const std::string& id) {
             if (method == "publish_shader") {
                 const auto source = draftValidation ? decodeDraftSource(params["source_base64"]) :
                     params["source"].get<std::string>();
-                if (!layer.shader.loadFromSource(source)) {
+                if (!layer.shader.loadFromSource(source, draftValidation)) {
                     auto logs = diagnostics(logStart, 128);
                     entry.response = failure(id, "shader_failed", "shader compile/link failed", logs["entries"]);
                     return;
+                }
+                if (layer.shader.hasSelfFeedback()) {
+                    draftDraw.id = id;
+                    draftDraw.expectedProgram = layer.shader.getShader().getProgram();
                 }
             } else if (method == "set_uniform") {
                 std::vector<float> values;
@@ -1232,7 +1242,7 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
                 text(binding["type"], 8, "uniform type") != draftUniformType(static_cast<int>(binding["components"].size())))
                 throw Invalid("invalid_params", "Saved uniform type does not match binding arity");
         }
-        if (!Shader::prepareDirectSource(source, candidate->program.source)) {
+        if (!Shader::prepareDirectSource(source, candidate->program.source, true)) {
             response = failure(id, "shader_failed", "shader compile/link failed", diagnostics(logStart, 128)["entries"]);
             return true;
         }
@@ -1323,13 +1333,16 @@ bool EngineControl::executeDraft(const std::string& id, const std::string& metho
     return true;
 }
 
-void EngineControl::settleDraftDraw() {
-    if (draftDraw.id.empty()) return;
+bool EngineControl::settleDraftDraw() {
+    if (draftDraw.id.empty()) return true;
     auto& entry = receipts.at(draftDraw.id);
-    auto& shader = render().getLayers()[0]->shader;
+    const auto method = entry.request["method"].get<std::string>();
+    const int layer = method == "publish_shader" ? entry.request["params"]["layer"].get<int>() : 0;
+    auto& shader = render().getLayers()[layer]->shader;
     const auto coherentDraw = [&] {
         if (draftDraw.expectedProgram ? !shader.ownsProgram(draftDraw.expectedProgram) : shader.isShaderLoaded())
             return false;
+        if (shader.hasSelfFeedback() && !shader.drewSelfFeedbackThisFrame()) return false;
         for (const auto& [slot, amplitude] : draftDraw.expectedSlots) {
             const auto input = runtime().inputs.all().find(slot);
             if (input == runtime().inputs.all().end() || input->second->get() != amplitude) return false;
@@ -1354,11 +1367,9 @@ void EngineControl::settleDraftDraw() {
         return true;
     };
     bool coherent = coherentDraw();
-    const auto method = entry.request["method"].get<std::string>();
-    if (draftDraw.restoring) {
-        entry.response = failure(draftDraw.id, coherent ? "draft_rolled_back" : "draft_state_lost",
-            coherent ? "The previous draft was restored and composed" : "The previous draft could not be observed");
-        entry.response["result"] = {{"scene", scene()}, {"restored_previous", coherent}};
+    if (method == "publish_shader") {
+        if (!coherent)
+            entry.response = failure(draftDraw.id, "shader_failed", "Self-feedback did not produce a composed frame");
     } else if (draftDraw.baseline) {
 #ifdef VOSC_RECOVERY_TESTING
         if (entry.request["params"]["token"] == "test-fail-first-draft-draw") coherent = false;
@@ -1377,13 +1388,21 @@ void EngineControl::settleDraftDraw() {
             draftActivation = std::move(draftDraw.previousActivation);
             draftSampleSequence = draftDraw.previousSampleSequence;
             revision = draftDraw.previousRevision;
-            draftDraw.restoring = true;
-            return;
+            renderedRevision = revision;
+            // GLFW has not swapped the back buffer yet. Replace the rejected draw without
+            // re-entering command processing, simulation updates, or receipt callbacks.
+            render().draw(runtime().camera);
+            observeSelfFeedbackDraw();
+            coherent = coherentDraw();
+            entry.response = failure(draftDraw.id, coherent ? "draft_rolled_back" : "draft_state_lost",
+                coherent ? "The previous draft was restored and composed" : "The previous draft could not be observed");
+            entry.response["result"] = {{"scene", scene()}, {"restored_previous", coherent}};
+        } else {
+            entry.response = reply(draftDraw.id, "rendered");
+            auto result = draftActivation;
+            result["scene"] = scene();
+            entry.response["result"] = std::move(result);
         }
-        entry.response = reply(draftDraw.id, "rendered");
-        auto result = draftActivation;
-        result["scene"] = scene();
-        entry.response["result"] = std::move(result);
     } else if (!coherent) {
         entry.response = failure(draftDraw.id, "draft_state_lost", "The changed draft state could not be observed");
     } else {
@@ -1396,6 +1415,19 @@ void EngineControl::settleDraftDraw() {
     if (method == "draft_commit") draftCommitReceipt = entry;
     else if (method == "draft_configure_slot" || method == "draft_bind_uniform") draftControlReceipt = entry;
     draftDraw = {};
+    return coherent;
+}
+
+void EngineControl::observeSelfFeedbackDraw() {
+    selfFeedbackDraw = nullptr;
+    const auto& layers = render().getLayers();
+    if (layers.size() != 1 || !layers[0]) return;
+    const auto& shader = layers[0]->shader;
+    if (!shader.drewSelfFeedbackThisFrame()) return;
+    selfFeedbackDraw = {{"step", shader.selfFeedbackStep()}, {"program", shader.getShader().getProgram()},
+                        {"frame", frame}};
+    if (draftPreview && draftActivation.contains("commit_id"))
+        selfFeedbackDraw["commit_id"] = draftActivation["commit_id"];
 }
 
 void EngineControl::startTrial(const std::string& id) {
@@ -2138,6 +2170,7 @@ Json EngineControl::scene() const {
         for (const auto& [name, input] : runtime().inputs.all()) slots[name] = input->get();
         result["draft_slots"] = std::move(slots);
     }
+    if (!selfFeedbackDraw.is_null()) result["self_feedback"] = selfFeedbackDraw;
     return result;
 }
 
@@ -2243,6 +2276,9 @@ void EngineControl::capture(const std::string& id) {
         ofPixels pixels;
         ofBuffer png;
         const auto params = entry.request.value("params", Json::object());
+        const auto minimumRevision = params.value("minimum_revision", uint64_t(0));
+        if (renderedRevision < minimumRevision)
+            throw Invalid("stale_revision", "The rendered scene did not reach the requested revision");
         if (!entry.feedbackPreviewOwner.empty() &&
             (feedbackPreviewDraw.is_null() || feedbackPreviewDraw.at("frame") != frame ||
              feedbackPreviewDraw.at("trial_id") != entry.feedbackPreviewOwner))
@@ -2252,9 +2288,11 @@ void EngineControl::capture(const std::string& id) {
         entry.response["result"] = {{"mime_type", "image/png"}, {"data_base64", base64(png)},
             {"width", pixels.getWidth()}, {"height", pixels.getHeight()},
             {"backing_width", width}, {"backing_height", height},
-            {"minimum_revision", params.value("minimum_revision", uint64_t(0))}};
+            {"minimum_revision", minimumRevision}};
         if (!entry.feedbackPreviewOwner.empty())
             entry.response["result"]["feedback_trial"] = feedbackPreviewDraw;
+        if (!selfFeedbackDraw.is_null() && selfFeedbackDraw["frame"] == frame)
+            entry.response["result"]["self_feedback"] = selfFeedbackDraw;
         images.push_back(id);
         while (images.size() > 2) {
             auto old = receipts.find(images.front());
@@ -2275,7 +2313,8 @@ void EngineControl::afterDraw() {
     if (!server.isRunning()) return;
     ++frame;
     renderedRevision = revision;
-    settleDraftDraw();
+    observeSelfFeedbackDraw();
+    const bool coherentDraft = settleDraftDraw();
     for (auto& pair : receipts) {
         if (pair.second.response["status"] == "applied" &&
             draftDraw.id != pair.first &&
@@ -2355,7 +2394,8 @@ void EngineControl::afterDraw() {
     if (!captures.empty()) {
         auto id = captures.front();
         captures.pop_front();
-        capture(id);
+        if (coherentDraft) capture(id);
+        else receipts.at(id).response = failure(id, "draft_state_lost", "The composed draft could not be observed");
     }
 }
 

@@ -321,6 +321,10 @@ void Layer::layerCommand(const string& command, const ofxOscMessage& m) {
 }
 
 void Layer::draw(const glm::vec3& pos, const glm::vec2& size, const Camera* camera) {
+    if (shader.hasSelfFeedback()) {
+        shader.drawSelfFeedback(data, pos, size, index);
+        return;
+    }
     //ofSetGlobalAmbientColor(ofFloatColor(1.0, 1.0, 1.0, 1.0));
     
     ofPushMatrix();

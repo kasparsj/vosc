@@ -33,6 +33,7 @@ export function evaluateHydraPatch(source: string) {
   const custom = new Map<string, { definition: ColorTransform; location: HydraLocation | null }>();
   let output: PatchNode | undefined;
   let outputError = false;
+  const o0 = Object.freeze(Object.create(null));
   let operations = 0;
   let customBytes = 0;
   const bytes = new TextEncoder();
@@ -60,9 +61,9 @@ export function evaluateHydraPatch(source: string) {
     const node = { name, args, input, other, location: location(), depth, expanded };
     const surface = Object.freeze({
       out(...args: unknown[]) {
-        if (args.length || output) {
+        if (args.length > 1 || (args.length === 1 && args[0] !== o0) || output) {
           outputError = true;
-          throw new UnsupportedHydraOperation("Hydra supports exactly one argument-free out().");
+          throw new UnsupportedHydraOperation("Hydra supports exactly one output using out() or out(o0).");
         }
         output = node;
       },
@@ -110,6 +111,13 @@ export function evaluateHydraPatch(source: string) {
     return wrap("osc", [hydraFrequency(scalar(frequency, "osc frequency", 0)), scalar(sync, "osc sync"), scalar(offset, "osc offset")]);
   }
 
+  function src(...args: unknown[]) {
+    if (args.length !== 1 || args[0] !== o0) {
+      throw new UnsupportedHydraOperation("Hydra supports only src(o0) for previous-frame sampling.");
+    }
+    return wrap("src", []);
+  }
+
   function param(...args: unknown[]) {
     arity("param", args.length, 2);
     const id = hydraParameterId(args[0]);
@@ -155,10 +163,11 @@ export function evaluateHydraPatch(source: string) {
       { definition: { name: definition.name, type: "color", inputs, glsl: definition.glsl }, location: location() });
   }
 
-  const patch = new Function("osc", "param", "setFunction", `"use strict";\n${source}\n//# sourceURL=${sourceURL}`);
-  if (patch(osc, param, setFunction) !== undefined) throw new Error("Hydra patch must finish synchronously with out().");
+  const patch = new Function("osc", "param", "setFunction", "src", "o0",
+    `"use strict";\n${source}\n//# sourceURL=${sourceURL}`);
+  if (patch(osc, param, setFunction, src, o0) !== undefined) throw new Error("Hydra patch must finish synchronously with out().");
   const root = output;
-  if (!root || outputError) throw new UnsupportedHydraOperation("Hydra requires exactly one argument-free out().");
+  if (!root || outputError) throw new UnsupportedHydraOperation("Hydra requires exactly one output using out() or out(o0).");
 
   const locations = new Map<string, HydraLocation | null>();
   const program = compileSinglePass(api => {
@@ -167,14 +176,16 @@ export function evaluateHydraPatch(source: string) {
       const prior = locations.get(node.name);
       if (!locations.has(node.name)) locations.set(node.name, node.location);
       else if (prior?.line !== node.location?.line || prior?.column !== node.location?.column) locations.set(node.name, null);
-      if (!node.input) return api.osc(...node.args as number[]);
+      if (!node.input) return node.name === "src" ? api.previousFrame() : api.osc(...node.args as number[]);
       const chain = replay(node.input);
       const args = node.args.map(value => typeof value === "string" ? api.parameter(value, parameters.get(value)!) : value);
       return node.other ? chain[node.name](replay(node.other), ...args) : chain[node.name](...args);
     }
     replay(root).out();
   });
-  return { ...program, functions: program.functions.map(fn => ({
+  const { readsPreviousFrame, ...shader } = program;
+  return { ...shader, feedback: readsPreviousFrame ? { location: locations.get("src") ?? null } : null,
+    functions: program.functions.map(fn => ({
     ...fn, location: custom.get(fn.name)?.location ?? locations.get(fn.name) ?? null,
   })), location: root.expanded === 1 ? root.location : null };
 }

@@ -7,6 +7,7 @@
 #include "../Texture.h"
 #include "../Buffer.hpp"
 #include "../TexturePool.h"
+#include "../FboPingPong.h"
 #include "ofxShadertoy.h"
 #include <cstdint>
 #include <variant>
@@ -26,7 +27,14 @@ struct ShaderPaths {
 class Camera;
 
 class Shader : public VarsHolder {
+    struct SelfFeedback {
+        FboPingPong buffers;
+        uint64_t step = 0;
+        uint64_t drawFrame = UINT64_MAX;
+    };
 public:
+    static constexpr int selfFeedbackWidth = 640;
+    static constexpr int selfFeedbackHeight = 480;
     struct DirectSourceState {
         shared_ptr<ofShader> program;
         string path;
@@ -48,6 +56,7 @@ public:
         shared_ptr<ofShader> program;
         string source;
         Uniforms uniforms;
+        std::unique_ptr<SelfFeedback> selfFeedback;
     };
 
     struct DraftProgram {
@@ -76,9 +85,16 @@ public:
         return shader != NULL && shader->isLoaded();
     }
     bool load(string path);
-    bool loadFromSource(const string& source);
+    bool loadFromSource(const string& source, bool allowSelfFeedback = false);
     bool snapshotDirectSource(DirectSourceState& state, string& reason) const;
-    static bool prepareDirectSource(const string& source, PreparedDirectSource& prepared);
+    static bool prepareDirectSource(const string& source, PreparedDirectSource& prepared,
+                                    bool allowSelfFeedback = false);
+    bool hasSelfFeedback() const { return bool(selfFeedback); }
+    uint64_t selfFeedbackStep() const { return selfFeedback ? selfFeedback->step : 0; }
+    bool drewSelfFeedbackThisFrame() const {
+        return selfFeedback && selfFeedback->drawFrame == uint64_t(ofGetFrameNum());
+    }
+    void drawSelfFeedback(TexData& data, const glm::vec3& pos, const glm::vec2& size, int layer);
     void installDirectSource(PreparedDirectSource&& prepared,
                              const map<string, vector<float>>& bindings);
     bool restoreDirectSource(const DirectSourceState& state);
@@ -194,6 +210,7 @@ private:
     map<string, shared_ptr<Texture>> textures;
     map<string, shared_ptr<Buffer>> buffers;
     shared_ptr<ofShader> shader;
+    std::unique_ptr<SelfFeedback> selfFeedback;
     shared_ptr<ofxShadertoy> shadertoy;
     string shaderPath;
     string directSource;

@@ -8,7 +8,7 @@
   "esbuild": "0.28.2",
   "distribution": "private-qualification-only",
   "externalDistribution": "pending-disposition",
-  "bundleSha256": "1928670e09ddece138168752c11910a50cf86a9d7f78eb8c6da28d1b467058ab",
+  "bundleSha256": "531ed544c9bd1871bb0435d92069908ca53f102b3146db7709de57a766bd2961",
   "compilerInputs": [
     "src/generate-glsl.js",
     "src/glsl/single-pass-transforms.js",
@@ -23,6 +23,6 @@
     "src/generate-glsl.js": "3a4eb7d3988ee8d109da1125b1ca9ba9882cc14173ad0f64b4abcf890d0c8041",
     "src/glsl/single-pass-transforms.js": "b9218ad2ab9263cf0c5a4c68dcef3672611a69e4bd17bd3d5e6b478e3387caba",
     "src/types.js": "635fdb270872bab7467743290c79dea52fb2caf21795d720ff2513c82c38ad73",
-    "src/vosc-single-pass.js": "437df51aca6ca3d1f4a861781b71b049b9a83082339b9ea21909ed22e5a17055"
+    "src/vosc-single-pass.js": "1ddc8d05c2141b416afd0f1e94a82f333cba271e0641eb3b13e4b77d4d65c8af"
   }
 }
