@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
 import { readFile, realpath, writeFile } from "node:fs/promises";
+import { createConnection } from "node:net";
 import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { Draft } from "../linux-host/draft";
@@ -34,6 +35,37 @@ function prepare(source: Buffer, token: string, revision: unknown, language = "w
 }
 function commit(token: string, revision: unknown, owner = lease) {
   return renderer.mutate("draft_commit", { lease: owner, token, revision, control_digest: controlDigest }, "commit-" + token);
+}
+async function supersedePending(pid: unknown, revision: unknown) {
+  // One socket dispatches one request per update. Cold Dawn preparation
+  // spans several updates, so the second request always displaces a pending one.
+  const path = join(await realpath(`/proc/${pid}/cwd`), "control.sock");
+  const first = "cold-superseded";
+  const second = "invalid-before";
+  const socket = createConnection(path);
+  socket.setTimeout(4500, () => socket.destroy(new Error("Missing draft prepare admissions")));
+  const candidates = [{ id: first, source: quadrants }, { id: second, source: invalid }];
+  socket.write(candidates.map(({ id, source }) =>
+    JSON.stringify({ id, method: "draft_prepare", params: params(source, id, revision, "wgsl") })
+  ).join("\n") + "\n");
+  const admissions: NativeObject[] = [];
+  let pending = "";
+  try {
+    for await (const chunk of socket.setEncoding("utf8")) {
+      pending += chunk;
+      const lines = pending.split("\n");
+      pending = lines.pop()!;
+      admissions.push(...lines.map(line => JSON.parse(line)));
+      if (admissions.length === 2) break;
+    }
+  } finally {
+    socket.destroy();
+  }
+  assert.deepEqual(admissions.map(({ id, status }) => [id, status]), [[first, "queued"], [second, "queued"]]);
+  await assert.rejects(renderer.recover(first, "prepared"), { code: "stale_candidate" });
+  await assert.rejects(renderer.recover(second, "prepared"), { code: "shader_failed" });
+  await assert.rejects(commit(first, revision), { code: "stale_candidate" });
+  return admissions;
 }
 async function retained(revision: unknown, token: string, previousFrames: unknown) {
   const live = await scene();
@@ -116,7 +148,7 @@ try {
   } else {
     const glStatus = await status();
     assert.equal(await realpath(`/proc/${glStatus.pid}/exe`), await realpath(join(installation, "renderer/vosc")));
-    await assert.rejects(prepare(invalid, "invalid-before", gl.revision), { code: "shader_failed" });
+    const pendingSupersession = await supersedePending(glStatus.pid, gl.revision);
     assert.equal((await status()).opengl_visible, true);
     assert.equal((await scene()).revision, gl.revision);
 
@@ -176,7 +208,7 @@ try {
     const afterTime = check(laterClock, clock, "clock-after", initialClock.revision, rgb)[0].rgba[3];
     assert.ok(afterTime > beforeTime, `Expected GPU elapsed time to advance (${beforeTime} -> ${afterTime})`);
 
-    Object.assign(evidence, { glStatus, first, firstStatus, afterFailure, replacement, replacementStatus, laterClock,
+    Object.assign(evidence, { glStatus, pendingSupersession, first, firstStatus, afterFailure, replacement, replacementStatus, laterClock,
       clockSamples: { beforeTime, afterTime }, replacementPixels: pixels });
     if (recovery) {
       const failToken = "test-fail-first-draft-draw";
