@@ -1,0 +1,94 @@
+# VOSC Editor roadmap archive · M1–M5
+
+The initial scope of all five milestones was implemented and internally qualified. M5 covers one synthetic scalar callback and one self-feedback output. Follow-up work and deferred checks are tracked in the [Editor backlog](../BACKLOG.md).
+
+## Qualification record
+
+The reports below are retained in the local `.omx/evidence/` workspace. Commit IDs identify the implementation in Git.
+
+| Milestone | Accepted scope and evidence |
+| --- | --- |
+| M1 · Editor workspace and editable drafts | `a269a05`. Signed offline editing and import, including invalid GLSL, safe save and reopen, and keyboard navigation. VoiceOver was skipped by explicit acceptance amendment. Shadertoy used a signed fixture. [Acceptance](../../../.omx/evidence/vosc-editor-roadmap-m1-m2/m1-candidate-05/m1-acceptance.md) · [VoiceOver amendment](../../../.omx/evidence/vosc-editor-roadmap-m1-m2/m1-candidate-05/acceptance-note.md) |
+| M2 · Native GLSL live editing | `68709bb`. Signed native hot swaps, OSC mapping retention, rollback, and standalone replay. The cross-host case was deferred to M3. [Acceptance](../../../.omx/evidence/vosc-editor-roadmap-m1-m2/m2-candidate-05/m2-acceptance.md) |
+| M3 · Mac Editor → Ubuntu Render Host | `0b21b84`, `c3ac6c0`. Signed discovery, pairing, native draw and OSC, explicit Restore, and switching between Mac and Ubuntu hosts. [Acceptance audit](../../../.omx/evidence/vosc-editor-m3-linux/acceptance-audit.md) |
+| M4 · Hydra single-pass authoring | `c920262`, `fd86c0c`. The pinned Triode compiler supports the documented single-pass subset. Signed qualification covered native rendering, OSC, failure recovery, and standalone replay. Direct LAN was verified and the WAN-disabled requirement was waived. [Qualification](../../../.omx/evidence/vosc-editor-triode-single-pass/qualification-editor-native.md) · [Network acceptance](../../../.omx/evidence/vosc-editor-triode-single-pass/accepted-wan-waiver.md) |
+| M5 · Callback uniforms and feedback | `3aa58c6`, `1a2551b`, `515c36e`. Signed Mac and Ubuntu runs verified callback updates, disconnect hold, Restore, frozen export, self-feedback accumulation, failed Run history preservation, and standalone replay. Feedback Echo was also qualified as a library entry. The callback run used the private Tailnet. [Callbacks](../../../.omx/evidence/vosc-editor-callbacks/native-qa-evidence.md) · [Self-feedback](../../../.omx/evidence/vosc-editor-self-feedback/qualification.md) · [Feedback Echo](../../../.omx/evidence/vosc-editor-feedback-library/qualification.md) |
+
+## Original roadmap and mockup audit
+
+The sections below preserve the original observations and proposed exit criteria. Historical source line references describe the recorded review baseline.
+
+Reviewed 2026-11-27 against local VOSC commit `57361d30de87` and the [Figma walkthrough](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=8-3). This is the roadmap for VOSC Editor on macOS and its private draft preview. The table records changes needed in the mockups and implementation. The milestones below are proposed sequencing.
+
+## Baseline
+
+The local implementation has five GLSL import routes, source provenance, paired native preview, reflected fixed and OSC bindings, offline reopen, and standalone replay export. The recorded M1–3 acceptance covers signed artifacts on one Mac and fixture-backed Shadertoy rendering. Real two-Mac LAN and live Shadertoy API evidence were explicitly deferred from that handoff. Later claims about those surfaces need their own evidence. [Current app workflow](../README.md)
+
+The editor-first navigation is sound. Use **New**, **Open**, and **Import** to get a document into the same workspace. Keep the native output on the selected render machine and keep the inspector next to the code. The prototype makes one important distinction visible in its error state: the edited text has failed while the last confirmed visual continues. Carry that distinction through every action.
+
+## Frontend audit
+
+The review inspected all 52 frame dimensions and sampled navigation, inputs, and status copy in the prototype. It also reviewed screenshots of the live editor, failed run, repository review, and host restore entry point. Keyboard focus, assistive technology, editor latency, and actual draw behavior require the implemented app.
+
+| Priority | Finding | Required change |
+| --- | --- | --- |
+| P1 | **Working text and playback share too much state.** The draft shows a dirty dot and a live revision, but the save dialog references revision 12 as though saving depends on it. Today the Save handler requires a ready preview, and Workspace asks the host to confirm the revision again. [Save mockup](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=6-666) · [Save implementation](../src/workspace.ts#L324-L334) | Model the working buffer, saved document, and last successfully drawn artifact separately. Allow offline saves, including invalid source. Show dirty state separately from playback. Use a dirty-document prompt when an action would discard edits. Export a named, previously accepted artifact and its bindings, with a stale-output notice when the buffer has moved on. |
+| P1 | **A shader swap can invalidate live controls.** The success screen promises the spin mapping survived. Current activation clears slots and bindings, and restore configures them through separate requests. The type-change frame still presents the old scalar mapping as mapped. [Success](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=9-3) · [Mapping conflict](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=6-510) · [Host activation](../host/Draft.swift#L51-L63) · [Restore](../src/workspace.ts#L360-L386) | Prepare the program and reconciled controls together. Preserve compatible bindings and slot IDs. Surface removed, retyped, renderer-owned, and temporarily inactive uniforms with actionable treatment. For an incompatible binding, retain its saved configuration for review and state exactly what the candidate will use. Commit or recover the shader and controls together. |
+| P1 | **The Run flow is illustrative.** The compile frame advances on a timer, the normal GLSL Run button has no prototype action, and the error path's Jump to line advances to a frame with corrected source. [GLSL](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=3-5450) · [Failed run](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=3-6064) | Drive status from the actual operation and matching draw receipt. Define pending, compile/link failure, in-flight timeout, reconciliation, and disconnected states. Jump to line moves focus and selection and leaves source intact. Show native log text when a location cannot be mapped. Keep manual Run available on both source types. |
+| P1 | **Restore and move-to-another-host are conflated.** Restore follows pairing Stage Mac over a workspace still showing Studio Mac. The actual restore contract requires the saved target and fingerprint. “View output” leads to a simulated desktop, while the actual remote preview appears on the other Mac. [Connected host](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=5-713) · [Host restriction](../src/workspace.ts#L360-L367) | Separate **Restore preview** on the saved host from an explicit **Use this host** decision when moving a draft. Show the intended target and stale last observation. Make remote output location explicit. Offer local window focus only where the installed app can perform it. Keep pairing and restore separate from previewing edits or affecting scheduled playback. |
+| P1 | **The compact layout and keyboard path are missing.** Every mockup is 1200 × 750. The app opens at 1040 × 720 and supports 680 × 540. The three-pane layout and centered dialogs need compact variants, and click targets in the prototype give little evidence about focus. [Editor](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=3-5299) · [Window limits](../src/main.ts#L108-L113) | At minimum size, keep source, Run, pending/error status, and diagnostic navigation usable. Collapse library and inspector into accessible toggles or drawers. Specify tab order, shortcuts in editor and dialogs, visible focus, Escape, and focus return. Verify at minimum, default, and wide sizes with keyboard, zoom, and macOS VoiceOver. |
+| P2 | **Import review implies selection and publication the app does not yet expose.** The repository mock labels files “Selected” without a toggle path, then the sample import chain lands on a differently named GLSL document. The importer currently validates pending entries as a batch and publishes accepted entries. [Repository review](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=4-1461) · [Import validation and publication](../src/importer.ts#L132-L187) | Add real selection and make the state of each file clear: acquired, converted, awaiting native validation, failed, or added. Carry the selected file name, ref, provenance, and converted bytes into the editor. Specify retry, cancel, partial success, existing library edits, and offline opening before native validation. |
+| P2 | **Callback and feedback controls read as finished features.** Signals shows audio FFT and a fixed update rate, callback export promises frozen values, and feedback appears alongside normal patches. Editor's current relay delivers one normalized OSC sample at a time and waits for native observation. Feedback has a bounded native path outside the current Editor draft protocol. [Signals](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=3-6677) · [Callback export](https://www.figma.com/design/vLaT5iZUhSYp1caTdqXqna?node-id=6-1148) · [OSC relay](../host/Draft.swift#L213-L248) · [Feedback trials](../../../docs/Feedback-shader-trials.md) | Expose these surfaces only as their capabilities ship. Specify where each signal comes from, what value is last confirmed, what happens when the source disappears, and what replay can reproduce. Keep the generated GLSL view faithful to the actual artifact. |
+
+## Delivery milestones
+
+### 1. Editor workspace and editable drafts
+
+**Outcome.** A user can create, import, edit, save, close, and reopen a GLSL document without a host. Editor becomes the default workspace. Import is a command that opens a picker or review dialog. Host management is reached from the destination control.
+
+- Build the source editor, document navigation, Problems panel, and collapsible inspector in the existing Electron/React app. Select an editor dependency against GLSL and JavaScript modes, diagnostics, keyboard and screen-reader behavior, large supported source files, and packaged size.
+- Distinguish working text and source provenance from the accepted native artifact. Define how existing saved drafts open in the editor. Keep one editing workflow and preserve existing user files. Keep provider acquisition and conversion in the shared importer, with explicit selection and publication for repository imports.
+- Prefer native file dialogs and the standard app menu for Open, Save, and shortcuts. Define loading, cancellation, overwrite handling, and recovery for working files, including unsaved edits during a document switch.
+
+**Exit evidence.** In the signed controller, open an existing draft, create and save invalid GLSL offline, reopen it without losing text, cancel a dirty switch, and exercise all five import entry points with their supported evidence sources. Select a subset of a mixed repository, cancel and retry an import, and verify that reimport preserves a locally edited library entry. Inspect 680 × 540, 1040 × 720, and wide layouts. Complete the editor, dialogs, and problems journey by keyboard and verify focus and announcements with VoiceOver.
+
+### 2. Native GLSL live editing and safe hot swaps
+
+**Outcome.** **Run** applies a working-buffer revision to the private native draft renderer while preserving the current visual and controls through failed edits. Auto-run follows the same path once manual Run is reliable.
+
+- Reuse paired host transport, native shader preparation and reflection, and drawn-frame receipts. Evaluate the existing protected shader trial path for applicable primitives, with an Editor operation that commits a prepared candidate and reconciled controls as one unit. Current clear-and-rebind behavior is insufficient for a live swap. [Protected shader trials](../../../docs/Shader-trials.md)
+- Identify attempts by document, content digest, run sequence, host identity and epoch. Coalesce pending edits, serialize publishes, fence late work when switching document or host, and reconcile uncertain outcomes before retrying. Distinguish a failed candidate from a lost renderer. Keep the last confirmed status explicit when current output cannot be observed.
+- Support fixed and OSC range mappings with stable slot IDs. Preserve compatible values and prevent a stale sample from changing a replacement revision. Use explicit Run first, then add off-by-default, debounced auto-run per document with an immediate way to pause it. Native logs and locations must refer to the attempted source, even if the editor has moved on.
+
+**Exit evidence.** On an installed app, map a real OSC source, run a valid edit, submit a broken edit, fix it, and verify the native frame and retained mapping at both range endpoints. Cover removed and retyped uniforms, rapid edits, missing or late receipts, renderer restart, and a host switch. Save the broken working buffer, export the accepted revision, and run the export separately. Check a concurrent show renderer during the whole journey.
+
+### 3. Qualify Mac Editor → Ubuntu Render Host
+
+**Outcome.** The signed macOS VOSC Editor discovers, pairs with, and runs native GLSL on the Ubuntu Render Host on `kaspars-ubuntu`. The Render Host owns a private native preview on its own display. A separately running show keeps drawing throughout editing and recovery.
+
+- Stage an internal Ubuntu Render Host build for the confirmed x86_64 graphics session, with the matching native renderer, private runtime data and local control socket. Use the existing v1 discovery, pairing and authenticated operations. The Ubuntu operator explicitly approves or denies the matching Editor fingerprint.
+- Exercise discovery and manual address in the signed Editor, including denial, disconnect, host restart and explicit same-identity **Restore**. Keep controller-only Mac launch as its own check.
+- Match Ubuntu native draw receipts and framebuffer captures for A, B, failed X retaining B, and C. Send real OSC to the Mac Editor at both mapped endpoints and verify the stable slot and fixed gain. Record separate show frames before, during and after the journey.
+- Finish the deferred two-host check with the signed Mac companion as A and Ubuntu as B. During a pending A Run, selecting B cannot publish. Verify distinct identities, explicit **Use this host** and **Run**, and fresh slot defaults on B.
+
+**Exit evidence.** The installed Mac-to-Ubuntu journey, Ubuntu service lifecycle and parity checks, controller-only launch and deferred host-switch scenarios all pass documented M3 acceptance checks. The local planning artifact is `.omx/plans/test-spec-vosc-editor-m3-linux.md`. The disposable Linux build and replay preflight provides separate renderer evidence. M1 and M2 retain their signed Mac acceptance history, including the recorded VoiceOver skip and two-host deferral.
+
+**Later scope.** Broader Linux support and release packaging require separate decisions. AI-assisted authoring and the separate-track timeline with independent layers and overlapping clips remain later work. Qualify explicit scheduling, independent transitions, and hold/resume after Editor or LAN loss as part of the timeline slice.
+
+### 4. Hydra single-pass authoring
+
+**Outcome.** A documented subset of Hydra-style JavaScript builds a 2D shader using helpers and loops in Editor, then goes through the same native Run, diagnostics, control, and replay workflow as GLSL. Start after the GLSL live path. This can proceed alongside first-release work when capacity allows.
+
+- Use the pinned Triode single-pass compiler for transform chains and emit standalone desktop GLSL with VOSC coordinates, built-ins, and an explicit fragment output. Keep source locations and stable names for generated controls. See the [Editor patch API](../README.md#run-a-single-pass-javascript-patch) for supported operations and conventions.
+- Execute JavaScript in a dedicated, terminable environment with a narrow synth API, bounded execution, and no privileged app or renderer APIs. Opening or importing JavaScript shows the source. An explicit first Run evaluates it. Define document trust before allowing auto-run.
+- Keep editable JavaScript and the accepted artifact in the draft. The generated GLSL inspector displays the actual compiled input, with diagnostics mapped back to JavaScript where possible. Render consumes native GLSL and native control bindings.
+
+**Exit evidence.** Run a patch with a helper, a nested transform, and an OSC-mapped parameter. Compare a representative output with an independently specified reference at fixed time and resolution. Exercise invalid JS, an infinite loop, and an unsupported operation, then recover without disturbing the prior native output. Export and replay the patch with Editor closed.
+
+### 5. Callback uniforms and feedback
+
+**Callbacks.** Editor evaluates callbacks at a bounded cadence and sends batched latest values for the active revision over the paired connection. Render consumes accepted values on its own frames. Define input ownership, callback errors, rate and queue behavior, conflict with OSC on the same control, and reconnect. On loss of Editor, hold the last applied callback values while the draft renderer remains available. For standalone export, offer an explicit snapshot of callback values and disclose which controls are frozen. Use a synthetic signal for the first proof and add audio or pointer sources when their runtime behavior is defined.
+
+**Feedback.** Start with one self-feedback output, `src(o0)…out(o0)`, using a native ping-pong buffer. Specify format, initialization, previous-frame sampling, reset versus preservation on edits, and export support. Verify history in native frames during apply, failure, and restore. Multiple outputs, media and Triode-specific 3D features follow after a separate pass and resource model is defined. [Native feedback contract](../../../docs/Feedback-composition-contract.md)
+
+Neither callbacks nor feedback are prerequisites for the agreed first release. Qualify callback delivery and disconnect on two machines before representing the workflow as live over LAN. Qualify self-feedback and replay against observed native output before exposing the feedback example as runnable in the library.

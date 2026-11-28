@@ -2,7 +2,7 @@
 
 The controller imports and edits fragment shader drafts. The render host opens the draft in its own native VOSC window. The controller can stage and inspect sources without a host connection.
 
-See the [VOSC Editor roadmap](ROADMAP.md) for the mockup audit and the proposed GLSL, Hydra, and live-preview milestones.
+See the [Editor backlog](BACKLOG.md) for current follow-ups and the [M1–M5 archive](archive/roadmap-m1-m5.md) for the original mockup audit and qualification reports.
 
 ## Build a signed internal test package
 
